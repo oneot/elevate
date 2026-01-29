@@ -11,6 +11,9 @@ import teamsIcon from '../assets/NewMicrosoft365Icons/Teams_512.png';
 import minecraftIcon from '../assets/NewMicrosoft365Icons/minecraft.png';
 import copilotStudioIcon from '../assets/NewMicrosoft365Icons/copilotstudio.png';
 
+// Components
+import KoreaMap from '../components/KoreaMap';
+
 const Home = () => {
     // State for map tooltip
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: '' });
@@ -246,58 +249,13 @@ const Home = () => {
                     className="lg:w-1/2 relative flex justify-center items-center h-[500px] lg:h-[750px] w-full map-container"
                     style={{ opacity: 0, transform: 'scale(0.95)', transition: 'all 1.2s ease-out 0.3s' }}
                 >
-                    <svg viewBox="0 0 400 550" className="w-full h-full drop-shadow-2xl" id="korea-map" xmlns="http://www.w3.org/2000/svg">
-                        <path id="korea-outline"
-                              d="M165 40 L190 45 L220 55 L235 80 L245 120 L260 160 L280 220 L300 280 L310 350 L305 420 L285 460 L260 490 L230 500 L190 495 L160 480 L130 460 L100 440 L85 400 L95 350 L80 300 L90 240 L105 180 L115 130 L130 80 L150 50 Z"
-                              fill="rgba(255,255,255,0.6)"
-                              stroke="rgba(0,120,212,0.3)"
-                              strokeWidth="2" />
-
-                        <g className="map-line" fill="none" strokeLinecap="round">
-                            <path d="M155 135 L220 110" />
-                            <path d="M155 135 L175 220" />
-                            <path d="M175 220 L240 320" />
-                            <path d="M175 220 L135 340" />
-                            <path d="M135 340 L145 420" />
-                            <path d="M240 320 L260 410" />
-                            <path d="M145 420 Q 150 480 155 510" />
-                        </g>
-
-                        <g id="map-points">
-                            {[
-                                { key: "Seoul", cx: 155, cy: 135, r: 7 },
-                                { key: "Incheon", cx: 135, cy: 130, r: 5 },
-                                { key: "Gyeonggi", cx: 165, cy: 115, r: 10, style: { opacity: 0.5 } },
-                                { key: "Gangwon", cx: 230, cy: 105, r: 6 },
-                                { key: "Sejong", cx: 180, cy: 210, r: 5 },
-                                { key: "Chungbuk", cx: 205, cy: 195, r: 5 },
-                                { key: "Daejeon", cx: 190, cy: 235, r: 6 },
-                                { key: "Chungnam", cx: 150, cy: 225, r: 5 },
-                                { key: "Gyeongbuk", cx: 255, cy: 290, r: 6 },
-                                { key: "Daegu", cx: 245, cy: 330, r: 6 },
-                                { key: "Ulsan", cx: 285, cy: 355, r: 5 },
-                                { key: "Busan", cx: 270, cy: 405, r: 7 },
-                                { key: "Gyeongnam", cx: 230, cy: 400, r: 6 },
-                                { key: "Jeonbuk", cx: 140, cy: 330, r: 6 },
-                                { key: "Gwangju", cx: 145, cy: 385, r: 6 },
-                                { key: "Jeonnam", cx: 125, cy: 430, r: 7 },
-                                { key: "JeJu", cx: 155, cy: 520, r: 6 }
-                            ].map((point) => (
-                                <circle
-                                    key={point.key}
-                                    cx={point.cx}
-                                    cy={point.cy}
-                                    r={hoveredRegion === point.key ? Math.max(9, point.r + 3) : point.r}
-                                    className="map-point"
-                                    style={point.style}
-                                    onMouseEnter={(e) => handleMapPointEnter(e, point.key)}
-                                    onMouseMove={handleMapPointMove}
-                                    onMouseLeave={handleMapPointLeave}
-                                    onClick={() => handleMapPointClick(point.key)}
-                                />
-                            ))}
-                        </g>
-                    </svg>
+                    <KoreaMap 
+                        hoveredRegion={hoveredRegion}
+                        onPointEnter={handleMapPointEnter}
+                        onPointMove={handleMapPointMove}
+                        onPointLeave={handleMapPointLeave}
+                        onPointClick={handleMapPointClick}
+                    />
 
                     <div 
                         id="tooltip" 
