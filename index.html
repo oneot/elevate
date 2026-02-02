@@ -23,6 +23,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 
+  /* 에이전트 sdk */
+  <script crossorigin="anonymous" src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
+
   <script>
     tailwind.config = {
       theme: {
@@ -667,37 +670,35 @@
   <div id="ai-agent-widget" class="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-4 font-sans">
     
     <div id="chat-window" class="
-        w-[360px] h-[600px] max-w-[calc(100vw-3rem)] max-h-[80vh]
-        bg-white/90 backdrop-blur-xl border border-white/50
-        rounded-[2rem] shadow-2xl shadow-blue-900/10
+        w-[380px] h-[650px] max-w-[calc(100vw-2rem)] max-h-[80vh]
+        bg-white/80 backdrop-blur-2xl border border-white/60
+        rounded-[2.5rem] shadow-2xl shadow-blue-900/15
         flex flex-col overflow-hidden
-        origin-bottom-right transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
-        transform scale-0 opacity-0 invisible translate-y-10
+        origin-bottom-right transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+        transform scale-0 opacity-0 invisible translate-y-12
       ">
       
-      <div class="h-14 bg-gradient-to-r from-ms-blue to-cyan-500 flex items-center justify-between px-5 shrink-0">
-        <div class="flex items-center gap-2 text-white font-bold tracking-wide text-sm">
-          <span class="text-xl">✨</span> Elevate AI Assistant
+      <div class="h-20 bg-gradient-to-r from-ms-blue/90 to-cyan-500/90 backdrop-blur-md flex items-center justify-between px-6 shrink-0 shadow-sm z-10">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg text-xl">
+            🤖
+          </div>
+          <div class="text-white">
+            <h3 class="font-bold text-base tracking-wide">Elevate AI</h3>
+            <div class="flex items-center gap-1.5 opacity-80">
+              <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+              <span class="text-xs font-medium">Online</span>
+            </div>
+          </div>
         </div>
-        <button onclick="toggleChat()" class="text-white/80 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+        
+        <button onclick="toggleChat()" class="text-white/70 hover:text-white hover:bg-white/20 p-2 rounded-full transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
 
-      <div class="flex-1 bg-white relative">
-        <div class="absolute inset-0 flex items-center justify-center -z-10">
-          <div class="w-8 h-8 border-4 border-blue-100 border-t-ms-blue rounded-full animate-spin"></div>
-        </div>
-        
-        <iframe 
-          src="https://copilotstudio.microsoft.com/environments/Default-62ae463a-9f12-4edf-8544-4f6ca3834524/bots/copilots_header_b3379/webchat?__version__=2" 
-          frameborder="0" 
-          style="width: 100%; height: 100%;"
-          title="Elevate AI Agent"
-        ></iframe>
-      </div>
+      <div id="webchat" class="flex-1 bg-white/40 overflow-y-auto relative" role="main"></div>
+
     </div>
 
     <button 
@@ -705,10 +706,9 @@
       onclick="toggleChat()"
       class="
         group relative w-16 h-16 rounded-full 
-        bg-gradient-to-tr from-[#0078D4] to-[#00C7F4]
-        text-white shadow-lg shadow-blue-500/30 border-4 border-white
+        bg-slate-900 text-white shadow-2xl shadow-blue-500/30 border border-white/20
         flex items-center justify-center
-        transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-cyan-500/50
+        transition-all duration-300 hover:scale-110 active:scale-95 hover:bg-ms-blue
         animate-float-slow
       "
     >
@@ -716,47 +716,127 @@
         class="w-7 h-7 transition-transform duration-300 group-hover:rotate-12">
         <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
       </svg>
-      
-      <span class="absolute top-0 right-0 flex h-4 w-4">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-white"></span>
-      </span>
     </button>
   </div>
 
   <style>
-    /* 둥둥 떠다니는 애니메이션 */
+    /* Custom Scrollbar for Chat */
+    #webchat::-webkit-scrollbar { width: 6px; }
+    #webchat::-webkit-scrollbar-track { background: transparent; }
+    #webchat::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+    
+    /* Animation */
     @keyframes float-slow {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
+      50% { transform: translateY(-6px); }
     }
-    .animate-float-slow {
-      animation: float-slow 3s ease-in-out infinite;
+    .animate-float-slow { animation: float-slow 3s ease-in-out infinite; }
+    .chat-open .animate-float-slow { animation: none; transform: rotate(45deg); background: #ef4444; } /* Red close style */
+
+    /* === SDK Style Overrides (Deep Customization) === */
+    /* 입력창 디자인 변경 */
+    .webchat__send-box {
+      background: rgba(255,255,255,0.8) !important;
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(0,0,0,0.05);
+      margin: 0 !important;
+      padding: 10px !important;
     }
-    .chat-open .animate-float-slow {
-      animation: none;
-      transform: rotate(45deg); 
-      background: #334155; 
-      border-color: #334155;
+    .webchat__send-box__main {
+      border-radius: 999px !important;
+      background: #f1f5f9 !important; /* slate-100 */
+      border: 1px solid transparent !important;
+      transition: all 0.2s;
     }
+    .webchat__send-box__main:focus-within {
+      background: white !important;
+      border-color: #0078D4 !important;
+      box-shadow: 0 0 0 3px rgba(0,120,212,0.1);
+    }
+    
+    /* 말풍선 폰트 */
+    .webchat__basic-transcript__text { font-family: 'Pretendard', sans-serif !important; }
   </style>
 
   <script>
+    // 1. 토글 로직
+    const chatWindow = document.getElementById('chat-window');
+    const toggleBtn = document.getElementById('chat-toggle-btn');
+    let isChatLoaded = false;
+
     function toggleChat() {
-      const chatWindow = document.getElementById('chat-window');
-      const toggleBtn = document.getElementById('chat-toggle-btn');
-      
       const isClosed = chatWindow.classList.contains('invisible');
       
       if (isClosed) {
-        chatWindow.classList.remove('invisible', 'scale-0', 'opacity-0', 'translate-y-10');
+        // Open
+        chatWindow.classList.remove('invisible', 'scale-0', 'opacity-0', 'translate-y-12');
         chatWindow.classList.add('scale-100', 'opacity-100', 'translate-y-0');
         toggleBtn.classList.add('chat-open');
+        
+        // Lazy Load (처음 열 때만 SDK 로드)
+        if (!isChatLoaded) {
+          loadChat();
+          isChatLoaded = true;
+        }
       } else {
-        chatWindow.classList.add('invisible', 'scale-0', 'opacity-0', 'translate-y-10');
+        // Close
+        chatWindow.classList.add('invisible', 'scale-0', 'opacity-0', 'translate-y-12');
         chatWindow.classList.remove('scale-100', 'opacity-100', 'translate-y-0');
         toggleBtn.classList.remove('chat-open');
       }
+    }
+
+    // 2. SDK 렌더링 로직 (스타일 커스텀 핵심)
+    async function loadChat() {
+      // ⭐ 중요: 여기에 Copilot Studio에서 복사한 토큰/Secret을 넣으세요.
+      // (보내주신 API 주소는 raw 데이터라, Web Chat은 Token 방식을 선호합니다)
+      const directLineSecret = 'rgfpuYupIP27STK2v0C7jCiBORlq63G3nyUj9Zan58rAp3HAWuSCJQQJ99CBACi5YpzAArohAAABAZBS2kCv.BHfCuXJnH5X8ciQJPMrhYemii9NlbNfkuOoGSIerwxznceY2y0uiJQQJ99CBACi5YpzAArohAAABAZBS1asc'; 
+
+      // 토큰 교환 (보안상 백엔드에서 하는게 좋지만, 클라이언트 데모용으로 작성)
+      // 실제론 아래 fetch를 통해 토큰을 받아오거나, Secret을 직접 씁니다.
+      
+      const styleOptions = {
+        // 색상 팔레트 (Tailwind colors)
+        accent: '#0078D4', // MS Blue
+        
+        // 아바타 설정
+        botAvatarInitials: 'AI',
+        userAvatarInitials: 'ME',
+        botAvatarBackgroundColor: '#0078D4',
+        userAvatarBackgroundColor: '#1e293b',
+        
+        // 말풍선 스타일 (둥글고 모던하게)
+        bubbleBackground: '#f1f5f9', // 봇 배경 (Slate-100)
+        bubbleBorderRadius: 20, 
+        bubbleFromUserBackground: '#0078D4', // 유저 배경
+        bubbleFromUserBorderRadius: 20,
+        bubbleFromUserTextColor: 'White',
+        
+        // 폰트 & 여백
+        rootHeight: '100%',
+        rootWidth: '100%',
+        backgroundColor: 'transparent', // 배경 투명 (Glass 효과 위해)
+        
+        // 기타 UI 숨김
+        hideUploadButton: true, // 파일 업로드 버튼 숨김 (깔끔하게)
+      };
+
+      // DirectLine 연결 생성
+      // 만약 Secret이 없다면 토큰 발급 로직이 필요합니다.
+      // 일단 Secret을 직접 넣는 방식으로 예시를 듭니다.
+      const directLine = window.WebChat.createDirectLine({
+        token: directLineSecret 
+        // 혹은 secret: directLineSecret (토큰 교환 없이 바로 쓸 때)
+      });
+
+      window.WebChat.renderWebChat(
+        {
+          directLine: directLine,
+          styleOptions: styleOptions,
+          locale: 'ko-KR' // 한국어 설정
+        },
+        document.getElementById('webchat')
+      );
     }
   </script>
   
