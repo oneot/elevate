@@ -672,15 +672,16 @@
             w-[380px] h-[650px] max-w-[calc(100vw-2rem)] max-h-[80vh]
             bg-white/80 backdrop-blur-2xl border border-white/60
             rounded-[2.5rem] shadow-2xl shadow-blue-900/15
-            flex flex-col overflow-hidden
+            flex flex-col overflow-hidden relative
             origin-bottom-right transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)]
             transform scale-0 opacity-0 invisible translate-y-12
           ">
           
           <div class="h-20 bg-gradient-to-r from-ms-blue/90 to-cyan-500/90 backdrop-blur-md flex items-center justify-between px-6 shrink-0 shadow-sm z-10">
             <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg text-2xl">🤖</div>
               <div class="text-white">
-                <h3 class="font-bold text-base tracking-wide">Elevate 무물 에이전트</h3>
+                <h3 class="font-bold text-base tracking-wide">Elevate Agent</h3>
                 <div class="flex items-center gap-1.5 opacity-80">
                   <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
                   <span class="text-xs font-medium">Online</span>
@@ -692,7 +693,15 @@
             </button>
           </div>
     
-          <div id="webchat" class="flex-1 bg-white/40 overflow-y-auto relative" role="main"></div>
+          <div id="webchat" class="flex-1 bg-white/40 overflow-y-auto relative z-0" role="main"></div>
+  
+          <div id="typing-overlay" class="absolute bottom-[80px] left-6 z-20 hidden transition-opacity duration-300">
+            <div class="typing-indicator bg-white/90 backdrop-blur-sm shadow-md border border-white/50 px-4 py-3 rounded-2xl flex gap-1.5">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          </div>
         </div>
     
         <button 
@@ -707,7 +716,7 @@
             flex items-center justify-center
             transition-all duration-300 hover:scale-110 active:scale-95
             hover:shadow-blue-500/50 hover:border-white/80
-            animate-float-slow
+            animate-float-slow z-50
           "
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" 
@@ -721,6 +730,8 @@
           </span>
         </button>
       </div>
+  
+      <script crossorigin src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
     
       <style>
         #webchat::-webkit-scrollbar { width: 6px; }
@@ -761,16 +772,31 @@
         }
         .webchat__basic-transcript__text { font-family: 'Pretendard', sans-serif !important; }
         
-        /* 아바타 이미지 영역 숨김 (혹시 모를 여백 제거) */
+        /* 대화창 내부 아바타 숨김 */
         .webchat__row.webchat__from-bot .webchat__avatar,
         .webchat__row.webchat__from-user .webchat__avatar {
            display: none !important;
+        }
+  
+        /* 🌟 Thinking Indicator Animation Style */
+        .typing-dot { 
+          width: 8px; height: 8px; 
+          background-color: #0078D4; 
+          border-radius: 50%; 
+          animation: typing-bounce 1.4s infinite ease-in-out both; 
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing-bounce { 
+          0%, 80%, 100% { transform: scale(0); opacity: 0.5; } 
+          40% { transform: scale(1); opacity: 1; } 
         }
       </style>
     
       <script>
         const chatWindow = document.getElementById('chat-window');
         const toggleBtn = document.getElementById('chat-toggle-btn');
+        const typingOverlay = document.getElementById('typing-overlay');
         let isChatLoaded = false;
     
         function toggleChat() {
@@ -788,24 +814,43 @@
         }
     
         async function loadChat() {
-          // Secret Key (보내주신 키 적용)
+          // Secret Key (이전에 주신 키 유지)
           const directLineSecret = 'rgfpuYupIP27STK2v0C7jCiBORlq63G3nyUj9Zan58rAp3HAWuSCJQQJ99CBACi5YpzAArohAAABAZBS2kCv.BHfCuXJnH5X8ciQJPMrhYemii9NlbNfkuOoGSIerwxznceY2y0uiJQQJ99CBACi5YpzAArohAAABAZBS1asc';
     
-          // 봇에게 "시작(startConversation)" 이벤트를 보내는 스토어
-          const store = window.WebChat.createStore({}, ({ dispatch }) => next => action => {
+          // 1. 미들웨어: 기본 'Typing' 말풍선 숨기기 (오버레이로 대체)
+          const activityMiddleware = () => next => card => {
+            if (card.activity.type === 'typing') return () => null;
+            return next(card);
+          };
+  
+          // 2. 스토어: 봇의 상태를 감시 -> Typing 중이면 오버레이 표시
+          const store = window.WebChat.createStore({}, ({ dispatch, getState }) => next => action => {
+            const result = next(action);
+            
+            // 상태 확인
+            const state = getState();
+            const isBotTyping = state.typing && state.typing.some(t => t.role === 'bot');
+            
+            // 오버레이 토글
+            if (isBotTyping) {
+              typingOverlay.classList.remove('hidden');
+            } else {
+              typingOverlay.classList.add('hidden');
+            }
+            
             if (action.type === 'DIRECT_LINE/CONNECT_FULFILLED') {
               dispatch({
                 type: 'WEB_CHAT/SEND_EVENT',
                 payload: { name: 'startConversation', type: 'event' }
               });
             }
-            return next(action);
+            return result;
           });
     
           const styleOptions = {
             accent: '#0078D4',
             
-            // 🚫 아바타(프로필) 모두 숨김 (null 설정)
+            // 아바타 숨김
             botAvatarInitials: null, 
             botAvatarImage: null,
             userAvatarInitials: null,
@@ -831,6 +876,7 @@
               directLine: directLine, 
               store: store, 
               styleOptions: styleOptions, 
+              activityMiddleware: activityMiddleware, // 미들웨어 추가
               locale: 'ko-KR' 
             },
             document.getElementById('webchat')
