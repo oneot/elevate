@@ -765,53 +765,73 @@
     </style>
   
     <script>
-      const chatWindow = document.getElementById('chat-window');
-      const toggleBtn = document.getElementById('chat-toggle-btn');
-      let isChatLoaded = false;
-  
-      function toggleChat() {
-        const isClosed = chatWindow.classList.contains('invisible');
-        if (isClosed) {
-          chatWindow.classList.remove('invisible', 'scale-0', 'opacity-0', 'translate-y-12');
-          chatWindow.classList.add('scale-100', 'opacity-100', 'translate-y-0');
-          toggleBtn.classList.add('chat-open');
-          if (!isChatLoaded) { loadChat(); isChatLoaded = true; }
-        } else {
-          chatWindow.classList.add('invisible', 'scale-0', 'opacity-0', 'translate-y-12');
-          chatWindow.classList.remove('scale-100', 'opacity-100', 'translate-y-0');
-          toggleBtn.classList.remove('chat-open');
+        const chatWindow = document.getElementById('chat-window');
+        const toggleBtn = document.getElementById('chat-toggle-btn');
+        let isChatLoaded = false;
+    
+        function toggleChat() {
+          const isClosed = chatWindow.classList.contains('invisible');
+          if (isClosed) {
+            chatWindow.classList.remove('invisible', 'scale-0', 'opacity-0', 'translate-y-12');
+            chatWindow.classList.add('scale-100', 'opacity-100', 'translate-y-0');
+            toggleBtn.classList.add('chat-open');
+            if (!isChatLoaded) { loadChat(); isChatLoaded = true; }
+          } else {
+            chatWindow.classList.add('invisible', 'scale-0', 'opacity-0', 'translate-y-12');
+            chatWindow.classList.remove('scale-100', 'opacity-100', 'translate-y-0');
+            toggleBtn.classList.remove('chat-open');
+          }
         }
-      }
-  
-      async function loadChat() {
-        // 아까 확인해주신 Secret Key를 그대로 적용해두었습니다.
-        const directLineSecret = 'rgfpuYupIP27STK2v0C7jCiBORlq63G3nyUj9Zan58rAp3HAWuSCJQQJ99CBACi5YpzAArohAAABAZBS2kCv.BHfCuXJnH5X8ciQJPMrhYemii9NlbNfkuOoGSIerwxznceY2y0uiJQQJ99CBACi5YpzAArohAAABAZBS1asc'; 
-  
-        const styleOptions = {
-          accent: '#0078D4',
-          botAvatarInitials: 'AI',
-          userAvatarInitials: 'ME',
-          botAvatarBackgroundColor: '#0078D4',
-          userAvatarBackgroundColor: '#1e293b',
-          bubbleBackground: '#f1f5f9',
-          bubbleBorderRadius: 20, 
-          bubbleFromUserBackground: '#0078D4',
-          bubbleFromUserBorderRadius: 20,
-          bubbleFromUserTextColor: 'White',
-          rootHeight: '100%',
-          rootWidth: '100%',
-          backgroundColor: 'transparent',
-          hideUploadButton: true,
-        };
-  
-        const directLine = window.WebChat.createDirectLine({ token: directLineSecret });
-  
-        window.WebChat.renderWebChat(
-          { directLine: directLine, styleOptions: styleOptions, locale: 'ko-KR' },
-          document.getElementById('webchat')
-        );
-      }
-    </script>
+    
+        async function loadChat() {
+          // Secret Key 확인
+          const directLineSecret = 'rgfpuYupIP27STK2v0C7jCiBORlq63G3nyUj9Zan58rAp3HAWuSCJQQJ99CBACi5YpzAArohAAABAZBS2kCv.BHfCuXJnH5X8ciQJPMrhYemii9NlbNfkuOoGSIerwxznceY2y0uiJQQJ99CBACi5YpzAArohAAABAZBS1asc'; 
+    
+          // ⭐ 봇에게 "시작(startConversation)" 이벤트를 보내는 스토어 생성
+          const store = window.WebChat.createStore({}, ({ dispatch }) => next => action => {
+            if (action.type === 'DIRECT_LINE/CONNECT_FULFILLED') {
+              // 봇과 연결이 성공하면 'startConversation' 이벤트를 발송
+              dispatch({
+                type: 'WEB_CHAT/SEND_EVENT',
+                payload: {
+                  name: 'startConversation',
+                  type: 'event'
+                }
+              });
+            }
+            return next(action);
+          });
+    
+          const styleOptions = {
+            accent: '#0078D4',
+            botAvatarInitials: 'AI',
+            userAvatarInitials: 'ME',
+            botAvatarBackgroundColor: '#0078D4',
+            userAvatarBackgroundColor: '#1e293b',
+            bubbleBackground: '#f1f5f9',
+            bubbleBorderRadius: 20, 
+            bubbleFromUserBackground: '#0078D4',
+            bubbleFromUserBorderRadius: 20,
+            bubbleFromUserTextColor: 'White',
+            rootHeight: '100%',
+            rootWidth: '100%',
+            backgroundColor: 'transparent',
+            hideUploadButton: true,
+          };
+    
+          const directLine = window.WebChat.createDirectLine({ token: directLineSecret });
+    
+          window.WebChat.renderWebChat(
+            { 
+              directLine: directLine, 
+              store: store, // ⭐ 위에서 만든 store를 여기에 연결!
+              styleOptions: styleOptions, 
+              locale: 'ko-KR' 
+            },
+            document.getElementById('webchat')
+          );
+        }
+      </script>
   
 </body>
 </html>
