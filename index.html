@@ -672,7 +672,7 @@
             w-[380px] h-[650px] max-w-[calc(100vw-2rem)] max-h-[80vh]
             bg-white/80 backdrop-blur-2xl border border-white/60
             rounded-[2.5rem] shadow-2xl shadow-blue-900/15
-            flex flex-col overflow-hidden relative
+            flex flex-col overflow-hidden
             origin-bottom-right transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)]
             transform scale-0 opacity-0 invisible translate-y-12
           ">
@@ -693,7 +693,7 @@
             </button>
           </div>
     
-          <div id="webchat" class="flex-1 bg-white/40 overflow-y-auto relative z-0" role="main"></div>
+          <div id="webchat" class="flex-1 bg-white/40 overflow-y-auto relative" role="main"></div>
         </div>
     
         <button 
@@ -708,24 +708,22 @@
             flex items-center justify-center
             transition-all duration-300 hover:scale-110 active:scale-95
             hover:shadow-blue-500/50 hover:border-white/80
-            animate-float-slow z-50
+            animate-float-slow
           "
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" 
             class="w-7 h-7 transition-transform duration-300 group-hover:rotate-12 drop-shadow-md">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
           </svg>
+          
           <span class="absolute top-0 right-0 flex h-4 w-4">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-4 w-4 bg-green-500 border-2 border-white"></span>
           </span>
         </button>
       </div>
-  
-      <script crossorigin src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
     
       <style>
-        /* 1. 기본 스타일 */
         #webchat::-webkit-scrollbar { width: 6px; }
         #webchat::-webkit-scrollbar-track { background: transparent; }
         #webchat::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
@@ -743,51 +741,31 @@
           border-color: transparent;
         }
     
-        .webchat__send-box { background: rgba(255,255,255,0.8) !important; backdrop-filter: blur(10px); border-top: 1px solid rgba(0,0,0,0.05); margin: 0 !important; padding: 10px !important; }
-        .webchat__send-box__main { border-radius: 999px !important; background: #f1f5f9 !important; border: 1px solid transparent !important; transition: all 0.2s; }
-        .webchat__send-box__main:focus-within { background: white !important; border-color: #0078D4 !important; box-shadow: 0 0 0 3px rgba(0,120,212,0.1); }
-        
-        /* 폰트 설정 */
+        /* SDK Custom Style */
+        .webchat__send-box {
+          background: rgba(255,255,255,0.8) !important;
+          backdrop-filter: blur(10px);
+          border-top: 1px solid rgba(0,0,0,0.05);
+          margin: 0 !important;
+          padding: 10px !important;
+        }
+        .webchat__send-box__main {
+          border-radius: 999px !important;
+          background: #f1f5f9 !important;
+          border: 1px solid transparent !important;
+          transition: all 0.2s;
+        }
+        .webchat__send-box__main:focus-within {
+          background: white !important;
+          border-color: #0078D4 !important;
+          box-shadow: 0 0 0 3px rgba(0,120,212,0.1);
+        }
         .webchat__basic-transcript__text { font-family: 'Pretendard', sans-serif !important; }
         
-        /* 🚫 아바타 숨김 */
+        /* 아바타 이미지 영역 숨김 (혹시 모를 여백 제거) */
         .webchat__row.webchat__from-bot .webchat__avatar,
         .webchat__row.webchat__from-user .webchat__avatar {
            display: none !important;
-        }
-  
-        /* ========================================================= */
-        /* 🚨 [핵심] 마크다운(Markdown) 스타일 복구 CSS */
-        /* ========================================================= */
-        /* 문단 간격 */
-        .webchat__basic-transcript__text p {
-          margin-bottom: 0.8rem !important; 
-          line-height: 1.6 !important;
-        }
-        /* 리스트 (점, 숫자) 복구 */
-        .webchat__basic-transcript__text ul, 
-        .webchat__basic-transcript__text ol {
-          margin-left: 1.5rem !important;   /* 들여쓰기 */
-          margin-bottom: 0.8rem !important;
-          list-style-position: outside !important;
-        }
-        .webchat__basic-transcript__text ul { list-style-type: disc !important; }   /* • 점 표시 */
-        .webchat__basic-transcript__text ol { list-style-type: decimal !important; } /* 1. 숫자 표시 */
-        
-        /* 리스트 항목 간격 */
-        .webchat__basic-transcript__text li { margin-bottom: 0.3rem !important; }
-  
-        /* 굵은 글씨(Bold) 복구 */
-        .webchat__basic-transcript__text strong, 
-        .webchat__basic-transcript__text b {
-          font-weight: 700 !important;
-          color: #1e293b !important;
-        }
-  
-        /* 링크 스타일 */
-        .webchat__basic-transcript__text a {
-          color: #0078D4 !important;
-          text-decoration: underline !important;
         }
       </style>
     
@@ -811,14 +789,10 @@
         }
     
         async function loadChat() {
+          // Secret Key (보내주신 키 적용)
           const directLineSecret = 'rgfpuYupIP27STK2v0C7jCiBORlq63G3nyUj9Zan58rAp3HAWuSCJQQJ99CBACi5YpzAArohAAABAZBS2kCv.BHfCuXJnH5X8ciQJPMrhYemii9NlbNfkuOoGSIerwxznceY2y0uiJQQJ99CBACi5YpzAArohAAABAZBS1asc';
     
-          // 라이브러리 로드 확인
-          if (!window.WebChat) {
-            alert('채팅 라이브러리를 불러오지 못했습니다. 새로고침 해주세요.');
-            return;
-          }
-  
+          // 봇에게 "시작(startConversation)" 이벤트를 보내는 스토어
           const store = window.WebChat.createStore({}, ({ dispatch }) => next => action => {
             if (action.type === 'DIRECT_LINE/CONNECT_FULFILLED') {
               dispatch({
@@ -832,12 +806,13 @@
           const styleOptions = {
             accent: '#0078D4',
             
-            // ⚠️ 중요: null 대신 빈 문자열("") 사용 (오류 방지)
-            botAvatarInitials: "", 
-            botAvatarImage: "",
-            userAvatarInitials: "",
-            userAvatarImage: "",
+            // 🚫 아바타(프로필) 모두 숨김 (null 설정)
+            botAvatarInitials: null, 
+            botAvatarImage: null,
+            userAvatarInitials: null,
+            userAvatarImage: null,
     
+            // 말풍선 스타일
             bubbleBackground: '#f1f5f9',
             bubbleBorderRadius: 20, 
             bubbleFromUserBackground: '#0078D4',
@@ -850,20 +825,17 @@
             hideUploadButton: true,
           };
     
-          try {
-            const directLine = window.WebChat.createDirectLine({ token: directLineSecret });
-            window.WebChat.renderWebChat(
-              { 
-                directLine: directLine, 
-                store: store, 
-                styleOptions: styleOptions, 
-                locale: 'ko-KR' 
-              },
-              document.getElementById('webchat')
-            );
-          } catch (err) {
-            console.error(err);
-          }
+          const directLine = window.WebChat.createDirectLine({ token: directLineSecret });
+    
+          window.WebChat.renderWebChat(
+            { 
+              directLine: directLine, 
+              store: store, 
+              styleOptions: styleOptions, 
+              locale: 'ko-KR' 
+            },
+            document.getElementById('webchat')
+          );
         }
       </script>
   
