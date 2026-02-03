@@ -679,7 +679,7 @@
         
         <div class="h-20 bg-gradient-to-r from-ms-blue/90 to-cyan-500/90 backdrop-blur-md flex items-center justify-between px-6 shrink-0 shadow-sm z-10">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg text-xl">🤖</div>
+            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg text-2xl">🤖</div>
             <div class="text-white">
               <h3 class="font-bold text-base tracking-wide">Elevate AI</h3>
               <div class="flex items-center gap-1.5 opacity-80">
@@ -701,7 +701,6 @@
         onclick="toggleChat()"
         class="
           group relative w-16 h-16 rounded-full 
-          /* 투명한 블루 그라데이션 */
           bg-gradient-to-tr from-[#0078D4]/85 to-[#00C7F4]/85 backdrop-blur-md
           border border-white/40
           text-white 
@@ -762,76 +761,83 @@
         box-shadow: 0 0 0 3px rgba(0,120,212,0.1);
       }
       .webchat__basic-transcript__text { font-family: 'Pretendard', sans-serif !important; }
+      
+      /* 아바타 이미지 둥글게 처리 */
+      .webchat__avatar__image { border-radius: 50%; }
     </style>
   
     <script>
-        const chatWindow = document.getElementById('chat-window');
-        const toggleBtn = document.getElementById('chat-toggle-btn');
-        let isChatLoaded = false;
-    
-        function toggleChat() {
-          const isClosed = chatWindow.classList.contains('invisible');
-          if (isClosed) {
-            chatWindow.classList.remove('invisible', 'scale-0', 'opacity-0', 'translate-y-12');
-            chatWindow.classList.add('scale-100', 'opacity-100', 'translate-y-0');
-            toggleBtn.classList.add('chat-open');
-            if (!isChatLoaded) { loadChat(); isChatLoaded = true; }
-          } else {
-            chatWindow.classList.add('invisible', 'scale-0', 'opacity-0', 'translate-y-12');
-            chatWindow.classList.remove('scale-100', 'opacity-100', 'translate-y-0');
-            toggleBtn.classList.remove('chat-open');
+      const chatWindow = document.getElementById('chat-window');
+      const toggleBtn = document.getElementById('chat-toggle-btn');
+      let isChatLoaded = false;
+  
+      function toggleChat() {
+        const isClosed = chatWindow.classList.contains('invisible');
+        if (isClosed) {
+          chatWindow.classList.remove('invisible', 'scale-0', 'opacity-0', 'translate-y-12');
+          chatWindow.classList.add('scale-100', 'opacity-100', 'translate-y-0');
+          toggleBtn.classList.add('chat-open');
+          if (!isChatLoaded) { loadChat(); isChatLoaded = true; }
+        } else {
+          chatWindow.classList.add('invisible', 'scale-0', 'opacity-0', 'translate-y-12');
+          chatWindow.classList.remove('scale-100', 'opacity-100', 'translate-y-0');
+          toggleBtn.classList.remove('chat-open');
+        }
+      }
+  
+      async function loadChat() {
+        // Secret Key
+        const directLineSecret = 'rgfpuYupIP27STK2v0C7jCiBORlq63G3nyUj9Zan58rAp3HAWuSCJQQJ99CBACi5YpzAArohAAABAZBS2kCv.BHfCuXJnH5X8ciQJPMrhYemii9NlbNfkuOoGSIerwxznceY2y0uiJQQJ99CBACi5YpzAArohAAABAZBS1asc'; 
+  
+        // 봇에게 "시작(startConversation)" 이벤트를 보내는 스토어
+        const store = window.WebChat.createStore({}, ({ dispatch }) => next => action => {
+          if (action.type === 'DIRECT_LINE/CONNECT_FULFILLED') {
+            dispatch({
+              type: 'WEB_CHAT/SEND_EVENT',
+              payload: { name: 'startConversation', type: 'event' }
+            });
           }
-        }
-    
-        async function loadChat() {
-          // Secret Key 확인
-          const directLineSecret = 'rgfpuYupIP27STK2v0C7jCiBORlq63G3nyUj9Zan58rAp3HAWuSCJQQJ99CBACi5YpzAArohAAABAZBS2kCv.BHfCuXJnH5X8ciQJPMrhYemii9NlbNfkuOoGSIerwxznceY2y0uiJQQJ99CBACi5YpzAArohAAABAZBS1asc'; 
-    
-          // ⭐ 봇에게 "시작(startConversation)" 이벤트를 보내는 스토어 생성
-          const store = window.WebChat.createStore({}, ({ dispatch }) => next => action => {
-            if (action.type === 'DIRECT_LINE/CONNECT_FULFILLED') {
-              // 봇과 연결이 성공하면 'startConversation' 이벤트를 발송
-              dispatch({
-                type: 'WEB_CHAT/SEND_EVENT',
-                payload: {
-                  name: 'startConversation',
-                  type: 'event'
-                }
-              });
-            }
-            return next(action);
-          });
-    
-          const styleOptions = {
-            accent: '#0078D4',
-            botAvatarInitials: 'AI',
-            userAvatarInitials: 'ME',
-            botAvatarBackgroundColor: '#0078D4',
-            userAvatarBackgroundColor: '#1e293b',
-            bubbleBackground: '#f1f5f9',
-            bubbleBorderRadius: 20, 
-            bubbleFromUserBackground: '#0078D4',
-            bubbleFromUserBorderRadius: 20,
-            bubbleFromUserTextColor: 'White',
-            rootHeight: '100%',
-            rootWidth: '100%',
-            backgroundColor: 'transparent',
-            hideUploadButton: true,
-          };
-    
-          const directLine = window.WebChat.createDirectLine({ token: directLineSecret });
-    
-          window.WebChat.renderWebChat(
-            { 
-              directLine: directLine, 
-              store: store, // ⭐ 위에서 만든 store를 여기에 연결!
-              styleOptions: styleOptions, 
-              locale: 'ko-KR' 
-            },
-            document.getElementById('webchat')
-          );
-        }
-      </script>
+          return next(action);
+        });
+  
+        const styleOptions = {
+          accent: '#0078D4',
+          
+          // 🤖 AI 프로필 설정 (이모지)
+          botAvatarInitials: '🤖', 
+          botAvatarBackgroundColor: '#0078D4', // AI 배경색 (파랑)
+          
+          // 🧑‍🎓 사용자(ME) 프로필 설정 (이미지 URL 적용)
+          userAvatarImage: 'https://microsoft-elevate.com/assets/student.png',
+          userAvatarInitials: '', // 이미지가 없을 때를 대비한 공백 (이미지 우선)
+          userAvatarBackgroundColor: '#1e293b', // 로딩 전 배경색
+  
+          // 말풍선 스타일
+          bubbleBackground: '#f1f5f9',
+          bubbleBorderRadius: 20, 
+          bubbleFromUserBackground: '#0078D4',
+          bubbleFromUserBorderRadius: 20,
+          bubbleFromUserTextColor: 'White',
+          
+          rootHeight: '100%',
+          rootWidth: '100%',
+          backgroundColor: 'transparent',
+          hideUploadButton: true,
+        };
+  
+        const directLine = window.WebChat.createDirectLine({ token: directLineSecret });
+  
+        window.WebChat.renderWebChat(
+          { 
+            directLine: directLine, 
+            store: store, 
+            styleOptions: styleOptions, 
+            locale: 'ko-KR' 
+          },
+          document.getElementById('webchat')
+        );
+      }
+    </script>
   
 </body>
 </html>
