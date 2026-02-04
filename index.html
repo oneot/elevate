@@ -793,38 +793,15 @@
           const directLineSecret = 'REPLACE_MY_SECRET_KEY';
     
           // 봇에게 "시작(startConversation)" 이벤트를 보내는 스토어
-          const store = window.WebChat.createStore(
-            {},
-            ({ dispatch }) => next => action => {
-          
-              // ✅ 1. 연결되면 startConversation 이벤트 전송 (기존 로직 유지)
-              if (action.type === 'DIRECT_LINE/CONNECT_FULFILLED') {
-                dispatch({
-                  type: 'WEB_CHAT/SEND_EVENT',
-                  payload: { name: 'startConversation', type: 'event' }
-                });
-              }
-          
-              // ✅ 2. 봇 메시지 들어올 때 markdown 강제
-              if (action.type === 'DIRECT_LINE/INCOMING_ACTIVITY') {
-                const activity = action.payload?.activity;
-          
-                if (
-                  activity &&
-                  activity.from?.role === 'bot' &&
-                  activity.text &&
-                  activity.textFormat !== 'markdown'
-                ) {
-                  action.payload.activity = {
-                    ...activity,
-                    textFormat: 'markdown'
-                  };
-                }
-              }
-          
-              return next(action);
+          const store = window.WebChat.createStore({}, ({ dispatch }) => next => action => {
+            if (action.type === 'DIRECT_LINE/CONNECT_FULFILLED') {
+              dispatch({
+                type: 'WEB_CHAT/SEND_EVENT',
+                payload: { name: 'startConversation', type: 'event' }
+              });
             }
-          );
+            return next(action);
+          });
     
           const styleOptions = {
             accent: '#0078D4',
