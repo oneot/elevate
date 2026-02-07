@@ -7,10 +7,9 @@ const PostGrid = ({ posts = [] }) => {
   }
 
   return (
-    // Use auto-fit with a larger min width so wide screens show fewer, wider cards (approx 3 columns on large displays)
     <div
       className="grid gap-6"
-      style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}
+      style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}
     >
       {posts.map((p) => (
         <div key={p.id || p.slug} className="h-full">

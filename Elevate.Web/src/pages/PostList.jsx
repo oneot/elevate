@@ -24,7 +24,8 @@ export default function PostList() {
   const { category } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const pageParam = parseInt(searchParams.get('page') || '1', 10);
-  const PAGE_SIZE = 9;
+  // Align page size with typical 5-column desktop grid (2 full rows)
+  const PAGE_SIZE = 10;
 
   // Parse selected tags from URL query param
   const tagsParam = searchParams.get('tags') || '';
@@ -177,11 +178,11 @@ export default function PostList() {
 
         <section className="w-full lg:col-span-10">
           {loading && <div className="text-center py-8">로딩 중...</div>}
-          {!loading && selectedTags.length > 0 && (
-            <div className="mb-4 text-sm text-slate-600">
-              {filteredPosts.length}개의 게시글이 선택된 태그와 일치합니다.
-            </div>
-          )}
+          <div className="mb-4 text-sm text-slate-600 min-h-[24px] flex items-center">
+            {!loading && selectedTags.length > 0 && (
+              <span>{filteredPosts.length}개의 게시글이 선택된 태그와 일치합니다.</span>
+            )}
+          </div>
           <PostGrid posts={posts} />
           <Pagination currentPage={pageParam} totalPages={totalPages} onPageChange={handlePageChange} />
         </section>
