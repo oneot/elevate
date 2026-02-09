@@ -1,4 +1,4 @@
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -82,14 +82,14 @@ const PostDetail = () => {
             {/* Post Content */}
             <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 py-12">
                 <div className="w-full max-w-4xl">
-                    <div className="clean-card rounded-[3rem] p-12 bg-white/80 backdrop-blur-xl shadow-2xl border border-white/50">
+                    <div className="clean-card no-hover rounded-[3rem] p-12 bg-white/80 backdrop-blur-xl shadow-2xl border border-white/50">
                         {/* Breadcrumb */}
                         <div className="text-sm text-slate-500 mb-6">
-                            <span>Home</span>
+                            <Link to="/" className="hover:text-ms-blue transition-colors">Home</Link>
                             <span className="mx-2">/</span>
-                            <span>Blog</span>
+                            <Link to="/blog" className="hover:text-ms-blue transition-colors">Blog</Link>
                             <span className="mx-2">/</span>
-                            <span>{categoryDisplayName}</span>
+                            <Link to={`/blog/${normalizedCategory}`} className="hover:text-ms-blue transition-colors">{categoryDisplayName}</Link>
                         </div>
 
                         {loading && <div className="text-center py-8 text-slate-500">로딩 중...</div>}
