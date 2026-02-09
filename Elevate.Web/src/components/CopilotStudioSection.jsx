@@ -12,7 +12,7 @@ const CopilotStudioSection = () => {
                         <h2 className="text-4xl lg:text-5xl font-bold mb-6 text-slate-900">
                             대한민국 AI Skilling,<br />
                             Copilot Agent로 <br className="md:hidden" />
-                            시작합니다!
+                            시작합니다!!
                         </h2>
                         <p className="text-slate-600 text-base mb-10 leading-relaxed font-medium">
                             학생들과 교육자들이 직접 AI 에이전트를 만드는 해커톤{' '}
