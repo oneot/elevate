@@ -9,6 +9,16 @@
   --color-ms-slate: #F3F5F8;
 }
 
+/* 부드러운 스크롤 효과 추가 */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 네비게이션 바가 제목을 가리지 않도록 여백 설정 */
+section[id] {
+  scroll-margin-top: 80px; /* Navigation 높이인 h-20(약 80px)만큼 띄워줍니다 */
+}
+
 body {
   background-color: #F8FAFC;
   color: #1e293b;
