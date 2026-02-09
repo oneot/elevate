@@ -1,9 +1,9 @@
 import { Routes, Route, Outlet } from 'react-router-dom';
-import Home from './pages/home';
+import Home from './pages/Home';
 import Blog from './pages/Blog';
 import PostList from './pages/PostList';
 import PostDetail from './pages/PostDetail';
-import NotFound from './pages/notfound';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
