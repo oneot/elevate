@@ -39,6 +39,17 @@ body {
   border-color: #0078D4;
 }
 
+.clean-card.no-hover {
+  transition: none !important;
+}
+
+.clean-card.no-hover:hover {
+  background: rgba(255, 255, 255, 0.7);
+  transform: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
 /* Background Blobs */
 .pastel-bg {
   position: fixed;
