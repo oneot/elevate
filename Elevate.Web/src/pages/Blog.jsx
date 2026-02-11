@@ -5,21 +5,23 @@ import copilotLogo from '../assets/NewMicrosoft365Icons/copilot-logo-500.png';
 import m365CopilotLogo from '../assets/NewMicrosoft365Icons/m365-copilot-logo-500.png';
 import teamsLogo from '../assets/NewMicrosoft365Icons/Teams_512.png';
 import minecraftLogo from '../assets/NewMicrosoft365Icons/minecraft.png';
+import excelLogo from '../assets/NewMicrosoft365Icons/Excel_512.png';
+import onenoteLogo from '../assets/NewMicrosoft365Icons/OneNote_512.png';
 
 const Blog = () => {
     const cards = [
+        {
+            title: 'M365 개요',
+            excerpt: 'M365 도구로 교육을 혁신하는 실전 가이드와 사례.',
+            icon: <img src={m365CopilotLogo} alt="Microsoft 365" className="h-10 w-10 object-contain rounded-md" />,
+            to: '/blog/m365',
+            ctaLabel: '자세히 보기'
+        },
         {
             title: 'Copilot',
             excerpt: '교실과 업무에서 Copilot 활용 사례와 팁을 공유합니다.',
             icon: <img src={copilotLogo} alt="Copilot" className="h-10 w-10 object-contain rounded-md" />,
             to: '/blog/copilot',
-            ctaLabel: '자세히 보기'
-        },
-        {
-            title: 'Microsoft 365',
-            excerpt: 'M365 도구로 교육을 혁신하는 실전 가이드와 사례.',
-            icon: <img src={m365CopilotLogo} alt="Microsoft 365" className="h-10 w-10 object-contain rounded-md" />,
-            to: '/blog/m365',
             ctaLabel: '자세히 보기'
         },
         {
@@ -34,6 +36,20 @@ const Blog = () => {
             excerpt: '교육용 Minecraft 프로젝트와 수업 사례를 소개합니다.',
             icon: <img src={minecraftLogo} alt="Minecraft EDU" className="h-10 w-10 object-contain rounded-md" />,
             to: '/blog/minecraft',
+            ctaLabel: '자세히 보기'
+        },
+        {
+            title: 'Excel',
+            excerpt: '교실과 실무에서 유용한 Excel 팁과 템플릿을 공유합니다.',
+            icon: <img src={excelLogo} alt="Excel" className="h-10 w-10 object-contain rounded-md" />,
+            to: '/blog/excel',
+            ctaLabel: '자세히 보기'
+        },
+        {
+            title: 'OneNote',
+            excerpt: '교수·학습 기록과 협업을 돕는 OneNote 활용 사례.',
+            icon: <img src={onenoteLogo} alt="OneNote" className="h-10 w-10 object-contain rounded-md" />,
+            to: '/blog/onenote',
             ctaLabel: '자세히 보기'
         }
     ];

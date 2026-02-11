@@ -1,41 +1,15 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const PostCard = ({ post }) => {
   const { id, slug, title, excerpt, imageUrl, author, publishedAt, likes = 0, comments = 0, category, tags = [] } = post;
   const safeCategory = category || 'all';
   const to = `/blog/${safeCategory}/${slug || id}`;
-  const titleWrapRef = useRef(null);
-  const titleInnerRef = useRef(null);
-  const [needsScroll, setNeedsScroll] = useState(false);
-  const [translate, setTranslate] = useState(0);
-  const [hovering, setHovering] = useState(false);
-  const excerptWrapRef = useRef(null);
-  const excerptInnerRef = useRef(null);
-  const [needsScrollExcerpt, setNeedsScrollExcerpt] = useState(false);
-  const [translateExcerpt, setTranslateExcerpt] = useState(0);
-  const [hoveringExcerpt, setHoveringExcerpt] = useState(false);
   const [showAllTags, setShowAllTags] = useState(false);
   const moreRef = useRef(null);
   const cardRef = useRef(null);
 
-  useEffect(() => {
-    const wrap = titleWrapRef.current;
-    const inner = titleInnerRef.current;
-    if (!wrap || !inner) return;
-    const overflow = inner.scrollWidth > wrap.clientWidth;
-    setNeedsScroll(overflow);
-    setTranslate(wrap.clientWidth - inner.scrollWidth);
-  }, [title]);
-
-  useEffect(() => {
-    const wrap = excerptWrapRef.current;
-    const inner = excerptInnerRef.current;
-    if (!wrap || !inner) return;
-    const overflow = inner.scrollWidth > wrap.clientWidth;
-    setNeedsScrollExcerpt(overflow);
-    setTranslateExcerpt(wrap.clientWidth - inner.scrollWidth);
-  }, [excerpt]);
+  // Removed horizontal scroll-on-hover animations for title and excerpt
 
   return (
     <article
@@ -53,52 +27,27 @@ const PostCard = ({ post }) => {
           </div>
 
           <div className="flex-1 mt-4 flex flex-col">
-            <div
-              ref={titleWrapRef}
-              onMouseEnter={() => setHovering(true)}
-              onMouseLeave={() => setHovering(false)}
-              className="overflow-hidden"
-              style={{ minHeight: 48 }}
-            >
-              <h3 className="text-lg font-semibold text-slate-900" style={{ whiteSpace: 'nowrap', overflow: 'hidden' }}>
-                <span
-                  ref={titleInnerRef}
-                  className="title-text inline-block"
-                  style={{
-                    display: 'inline-block',
-                    transform: hovering && needsScroll ? `translateX(${translate}px)` : 'translateX(0)',
-                    transition: hovering && needsScroll ? `transform ${Math.min(8, Math.max(1, Math.abs(translate) / 60))}s linear` : 'transform 0.2s ease',
-                  }}
-                >
-                  {title}
-                </span>
-              </h3>
-            </div>
-            <div
-              ref={excerptWrapRef}
-              onMouseEnter={() => setHoveringExcerpt(true)}
-              onMouseLeave={() => setHoveringExcerpt(false)}
-              className="text-sm text-slate-600 mt-2 overflow-hidden"
-              style={{ maxHeight: 54 }}
-            >
-              <p
-                ref={excerptInnerRef}
-                className="m-0"
+            <div className="overflow-hidden" style={{ minHeight: 48 }}>
+              <h3
+                className="text-lg font-semibold text-slate-900"
                 style={{
-                  whiteSpace: 'nowrap',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
                   overflow: 'hidden',
-                  display: 'inline-block',
-                  transform: hoveringExcerpt && needsScrollExcerpt ? `translateX(${translateExcerpt}px)` : 'translateX(0)',
-                  transition: hoveringExcerpt && needsScrollExcerpt ? `transform ${Math.min(8, Math.max(1, Math.abs(translateExcerpt) / 60))}s linear` : 'transform 0.2s ease',
+                  wordBreak: 'break-word'
                 }}
               >
-                {excerpt}
-              </p>
+                {title}
+              </h3>
+            </div>
+            <div className="text-sm text-slate-600 mt-2 overflow-hidden" style={{ maxHeight: 54 }}>
+              <p className="m-0" style={{ whiteSpace: 'normal' }}>{excerpt}</p>
             </div>
 
             {tags.length > 0 && (
               <div
-                className="relative flex flex-wrap items-center gap-1 mt-2 max-w-full min-w-0"
+                className="relative flex flex-wrap items-center gap-1 mt-2 max-w-full min-w-0 mt-auto"
                 onMouseEnter={() => setShowAllTags(true)}
                 onMouseLeave={() => setShowAllTags(false)}
               >

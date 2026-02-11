@@ -6,12 +6,15 @@ import copilotIcon from '../assets/NewMicrosoft365Icons/copilot-logo-500.png';
 import m365Icon from '../assets/NewMicrosoft365Icons/m365-copilot-logo-500.png';
 import teamsIcon from '../assets/NewMicrosoft365Icons/Teams_512.png';
 import minecraftIcon from '../assets/NewMicrosoft365Icons/minecraft.png';
+import excelIcon from '../assets/NewMicrosoft365Icons/Excel_512.png';
+import onenoteIcon from '../assets/NewMicrosoft365Icons/OneNote_512.png';
 
 // Components
 import Navigation from '../components/Navigation';
 import MapSection from '../components/MapSection';
 import CopilotStudioSection from '../components/CopilotStudioSection';
 import Footer from '../components/Footer';
+import ChatWidget from '../components/ChatWidget';
 
 // Hooks
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
@@ -54,49 +57,35 @@ const Home = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-auto sm:auto-rows-[240px]">
-                    {/* Copilot */}
-                    <Link to="/blog/copilot" className="col-span-1 lg:col-span-1 row-span-1 lg:row-span-2 block h-full">
-                        <div className="reveal-card clean-card rounded-[2.5rem] p-8 relative overflow-hidden group cursor-pointer fade-in-section h-full bg-gradient-to-br from-white via-white to-blue-50 shadow-soft hover:shadow-hover transition-all duration-300">
-                            <div className="relative z-10 flex flex-col h-full justify-between">
-                            <div>
-                                <div className="w-20 h-20 rounded-3xl bg-white flex items-center justify-center mb-8 shadow-xl shadow-blue-200/50 border border-white overflow-hidden">
-                                    <img src={copilotIcon}
-                                         alt="Microsoft Copilot"
-                                         className="w-14 h-14 object-contain group-hover:scale-110 transition-transform duration-500" />
-                                </div>
-                                <h3 className="text-3xl lg:text-4xl font-bold mb-4 text-slate-900 tracking-tight">Microsoft Copilot</h3>
-                                <p className="text-slate-500 text-lg leading-relaxed font-medium">
-                                    선생님의 업무 시간은 줄이고,<br/>
-                                    학생들의 창의력은 무한히 확장합니다.<br/>
-                                    AI 비서와 함께하는 교실을 경험하세요.
-                                </p>
-                            </div>
-                            <div className="card-cta mt-4 sm:mt-0 flex items-center gap-2 text-ms-blue font-bold opacity-0 group-hover:opacity-100 group-hover:gap-4 transition-all duration-300 text-lg translate-x-[-10px] group-hover:translate-x-0">
-                                더 알아보기 <span>→</span>
-                            </div>
-                            </div>
-                            <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-400/5 rounded-full blur-3xl"></div>
-                        </div>
-                    </Link>
-
                     {/* Microsoft 365 */}
                     <Link to="/blog/m365" className="block h-full col-span-1 row-span-1">
                         <div className="reveal-card clean-card rounded-[2rem] p-6 group cursor-pointer fade-in-section h-full flex flex-col justify-between bg-gradient-to-br from-white to-orange-50 shadow-soft hover:shadow-hover transition-all duration-300">
                             <div>
                                 <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mb-4 shadow-lg shadow-orange-100 border border-white">
-                                    <img src={m365Icon} alt="M365" className="w-10 h-10 group-hover:scale-110 transition-transform" />
+                                    <img src={m365Icon} alt="Microsoft 365" className="w-10 h-10 group-hover:scale-110 transition-transform" />
                                 </div>
-                                <h3 className="text-xl font-bold text-slate-800">Microsoft 365</h3>
-                                <p className="text-sm text-slate-500">
-                                    선생님의 교실 운영을 하나의 환경으로 통합하고,<br/>
-                                    학생들의 학습 활동을 지속적으로 이어갑니다.
-                                </p>
+                                <h3 className="text-xl font-bold text-slate-800">M365 개요</h3>
+                                <p className="text-sm text-slate-500">교실 운영을 통합하고 학습 활동을 지속적으로 이어가는 방법을 소개합니다.</p>
                             </div>
-                            <div className="card-cta mt-4 sm:mt-0 text-orange-600 text-xs font-bold opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">
-                                더 알아보기 →
-                            </div>
+                            <div className="card-cta mt-4 sm:mt-0 text-orange-600 text-xs font-bold opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">더 알아보기 →</div>
                         </div>
                     </Link>
+
+                    {/* Copilot */}
+                    <Link to="/blog/copilot" className="block h-full col-span-1 row-span-1">
+                        <div className="reveal-card clean-card rounded-[2rem] p-6 group cursor-pointer fade-in-section h-full flex flex-col justify-between bg-gradient-to-br from-white to-blue-50 shadow-soft hover:shadow-hover transition-all duration-300">
+                            <div>
+                                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mb-4 shadow-lg shadow-blue-100 border border-white">
+                                    <img src={copilotIcon} alt="Microsoft Copilot" className="w-10 h-10 group-hover:scale-110 transition-transform" />
+                                </div>
+                                <h3 className="text-xl font-bold text-slate-900">Copilot</h3>
+                                <p className="text-sm text-slate-500">선생님의 업무 시간은 줄이고, 학생들의 창의력은 확장합니다.</p>
+                            </div>
+                            <div className="card-cta mt-4 sm:mt-0 text-ms-blue text-xs font-bold opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">더 알아보기 →</div>
+                        </div>
+                    </Link>
+
+                    
 
                     {/* Microsoft Teams */}
                     <Link to="/blog/teams" className="block h-full col-span-1 row-span-1">
@@ -136,6 +125,42 @@ const Home = () => {
                         </div>
                     </Link>
 
+                    {/* Excel */}
+                    <Link to="/blog/excel" className="block h-full col-span-1 row-span-1">
+                        <div className="reveal-card clean-card rounded-[2rem] p-6 group cursor-pointer fade-in-section h-full flex flex-col justify-between bg-gradient-to-br from-white to-emerald-50 shadow-soft hover:shadow-hover transition-all duration-300">
+                            <div>
+                                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mb-4 shadow-lg shadow-emerald-100 border border-white">
+                                    <img src={excelIcon} alt="Excel" className="w-9 h-9 group-hover:scale-110 transition-transform" />
+                                </div>
+                                <h3 className="text-xl font-bold text-emerald-700">Excel</h3>
+                                <p className="text-sm text-slate-500">
+                                    교실과 실무에서 유용한 Excel 팁과 템플릿을 공유합니다.
+                                </p>
+                            </div>
+                            <div className="card-cta mt-4 sm:mt-0 text-emerald-600 text-xs font-bold opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">
+                                더 알아보기 →
+                            </div>
+                        </div>
+                    </Link>
+
+                    {/* OneNote */}
+                    <Link to="/blog/onenote" className="block h-full col-span-1 row-span-1">
+                        <div className="reveal-card clean-card rounded-[2rem] p-6 group cursor-pointer fade-in-section h-full flex flex-col justify-between bg-gradient-to-br from-white to-violet-50 shadow-soft hover:shadow-hover transition-all duration-300">
+                            <div>
+                                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mb-4 shadow-lg shadow-violet-100 border border-white">
+                                    <img src={onenoteIcon} alt="OneNote" className="w-9 h-9 group-hover:scale-110 transition-transform" />
+                                </div>
+                                <h3 className="text-xl font-bold text-violet-700">OneNote</h3>
+                                <p className="text-sm text-slate-500">
+                                    교수·학습 기록과 협업을 돕는 OneNote 활용 사례입니다.
+                                </p>
+                            </div>
+                            <div className="card-cta mt-4 sm:mt-0 text-violet-600 text-xs font-bold opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">
+                                더 알아보기 →
+                            </div>
+                        </div>
+                    </Link>
+
                     {/* Elevate Blog */}
                     <Link to="/blog" className="block h-full col-span-1 row-span-1">
                         <div className="reveal-card clean-card rounded-[2rem] p-6 h-full flex flex-col justify-between group cursor-pointer fade-in-section bg-gradient-to-br from-white to-slate-100 shadow-soft hover:shadow-hover transition-all duration-300">
@@ -159,6 +184,7 @@ const Home = () => {
             <CopilotStudioSection />
 
             <Footer />
+            <ChatWidget />
         </div>
     );
 };

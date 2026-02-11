@@ -9,10 +9,12 @@ import TagFilter from '../components/TagFilter';
 
 const DISPLAY_NAMES = {
   all: 'ALL',
-  m365: 'M365',
+  m365: 'M365 개요',
   copilot: 'Copilot',
-  minecraft: 'Minecraft',
   teams: 'Teams',
+  minecraft: 'Minecraft',
+  excel: 'Excel',
+  onenote: 'OneNote',
 };
 
 const VALID_CATEGORIES = Object.keys(DISPLAY_NAMES);

@@ -5,13 +5,15 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 
-const VALID_CATEGORIES = ['m365', 'copilot', 'minecraft', 'teams'];
+const VALID_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote'];
 
 const CATEGORY_DISPLAY_NAMES = {
-    'm365': 'Microsoft 365',
+    'm365': 'M365 개요',
     'copilot': 'Copilot',
+    'teams': 'Teams',
     'minecraft': 'Minecraft',
-    'teams': 'Microsoft Teams'
+    'excel': 'Excel',
+    'onenote': 'OneNote'
 };
 
 const PostDetail = () => {

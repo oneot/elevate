@@ -302,3 +302,78 @@ body {
 .prose input[type="checkbox"] {
   margin-right: 0.5rem;
 }
+
+/* --- Chat Widget Custom Styles --- */
+
+/* 1. 버튼 둥둥 떠다니는 애니메이션 */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.animate-float-slow {
+  animation: float-slow 3s ease-in-out infinite;
+}
+
+/* 2. WebChat SDK 내부 스타일 강제 적용 */
+#webchat-container .webchat__send-box {
+  background: rgba(255,255,255,0.8) !important;
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(0,0,0,0.05);
+  margin: 0 !important;
+  padding: 10px !important;
+}
+
+#webchat-container .webchat__send-box__main {
+  border-radius: 999px !important;
+  background: #f1f5f9 !important;
+  border: 1px solid transparent !important;
+  transition: all 0.2s;
+}
+
+#webchat-container .webchat__send-box__main:focus-within {
+  background: white !important;
+  border-color: #0078D4 !important;
+  box-shadow: 0 0 0 3px rgba(0,120,212,0.1);
+}
+
+#webchat-container .webchat__basic-transcript__text {
+  font-family: 'Pretendard', sans-serif !important;
+}
+
+/* 아바타 숨김 */
+#webchat-container .webchat__row.webchat__from-bot .webchat__avatar,
+#webchat-container .webchat__row.webchat__from-user .webchat__avatar {
+  display: none !important;
+}
+
+/* 마크다운 리스트 스타일 복구 */
+#webchat-container .webchat__render-markdown ol,
+#webchat-container .webchat__render-markdown ul {
+  list-style: revert !important;
+  margin: 0.5rem 0 0.5rem 1.25rem !important;
+  padding-left: 1.25rem !important;
+  list-style-position: outside !important;
+}
+#webchat-container .webchat__render-markdown ol { list-style-type: decimal !important; }
+#webchat-container .webchat__render-markdown ul { list-style-type: disc !important; }
+
+/* --- Loading Animation (Bouncing Blue Dots) --- */
+
+@keyframes bounce-loading {
+  0%, 100% { transform: translateY(0); opacity: 0.7; }
+  50% { transform: translateY(-8px); opacity: 1; }
+}
+
+.loading-dot {
+  @apply w-2.5 h-2.5 rounded-full bg-[#0078D4]; /* 점 크기 살짝 줄임 */
+  animation: bounce-loading 0.6s infinite ease-in-out alternate;
+}
+
+.loading-dot:nth-child(1) { animation-delay: 0s; }
+.loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* 기본 타이핑 인디케이터 확실하게 숨기기 (중복 방지) */
+.webchat__typing-indicator {
+  display: none !important;
+}
