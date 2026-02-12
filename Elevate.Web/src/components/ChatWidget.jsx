@@ -81,10 +81,10 @@ const ChatWidget = () => {
   }), []);
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-4 font-sans">
+    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-4 font-sans pointer-events-none">
       {/* 채팅창 컨테이너 */}
       <div
-        className={`
+        className={`pointer-events-auto
           w-[380px] h-[650px] max-w-[calc(100vw-2rem)] max-h-[80vh]
           bg-white/80 backdrop-blur-2xl border border-white/60
           rounded-[2.5rem] shadow-2xl shadow-blue-900/15
@@ -140,7 +140,7 @@ const ChatWidget = () => {
       {/* 토글 버튼 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`
+        className={`pointer-events-auto
           group relative w-16 h-16 rounded-full 
           bg-gradient-to-tr from-[#0078D4]/85 to-[#00C7F4]/85 backdrop-blur-md
           border border-white/40 text-white shadow-lg shadow-blue-500/30

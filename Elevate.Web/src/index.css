@@ -60,6 +60,16 @@ body {
   border-color: rgba(255, 255, 255, 0.8);
 }
 
+.card-link {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.card-link:focus-visible {
+  outline: 3px solid #0078D4;
+  outline-offset: 4px;
+  border-radius: 1.25rem;
+}
+
 /* Background Blobs */
 .pastel-bg {
   position: fixed;
@@ -133,6 +143,18 @@ body {
                 background 0.4s cubic-bezier(0.4,0,0.2,1);
   }
 
+  /* 모바일에서는 :hover 상태가 탭 탐색을 방해하지 않도록 hover 시각효과를 제거 */
+  .reveal-card:hover {
+    transform: none !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02) !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
+  }
+
+  .reveal-card:hover img,
+  .reveal-card:hover [class*="group-hover:"] {
+    transform: none !important;
+  }
+
   .reveal-card.in-view {
     background: rgba(255, 255, 255, 0.95);
     transform: translateY(-5px) !important;
@@ -140,17 +162,17 @@ body {
     border-color: #0078D4 !important;
   }
 
-  /* CTA logic */
+  /* 모바일 CTA는 항상 노출 */
   .reveal-card .card-cta {
-    opacity: 0 !important;
-    transform: translateX(-10px) !important;
+    opacity: 1 !important;
+    transform: none !important;
     transition: opacity 0.35s cubic-bezier(0.4,0,0.2,1),
                 transform 0.35s cubic-bezier(0.4,0,0.2,1);
   }
 
   .reveal-card.in-view .card-cta {
     opacity: 1 !important;
-    transform: translateX(0) !important;
+    transform: none !important;
   }
 }
 
