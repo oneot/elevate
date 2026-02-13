@@ -1,4 +1,4 @@
-title: 📘 Onenote로 자료 정리하기 기초: 기본 기능부터 유용한 Tip까지
+title: 📘 Onenote로 자료 정리하기 기초 - 기본 기능부터 유용한 Tip까지
 tags: [onenote, productivity]
 date: 2026-02-09
 ---
