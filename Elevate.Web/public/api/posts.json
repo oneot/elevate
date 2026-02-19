@@ -1,10 +1,28 @@
 {
   "items": [
     {
+      "id": "onenote/onenote",
+      "slug": "onenote",
+      "title": "📘 Onenote로 자료 정리하기 기초 - 기본 기능부터 유용한 Tip까지",
+      "excerpt": "이런 순간, 익숙하지 않으신가요? \r",
+      "imageUrl": "/images/onenote/onenote/0.png",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "onenote",
+      "tags": [
+        "onenote",
+        "productivity"
+      ]
+    },
+    {
       "id": "teams/teams-2",
       "slug": "teams-2",
       "title": "📄 Teams 과제, 퀴즈로 수업을 제출하고 확인하고 피드백하기까지 한 번에 관리하기",
-      "excerpt": "이런 순간, 필요하지 않으신가요? ",
+      "excerpt": "이런 순간, 필요하지 않으신가요? \r",
       "imageUrl": "/images/teams/teams-1/img1.png",
       "author": {
         "name": "Unknown"
@@ -22,7 +40,7 @@
       "id": "teams/teams-1",
       "slug": "teams-1",
       "title": "📘 Teams로 학급 만들고 관리하기 : 기본 세팅부터 운영까지",
-      "excerpt": "이런 순간, 익숙하지 않으신가요? ",
+      "excerpt": "이런 순간, 익숙하지 않으신가요? \r",
       "imageUrl": "/images/teams/teams-0/img1.png",
       "author": {
         "name": "Unknown"
@@ -42,7 +60,7 @@
       "id": "minecraft/minecraft-education-block-coding",
       "slug": "minecraft-education-block-coding",
       "title": "Minecraft에 Education Block Coding",
-      "excerpt": "STEP 0: 시나리오",
+      "excerpt": "STEP 0: 시나리오\r",
       "imageUrl": "/images/minecraft/minecraft-block-coding/img1.png",
       "author": {
         "name": "Unknown"
@@ -58,10 +76,30 @@
       ]
     },
     {
-      "id": "m365/excel-2",
+      "id": "M365/signup",
+      "slug": "signup",
+      "title": "📘 Microsoft 365 교육용 계정 만들기 : 교육청 포털에서 시작하기",
+      "excerpt": "🤔 이런 순간, 익숙하지 않으신가요? \r",
+      "imageUrl": "/images/m365/signup/img1.png",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-02",
+      "likes": 0,
+      "comments": 0,
+      "category": "M365",
+      "tags": [
+        "m365",
+        "account",
+        "education",
+        "tutorial"
+      ]
+    },
+    {
+      "id": "excel/excel-2",
       "slug": "excel-2",
       "title": "Excel (2)",
-      "excerpt": "Excel로 급식지도 담당 배정하기",
+      "excerpt": "Excel로 급식지도 담당 배정하기\r",
       "imageUrl": "/images/m365/excel-2/img1.png",
       "author": {
         "name": "Unknown"
@@ -69,7 +107,7 @@
       "publishedAt": "2026-02-02",
       "likes": 0,
       "comments": 0,
-      "category": "m365",
+      "category": "excel",
       "tags": [
         "m365",
         "productivity",
@@ -78,10 +116,10 @@
       ]
     },
     {
-      "id": "m365/excel-1",
+      "id": "excel/excel-1",
       "slug": "excel-1",
       "title": "Excel (1)",
-      "excerpt": "이런 순간, 익숙하지 않으신가요? ",
+      "excerpt": "이런 순간, 익숙하지 않으신가요? \r",
       "imageUrl": "/images/m365/excel-1/img0.png",
       "author": {
         "name": "Unknown"
@@ -89,7 +127,7 @@
       "publishedAt": "2026-02-02",
       "likes": 0,
       "comments": 0,
-      "category": "m365",
+      "category": "excel",
       "tags": [
         "m365",
         "productivity",
@@ -139,7 +177,7 @@
       "id": "copilot/custom-agent",
       "slug": "custom-agent",
       "title": "M365 Copilot으로 나만의 에이전트 만들기",
-      "excerpt": "STEP 0. 시나리오",
+      "excerpt": "STEP 0. 시나리오\r",
       "imageUrl": "/images/m365Copilot/copilotAgent/img1.png",
       "author": {
         "name": "Unknown"
@@ -193,18 +231,21 @@
       ]
     }
   ],
-  "total": 10,
+  "total": 12,
   "allTags": [
+    "account",
     "agent",
     "ai",
     "coding",
     "collaboration",
     "copilot",
+    "education",
     "excel",
     "gaming",
     "m365",
     "minecraft",
     "office",
+    "onenote",
     "productivity",
     "prompt",
     "teams",
