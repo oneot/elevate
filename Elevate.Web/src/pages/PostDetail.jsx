@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import rehypeSlug from 'rehype-slug';
+import TableOfContents from '../components/TableOfContents';
 
 const VALID_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote'];
 
@@ -83,56 +85,70 @@ const PostDetail = () => {
 
             {/* Post Content */}
             <div className="relative z-10 min-h-screen flex flex-col items-center px-4 sm:px-6 py-12">
-                <div className="w-full max-w-4xl">
-                    <div className="clean-card no-hover rounded-[2.25rem] sm:rounded-[3rem] p-7 sm:p-10 lg:p-12 bg-white/80 backdrop-blur-xl shadow-2xl border border-white/50">
-                        {/* Breadcrumb */}
-                        <div className="text-sm text-slate-500 mb-6">
-                            <Link to="/" className="hover:text-ms-blue transition-colors">Home</Link>
-                            <span className="mx-2">/</span>
-                            <Link to="/blog" className="hover:text-ms-blue transition-colors">Blog</Link>
-                            <span className="mx-2">/</span>
-                            <Link to={`/blog/${normalizedCategory}`} className="hover:text-ms-blue transition-colors">{categoryDisplayName}</Link>
-                        </div>
-
-                        {loading && <div className="text-center py-8 text-slate-500">로딩 중...</div>}
-
-                        {!loading && post && (
-                            <>
-                                {/* Post Title */}
-                                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gradient mb-4 tracking-tight leading-tight">
-                                    {post.title}
-                                </h1>
-
-                                {/* Meta */}
-                                <div className="mb-6 flex items-center gap-4 text-sm text-slate-500">
-                                    <span className="inline-block px-4 py-2 bg-ms-blue/10 text-ms-blue rounded-full font-medium">
-                                        {categoryDisplayName}
-                                    </span>
-                                    <span>{post.publishedAt}</span>
+                <div className="w-full max-w-7xl">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        {/* Main Content */}
+                        <div className="lg:col-span-3">
+                            <div className="clean-card no-hover rounded-[2.25rem] sm:rounded-[3rem] p-7 sm:p-10 lg:p-12 bg-white/80 backdrop-blur-xl shadow-2xl border border-white/50">
+                                {/* Breadcrumb */}
+                                <div className="text-sm text-slate-500 mb-6">
+                                    <Link to="/" className="hover:text-ms-blue transition-colors">Home</Link>
+                                    <span className="mx-2">/</span>
+                                    <Link to="/blog" className="hover:text-ms-blue transition-colors">Blog</Link>
+                                    <span className="mx-2">/</span>
+                                    <Link to={`/blog/${normalizedCategory}`} className="hover:text-ms-blue transition-colors">{categoryDisplayName}</Link>
                                 </div>
 
-                                {/* Tags */}
-                                {Array.isArray(post.tags) && post.tags.length > 0 && (
-                                    <div className="mb-8 flex flex-wrap gap-2 text-sm">
-                                        {post.tags.map((tag) => (
-                                            <span
-                                                key={tag}
-                                                className="px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-600"
-                                            >
-                                                {tag}
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
+                                {loading && <div className="text-center py-8 text-slate-500">로딩 중...</div>}
 
-                                {/* Post Body */}
-                                <article className="prose prose-lg max-w-none text-slate-700">
-                                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                                        {post.content}
-                                    </ReactMarkdown>
-                                </article>
-                            </>
-                        )}
+                                {!loading && post && (
+                                    <>
+                                        {/* Post Title */}
+                                        <h1 
+                                            id="post-title"
+                                            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gradient mb-4 tracking-tight leading-tight">
+                                            {post.title}
+                                        </h1>
+
+                                        {/* Meta */}
+                                        <div className="mb-6 flex items-center gap-4 text-sm text-slate-500">
+                                            <span className="inline-block px-4 py-2 bg-ms-blue/10 text-ms-blue rounded-full font-medium">
+                                                {categoryDisplayName}
+                                            </span>
+                                            <span>{post.publishedAt}</span>
+                                        </div>
+
+                                        {/* Tags */}
+                                        {Array.isArray(post.tags) && post.tags.length > 0 && (
+                                            <div className="mb-8 flex flex-wrap gap-2 text-sm">
+                                                {post.tags.map((tag) => (
+                                                    <span
+                                                        key={tag}
+                                                        className="px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-600"
+                                                    >
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Post Body */}
+                                        <article className="prose prose-lg max-w-none text-slate-700">
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeSlug]}>
+                                                {post.content}
+                                            </ReactMarkdown>
+                                        </article>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Table of Contents Sidebar */}
+                        <div className="hidden lg:block lg:col-span-1">
+                            {!loading && post && (
+                                <TableOfContents content={post.content} postTitle={post.title} />
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

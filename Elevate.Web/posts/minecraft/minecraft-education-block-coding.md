@@ -1,4 +1,4 @@
-title: Minecraft에 Education Block Coding
+title: Minecraft Education Block Coding
 tags: [minecraft, gaming, coding]
 date: 2026-02-02
 ---
