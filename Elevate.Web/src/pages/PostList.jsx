@@ -146,13 +146,13 @@ export default function PostList() {
   }
 
   return (
-    <main className="w-full px-4 sm:px-8 lg:px-12 py-8">
-      <header className="mb-10 flex flex-col gap-4">
+    <main className="w-full px-4 sm:px-6 lg:px-12 py-8">
+      <header className="mb-10 flex flex-col gap-5">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <Logo isBlog={true}/>
-            <p> | </p>
-            <h1 className="text-2xl font-bold">{displayName} Posts</h1>
+            <p className="text-slate-400">|</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">{displayName} Posts</h1>
           </div>
           <div className="w-full sm:w-80"><SearchBar placeholder={`Search ${displayName}`} onSubmit={(q) => { updateUrlParams({ page: '1', q }); }} /></div>
         </div>
@@ -160,7 +160,7 @@ export default function PostList() {
           <ul className="flex flex-wrap gap-2">
             {VALID_CATEGORIES.map((c) => (
               <li key={c}>
-                <Link to={`/blog/${c}`} className={`inline-block px-4 py-2 rounded-full border ${c === category ? 'bg-ms-blue text-white' : 'bg-white text-slate-700'}`}>
+                <Link to={`/blog/${c}`} className={`inline-block px-3.5 py-2 rounded-full border text-sm sm:text-base ${c === category ? 'bg-ms-blue text-white' : 'bg-white text-slate-700'}`}>
                   {DISPLAY_NAMES[c]}
                 </Link>
               </li>
