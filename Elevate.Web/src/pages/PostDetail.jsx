@@ -104,7 +104,9 @@ const PostDetail = () => {
                                 {!loading && post && (
                                     <>
                                         {/* Post Title */}
-                                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gradient mb-4 tracking-tight leading-tight">
+                                        <h1 
+                                            id="post-title"
+                                            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gradient mb-4 tracking-tight leading-tight">
                                             {post.title}
                                         </h1>
 
@@ -144,7 +146,7 @@ const PostDetail = () => {
                         {/* Table of Contents Sidebar */}
                         <div className="hidden lg:block lg:col-span-1">
                             {!loading && post && (
-                                <TableOfContents content={post.content} />
+                                <TableOfContents content={post.content} postTitle={post.title} />
                             )}
                         </div>
                     </div>

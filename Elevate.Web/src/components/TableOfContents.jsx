@@ -55,6 +55,29 @@ const buildNestedHeadings = (flatHeadings) => {
 // 목차 아이템 렌더링 (재귀)
 const TableOfContentsItem = ({ heading, activeId, onLinkClick }) => {
   const isActive = activeId === heading.id;
+  const isPostTitle = heading.id === 'post-title';
+
+  // 게시글 제목은 특별한 스타일
+  if (isPostTitle) {
+    return (
+      <li className="mb-4">
+        <a
+          href={`#${heading.id}`}
+          className="block px-3 py-2 text-sm font-semibold text-ms-blue bg-ms-blue/10 border-l-4 border-ms-blue rounded-r transition-all line-clamp-2 hover:bg-ms-blue/15"
+          onClick={(e) => {
+            e.preventDefault();
+            console.log('🔗 Clicked on post title');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            onLinkClick();
+          }}
+        >
+          {heading.text}
+        </a>
+      </li>
+    );
+  }
+
+  // 일반 제목의 스타일
   const paddingClass = {
     1: 'pl-0',
     2: 'pl-4',
@@ -65,9 +88,9 @@ const TableOfContentsItem = ({ heading, activeId, onLinkClick }) => {
     <li key={heading.id} className={paddingClass}>
       <a
         href={`#${heading.id}`}
-        className={`block py-1.5 text-sm transition-all line-clamp-2 ${
+        className={`block py-1.5 text-sm font-medium transition-all line-clamp-2 ${
           isActive
-            ? 'text-ms-blue font-semibold'
+            ? 'text-ms-blue'
             : 'text-slate-600 hover:text-slate-800'
         }`}
         onClick={(e) => {
@@ -102,7 +125,7 @@ const TableOfContentsItem = ({ heading, activeId, onLinkClick }) => {
   );
 };
 
-const TableOfContents = ({ content }) => {
+const TableOfContents = ({ content, postTitle }) => {
   const [activeId, setActiveId] = useState('');
   const [headings, setHeadings] = useState([]);
   const observerRef = useRef(null);
@@ -122,6 +145,16 @@ const TableOfContents = ({ content }) => {
     const initialTimer = setTimeout(() => {
       console.log('⏱️ Running initial heading extraction');
       const flatHeadings = extractHeadingsFromDOM();
+      
+      // 게시글 제목을 첫 번째 항목으로 추가
+      if (postTitle) {
+        flatHeadings.unshift({
+          id: 'post-title',
+          text: postTitle,
+          level: 1
+        });
+      }
+
       if (flatHeadings.length > 0) {
         const nested = buildNestedHeadings(flatHeadings);
         setHeadings(nested);
@@ -132,6 +165,16 @@ const TableOfContents = ({ content }) => {
     const handleMutation = () => {
       console.log('🔄 Mutation detected, extracting headings');
       const flatHeadings = extractHeadingsFromDOM();
+      
+      // 게시글 제목을 첫 번째 항목으로 추가
+      if (postTitle) {
+        flatHeadings.unshift({
+          id: 'post-title',
+          text: postTitle,
+          level: 1
+        });
+      }
+
       if (flatHeadings.length > 0) {
         const nested = buildNestedHeadings(flatHeadings);
         setHeadings(nested);
@@ -149,7 +192,7 @@ const TableOfContents = ({ content }) => {
       clearTimeout(initialTimer);
       observer.disconnect();
     };
-  }, [content]);
+  }, [content, postTitle]);
 
   // Intersection Observer로 현재 섹션 추적
   useEffect(() => {
