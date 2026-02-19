@@ -1,0 +1,21 @@
+{
+  "id": "M365/signup",
+  "slug": "signup",
+  "title": "📘 Microsoft 365 교육용 계정 만들기 : 교육청 포털에서 시작하기",
+  "excerpt": "🤔 이런 순간, 익숙하지 않으신가요? \r",
+  "imageUrl": "/images/m365/signup/img1.png",
+  "author": {
+    "name": "Unknown"
+  },
+  "publishedAt": "2026-02-02",
+  "likes": 0,
+  "comments": 0,
+  "category": "M365",
+  "tags": [
+    "m365",
+    "account",
+    "education",
+    "tutorial"
+  ],
+  "content": "\n\r\n> **🤔 이런 순간, 익숙하지 않으신가요?** <br>\r\n“Microsoft 365 계정부터 만들라는데… 어디서 만들라는 거지?”  \r\n공식 사이트에 들어갔더니 학교 계정이 아니라는 말이 나오고  \r\n주변 선생님들은 다들 교육청 사이트 링크를 주는 상황  \r\n\r\n👉 **결론부터 말하면,**  \r\n국내 초·중·고 교사는 Microsoft 공식 사이트가 아니라  \r\n**‘소속 교육청 사이트’에서 계정을 만드는 것이 맞습니다.**\r\n\r\n---\r\n\r\n# STEP 1. 어디서 만들어야 할까?\r\n\r\n## 왜 공식 사이트가 아닌가요?\r\n\r\n국내 초·중·고의 Microsoft 365는  \r\nMicrosoft가 직접 관리하는 개인 계정 구조가 아닙니다.\r\n\r\n👉 시·도교육청이 하나의 조직으로 계약·운영하고,  \r\n교사·학생 계정을 교육청 기준으로 통합 관리합니다.\r\n\r\n그래서 아래와 같은 관리가 가능합니다.\r\n\r\n- 학교 소속 확인  \r\n- 교사 / 학생 계정 구분  \r\n- 전근·전출·졸업 시 계정 정리  \r\n- Teams 수업 권한 관리  \r\n\r\n✅ 이 때문에 계정 생성도  \r\n👉 **반드시 교육청 전용 M365 포털을 통해 진행해야 합니다.**\r\n\r\n---\r\n\r\n# STEP 2. 우리 학교 ‘교육청 M365 포털’ 찾기\r\n\r\n각 시·도교육청마다 전용 계정 생성 사이트가 있습니다.\r\n\r\n## 📌 예시 (일부)\r\n\r\n- 서울특별시교육청 : https://o365.sen.go.kr  \r\n- 경기도교육청 : https://www.goedu.kr  \r\n- 부산광역시교육청 : https://o365.pen.go.kr  \r\n- 강원특별자치도교육청 : https://office365.gwe.go.kr  \r\n- 세종특별자치시교육청 : https://o365.sje.go.kr  \r\n\r\n💡 보통 포털 이름은  \r\n**“Microsoft 365 클라우드 서비스” / “Office 365 지원 시스템”** 으로 되어 있습니다.\r\n\r\n---\r\n\r\n# STEP 3. 교육청 사이트에서 계정 만들기\r\n\r\n교육청마다 화면은 조금씩 다르지만,  \r\n흐름은 거의 동일합니다.\r\n\r\n## 1️⃣ 교육청 M365 포털 접속  \r\n→ **[교직원 계정 생성]** 선택\r\n\r\n## 2️⃣ 약관 동의 및 본인 인증  \r\n- 휴대폰 인증  \r\n- 또는 교육청 인증 절차 진행  \r\n\r\n## 3️⃣ 학교 인증코드 입력  \r\n- 학교 정보부 / 담당부서에서 관리  \r\n- 학생은 가정통신문, 교사는 학교 내부 안내로 전달  \r\n\r\n## 4️⃣ 계정 정보 입력  \r\n- 아이디 / 비밀번호 설정  \r\n- 보조 이메일 등록  \r\n\r\n✅ 이 과정을 마치면  \r\n교육청 도메인의 M365 계정이 생성됩니다.  \r\n(예: @sen.go.kr, @학교명.go.kr 등)\r\n\r\n---\r\n\r\n# STEP 4. 계정 생성이 어렵다면?\r\n\r\n계정 생성을 하다 막히는 부분이 있다면  \r\n**microsoft-elevate.com** 에서 에이전트를 만나보세요.\r\n![image](/images/m365/signup/img1.png)\r\n1️⃣ microsoft-elevate.com 에 접속합니다.  \r\n![image](/images/m365/signup/img2.png)\r\n2️⃣ 우측 아래 **에이전트 버튼**을 클릭합니다.\r\n![image](/images/m365/signup/img3.png)\r\n3️⃣ 계정 생성과 관련된 부분을 질문합니다.\r\n\r\n👉 microsoft-elevate 에이전트가 단계별로 안내해드립니다.\r\n\r\n---\r\n\r\n# STEP 5. 계정 생성 후 바로 할 수 있는 것들\r\n\r\n생성된 계정으로 아래 사이트에 로그인해보세요.\r\n\r\n- https://www.office.com  \r\n- https://teams.microsoft.com  \r\n\r\n로그인 즉시:\r\n\r\n✅ Microsoft Teams 수업 팀 생성  \r\n✅ 과제·퀴즈 게시  \r\n✅ Word / Excel / PowerPoint 사용  \r\n✅ OneDrive 자동 생성  \r\n\r\n👉 수업용 M365 환경이 바로 활성화됩니다.\r\n\r\n---\r\n\r\n# 🎉 마무리\r\n\r\nM365 교육용 계정은  \r\n단순한 ‘오피스 계정’이 아니라,\r\n\r\n✅ 학교 수업을 운영하기 위한 공식 계정입니다.\r\n\r\n- Teams 수업  \r\n- 과제·퀴즈  \r\n- 학생 계정 연동  \r\n- 학적 기반 관리  \r\n\r\n이 모든 출발점이  \r\n👉 **교육청 M365 계정입니다.**\r\n\r\n---\r\n\r\n💡 **TIP – 이렇게 이어서 활용하세요**\r\n\r\n- Teams 수업 시작  \r\n→ 교육청 계정으로 로그인하면 바로 수업 팀 생성 가능  \r\n\r\n- 학생 계정 연동  \r\n→ 같은 교육청 계정 체계라 초대·관리 간단  \r\n\r\n- 학교 공식 기록과 연계  \r\n→ 과제, 활동 이력이 자연스럽게 누적  "
+}
