@@ -60,8 +60,8 @@ async function walkPosts(dir) {
   const posts = [];
   for (const catEnt of categories) {
     if (!catEnt.isDirectory()) continue;
-    const category = catEnt.name;
-    const catDir = path.join(dir, category);
+    const category = catEnt.name.toLowerCase();
+    const catDir = path.join(dir, catEnt.name);
     const files = await fs.readdir(catDir, { withFileTypes: true });
     for (const f of files) {
       if (!f.isFile()) continue;
