@@ -122,13 +122,13 @@ const Home = () => {
             <MapSection />
 
             {/* Microsoft 365 Section */}
-            <section id="m365-section" className="py-20 px-6 max-w-7xl mx-auto">
-                <div className="mb-12 text-center fade-in-section">
-                    <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-slate-900">Explore Microsoft AI</h2>
-                    <p className="text-slate-500 text-lg">교육 현장을 변화시키는 강력한 도구들을 만나보세요.</p>
+            <section id="m365-section" className="py-16 md:py-20 px-4 sm:px-6 max-w-7xl mx-auto">
+                <div className="mb-10 md:mb-12 text-center fade-in-section">
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 md:mb-4 text-slate-900">Explore Microsoft AI</h2>
+                    <p className="text-slate-500 text-base sm:text-lg">교육 현장을 변화시키는 강력한 도구들을 만나보세요.</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-auto sm:auto-rows-[240px]">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 auto-rows-auto sm:auto-rows-[240px]">
                     {features.map((feature, index) => (
                         <FeatureCard 
                             key={index}

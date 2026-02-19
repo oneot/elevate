@@ -82,9 +82,9 @@ const PostDetail = () => {
             </div>
 
             {/* Post Content */}
-            <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 py-12">
+            <div className="relative z-10 min-h-screen flex flex-col items-center px-4 sm:px-6 py-12">
                 <div className="w-full max-w-4xl">
-                    <div className="clean-card no-hover rounded-[3rem] p-12 bg-white/80 backdrop-blur-xl shadow-2xl border border-white/50">
+                    <div className="clean-card no-hover rounded-[2.25rem] sm:rounded-[3rem] p-7 sm:p-10 lg:p-12 bg-white/80 backdrop-blur-xl shadow-2xl border border-white/50">
                         {/* Breadcrumb */}
                         <div className="text-sm text-slate-500 mb-6">
                             <Link to="/" className="hover:text-ms-blue transition-colors">Home</Link>
@@ -99,7 +99,7 @@ const PostDetail = () => {
                         {!loading && post && (
                             <>
                                 {/* Post Title */}
-                                <h1 className="text-4xl lg:text-5xl font-bold text-gradient mb-4 tracking-tight">
+                                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gradient mb-4 tracking-tight leading-tight">
                                     {post.title}
                                 </h1>
 

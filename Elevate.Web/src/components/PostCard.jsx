@@ -14,11 +14,11 @@ const PostCard = ({ post }) => {
   return (
     <article
       ref={cardRef}
-      className="hover:shadow-lg reveal-card post-card rounded-2xl p-6 shadow-soft transition group bg-white h-full w-full max-w-full"
+      className="hover:shadow-lg reveal-card post-card rounded-2xl p-5 sm:p-6 shadow-soft transition group bg-white h-full w-full max-w-full"
     >
       <Link to={to} aria-label={`Open post ${title}`} className="block focus:outline-none focus:ring-2 focus:ring-ms-blue/30 h-full">
         <div className="flex flex-col h-full">
-          <div className="w-full rounded-md overflow-hidden bg-slate-100" style={{height: 160}}>
+          <div className="w-full rounded-md overflow-hidden bg-slate-100" style={{height: 150}}>
             {imageUrl ? (
               <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
             ) : (
@@ -41,7 +41,7 @@ const PostCard = ({ post }) => {
                 {title}
               </h3>
             </div>
-            <div className="text-sm text-slate-600 mt-2 overflow-hidden" style={{ maxHeight: 54 }}>
+            <div className="text-sm text-slate-600 mt-2 overflow-hidden" style={{ maxHeight: 60 }}>
               <p className="m-0" style={{ whiteSpace: 'normal' }}>{excerpt}</p>
             </div>
 
@@ -64,7 +64,7 @@ const PostCard = ({ post }) => {
                     <button
                       ref={moreRef}
                       type="button"
-                      className="text-xs px-2 py-0.5 text-slate-400 border border-transparent hover:border-slate-200 rounded-full"
+                      className="text-xs px-2.5 py-1 text-slate-500 border border-slate-200 rounded-full bg-white/80 hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ms-blue"
                       onFocus={() => setShowAllTags(true)}
                       onBlur={() => setShowAllTags(false)}
                       onClick={() => setShowAllTags((v) => !v)}

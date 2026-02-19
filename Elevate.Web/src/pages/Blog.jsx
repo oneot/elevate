@@ -71,18 +71,18 @@ const Blog = () => {
             </div>
 
             {/* Blog Content */}
-            <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6">
+            <div className="relative z-10 min-h-screen flex flex-col items-center px-4 sm:px-6 pt-28 pb-16 gap-10">
                 <div className="text-center max-w-4xl">
-                    <h1 className="text-5xl lg:text-6xl font-bold text-slate-900 mb-6 tracking-tight">
+                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-4 sm:mb-6 tracking-tight leading-tight">
                         Microsoft Elevate Blog
                     </h1>
-                    <p className="text-xl text-slate-600 leading-relaxed">
+                    <p className="text-lg sm:text-xl text-slate-600 leading-relaxed">
                         M365로 교육을 바꿔보세요.
                     </p>
                 </div>
 
                 {/* 검색창 (비활성) + 카드 그리드 + 오른쪽 캡션 */}
-                <div className="max-w-6xl mx-auto mt-12 px-6 w-full">
+                <div className="max-w-6xl mx-auto w-full">
                     {/* 검색창: 당장은 기능 없음 (readOnly) */}
                     <div className="flex justify-center w-full">
                         <div className="w-full max-w-3xl">
@@ -91,15 +91,15 @@ const Blog = () => {
                                 placeholder="Copilot으로 검색하기"
                                 readOnly
                                 aria-label="검색"
-                                className="w-full bg-white/60 rounded-full py-3 px-6 border border-white/60 shadow-inner placeholder-slate-400 text-slate-700 focus:outline-none focus:ring-2 focus:ring-ms-blue/30"
+                                className="w-full bg-white/70 rounded-full py-3 px-5 md:px-6 border border-white/60 shadow-inner placeholder-slate-400 text-slate-700 focus:outline-none focus:ring-2 focus:ring-ms-blue/30"
                             />
                         </div>
                     </div>
 
-                    <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                         {/* 왼쪽: 카드 그리드 (2/3) */}
                         <div className="lg:col-span-2">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
                                 {cards.map((c) => (
                                     <BlogCard
                                         key={c.to}

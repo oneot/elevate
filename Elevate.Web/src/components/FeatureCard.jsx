@@ -79,9 +79,9 @@ const FeatureCard = ({
             aria-label={ariaLabel} 
             className="card-link block h-full touch-manipulation col-span-1 row-span-1"
         >
-            <div className={`reveal-card clean-card rounded-[2rem] p-6 group fade-in-section h-full flex flex-col justify-between ${colors.gradient} shadow-soft hover:shadow-hover transition-all duration-300`}>
+            <div className={`reveal-card clean-card rounded-[2rem] p-5 sm:p-6 group fade-in-section h-full flex flex-col justify-between ${colors.gradient} shadow-soft hover:shadow-hover transition-all duration-300`}>
                 <div>
-                    <div className={`w-14 h-14 rounded-2xl bg-white flex items-center justify-center mb-4 shadow-lg ${colors.shadow} border border-white ${iconType === 'emoji' ? 'text-3xl' : ''} transition-all duration-300 ease-out group-hover:scale-110 ${iconType === 'emoji' ? 'group-hover:-translate-y-0.5 group-hover:bg-slate-50' : ''}`}>
+                    <div className={`w-14 h-14 rounded-2xl bg-white flex items-center justify-center mb-4 shadow-lg ${colors.shadow} border border-white ${iconType === 'emoji' ? 'text-3xl' : ''} transition-all duration-300 ease-out group-hover:scale-105 sm:group-hover:scale-110 ${iconType === 'emoji' ? 'group-hover:-translate-y-0.5 group-hover:bg-slate-50' : ''}`}>
                         {iconType === 'emoji' ? (
                             icon
                         ) : (
