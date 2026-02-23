@@ -1,6 +1,26 @@
 {
   "items": [
     {
+      "id": "excel/excel-tutorial",
+      "slug": "excel-tutorial",
+      "title": "📖 Excel로 데이터 쉽게 관리하기",
+      "excerpt": "STEP 1. Excel",
+      "imageUrl": "/images/excel/excel-tutorial/1.png",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-16",
+      "likes": 0,
+      "comments": 0,
+      "category": "excel",
+      "tags": [
+        "m365",
+        "productivity",
+        "office",
+        "excel"
+      ]
+    },
+    {
       "id": "onenote/onenote",
       "slug": "onenote",
       "title": "📘 Onenote로 자료 정리하기 기초 - 기본 기능부터 유용한 Tip까지",
@@ -59,7 +79,7 @@
     {
       "id": "minecraft/minecraft-education-block-coding",
       "slug": "minecraft-education-block-coding",
-      "title": "Minecraft에 Education Block Coding",
+      "title": "Minecraft Education Block Coding",
       "excerpt": "STEP 0: 시나리오",
       "imageUrl": "/images/minecraft/minecraft-block-coding/img1.png",
       "author": {
@@ -79,7 +99,7 @@
       "id": "m365/signup",
       "slug": "signup",
       "title": "📘 Microsoft 365 교육용 계정 만들기 - 교육청 포털에서 시작하기",
-      "excerpt": "🤔 이런 순간, 익숙하지 않으신가요? ",
+      "excerpt": "STEP 0. 어디서 만들어야 할까?",
       "imageUrl": "/images/m365/signup/img1.png",
       "author": {
         "name": "Unknown"
@@ -93,6 +113,26 @@
         "account",
         "education",
         "tutorial"
+      ]
+    },
+    {
+      "id": "m365/onedrive-tutorial",
+      "slug": "onedrive-tutorial",
+      "title": "📖 Onedrive로 어디서나 안전하게 저장·공유·협업하기",
+      "excerpt": "STEP 1. Onedrive",
+      "imageUrl": "/images/m365/onedrive-tutorial/1.png",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-02",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "cloud",
+        "onedrive"
       ]
     },
     {
@@ -231,11 +271,12 @@
       ]
     }
   ],
-  "total": 12,
+  "total": 14,
   "allTags": [
     "account",
     "agent",
     "ai",
+    "cloud",
     "coding",
     "collaboration",
     "copilot",
@@ -245,6 +286,7 @@
     "m365",
     "minecraft",
     "office",
+    "onedrive",
     "onenote",
     "productivity",
     "prompt",
