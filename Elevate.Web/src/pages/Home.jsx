@@ -15,6 +15,7 @@ import CopilotStudioSection from '../components/CopilotStudioSection';
 import Footer from '../components/Footer';
 import ChatWidget from '../components/ChatWidget';
 import FeatureCard from '../components/FeatureCard';
+import MEESection from '../components/MEESection';
 
 // Hooks
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
@@ -137,8 +138,10 @@ const Home = () => {
                     ))}
                 </div>
             </section>
-
+        
             <CopilotStudioSection />
+
+            <MEESection />
 
             <Footer />
             <ChatWidget />
