@@ -1,6 +1,8 @@
 title: Excel (2)
 tags: [m365, productivity, office, excel]
 date: 2026-02-02
+series: "Excel 활용 가이드"
+seriesOrder: 3
 ---
 
 # Excel로 급식지도 담당 배정하기

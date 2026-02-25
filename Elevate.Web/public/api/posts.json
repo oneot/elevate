@@ -18,7 +18,9 @@
         "productivity",
         "office",
         "excel"
-      ]
+      ],
+      "series": "Excel 활용 가이드",
+      "seriesOrder": 1
     },
     {
       "id": "onenote/onenote",
@@ -36,7 +38,9 @@
       "tags": [
         "onenote",
         "productivity"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "teams/teams-2",
@@ -54,7 +58,9 @@
       "tags": [
         "teams",
         "collaboration"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "teams/teams-1",
@@ -74,7 +80,9 @@
         "collaboration",
         "productivity",
         "tutorial"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "minecraft/minecraft-education-block-coding",
@@ -93,7 +101,9 @@
         "minecraft",
         "gaming",
         "coding"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "m365/signup",
@@ -113,7 +123,9 @@
         "account",
         "education",
         "tutorial"
-      ]
+      ],
+      "series": "M365 활용 가이드",
+      "seriesOrder": 1
     },
     {
       "id": "m365/onedrive-tutorial",
@@ -133,7 +145,9 @@
         "productivity",
         "cloud",
         "onedrive"
-      ]
+      ],
+      "series": "M365 활용 가이드",
+      "seriesOrder": 2
     },
     {
       "id": "excel/excel-2",
@@ -153,7 +167,9 @@
         "productivity",
         "office",
         "excel"
-      ]
+      ],
+      "series": "Excel 활용 가이드",
+      "seriesOrder": 3
     },
     {
       "id": "excel/excel-1",
@@ -173,7 +189,9 @@
         "productivity",
         "office",
         "excel"
-      ]
+      ],
+      "series": "Excel 활용 가이드",
+      "seriesOrder": 2
     },
     {
       "id": "copilot/prompt-coach",
@@ -192,7 +210,9 @@
         "copilot",
         "ai",
         "agent"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "copilot/research",
@@ -211,7 +231,9 @@
         "copilot",
         "ai",
         "prompt"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "copilot/custom-agent",
@@ -230,7 +252,9 @@
         "copilot",
         "ai",
         "productivity"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "copilot/copilot-chat",
@@ -249,7 +273,9 @@
         "copilot",
         "ai",
         "tutorial"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "copilot/analyst",
@@ -268,7 +294,9 @@
         "copilot",
         "productivity",
         "agent"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     }
   ],
   "total": 14,
@@ -292,5 +320,45 @@
     "prompt",
     "teams",
     "tutorial"
-  ]
+  ],
+  "seriesByCategory": {
+    "excel": {
+      "Excel 활용 가이드": [
+        {
+          "id": "excel/excel-tutorial",
+          "slug": "excel-tutorial",
+          "title": "📖 Excel로 데이터 쉽게 관리하기",
+          "seriesOrder": 1
+        },
+        {
+          "id": "excel/excel-1",
+          "slug": "excel-1",
+          "title": "Excel (1)",
+          "seriesOrder": 2
+        },
+        {
+          "id": "excel/excel-2",
+          "slug": "excel-2",
+          "title": "Excel (2)",
+          "seriesOrder": 3
+        }
+      ]
+    },
+    "m365": {
+      "M365 활용 가이드": [
+        {
+          "id": "m365/signup",
+          "slug": "signup",
+          "title": "📘 Microsoft 365 교육용 계정 만들기 - 교육청 포털에서 시작하기",
+          "seriesOrder": 1
+        },
+        {
+          "id": "m365/onedrive-tutorial",
+          "slug": "onedrive-tutorial",
+          "title": "📖 Onedrive로 어디서나 안전하게 저장·공유·협업하기",
+          "seriesOrder": 2
+        }
+      ]
+    }
+  }
 }

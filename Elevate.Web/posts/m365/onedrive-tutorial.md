@@ -1,6 +1,8 @@
 title: 📖 Onedrive로 어디서나 안전하게 저장·공유·협업하기
 tags: [m365, productivity, cloud, onedrive]
 date: 2026-02-02
+series: "M365 활용 가이드"
+seriesOrder: 2
 ---
 # STEP 1. Onedrive
 

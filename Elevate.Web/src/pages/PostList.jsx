@@ -6,6 +6,7 @@ import Pagination from '../components/Pagination';
 import SearchBar from '../components/SearchBar';
 import Logo from '../components/Logo';
 import TagFilter from '../components/TagFilter';
+import SeriesNavigator from '../components/SeriesNavigator';
 
 const DISPLAY_NAMES = {
   all: 'ALL',
@@ -38,6 +39,7 @@ export default function PostList() {
 
   const [allPosts, setAllPosts] = useState([]);
   const [allTags, setAllTags] = useState([]);
+  const [seriesByCategory, setSeriesByCategory] = useState({});
   const [loading, setLoading] = useState(false);
   // intentionally not exposing error to UI; keep only for console/logging
   const [_error, setError] = useState(null);
@@ -65,6 +67,7 @@ export default function PostList() {
           tags: normalizeTagList(p.tags || []),
         }));
         setAllTags(normalizedAllTags);
+        setSeriesByCategory(data.seriesByCategory || {});
 
         // Client-side filtering by category
         let filtered;
@@ -97,6 +100,35 @@ export default function PostList() {
       return selectedTags.every((t) => postTags.includes(t));
     });
   }, [allPosts, selectedTags]);
+
+  // Calculate current series data for sidebar
+  const currentSeriesData = useMemo(() => {
+    if (!category || category === 'all') return null;
+    const categorySeries = seriesByCategory[category];
+    if (!categorySeries || Object.keys(categorySeries).length === 0) return null;
+
+    // Count series occurrences in filtered posts
+    const seriesCounts = {};
+    filteredPosts.forEach((post) => {
+      if (post.series && categorySeries[post.series]) {
+        seriesCounts[post.series] = (seriesCounts[post.series] || 0) + 1;
+      }
+    });
+
+    // Find the most common series
+    const seriesNames = Object.keys(seriesCounts);
+    if (seriesNames.length === 0) return null;
+
+    const primarySeries = seriesNames.sort((a, b) => seriesCounts[b] - seriesCounts[a])[0];
+    const seriesPosts = categorySeries[primarySeries];
+
+    if (!seriesPosts || seriesPosts.length < 2) return null;
+
+    return {
+      title: primarySeries,
+      posts: seriesPosts,
+    };
+  }, [category, seriesByCategory, filteredPosts]);
 
   // Paginate filtered posts
   const total = filteredPosts.length;
@@ -169,7 +201,7 @@ export default function PostList() {
         </nav>
       </header>
 
-      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6">
+      <div className={`flex flex-col lg:grid gap-6 ${currentSeriesData ? 'lg:grid-cols-12' : 'lg:grid-cols-10'}`}>
         <aside className="w-full lg:col-span-2">
           <TagFilter
             allTags={allTags}
@@ -179,9 +211,9 @@ export default function PostList() {
           />
         </aside>
 
-        <section className="w-full lg:col-span-10">
+        <section className={`w-full ${currentSeriesData ? 'lg:col-span-7 xl:col-span-8' : 'lg:col-span-8'}`}>
           {loading && <div className="text-center py-8">로딩 중...</div>}
-          <div className="mb-4 text-sm text-slate-600 min-h-[24px] flex items-center">
+          <div className="mb-4 text-sm text-slate-600 min-h-6 flex items-center">
             {!loading && selectedTags.length > 0 && (
               <span>{filteredPosts.length}개의 게시글이 선택된 태그와 일치합니다.</span>
             )}
@@ -189,6 +221,17 @@ export default function PostList() {
           <PostGrid posts={posts} />
           <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
         </section>
+
+        {currentSeriesData && (
+          <aside className="w-full lg:col-span-3 xl:col-span-2 hidden lg:block">
+            <SeriesNavigator
+              seriesPosts={currentSeriesData.posts}
+              seriesTitle={currentSeriesData.title}
+              category={category}
+              currentPostId={null}
+            />
+          </aside>
+        )}
       </div>
     </main>
   );

@@ -1,6 +1,8 @@
 title: Excel (1)
 tags: [m365, productivity, office, excel]
 date: 2026-02-02
+series: "Excel 활용 가이드"
+seriesOrder: 2
 ---
 
 

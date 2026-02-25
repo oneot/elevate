@@ -1,6 +1,8 @@
 title: 📖 Excel로 데이터 쉽게 관리하기
 tags: [m365, productivity, office, excel]
 date: 2026-02-16
+series: "Excel 활용 가이드"
+seriesOrder: 1
 ---
 # STEP 1. Excel
 
