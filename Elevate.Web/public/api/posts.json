@@ -1,6 +1,28 @@
 {
   "items": [
     {
+      "id": "m365/powerpoint-tutorial",
+      "slug": "powerpoint-tutorial",
+      "title": "📖 PowerPoint로 쉽게 강의자료 만들기",
+      "excerpt": "STEP 1. PowerPoint",
+      "imageUrl": "/images/m365/powerpoint-tutorial/1.png",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-16",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "office",
+        "powerpoint"
+      ],
+      "series": "M365 활용 가이드",
+      "seriesOrder": 3
+    },
+    {
       "id": "excel/excel-tutorial",
       "slug": "excel-tutorial",
       "title": "📖 Excel로 데이터 쉽게 관리하기",
@@ -299,7 +321,7 @@
       "seriesOrder": null
     }
   ],
-  "total": 14,
+  "total": 15,
   "allTags": [
     "account",
     "agent",
@@ -316,12 +338,35 @@
     "office",
     "onedrive",
     "onenote",
+    "powerpoint",
     "productivity",
     "prompt",
     "teams",
     "tutorial"
   ],
   "seriesByCategory": {
+    "m365": {
+      "M365 활용 가이드": [
+        {
+          "id": "m365/signup",
+          "slug": "signup",
+          "title": "📘 Microsoft 365 교육용 계정 만들기 - 교육청 포털에서 시작하기",
+          "seriesOrder": 1
+        },
+        {
+          "id": "m365/onedrive-tutorial",
+          "slug": "onedrive-tutorial",
+          "title": "📖 Onedrive로 어디서나 안전하게 저장·공유·협업하기",
+          "seriesOrder": 2
+        },
+        {
+          "id": "m365/powerpoint-tutorial",
+          "slug": "powerpoint-tutorial",
+          "title": "📖 PowerPoint로 쉽게 강의자료 만들기",
+          "seriesOrder": 3
+        }
+      ]
+    },
     "excel": {
       "Excel 활용 가이드": [
         {
@@ -341,22 +386,6 @@
           "slug": "excel-2",
           "title": "Excel (2)",
           "seriesOrder": 3
-        }
-      ]
-    },
-    "m365": {
-      "M365 활용 가이드": [
-        {
-          "id": "m365/signup",
-          "slug": "signup",
-          "title": "📘 Microsoft 365 교육용 계정 만들기 - 교육청 포털에서 시작하기",
-          "seriesOrder": 1
-        },
-        {
-          "id": "m365/onedrive-tutorial",
-          "slug": "onedrive-tutorial",
-          "title": "📖 Onedrive로 어디서나 안전하게 저장·공유·협업하기",
-          "seriesOrder": 2
         }
       ]
     }
