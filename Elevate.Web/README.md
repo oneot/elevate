@@ -38,17 +38,33 @@ npm run build
 
 ## 문서 / Documentation
 
-- 게시글 작성 가이드: `POSTS_GUIDE.md`
-- 아키텍처 상세: `ARCHITECTURE.md`
-- 컴포넌트 설명: `COMPONENTS.md`
+프로젝트를 이해하고 기여하기 위해 다음 문서들을 순서대로 읽으시면 됩니다:
+
+1. **프로젝트 아키텍처** ([ARCHITECTURE.md](ARCHITECTURE.md))
+   - 마크다운 → JSON 변환 흐름, 빌드 과정, 데이터 구조 이해
+   - 처음 프로젝트를 접할 때, 또는 빌드/배포 문제를 해결할 때 참고
+
+2. **컴포넌트 설명** ([COMPONENTS.md](COMPONENTS.md))
+   - 각 UI 컴포넌트의 역할, props, 상호작용 방식
+   - 기존 컴포넌트를 수정하거나 새로운 컴포넌트를 만들 때 참고
+
+3. **게시글 작성 가이드** ([POSTS_GUIDE.md](POSTS_GUIDE.md))
+   - 마크다운 파일 작성 규칙, frontmatter 필드, 이미지 처리, 시리즈 설정
+   - 새로운 콘텐츠를 추가하려는 콘텐츠 작성자·기고자가 참고
+
+4. **개발 기여 가이드** ([CONTRIBUTING.md](CONTRIBUTING.md))
+   - 개발 환경 설정, 브랜치/PR 규칙, 코드 스타일, 로컬 테스트
+   - 코드를 수정하거나 새로운 기능을 추가하려는 개발자가 참고
+
+5. **배포 가이드** ([DEPLOYMENT.md](DEPLOYMENT.md))
+   - 로컬 빌드 절차, 배포 전 체크리스트, 환경변수 설정
+   - 프로덕션 배포나 CI/CD 파이프라인 구성 시 참고
 
 ## 기여 / Contributing
 
-간단한 기여 방법:
+프로젝트에 기여하려면 [CONTRIBUTING.md](CONTRIBUTING.md)를 참고해주세요.
 
-1. 새로운 브랜치 생성
-2. 변경 사항 커밋
-3. PR 생성
-
-자세한 기여 가이드는 `CONTRIBUTING.md`를 추가할 예정입니다.
+- 콘텐츠 추가: [POSTS_GUIDE.md](POSTS_GUIDE.md) 참고
+- 코드 수정/기능 추가: [CONTRIBUTING.md](CONTRIBUTING.md) 참고
+- 배포 업무: [DEPLOYMENT.md](DEPLOYMENT.md) 참고
 
