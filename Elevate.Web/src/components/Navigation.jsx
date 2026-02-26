@@ -20,7 +20,7 @@ const Navigation = () => {
                                bg-slate-900 text-white text-sm font-semibold whitespace-nowrap
                                hover:bg-slate-700 transition-all shadow-lg shadow-slate-900/20"
                 >
-                    Contact Us
+                    문의하기
                 </a>
             </div>
         </nav>
