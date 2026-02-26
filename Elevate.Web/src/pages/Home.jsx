@@ -90,7 +90,7 @@ const Home = () => {
         },
         {
             title: 'Elevate Blog',
-            description: 'Microsoft AI의 모든 리소스를 한 곳에서 확인하세요.',
+            description: 'M365의 업데이트 소식들을 한 곳에서 확인하세요.',
             icon: '📦',
             iconType: 'emoji',
             to: '/blog',
