@@ -94,20 +94,23 @@ const MapSection = () => {
                     함께합니다.
                 </h1>
 
-                {/* <p style={{ opacity: 0, transform: 'translateY(30px)', transition: 'all 1s ease-out 0.3s' }} className="text-lg text-slate-500 mb-8 max-w-lg leading-relaxed font-medium">
+                <p style={{ opacity: 0, transform: 'translateY(30px)', transition: 'all 1s ease-out 0.3s' }} className="text-lg text-slate-500 mb-8 max-w-lg leading-relaxed font-medium">
                     모두를 위한 AI 교육 환경,<br/>M365와 Copilot으로 바로 시작해 보세요!<br/>
                     <span className="text-slate-900 font-bold underline decoration-ms-blue/30 decoration-4 underline-offset-4">
                         교육용 계정 생성을 위해 지도에서 교육청을 선택해주세요.
                     </span>
-                </p> */}
+                </p>
 
-                <div style={{ opacity: 0, transform: 'translateY(30px)', transition: 'all 1s ease-out 0.45s' }} className="bg-white p-6 rounded-2xl shadow-soft border border-slate-100 flex items-start gap-4 w-full max-w-lg transform transition-transform hover:scale-105">
+                <div style={{ opacity: 0, transform: 'translateY(30px)', transition: 'all 1s ease-out 0.45s' }} className="bg-white p-6 rounded-2xl shadow-soft border border-slate-100 flex items-start gap-4 w-full max-w-md transform transition-transform hover:scale-105">
                     <img src={feelingsMonster} alt="Student icon" className="w-16 h-16 object-contain shrink-0" />
                     <div>
-                        <h3 className="text-lg font-bold text-slate-900 mb-1">교육용 계정 사용이 처음이신가요?</h3>
-                        <p className="text-sm text-slate-500">
-                            각 교육청 Microsoft 포털에서 회원가입 후 <br/>교육용 Microsoft 제품들을 바로 사용해보세요!
-                        </p>
+                        <h3 className="text-lg font-bold text-slate-900 mb-1">교육용 계정 생성이 어려우신가요?</h3>
+                        <button 
+                            onClick={() => window.open('https://microsoft-elevate.com/blog/m365/signup', '_blank', 'noopener,noreferrer')}
+                            className="px-4 py-2 bg-ms-blue text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors text-sm"
+                        >
+                            자세히 알아보기
+                        </button>
                     </div>
                 </div>
             </div>
