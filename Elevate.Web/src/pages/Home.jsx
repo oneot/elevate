@@ -12,7 +12,6 @@ import onenoteIcon from '../assets/NewMicrosoft365Icons/OneNote_512.png';
 import Navigation from '../components/Navigation';
 import MapSection from '../components/MapSection';
 import CopilotStudioSection from '../components/CopilotStudioSection';
-import Footer from '../components/Footer';
 import ChatWidget from '../components/ChatWidget';
 import FeatureCard from '../components/FeatureCard';
 import MEESection from '../components/MEESection';
@@ -143,7 +142,6 @@ const Home = () => {
 
             <MEESection />
 
-            <Footer />
             <ChatWidget />
         </div>
     );
