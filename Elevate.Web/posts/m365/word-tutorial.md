@@ -1,4 +1,4 @@
-title: 📖 Microsoft Word: 글로벌 문서 작업 플랫폼 Word 온라인으로 시작하기
+title: 📖 Microsoft Word - 글로벌 문서 작업 플랫폼 Word 온라인으로 시작하기
 tags: [m365, productivity, word, cloud, onedrive]
 date: 2026-02-28
 series: "M365 활용 가이드"
