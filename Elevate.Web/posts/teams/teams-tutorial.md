@@ -1,4 +1,4 @@
-title: "📘 Teams로 학급 만들고 관리하기 : 기본 세팅부터 운영까지"
+title: "📘 Teams로 학급 만들고 관리하기 - 기본 세팅부터 운영까지"
 tags: [teams, collaboration, productivity, tutorial]
 date: 2026-02-27
 ---
