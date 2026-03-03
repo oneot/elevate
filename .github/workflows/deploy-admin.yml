@@ -38,7 +38,7 @@ jobs:
 
             - name: Install dependencies
               working-directory: ./Elevate.Admin
-              run: npm ci
+              run: npm install
 
             - name: Build Admin App
               working-directory: ./Elevate.Admin
