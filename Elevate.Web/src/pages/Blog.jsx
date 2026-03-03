@@ -76,15 +76,15 @@ const Blog = () => {
                     <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-4 sm:mb-6 tracking-tight leading-tight">
                         Microsoft Elevate Blog
                     </h1>
-                    <p className="text-lg sm:text-xl text-slate-600 leading-relaxed">
+                    {/* <p className="text-lg sm:text-xl text-slate-600 leading-relaxed">
                         M365로 교육을 바꿔보세요.
-                    </p>
+                    </p> */}
                 </div>
 
                 {/* 검색창 (비활성) + 카드 그리드 + 오른쪽 캡션 */}
                 <div className="max-w-6xl mx-auto w-full">
                     {/* 검색창: 당장은 기능 없음 (readOnly) */}
-                    <div className="flex justify-center w-full">
+                    {/* <div className="flex justify-center w-full">
                         <div className="w-full max-w-3xl">
                             <input
                                 type="text"
@@ -94,34 +94,20 @@ const Blog = () => {
                                 className="w-full bg-white/70 rounded-full py-3 px-5 md:px-6 border border-white/60 shadow-inner placeholder-slate-400 text-slate-700 focus:outline-none focus:ring-2 focus:ring-ms-blue/30"
                             />
                         </div>
-                    </div>
+                    </div> */}
 
-                    <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-                        {/* 왼쪽: 카드 그리드 (2/3) */}
-                        <div className="lg:col-span-2">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
-                                {cards.map((c) => (
-                                    <BlogCard
-                                        key={c.to}
-                                        title={c.title}
-                                        excerpt={c.excerpt}
-                                        icon={c.icon}
-                                        to={c.to}
-                                        ctaLabel={c.ctaLabel}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* 오른쪽: 회색 문구 (데스크탑에만 표시) */}
-                        <div className="hidden lg:flex lg:col-span-1 items-center justify-center">
-                            <div className="text-right pr-8">
-                                <p className="text-2xl lg:text-3xl text-slate-500 leading-relaxed">
-                                    당신의 무한한 교육을
-                                    <br />
-                                    M365와 함께하세요
-                                </p>
-                            </div>
+                    <div className="mt-10 w-full">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                            {cards.map((c) => (
+                                <BlogCard
+                                    key={c.to}
+                                    title={c.title}
+                                    excerpt={c.excerpt}
+                                    icon={c.icon}
+                                    to={c.to}
+                                    ctaLabel={c.ctaLabel}
+                                />
+                            ))}
                         </div>
                     </div>
                 </div>

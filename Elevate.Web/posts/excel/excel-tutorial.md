@@ -1,0 +1,104 @@
+title: 📖 Excel로 데이터 쉽게 관리하기
+tags: [m365, productivity, office, excel]
+date: 2026-02-16
+series: "Excel 활용 가이드"
+seriesOrder: 1
+---
+# STEP 1. Excel
+
+## Excel이란?
+
+- 계산부터 데이터 분석까지 한 곳에서 진행할 수 있는 스프레드시트 애플리케이션
+
+## 교육용 계정으로 사용했을 때는…
+
+- 고급 데이터 분석 기능을 모두 사용할 수 있습니다.
+    - 교육용 계정에서는 설치형 Excel을 사용할 수 있기 때문에 대용량 시트 처리 속도도 더 빨라져요.
+    - 이 때 데이터 모델(Power Pivot), VBA 매크로, 외부 데이터 연결을 지원하며, **복잡한 보고서를 자동화하거나 학교에서 공유 및 협업하는 문서를 원활하게 운영**할 수 있어요.
+- OneDrive 1TB를 무료로 제공합니다.
+    - 안정적으로 Excel 파일을 자동 백업하고, Excel의 버전을 관리할 수 있어요.
+- 보안 기능이 향상됩니다.
+    - 특히 조직 내외로 Excel 파일을 공유할 때 학교 내의 정보를 안전하게 보호할 수 있어요.
+- Teams, SharePoint와의 협업 기능이 더 부드럽게 작동합니다.
+    - 여러 사람들이 하나의 파일을 실시간으로 편집할 때 더욱 안정적으로 할 수 있어요.
+- Excel을 사용하기 위한 계정이 아직 없다면? [여기](https://microsoft-elevate.com/blog/m365/signup)를 확인해보세요. 
+
+# STEP 2. 웹에서 Excel 바로 써보기
+
+1. 검색창에 ‘excel’을 입력하고, Microsoft 홈페이지에 들어갑니다.
+
+![image](/images/excel/excel-tutorial/1.png)
+
+2. 오른쪽 상단에서 로그인을 누른 후, 교육용 계정(교사/학생)으로 로그인을 진행합니다.
+
+![image](/images/excel/excel-tutorial/2.png)
+
+![image](/images/excel/excel-tutorial/3.png)
+
+3. Excel 열기를 클릭합니다. 
+
+![image](/images/excel/excel-tutorial/4.png)
+
+4. ‘빈 통합 문서 만들기’를 클릭하면 바로 엑셀 작업을 시작할 수 있습니다.
+
+![image](/images/excel/excel-tutorial/5.png)
+
+- Tip! 앱을 설치했다면 ‘다음으로 점프백’을 통해 이전에 열었던 문서 등을 바로 확인할 수 있어요.
+
+![image](/images/excel/excel-tutorial/6.png)
+
+5. 바로 Excel 작업을 시작해보세요.
+
+![image](/images/excel/excel-tutorial/7.png)
+
+- Tip! 왼쪽 상단의 메뉴를 누를 경우 다른 Microsoft 365 앱들을 바로 사용할 수 있어요!
+
+![image](/images/excel/excel-tutorial/8.png)
+
+# STEP 3. 앱에서 고도화된 작업해보기
+
+1. 아래의 링크로 들어가서 ‘앱 설치’ → ‘Microsoft 365 앱’을 선택합니다.
+
+[앱 | M365 Copilot](https://m365.cloud.microsoft/apps?auth=2)
+
+![image](/images/excel/excel-tutorial/9.png)
+
+2. ‘Office 설치’를 누른 후 다운받아진 ‘OfficeSetup.exe’을 누릅니다.
+
+![image](/images/excel/excel-tutorial/10.png)
+
+3. Microsoft 365 앱이 다운받아질 때까지 잠시만 기다려주세요.
+
+![image](/images/excel/excel-tutorial/11.png)
+
+- 그리고 나면 앱 설치가 완료됩니다!
+- 앱 오픈 시에 로그인이 요구될 경우 이전과 동일하게 교육용 계정으로 로그인하시거나 ‘계정 추가’를 통해 로그인하면 됩니다.
+
+![image](/images/excel/excel-tutorial/12.png)
+
+# STEP 4. 앱을 통해 많은 데이터 다루기
+
+웹 Excel과 달리 앱 Excel을 사용했을 때 더 많은 기능을 사용할 수 있습니다.
+
+![image](/images/excel/excel-tutorial/13.png)
+
+예를 들어, [개발 도구] 에서는 아래의 기능들을 더 활용할 수 있습니다.
+
+1. Visual Basic: VBA 편집기 실행
+2. 매크로: 매크로 목록 열기 및 실행
+3. 매크로 기록: 클릭 동작을 자동으로 VBA 코드로 기록
+4. 상대 참조로 기록: 매크로 기록 시에 절대/상대 참조 전환
+5. 매크로 보안: 매크로 실행 허용 및 차단 옵션 설정
+6. 추가 기능: Office Add-ins(웹 애드인) 추가
+7. Excel 추가 기능: Analysis ToolPak, Solver 같은 전통적인 Excel Add-in
+8. COM 추가 기능: 외부 도구, 프로그램과 연동되는 Windows 전용 Add-in
+
+이를 통해 아래의 업무들을 할 수 있습니다!👍 
+
+- 공문 제출 양식, 주간 계획서, 보고서 등 반복되는 양식 자동화
+- 성적/출결/조사 자료 자동 정리
+- 문서 자동 생성을 통한 대량 작업 자동화
+- 학생 정보 자동 관리
+- 개별 점수 처리 및 피드백 자동화
+- 생활기록부 초안 자동 생성
+

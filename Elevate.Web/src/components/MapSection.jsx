@@ -12,12 +12,21 @@ const MapSection = () => {
 
     const handleMapPointEnter = (e, key) => {
         const name = officeNames[key] || key || "지역";
-        const rect = mapContainerRef.current.getBoundingClientRect();
+        const mapRect = mapContainerRef.current.getBoundingClientRect();
+        
+        // circle 요소의 실제 화면상 위치를 정확히 계산
+        const circleRect = e.target.getBoundingClientRect();
+        const circleCenterX = circleRect.left + circleRect.width / 2;
+        const circleCenterY = circleRect.top + circleRect.height / 2;
+        
+        // 핀의 반경과 마진을 고려하여 말풍선 위치 계산
+        const pinRadius = parseFloat(e.target.getAttribute('r')) || 8;
+        const tooltipOffset = pinRadius + 35;
         
         setTooltip({
             visible: true,
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top - 40,
+            x: circleCenterX - mapRect.left,
+            y: circleCenterY - mapRect.top - tooltipOffset,
             text: name
         });
         setHoveredRegion(key);
@@ -25,11 +34,20 @@ const MapSection = () => {
 
     const handleMapPointMove = (e) => {
         if (!tooltip.visible) return;
-        const rect = mapContainerRef.current.getBoundingClientRect();
+        const mapRect = mapContainerRef.current.getBoundingClientRect();
+        
+        // 마우스 움직임에 따라 실시간으로 위치 업데이트
+        const circleRect = e.target.getBoundingClientRect();
+        const circleCenterX = circleRect.left + circleRect.width / 2;
+        const circleCenterY = circleRect.top + circleRect.height / 2;
+        
+        const pinRadius = parseFloat(e.target.getAttribute('r')) || 8;
+        const tooltipOffset = pinRadius + 25;
+        
         setTooltip(prev => ({
             ...prev,
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top - 40,
+            x: circleCenterX - mapRect.left,
+            y: circleCenterY - mapRect.top - tooltipOffset,
         }));
     };
 
@@ -79,19 +97,20 @@ const MapSection = () => {
                 <p style={{ opacity: 0, transform: 'translateY(30px)', transition: 'all 1s ease-out 0.3s' }} className="text-lg text-slate-500 mb-8 max-w-lg leading-relaxed font-medium">
                     모두를 위한 AI 교육 환경,<br/>M365와 Copilot으로 바로 시작해 보세요!<br/>
                     <span className="text-slate-900 font-bold underline decoration-ms-blue/30 decoration-4 underline-offset-4">
-                        먼저, 지도에서 교육청을 선택해주세요.
+                        교육용 계정 생성을 위해 지도에서 교육청을 선택해주세요.
                     </span>
                 </p>
 
-                <div style={{ opacity: 0, transform: 'translateY(30px)', transition: 'all 1s ease-out 0.45s' }} className="bg-white p-6 rounded-2xl shadow-soft border border-slate-100 flex items-start gap-4 w-full max-w-lg transform transition-transform hover:scale-105">
+                <div style={{ opacity: 0, transform: 'translateY(30px)', transition: 'all 1s ease-out 0.45s' }} className="bg-white p-6 rounded-2xl shadow-soft border border-slate-100 flex items-start gap-4 w-full max-w-md transform transition-transform hover:scale-105">
                     <img src={feelingsMonster} alt="Student icon" className="w-16 h-16 object-contain shrink-0" />
                     <div>
-                        <h3 className="text-lg font-bold text-slate-900 mb-1">학생 혹은 교원이신가요?</h3>
-                        <p className="text-sm text-slate-500">
-                            각 교육청 Microsoft 포털에서,
-                            <br className="block sm:hidden" />
-                            Microsoft AI를 바로 시작해보세요!
-                        </p>
+                        <h3 className="text-lg font-bold text-slate-900 mb-1">교육용 계정 생성이 어려우신가요?</h3>
+                        <button 
+                            onClick={() => window.open('https://microsoft-elevate.com/blog/m365/signup', '_blank', 'noopener,noreferrer')}
+                            className="px-4 py-2 bg-ms-blue text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors text-sm"
+                        >
+                            자세히 알아보기
+                        </button>
                     </div>
                 </div>
             </div>

@@ -121,6 +121,10 @@ async function walkPosts(dir) {
         tags = [String(data.tag).trim().toLowerCase()];
       }
 
+      // series handling
+      const series = data.series ? String(data.series).trim() : null;
+      const seriesOrder = data.seriesOrder ? Number(data.seriesOrder) : null;
+
       const post = {
         id,
         slug,
@@ -133,6 +137,8 @@ async function walkPosts(dir) {
         comments: Number(data.comments || 0),
         category,
         tags,
+        series,
+        seriesOrder,
         content, // raw markdown body for detail page
       };
 
@@ -167,13 +173,46 @@ async function main() {
   }
   const allTags = Array.from(allTagsSet).sort();
 
+  // Build series index by category
+  const seriesByCategory = {};
+  for (const p of posts) {
+    if (p.series && p.seriesOrder != null) {
+      if (!seriesByCategory[p.category]) {
+        seriesByCategory[p.category] = {};
+      }
+      if (!seriesByCategory[p.category][p.series]) {
+        seriesByCategory[p.category][p.series] = [];
+      }
+      seriesByCategory[p.category][p.series].push({
+        id: p.id,
+        slug: p.slug,
+        title: p.title,
+        seriesOrder: p.seriesOrder,
+      });
+    }
+  }
+
+  // Sort series posts by seriesOrder
+  for (const category in seriesByCategory) {
+    for (const seriesName in seriesByCategory[category]) {
+      seriesByCategory[category][seriesName].sort((a, b) => a.seriesOrder - b.seriesOrder);
+    }
+  }
+
   // Write summary list (without content) for list pages
   const listItems = posts.map(({ content, ...rest }) => rest);
-  const out = { items: listItems, total: listItems.length, allTags };
+  const out = { items: listItems, total: listItems.length, allTags, seriesByCategory };
   const outPath = path.join(OUT_DIR, 'posts.json');
   await fs.writeFile(outPath, JSON.stringify(out, null, 2), 'utf-8');
   console.log(`Wrote posts list to ${outPath} (${allTags.length} unique tags)`);
   console.log('Tags:', allTags.join(', '));
+  
+  // Log series information
+  const seriesCount = Object.values(seriesByCategory).reduce(
+    (acc, cat) => acc + Object.keys(cat).length,
+    0
+  );
+  console.log(`Found ${seriesCount} series across ${Object.keys(seriesByCategory).length} categories`);
 }
 
 main().catch((err) => {

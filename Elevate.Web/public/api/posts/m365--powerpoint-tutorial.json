@@ -1,0 +1,23 @@
+{
+  "id": "m365/powerpoint-tutorial",
+  "slug": "powerpoint-tutorial",
+  "title": "📖 PowerPoint로 쉽게 강의자료 만들기",
+  "excerpt": "STEP 1. PowerPoint",
+  "imageUrl": "/images/m365/powerpoint-tutorial/1.png",
+  "author": {
+    "name": "Unknown"
+  },
+  "publishedAt": "2026-02-16",
+  "likes": 0,
+  "comments": 0,
+  "category": "m365",
+  "tags": [
+    "m365",
+    "productivity",
+    "office",
+    "powerpoint"
+  ],
+  "series": "M365 활용 가이드",
+  "seriesOrder": 3,
+  "content": "# STEP 1. PowerPoint\n\n## PowerPoint란?\n\n- 아이디어를 시각적인 슬라이드로 구성해 효과적으로 전달하고, 함께 편집하며 발표 자료를 만들 수 있게 해주는 프레젠테이션 도구\n\n## 교육용 계정으로 사용했을 때는…\n\n- 고급 디자인 도구와 템플릿을 모두 사용할 수 있습니다.\n    - 교육용 계정에서는 설치형 PowerPoint를 사용할 수 있기 때문에, AI 기반 디자인 아이디어 제안, 고급 애니메이션 효과, 그리고 대용량 프레젠테이션도 원활하게 작업할 수 있어요.\n- Microsoft 교육 애플리케이션과 자연스럽게 연결됩니다.\n    - Microsoft Teams for Education, Forms 등 모든 교육 애플리케이션과 연동돼요. Forms로 만든 퀴즈를 슬라이드에 바로 삽입하거나, Teams에서 실시간으로 협업하여 슬라이드를 편집할 수 있어요.\n    - Onedrive와 연동되어 편집 내용이 클라우드에 자동으로 저장돼요.\n    - 특히 수업 자료를 만들 때, 다른 교사나 학생들과 실시간으로 협업하여 슬라이드를 편집할 수 있어요.\n\n# STEP 2. 웹에서 PowerPoint 바로 써보기\n\n1. 검색창에 ‘PowerPoint’를 입력하고, Microsoft 홈페이지에 들어갑니다.\n\n![image](/images/m365/powerpoint-tutorial/1.png)\n\n2. 오른쪽 상단에서 로그인을 누른 후, 교육용 계정(교사/학생)으로 로그인을 진행합니다.\n\n![image](/images/m365/powerpoint-tutorial/3.png)\n\n3. ‘빈 프레젠테이션 만들기’를 눌러서 바로 PowerPoint 작업을 시작해보세요.\n\n![image](/images/m365/powerpoint-tutorial/4.png)\n\n![image](/images/m365/powerpoint-tutorial/5.png)\n\n# STEP 3. 앱에서 고도화된 작업해보기\n\n1. 아래의 링크로 들어가서 ‘앱 설치’ → ‘Microsoft 365 앱’을 선택합니다.\n\n[앱 | M365 Copilot](https://m365.cloud.microsoft/apps?auth=2)\n\n![image](/images/m365/onedrive-tutorial/7.png)\n\n2. ‘Office 설치’를 누른 후 다운받아진 ‘OfficeSetup.exe’을 누릅니다.\n\n![image](/images/m365/onedrive-tutorial/8.png)\n\n3. Microsoft 365 앱이 다운받아질 때까지 잠시만 기다려주세요\n\n![image](/images/m365/onedrive-tutorial/9.png)\n\n- 그리고 나면 PowerPoint를 포함한 Microsoft 365 Office 앱 설치가 완료됩니다!\n\n# STEP 4. 앱을 통해 많은 파일 다루기\n\n웹 PowerPoint와 달리 앱 PowerPoint를 사용했을 때 더 많은 기능을 사용할 수 있습니다.\n\n![image](/images/m365/powerpoint-tutorial/7.png)\n\n![image](/images/m365/powerpoint-tutorial/8.png)\n\n예를 들어, 아래의 기능들을 더 원활하게 사용할 수 있습니다.\n\n1. 설치형 PowerPoint는 운영체재와 직접 통합되기 때문에 훨씬 빠르게 사용 가능합니다.\n2. PC의 로컬 파일이 클라우드에 자동·실시간으로 동기화됩니다.\n3. 학교 Wi-Fi가 불안정해도 작업이 가능하고, 수업 중에도 대비할 수 있습니다.\n4. 모든 애니메이션 효과, 대용량 프레젠테이션 작업 등 고급 기능을 사용할 수 있습니다.\n5. M365 애플리케이션들과 연동되에 슬라이드에 Forms로 만든 퀴즈를 바로 삽입하거나, Teams에서 실시간으로 협업하여 슬라이드를 편집할 수 있습니다.\n\n이를 통해 아래의 업무들을 할 수 있습니다!👍 \n\n- 교안과 수업 자료를 체계적으로 제작·보관·공유할 수 있어요\n- 학년별, 과목별 자료를 클라우드에 안전하게 관리할 수 있어요\n- 동료 교사와 함께 수업 자료를 공동 제작하고 빠르게 피드백을 주고받을 수 있어요\n- 학생 발표 수업에서 파일 취합과 공유를 효율적으로 처리할 수 있어요\n- 자동 저장과 버전 기록 기능으로 실수로 덮어쓰는 문제를 줄일 수 있어요\n- 학교 PC, 개인 노트북 어디서든 동일한 계정 환경으로 수업 준비를 할 수 있어요\n- Teams 수업 채널에 바로 업로드하여 원격·블렌디드 수업에도 활용할 수 있어요"
+}

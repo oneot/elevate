@@ -11,11 +11,14 @@ const MapTooltip = ({ tooltip }) => {
                 opacity: tooltip.visible ? 1 : 0,
                 left: `${tooltip.x}px`,
                 top: `${tooltip.y}px`,
-                transform: 'translateY(-10px)'
+                // 말풍선을 수평 중앙에 위치, 수직은 위쪽 정렬
+                transform: 'translateX(-50%)',
+                transition: 'opacity 0.2s ease'
             }}
         >
             <span>{tooltip.text}</span>
-            <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 rotate-45"></div>
+            {/* 화살표: 말풍선 아래쪽 중앙에 위치 */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -translate-y-1 w-3 h-3 bg-slate-800 rotate-45"></div>
         </div>
     );
 };

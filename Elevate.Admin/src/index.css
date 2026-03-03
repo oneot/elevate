@@ -1,0 +1,183 @@
+@import "tailwindcss";
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+@theme {
+  --font-sans: 'Segoe UI', 'Inter', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  --color-ms-blue: #0f6cbd;
+  --color-ms-green: #107c10;
+  --color-ms-orange: #d83b01;
+  --color-ms-yellow: #ffaa44;
+  --color-ms-slate: #f3f2f1;
+}
+
+/* 전역 타이포그래피 */
+html {
+  scroll-behavior: smooth;
+  font-family: var(--font-sans);
+  background-color: var(--color-ms-slate);
+}
+
+body {
+  line-height: 1.5;
+  word-break: keep-all;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus 스타일 (Fluent Design 2) */
+*:focus-visible {
+  outline: 2px solid var(--color-ms-blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 텍스트 색상 유틸리티 */
+.text-gradient {
+  color: #0f172a;
+}
+.text-gradient-green {
+  color: var(--color-ms-green);
+}
+.bg-gradient-blue {
+  background-color: var(--color-ms-blue);
+}
+.bg-gradient-green {
+  background-color: var(--color-ms-green);
+}
+
+/* Fluent Card Surface */
+.clean-card {
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 0 2px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+.clean-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.04), 0 0 2px rgba(0, 0, 0, 0.06);
+}
+
+/* TipTap 에디터 스타일 (중복 제거 & 깔끔한 Fluent 스타일) */
+.ProseMirror {
+  outline: none;
+  color: #242424;
+}
+
+.ProseMirror h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 2.25rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ProseMirror h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 2rem;
+  margin-top: 0.875rem;
+  margin-bottom: 0.875rem;
+}
+
+.ProseMirror h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.75rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.ProseMirror blockquote {
+  border-left: 3px solid #0f6cbd;
+  padding-left: 1rem;
+  font-size: 0.95em;
+  color: #424242;
+  margin: 1rem 0;
+  background-color: #f3f2f1;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.ProseMirror code {
+  background-color: #f3f2f1;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.875em;
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: #d83b01;
+}
+
+.ProseMirror pre {
+  background-color: #242424;
+  color: #faf9f8;
+  padding: 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.ProseMirror pre code {
+  background-color: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: 0.875rem;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+
+.ProseMirror ul {
+  list-style-type: disc;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+}
+
+.ProseMirror li {
+  margin: 0.25rem 0;
+}
+
+.ProseMirror hr {
+  border: none;
+  border-top: 1px solid #edebe9;
+  margin: 2rem 0;
+}
+
+.ProseMirror p {
+  margin: 0.75rem 0;
+}
+
+.ProseMirror a {
+  color: #0f6cbd;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.ProseMirror a:hover {
+  color: #004578;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 1rem 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+.ProseMirror strong {
+  font-weight: 600;
+}
+
+.ProseMirror em {
+  font-style: italic;
+}
+
+.ProseMirror s {
+  text-decoration: line-through;
+}

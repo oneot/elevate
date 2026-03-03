@@ -1,6 +1,50 @@
 {
   "items": [
     {
+      "id": "m365/powerpoint-tutorial",
+      "slug": "powerpoint-tutorial",
+      "title": "📖 PowerPoint로 쉽게 강의자료 만들기",
+      "excerpt": "STEP 1. PowerPoint",
+      "imageUrl": "/images/m365/powerpoint-tutorial/1.png",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-16",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "office",
+        "powerpoint"
+      ],
+      "series": "M365 활용 가이드",
+      "seriesOrder": 3
+    },
+    {
+      "id": "excel/excel-tutorial",
+      "slug": "excel-tutorial",
+      "title": "📖 Excel로 데이터 쉽게 관리하기",
+      "excerpt": "STEP 1. Excel",
+      "imageUrl": "/images/excel/excel-tutorial/1.png",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-16",
+      "likes": 0,
+      "comments": 0,
+      "category": "excel",
+      "tags": [
+        "m365",
+        "productivity",
+        "office",
+        "excel"
+      ],
+      "series": "Excel 활용 가이드",
+      "seriesOrder": 1
+    },
+    {
       "id": "onenote/onenote",
       "slug": "onenote",
       "title": "📘 Onenote로 자료 정리하기 기초 - 기본 기능부터 유용한 Tip까지",
@@ -16,7 +60,9 @@
       "tags": [
         "onenote",
         "productivity"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "teams/teams-2",
@@ -34,7 +80,9 @@
       "tags": [
         "teams",
         "collaboration"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "teams/teams-1",
@@ -54,12 +102,14 @@
         "collaboration",
         "productivity",
         "tutorial"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "minecraft/minecraft-education-block-coding",
       "slug": "minecraft-education-block-coding",
-      "title": "Minecraft에 Education Block Coding",
+      "title": "Minecraft Education Block Coding",
       "excerpt": "STEP 0: 시나리오",
       "imageUrl": "/images/minecraft/minecraft-block-coding/img1.png",
       "author": {
@@ -73,13 +123,15 @@
         "minecraft",
         "gaming",
         "coding"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "m365/signup",
       "slug": "signup",
       "title": "📘 Microsoft 365 교육용 계정 만들기 - 교육청 포털에서 시작하기",
-      "excerpt": "🤔 이런 순간, 익숙하지 않으신가요? ",
+      "excerpt": "STEP 0. 어디서 만들어야 할까?",
       "imageUrl": "/images/m365/signup/img1.png",
       "author": {
         "name": "Unknown"
@@ -93,7 +145,31 @@
         "account",
         "education",
         "tutorial"
-      ]
+      ],
+      "series": "M365 활용 가이드",
+      "seriesOrder": 1
+    },
+    {
+      "id": "m365/onedrive-tutorial",
+      "slug": "onedrive-tutorial",
+      "title": "📖 Onedrive로 어디서나 안전하게 저장·공유·협업하기",
+      "excerpt": "STEP 1. Onedrive",
+      "imageUrl": "/images/m365/onedrive-tutorial/1.png",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-02",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "cloud",
+        "onedrive"
+      ],
+      "series": "M365 활용 가이드",
+      "seriesOrder": 2
     },
     {
       "id": "excel/excel-2",
@@ -113,7 +189,9 @@
         "productivity",
         "office",
         "excel"
-      ]
+      ],
+      "series": "Excel 활용 가이드",
+      "seriesOrder": 3
     },
     {
       "id": "excel/excel-1",
@@ -133,7 +211,9 @@
         "productivity",
         "office",
         "excel"
-      ]
+      ],
+      "series": "Excel 활용 가이드",
+      "seriesOrder": 2
     },
     {
       "id": "copilot/prompt-coach",
@@ -152,7 +232,9 @@
         "copilot",
         "ai",
         "agent"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "copilot/research",
@@ -171,7 +253,9 @@
         "copilot",
         "ai",
         "prompt"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "copilot/custom-agent",
@@ -190,7 +274,9 @@
         "copilot",
         "ai",
         "productivity"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "copilot/copilot-chat",
@@ -209,7 +295,9 @@
         "copilot",
         "ai",
         "tutorial"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "copilot/analyst",
@@ -228,14 +316,17 @@
         "copilot",
         "productivity",
         "agent"
-      ]
+      ],
+      "series": null,
+      "seriesOrder": null
     }
   ],
-  "total": 12,
+  "total": 15,
   "allTags": [
     "account",
     "agent",
     "ai",
+    "cloud",
     "coding",
     "collaboration",
     "copilot",
@@ -245,10 +336,58 @@
     "m365",
     "minecraft",
     "office",
+    "onedrive",
     "onenote",
+    "powerpoint",
     "productivity",
     "prompt",
     "teams",
     "tutorial"
-  ]
+  ],
+  "seriesByCategory": {
+    "m365": {
+      "M365 활용 가이드": [
+        {
+          "id": "m365/signup",
+          "slug": "signup",
+          "title": "📘 Microsoft 365 교육용 계정 만들기 - 교육청 포털에서 시작하기",
+          "seriesOrder": 1
+        },
+        {
+          "id": "m365/onedrive-tutorial",
+          "slug": "onedrive-tutorial",
+          "title": "📖 Onedrive로 어디서나 안전하게 저장·공유·협업하기",
+          "seriesOrder": 2
+        },
+        {
+          "id": "m365/powerpoint-tutorial",
+          "slug": "powerpoint-tutorial",
+          "title": "📖 PowerPoint로 쉽게 강의자료 만들기",
+          "seriesOrder": 3
+        }
+      ]
+    },
+    "excel": {
+      "Excel 활용 가이드": [
+        {
+          "id": "excel/excel-tutorial",
+          "slug": "excel-tutorial",
+          "title": "📖 Excel로 데이터 쉽게 관리하기",
+          "seriesOrder": 1
+        },
+        {
+          "id": "excel/excel-1",
+          "slug": "excel-1",
+          "title": "Excel (1)",
+          "seriesOrder": 2
+        },
+        {
+          "id": "excel/excel-2",
+          "slug": "excel-2",
+          "title": "Excel (2)",
+          "seriesOrder": 3
+        }
+      ]
+    }
+  }
 }

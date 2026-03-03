@@ -34,13 +34,14 @@ jobs:
             - name: Install dependencies (ignore peer conflicts)
               run: npm ci --legacy-peer-deps
 
+            - name: Build posts
+              run: npm run generate-posts
+              
             - name: Build
               run: npm run build
               env:
                 VITE_DIRECT_LINE_SECRET: ${{ secrets.DIRECT_LINE_SECRET }}
 
-            - name: Build posts
-              run: npm run generate-posts
 
             - name: Include CNAME
               run: cp ../CNAME dist/
