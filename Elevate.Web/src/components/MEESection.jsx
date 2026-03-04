@@ -4,7 +4,7 @@ import meeImage from '../assets/mee-image.png';
 const MEESection = () => {
     return (
         <section id="mee-section" className="py-20 px-6 max-w-7xl mx-auto">
-            <div className="bg-white/40 backdrop-blur-2xl rounded-[40px] p-10 lg:p-16 relative overflow-hidden text-center lg:text-left border border-white/60 border-b-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.1),inset_0_1px_2px_rgba(255,255,255,0.9)] fade-in-section">
+            <div className="bg-white/40 backdrop-blur-2xl rounded-[40px] p-10 lg:p-16 relative overflow-hidden text-center lg:text-left border border-white/60 border-b-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_1px_2px_rgba(255,255,255,0.9)] fade-in-section">
                 
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-blue-100 via-sky-50 to-transparent rounded-full translate-x-1/4 -translate-y-1/4 z-0"></div>
 
