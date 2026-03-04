@@ -14,12 +14,10 @@ const MapSection = () => {
         const name = officeNames[key] || key || "지역";
         const mapRect = mapContainerRef.current.getBoundingClientRect();
         
-        // circle 요소의 실제 화면상 위치를 정확히 계산
         const circleRect = e.target.getBoundingClientRect();
         const circleCenterX = circleRect.left + circleRect.width / 2;
         const circleCenterY = circleRect.top + circleRect.height / 2;
         
-        // 핀의 반경과 마진을 고려하여 말풍선 위치 계산
         const pinRadius = parseFloat(e.target.getAttribute('r')) || 8;
         const tooltipOffset = pinRadius + 35;
         
@@ -36,7 +34,6 @@ const MapSection = () => {
         if (!tooltip.visible) return;
         const mapRect = mapContainerRef.current.getBoundingClientRect();
         
-        // 마우스 움직임에 따라 실시간으로 위치 업데이트
         const circleRect = e.target.getBoundingClientRect();
         const circleCenterX = circleRect.left + circleRect.width / 2;
         const circleCenterY = circleRect.top + circleRect.height / 2;
@@ -59,19 +56,14 @@ const MapSection = () => {
     const handleMapPointClick = (key) => {
         const name = officeNames[key] || key;
         const url = normalizeUrl(offices[key]);
-
         if (!url) return;
 
-        // ✅ 모바일(터치 스크린)인지 확인
         const isMobile = window.matchMedia("(pointer: coarse)").matches;
-
         if (isMobile) {
-            // 📱 모바일: 확인창 띄우기 (오터치 방지)
             if (window.confirm(`${name} 페이지로 이동하시겠습니까?`)) {
                 window.open(url, "_blank", "noopener,noreferrer");
             }
         } else {
-            // 💻 PC: 묻지 않고 바로 이동 (빠른 탐색)
             window.open(url, "_blank", "noopener,noreferrer");
         }
     };
@@ -101,20 +93,37 @@ const MapSection = () => {
                     </span>
                 </p>
 
-                <div style={{ opacity: 0, transform: 'translateY(30px)', transition: 'all 1s ease-out 0.45s' }} className="bg-white p-6 rounded-2xl shadow-soft border border-slate-100 flex items-start gap-4 w-full max-w-md transform transition-transform hover:scale-105">
-                    <img src={feelingsMonster} alt="Student icon" className="w-16 h-16 object-contain shrink-0" />
-                    <div>
-                        <h3 className="text-lg font-bold text-slate-900 mb-1">교육용 계정 생성이 어려우신가요?</h3>
-                        <button 
-                            onClick={() => window.open('https://microsoft-elevate.com/blog/m365/signup', '_blank', 'noopener,noreferrer')}
-                            className="px-4 py-2 bg-ms-blue text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors text-sm"
-                        >
-                            자세히 알아보기
-                        </button>
-                    </div>
+                <div style={{ opacity: 0, transform: 'translateY(30px)', transition: 'all 1s ease-out 0.45s' }} className="w-full max-w-[420px]">
+    <a 
+        href="https://microsoft-elevate.com/blog/m365/signup"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="py-4 group relative overflow-hidden bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] border border-white/60 border-b-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_1px_2px_rgba(255,255,255,0.9)] flex items-center gap-5 w-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-white/50 hover:shadow-[0_20px_50px_rgba(0,0,0,0.3),inset_0_1px_2px_rgba(255,255,255,1)] cursor-pointer card-link outline-none"
+    >
+        <div className="w-16 h-16 bg-white/60 rounded-2xl p-2 shadow-sm border border-white/80 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 shrink-0">
+            <img src={feelingsMonster} alt="Student icon" className="w-full h-full object-contain" />
+        </div>
+        <div className="flex flex-col items-start text-left w-full">
+            <h3 className="text-lg font-extrabold text-slate-900 leading-snug">
+                교육용 계정 관련 도움이 필요하신가요?
+            </h3>
+            <div className="w-full mt-2 overflow-hidden">
+                <div className="text-sm font-bold 
+                    flex justify-start
+                    transition-all duration-800 ease-[cubic-bezier(0.16,1,0.3,1)]
+                    text-blue-600
+                    group-hover:translate-x-[calc(97%-85px)]
+                    group-hover:text-blue-900"
+                >
+                    더 알아보기 →
                 </div>
             </div>
+        </div>
+    </a>
+</div>
+            </div>
 
+            {/* 오른쪽 지도 영역 */}
             <div 
                 ref={mapContainerRef}
                 className="lg:w-1/2 relative flex justify-center items-center h-[500px] lg:h-[750px] w-full map-container"
@@ -127,7 +136,6 @@ const MapSection = () => {
                     onPointLeave={handleMapPointLeave}
                     onPointClick={handleMapPointClick}
                 />
-
                 <MapTooltip tooltip={tooltip} />
             </div>
         </section>
