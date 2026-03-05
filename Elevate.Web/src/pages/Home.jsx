@@ -32,7 +32,7 @@ const Home = () => {
     // 기능 카드 데이터
     const features = [
         {
-            title: 'M365 개요',
+            title: 'M365',
             description: '교실 운영을 통합하고 학습 활동을 지속적으로 이어가는 방법을 소개합니다.',
             icon: m365Icon,
             iconType: 'image',

@@ -10,7 +10,7 @@ import SeriesNavigator from '../components/SeriesNavigator';
 
 const DISPLAY_NAMES = {
   all: 'ALL',
-  m365: 'M365 개요',
+  m365: 'M365',
   copilot: 'Copilot',
   teams: 'Teams',
   minecraft: 'Minecraft',
