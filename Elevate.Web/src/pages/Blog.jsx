@@ -14,42 +14,42 @@ const Blog = () => {
             title: 'M365 개요',
             excerpt: 'M365 도구로 교육을 혁신하는 실전 가이드와 사례.',
             icon: <img src={m365CopilotLogo} alt="Microsoft 365" className="h-10 w-10 object-contain rounded-md" />,
-            to: '/blog/m365',
+            to: '/m365',
             ctaLabel: '자세히 보기'
         },
         {
             title: 'Copilot',
             excerpt: '교실과 업무에서 Copilot 활용 사례와 팁을 공유합니다.',
             icon: <img src={copilotLogo} alt="Copilot" className="h-10 w-10 object-contain rounded-md" />,
-            to: '/blog/copilot',
+            to: '/copilot',
             ctaLabel: '자세히 보기'
         },
         {
             title: 'Teams',
             excerpt: '협업과 원격수업을 위한 Teams 활용법과 모범 사례.',
             icon: <img src={teamsLogo} alt="Teams" className="h-10 w-10 object-contain rounded-md" />,
-            to: '/blog/teams',
+            to: '/teams',
             ctaLabel: '자세히 보기'
         },
         {
             title: 'Minecraft',
             excerpt: '교육용 Minecraft 프로젝트와 수업 사례를 소개합니다.',
             icon: <img src={minecraftLogo} alt="Minecraft EDU" className="h-10 w-10 object-contain rounded-md" />,
-            to: '/blog/minecraft',
+            to: '/minecraft',
             ctaLabel: '자세히 보기'
         },
         {
             title: 'Excel',
             excerpt: '교실과 실무에서 유용한 Excel 팁과 템플릿을 공유합니다.',
             icon: <img src={excelLogo} alt="Excel" className="h-10 w-10 object-contain rounded-md" />,
-            to: '/blog/excel',
+            to: '/excel',
             ctaLabel: '자세히 보기'
         },
         {
             title: 'OneNote',
             excerpt: '교수·학습 기록과 협업을 돕는 OneNote 활용 사례.',
             icon: <img src={onenoteLogo} alt="OneNote" className="h-10 w-10 object-contain rounded-md" />,
-            to: '/blog/onenote',
+            to: '/onenote',
             ctaLabel: '자세히 보기'
         }
     ];

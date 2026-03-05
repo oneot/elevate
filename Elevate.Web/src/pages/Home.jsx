@@ -36,7 +36,7 @@ const Home = () => {
             description: '교실 운영을 통합하고 학습 활동을 지속적으로 이어가는 방법을 소개합니다.',
             icon: m365Icon,
             iconType: 'image',
-            to: '/blog/m365',
+            to: '/m365',
             colorScheme: 'orange',
             ariaLabel: 'M365 개요 페이지로 이동'
         },
@@ -45,7 +45,7 @@ const Home = () => {
             description: '선생님의 업무 시간은 줄이고, 학생들의 창의력은 확장합니다.',
             icon: copilotIcon,
             iconType: 'image',
-            to: '/blog/copilot',
+            to: '/copilot',
             colorScheme: 'blue',
             ariaLabel: 'Copilot 페이지로 이동'
         },
@@ -55,7 +55,7 @@ const Home = () => {
             icon: teamsIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
-            to: '/blog/teams',
+            to: '/teams',
             colorScheme: 'indigo',
             ariaLabel: 'Microsoft Teams 페이지로 이동'
         },
@@ -65,7 +65,7 @@ const Home = () => {
             icon: minecraftIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
-            to: '/blog/minecraft',
+            to: '/minecraft',
             colorScheme: 'green',
             ariaLabel: 'Minecraft EDU 페이지로 이동'
         },
@@ -75,7 +75,7 @@ const Home = () => {
             icon: excelIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
-            to: '/blog/excel',
+            to: '/excel',
             colorScheme: 'emerald',
             ariaLabel: 'Excel 페이지로 이동'
         },
@@ -85,20 +85,20 @@ const Home = () => {
             icon: onenoteIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
-            to: '/blog/onenote',
+            to: '/onenote',
             colorScheme: 'violet',
             ariaLabel: 'OneNote 페이지로 이동'
-        },
-        {
-            title: 'Elevate Blog',
-            description: 'M365의 업데이트 소식들을 한 곳에서 확인하세요.',
-            icon: '📦',
-            iconType: 'emoji',
-            to: '/blog',
-            colorScheme: 'slate',
-            ctaLabel: '전체 보기 →',
-            ariaLabel: 'Elevate Blog 전체 페이지로 이동'
         }
+        // {
+        //     title: 'Elevate Blog',
+        //     description: 'M365의 업데이트 소식들을 한 곳에서 확인하세요.',
+        //     icon: '📦',
+        //     iconType: 'emoji',
+        //     to: '/blog',
+        //     colorScheme: 'slate',
+        //     ctaLabel: '전체 보기 →',
+        //     ariaLabel: 'Elevate Blog 전체 페이지로 이동'
+        // }
     ];
 
     return (

@@ -21,7 +21,7 @@ seriesOrder: 1
     - 특히 조직 내외로 Excel 파일을 공유할 때 학교 내의 정보를 안전하게 보호할 수 있어요.
 - Teams, SharePoint와의 협업 기능이 더 부드럽게 작동합니다.
     - 여러 사람들이 하나의 파일을 실시간으로 편집할 때 더욱 안정적으로 할 수 있어요.
-- Excel을 사용하기 위한 계정이 아직 없다면? [여기](https://microsoft-elevate.com/blog/m365/signup)를 확인해보세요. 
+- Excel을 사용하기 위한 계정이 아직 없다면? [여기](https://microsoft-elevate.com/m365/signup)를 확인해보세요. 
 
 # STEP 2. 웹에서 Excel 바로 써보기
 

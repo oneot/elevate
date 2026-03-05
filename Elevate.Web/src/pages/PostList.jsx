@@ -200,7 +200,7 @@ export default function PostList() {
           <ul className="flex flex-wrap gap-2">
             {VALID_CATEGORIES.map((c) => (
               <li key={c}>
-                <Link to={`/blog/${c}`} className={`inline-block px-3.5 py-2 rounded-full border text-sm sm:text-base ${c === category ? 'bg-ms-blue text-white' : 'bg-white text-slate-700'}`}>
+                <Link to={`/${c}`} className={`inline-block px-3.5 py-2 rounded-full border text-sm sm:text-base ${c === category ? 'bg-ms-blue text-white' : 'bg-white text-slate-700'}`}>
                   {DISPLAY_NAMES[c]}
                 </Link>
               </li>

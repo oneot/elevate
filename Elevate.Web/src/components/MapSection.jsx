@@ -95,7 +95,7 @@ const MapSection = () => {
 
                 <div style={{ opacity: 0, transform: 'translateY(30px)', transition: 'all 1s ease-out 0.45s' }} className="w-full max-w-[420px]">
     <a 
-        href="https://microsoft-elevate.com/blog/m365/signup"
+        href="https://microsoft-elevate.com/m365/signup"
         target="_blank"
         rel="noopener noreferrer"
         className="py-4 group relative overflow-hidden bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] border border-white/60 border-b-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_1px_2px_rgba(255,255,255,0.9)] flex items-center gap-5 w-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-white/50 hover:shadow-[0_20px_50px_rgba(0,0,0,0.3),inset_0_1px_2px_rgba(255,255,255,1)] cursor-pointer card-link outline-none"
