@@ -175,7 +175,7 @@
 6. **`SeriesNavigator`** 가 현재 카테고리의 시리즈 정보 표시 (조건부)
 
 ### 게시글 상세 화면
-1. 라우팅: `/blog/:category/:postId`
+1. 라우팅: `/:category/:postId`
 2. **`PostDetail`** 가 URL 파라미터로부터 ID 추출
 3. 개별 JSON 또는 전체 `posts.json`에서 게시글 데이터 로드
 4. 마크다운 렌더링 (좌측)

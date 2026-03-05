@@ -46,7 +46,7 @@ export default function SeriesNavigator({ seriesPosts = [], seriesTitle = '', ca
               return (
                 <li key={post.slug}>
                   <Link
-                    to={`/blog/${category}/${post.slug}`}
+                    to={`/${category}/${post.slug}`}
                     className={`block px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? 'bg-ms-blue/10 text-ms-blue font-semibold border-l-4 border-ms-blue'

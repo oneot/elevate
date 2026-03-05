@@ -1,6 +1,72 @@
 {
   "items": [
     {
+      "id": "m365/word-tutorial",
+      "slug": "word-tutorial",
+      "title": "📖 Microsoft Word - 글로벌 문서 작업 플랫폼 Word 온라인으로 시작하기",
+      "excerpt": "STEP 1. Word",
+      "imageUrl": "/images/m365/word-tutorial/001.png",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-28",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "word",
+        "cloud",
+        "onedrive"
+      ],
+      "series": "M365 활용 가이드",
+      "seriesOrder": 4
+    },
+    {
+      "id": "teams/teams-tutorial",
+      "slug": "teams-tutorial",
+      "title": "📘 Teams로 학급 만들고 관리하기 - 기본 세팅부터 운영까지",
+      "excerpt": "STEP 1. Teams로 학급 관리하기 – 왜 Teams인가요?",
+      "imageUrl": "/images/teams/teams-0/img0_0.png",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-27",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "collaboration",
+        "productivity",
+        "tutorial"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "minecraft/minecraft-tutorial",
+      "slug": "minecraft-tutorial",
+      "title": "⛏️ Minecraft와 함께 게임으로 학습하기",
+      "excerpt": "STEP 1. Minecraft Education",
+      "imageUrl": "/images/minecraft/minecraft-tutorial/1.png",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-16",
+      "likes": 0,
+      "comments": 0,
+      "category": "minecraft",
+      "tags": [
+        "gaming",
+        "education",
+        "minecraft"
+      ],
+      "series": "Minecraft 활용 가이드",
+      "seriesOrder": 1
+    },
+    {
       "id": "m365/powerpoint-tutorial",
       "slug": "powerpoint-tutorial",
       "title": "📖 PowerPoint로 쉽게 강의자료 만들기",
@@ -65,8 +131,8 @@
       "seriesOrder": null
     },
     {
-      "id": "teams/teams-2",
-      "slug": "teams-2",
+      "id": "teams/teams-1",
+      "slug": "teams-1",
       "title": "📄 Teams 과제, 퀴즈로 수업을 제출하고 확인하고 피드백하기까지 한 번에 관리하기",
       "excerpt": "이런 순간, 필요하지 않으신가요? ",
       "imageUrl": "/images/teams/teams-1/img1.png",
@@ -85,32 +151,10 @@
       "seriesOrder": null
     },
     {
-      "id": "teams/teams-1",
-      "slug": "teams-1",
-      "title": "📘 Teams로 학급 만들고 관리하기 : 기본 세팅부터 운영까지",
-      "excerpt": "이런 순간, 익숙하지 않으신가요? ",
-      "imageUrl": "/images/teams/teams-0/img1.png",
-      "author": {
-        "name": "Unknown"
-      },
-      "publishedAt": "2026-02-02",
-      "likes": 0,
-      "comments": 0,
-      "category": "teams",
-      "tags": [
-        "teams",
-        "collaboration",
-        "productivity",
-        "tutorial"
-      ],
-      "series": null,
-      "seriesOrder": null
-    },
-    {
       "id": "minecraft/minecraft-education-block-coding",
       "slug": "minecraft-education-block-coding",
       "title": "Minecraft Education Block Coding",
-      "excerpt": "STEP 0: 시나리오",
+      "excerpt": "이런 순간, 익숙하지 않으신가요? ",
       "imageUrl": "/images/minecraft/minecraft-block-coding/img1.png",
       "author": {
         "name": "Unknown"
@@ -174,8 +218,8 @@
     {
       "id": "excel/excel-2",
       "slug": "excel-2",
-      "title": "Excel (2)",
-      "excerpt": "Excel로 급식지도 담당 배정하기",
+      "title": "Excel로 급식지도 담당 한번에 배정하기",
+      "excerpt": "이런 순간, 익숙하지 않으신가요? ",
       "imageUrl": "/images/m365/excel-2/img1.png",
       "author": {
         "name": "Unknown"
@@ -196,7 +240,7 @@
     {
       "id": "excel/excel-1",
       "slug": "excel-1",
-      "title": "Excel (1)",
+      "title": "Excel로 담당 학급 성적 관리하기",
       "excerpt": "이런 순간, 익숙하지 않으신가요? ",
       "imageUrl": "/images/m365/excel-1/img0.png",
       "author": {
@@ -261,7 +305,7 @@
       "id": "copilot/custom-agent",
       "slug": "custom-agent",
       "title": "M365 Copilot으로 나만의 에이전트 만들기",
-      "excerpt": "STEP 0. 시나리오",
+      "excerpt": "이런 순간, 익숙하지 않으신가요? ",
       "imageUrl": "/images/m365Copilot/copilotAgent/img1.png",
       "author": {
         "name": "Unknown"
@@ -321,7 +365,7 @@
       "seriesOrder": null
     }
   ],
-  "total": 15,
+  "total": 17,
   "allTags": [
     "account",
     "agent",
@@ -342,7 +386,8 @@
     "productivity",
     "prompt",
     "teams",
-    "tutorial"
+    "tutorial",
+    "word"
   ],
   "seriesByCategory": {
     "m365": {
@@ -364,6 +409,22 @@
           "slug": "powerpoint-tutorial",
           "title": "📖 PowerPoint로 쉽게 강의자료 만들기",
           "seriesOrder": 3
+        },
+        {
+          "id": "m365/word-tutorial",
+          "slug": "word-tutorial",
+          "title": "📖 Microsoft Word - 글로벌 문서 작업 플랫폼 Word 온라인으로 시작하기",
+          "seriesOrder": 4
+        }
+      ]
+    },
+    "minecraft": {
+      "Minecraft 활용 가이드": [
+        {
+          "id": "minecraft/minecraft-tutorial",
+          "slug": "minecraft-tutorial",
+          "title": "⛏️ Minecraft와 함께 게임으로 학습하기",
+          "seriesOrder": 1
         }
       ]
     },
@@ -378,13 +439,13 @@
         {
           "id": "excel/excel-1",
           "slug": "excel-1",
-          "title": "Excel (1)",
+          "title": "Excel로 담당 학급 성적 관리하기",
           "seriesOrder": 2
         },
         {
           "id": "excel/excel-2",
           "slug": "excel-2",
-          "title": "Excel (2)",
+          "title": "Excel로 급식지도 담당 한번에 배정하기",
           "seriesOrder": 3
         }
       ]

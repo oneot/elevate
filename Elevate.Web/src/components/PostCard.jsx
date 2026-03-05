@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 const PostCard = ({ post }) => {
   const { id, slug, title, excerpt, imageUrl, author, publishedAt, likes = 0, comments = 0, category, tags = [] } = post;
   const safeCategory = category || 'all';
-  const to = `/blog/${safeCategory}/${slug || id}`;
+  const to = `/${safeCategory}/${slug || id}`;
   const [showAllTags, setShowAllTags] = useState(false);
   const moreRef = useRef(null);
   const cardRef = useRef(null);

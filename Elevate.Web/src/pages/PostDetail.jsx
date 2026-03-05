@@ -94,9 +94,7 @@ const PostDetail = () => {
                                 <div className="text-sm text-slate-500 mb-6">
                                     <Link to="/" className="hover:text-ms-blue transition-colors">Home</Link>
                                     <span className="mx-2">/</span>
-                                    <Link to="/blog" className="hover:text-ms-blue transition-colors">Blog</Link>
-                                    <span className="mx-2">/</span>
-                                    <Link to={`/blog/${normalizedCategory}`} className="hover:text-ms-blue transition-colors">{categoryDisplayName}</Link>
+                                    <Link to={`/${normalizedCategory}`} className="hover:text-ms-blue transition-colors">{categoryDisplayName}</Link>
                                 </div>
 
                                 {loading && <div className="text-center py-8 text-slate-500">로딩 중...</div>}

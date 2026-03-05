@@ -145,10 +145,10 @@ cat public/api/posts/<category>--<slug>.json
 ## 슬러그 규칙
 
 - **기본값**: 파일명 (확장자 제외)
-  - `copilot.md` → 슬러그 `copilot` → URL `/blog/copilot/copilot`
-  - `excel-1.md` → 슬러그 `excel-1` → URL `/blog/excel/excel-1`
+  - `copilot.md` → 슬러그 `copilot` → URL `/copilot/copilot`
+  - `excel-1.md` → 슬러그 `excel-1` → URL `/excel/excel-1`
 - **커스텀**: frontmatter의 `slug` 필드로 재정의 가능
-  - `posts/excel/excel-1.md`에서 `slug: "intro"`라고 하면 → URL `/blog/excel/intro`
+  - `posts/excel/excel-1.md`에서 `slug: "intro"`라고 하면 → URL `/excel/intro`
 
 ---
 
