@@ -39,7 +39,7 @@ const MapSection = () => {
         const circleCenterY = circleRect.top + circleRect.height / 2;
         
         const pinRadius = parseFloat(e.target.getAttribute('r')) || 8;
-        const tooltipOffset = pinRadius + 25;
+        const tooltipOffset = pinRadius + 10;
         
         setTooltip(prev => ({
             ...prev,
