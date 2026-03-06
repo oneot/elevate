@@ -40,11 +40,22 @@ jobs:
               working-directory: ./Elevate.Admin
               run: npm install
 
+            - name: Replace Tenant ID in config files
+              working-directory: ./Elevate.Admin
+              run: |
+                  # staticwebapp.config.json의 YOUR_TENANT_ID를 실제 값으로 치환
+                  sed -i "s|YOUR_TENANT_ID|${{ secrets.VITE_AZURE_TENANT_ID }}|g" staticwebapp.config.json
+                  sed -i "s|YOUR_TENANT_ID|${{ secrets.VITE_AZURE_TENANT_ID }}|g" public/staticwebapp.config.json
+              shell: bash
+
             - name: Build Admin App
               working-directory: ./Elevate.Admin
               run: npm run build
               env:
                   NODE_ENV: production
+                  VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+                  VITE_AZURE_TENANT_ID: ${{ secrets.VITE_AZURE_TENANT_ID }}
+                  VITE_AZURE_CLIENT_ID: ${{ secrets.VITE_AZURE_CLIENT_ID }}
 
             - name: Deploy to Azure Static Web Apps
               id: deploy
