@@ -44,8 +44,22 @@ jobs:
               working-directory: ./Elevate.Admin
               run: |
                   # staticwebapp.config.json의 YOUR_TENANT_ID를 실제 값으로 치환
+                  echo "Replacing YOUR_TENANT_ID with Tenant ID in config files..."
                   sed -i "s|YOUR_TENANT_ID|${{ secrets.VITE_AZURE_TENANT_ID }}|g" staticwebapp.config.json
                   sed -i "s|YOUR_TENANT_ID|${{ secrets.VITE_AZURE_TENANT_ID }}|g" public/staticwebapp.config.json
+                  echo "✓ Replacement completed"
+              shell: bash
+
+            - name: Verify config files (no YOUR_TENANT_ID should remain)
+              working-directory: ./Elevate.Admin
+              run: |
+                  echo "Verifying config files..."
+                  if grep -r "YOUR_TENANT_ID" staticwebapp.config.json public/staticwebapp.config.json; then
+                    echo "❌ ERROR: Found unreplaced YOUR_TENANT_ID placeholders!"
+                    exit 1
+                  else
+                    echo "✓ All YOUR_TENANT_ID placeholders replaced successfully"
+                  fi
               shell: bash
 
             - name: Build Admin App
