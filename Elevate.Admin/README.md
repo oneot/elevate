@@ -42,15 +42,66 @@
 
 ## 환경 변수
 
-- `VITE_API_BASE_URL`: Azure App Service API 엔드포인트 (예: `https://<app>.azurewebsites.net/api`)
+### 로컬 개발
 
-예시는 [.env.example](.env.example)를 참고하세요.
+`.env.example`을 `.env`로 복사하여 다음 값을 설정하세요:
+
+```bash
+# Azure App Service Backend API
+VITE_API_BASE_URL=xxxxx
+
+# Entra ID Authentication (테넌트 제한용)
+VITE_AZURE_TENANT_ID=your-tenant-id-here
+VITE_AZURE_CLIENT_ID=your-client-id-here
+```
+
+#### 환경 변수 확인 방법
+
+**VITE_AZURE_TENANT_ID**:
+```bash
+# Azure CLI로 확인
+az account show --query tenantId -o tsv
+
+# 또는 Azure Portal
+# Entra ID > Overview > Tenant ID
+```
+
+**VITE_AZURE_CLIENT_ID**:
+```bash
+# Terraform 적용 후 확인
+cd infrastructure/terraform
+terraform output entra_admin_app_id
+```
 
 API가 아직 준비되지 않은 경우, Admin은 목업 데이터를 사용해 UI를 미리 확인할 수 있습니다.
 
-## 인증/라우팅 설정
+## 인증 및 테넌트 제한
 
-Static Web Apps의 내장 인증을 사용합니다. 모든 Admin 경로는 `authenticated` 역할로 제한되어 있으며, 구성은 [staticwebapp.config.json](staticwebapp.config.json)에 정의됩니다.
+### Entra ID 기반 인증
+
+이 앱은 **Azure Static Web Apps의 내장 인증**과 **Entra ID 앱 등록**을 사용합니다:
+
+- **테넌트 제한**: `sign_in_audience = "AzureADMyOrg"` 설정으로 **회사 테넌트 사용자만** 접근 가능
+- **다른 테넌트의 Microsoft 계정**: 로그인 차단
+- **개인 Microsoft 계정** (Hotmail, Outlook 등): 로그인 차단
+
+### 설정 구조
+
+인증 구성은 다음 파일들에서 관리됩니다:
+
+1. **[staticwebapp.config.json](staticwebapp.config.json)**: Azure Static Web Apps 인증 프로바이더 설정
+   - `auth.identityProviders.azureActiveDirectory` 섹션에서 Entra ID 연결
+   - `openIdIssuer`에 Tenant ID 하드코딩 필요
+
+2. **[infrastructure/terraform/entra-id.tf](../infrastructure/terraform/entra-id.tf)**: Entra ID 앱 등록 리소스
+   - `sign_in_audience = "AzureADMyOrg"` 설정
+
+3. **Azure Static Web App 환경 변수** (Azure Portal 또는 CLI에서 설정):
+   - `AZURE_CLIENT_ID`: Entra ID 앱 등록의 Client ID
+
+### 역할 기반 라우팅
+
+모든 Admin 경로는 `authenticated` 역할로 제한되어 있으며, 로그인하지 않은 사용자는 자동으로 Entra ID 로그인 페이지로 리다이렉트됩니다.
 
 ## API 계약 (가정)
 
