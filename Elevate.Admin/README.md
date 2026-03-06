@@ -19,7 +19,7 @@
 이 Admin 앱은 Azure 기반의 서버리스 아키텍처를 전제로 설계됩니다.
 
 - **Admin 프론트엔드**: Azure Static Web Apps (Entra ID 로그인 + 역할 기반 라우팅)
-- **Backend API**: Azure Functions (HTTP Trigger)
+- **Backend API**: Azure App Service (Node.js/Express)
 - **운영 데이터**: Azure Cosmos DB for NoSQL (포스트/메타데이터 저장)
 - **이미지 저장소**: Azure Blob Storage (바이너리 저장)
 - **블로그 트래킹**: Application Insights JS SDK (GitHub Pages에 삽입)
@@ -37,12 +37,12 @@
 정적 사이트인 GitHub Pages의 사용자 트래픽을 관리자가 통계로 파악할 수 있도록 데이터 파이프라인과 대시보드 기능을 구축합니다.
 
 1. **데이터 수집 (GitHub Pages)**: 클라이언트 사이드에 **Application Insights SDK (JavaScript)** 탑재, `trackPageView` 및 `trackEvent` 전송
-2. **통계 분석 및 제공 (Azure Functions)**: Azure Monitor Data Access API를 호출하여 KQL (Kusto Query Language) 기반 통계 데이터(일자별 PV/UV, 유입 경로, 개별 포스트 방문수) 가공 및 전달
+2. **통계 분석 및 제공 (Azure App Service API)**: Azure Monitor Data Access API를 호출하여 KQL (Kusto Query Language) 기반 통계 데이터(일자별 PV/UV, 유입 경로, 개별 포스트 방문수) 가공 및 전달
 3. **관리자 시각화 (Admin Frontend)**: Admin 앱 내 대시보드(Dashboard) 페이지를 신설하고 차트 라이브러리(Recharts 등)를 활용하여 요약 지표 및 트래픽 시각화 제공
 
 ## 환경 변수
 
-- `VITE_API_BASE_URL`: Azure Functions API 엔드포인트 (예: `https://<app>.azurewebsites.net/api`)
+- `VITE_API_BASE_URL`: Azure App Service API 엔드포인트 (예: `https://<app>.azurewebsites.net/api`)
 
 예시는 [.env.example](.env.example)를 참고하세요.
 
