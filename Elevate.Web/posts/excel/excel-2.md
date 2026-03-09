@@ -1,8 +1,8 @@
 title: Excel로 급식지도 담당 한번에 배정하기
 tags: [m365, productivity, office, excel]
 date: 2026-02-02
-series: "Excel 활용 가이드"
-seriesOrder: 3
+series: "Excel 입문 가이드"
+seriesOrder: 8
 ---
 > **이런 순간, 익숙하지 않으신가요?** <br>
 새 학기가 되고, 학생들이 학교에 오면서 급식지도 당번을 정해야 합니다. 

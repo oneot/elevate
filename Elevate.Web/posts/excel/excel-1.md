@@ -1,8 +1,8 @@
 title: Excel로 담당 학급 성적 관리하기
 tags: [m365, productivity, office, excel]
 date: 2026-02-02
-series: "Excel 활용 가이드"
-seriesOrder: 2
+series: "Excel 입문 가이드"
+seriesOrder: 7
 ---
 
 > **이런 순간, 익숙하지 않으신가요?** <br>

@@ -1,0 +1,43 @@
+title: PowerPoint Online 시작하기 6
+tags: [powerpoint, m365]
+date: 2026-03-09
+series: "PowerPoint Online 입문 가이드"
+seriesOrder: 7
+---
+# PowerPoint Online 시작하기 #6
+
+## 1. 3D 모델 삽입하기
+
+이번 챕터에서는 PowerPoint for Desktop에서 지원하는 기능을 알아보겠습니다. PowerPoint의 더 다양한 기능은 App 버전에서 지원을 더 많이 합니다. 3D 모델 삽입과 번역 기능을 다루어보겠습니다.
+
+| 3D 모델 삽입하기
+
+![image](/images/m365/pptonline6/image3.jpg)
+
+1. [삽입] 탭에서 [3D 모델]-[스톡 3D 모델 삽입]을 선택합니다.
+
+2. 이때, 이 디바이스..를 선택하면, 직접 만들거나 다운받은 3D 모델을 삽입할 수 있으나, 학교에서 이루어지는 대부분의 모델은 스톡 3D 모델만으로도 충분합니다.
+
+3D 모델 찾는 팝업 창에서는 반드시 영어로 검색해야 합니다. 검색하게 되면 관련된 여러가지 3D 개체를 보여줍니다. 만약 잘 나오지 않는다면 관련 단어를 검색해보는 것도 좋습니다.
+
+![image](/images/m365/pptonline6/image5.jpg)
+
+![image](/images/m365/pptonline6/image6.jpg)
+
+위와 같이 스톡 이미지 아라에 달리는 사람 이미지가 있는 경우 3D 모델 중 움직이는 스톡 이미지가 삽입됩니다.
+
+---
+
+## 2. PowerPoint 번역 기능
+
+Microsoft는 모든 학생들을 위한 교육을 지향합니다. 따라서 언어 장벽을 넘어 모든 학생들이 수업에 참여하고 학습을 이어갈 수 있도로 도와줍니다. 이러한 도움을 위해 PowerPoint에서는 번역 기능을 제공합니다.
+
+![image](/images/m365/pptonline6/imagee.jpg)
+
+1. [검토] 탭에서 [번역]을 선택합니다.
+
+2. PowerPoint 내에서 번역하고자 하는 텍스트 상자 속의 텍스트를 선택합니다.
+
+3. 약 60개 이상의 언어를 지원합니다. 원하는 언어로 변환한 후 [삽입]을 클릭하여 PowerPoint내 글을 변경합니다.
+
+[검토]-[번역]은 PowerPoint외에 Word, Excel, OneNote 등 대부분의 MS 365 플랫폼에서 지원하는 기능입니다. 번역 기능을 활용하여 더 나은 소통을 만들어낼 수 있습니다.
