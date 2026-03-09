@@ -12,9 +12,13 @@
   },
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/assets/*", "/*.png", "/*.svg", "/*.ico", "/*.txt", "/*.json"]
+    "exclude": ["/.auth/*", "/assets/*", "/*.png", "/*.svg", "/*.ico", "/*.txt", "/*.json"]
   },
   "routes": [
+    {
+      "route": "/.auth/*",
+      "allowedRoles": ["anonymous"]
+    },
     {
       "route": "/*",
       "allowedRoles": ["authenticated"]
