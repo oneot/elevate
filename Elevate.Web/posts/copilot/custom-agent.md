@@ -1,6 +1,8 @@
 title: M365 Copilot으로 나만의 에이전트 만들기
 tags: [copilot, ai, productivity]
 date: 2026-01-26
+series: "Copilot 입문 가이드"
+seriesOrder: 10
 ---
 >**이런 순간, 익숙하지 않으신가요?** <br>
 "이번 시험 범위가 어디인가요?", "과제 설명 다시 해주세요."

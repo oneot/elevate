@@ -1,14 +1,16 @@
 title: ⛏️ Minecraft와 함께 게임으로 학습하기
 tags: [gaming, education, minecraft]
 date: 2026-02-16
-series: "Minecraft 활용 가이드"
+series: "Minecraft Education 입문 가이드"
 seriesOrder: 1
 ---
 # STEP 1. Minecraft Education
 
 ## Minecraft Education이란?
 
-- 학습 주제를 가상 공간에서 직접 구현하고 탐험하며, 학생들이 협력·제작·문제 해결 과정을 통해 배움을 확장할 수 있게 해주는 게임 기반 학습 도구
+Minecraft Education Edition은 전 세계적으로 인기 있는 게임 Minecraft를 교육 목적으로 활용할 수 있도록 설계된 특별한 버전입니다. 이 플랫폼은 학습자들에게 협력, 문제 해결, 창의적 사고의 기회를 제공합니다. 
+
+마이크로소프트의 메타버스 플랫폼에서는 누구나 쉽게 다양하고 창의적인 산출물을 활용한 수업을 진행할 수 있습니다. 이러한 수업을 통해 결과물을 도출할 수 있었던 이유는 A3 Plan 회사(학교) 계정에 Minecraft Education에 접속할 수 있는 권한이 포함되어 있기 때문입니다.
 
 ## 교육용 계정으로 사용했을 때는…
 
@@ -29,6 +31,20 @@ seriesOrder: 1
 
 ![image](/images/minecraft/minecraft-tutorial/1.png)
 
+Window, Chromebook, Android, Mac, IPHONE, IPAD 어떤 기기도 마인크래프트 에듀케이션을 설치하여 활용할 수 있습니다.
+
+![image](/images/minecraft/minecraftedu1/imagef.jpg)
+
+iPad와 iOS의 App Store에서 검색한 사진입니다. A3 Plan 아이디로 접속하려면 Minecraft가 아닌 Minecraft Education을 설치한 후 로그인해야 합니다. 물론 Android, Chromebook 모두 설치 가능합니다.
+
+![image](/images/minecraft/minecraftedu1/image12.jpg)
+
+Windows를 기준으로 설명드리겠습니다. Windows를 선택하고 [설치]를 누르면 파일이 다운로드됩니다. 다운로드된 파일을 열어 설치를 진행하면, 설치 후 자동으로 업데이트가 완료됩니다. [열기]를 누르면 Minecraft Education에 연결됩니다.
+
+### | 실행 및 로그인
+
+[Win] 키를 누르고 Minecraft Education을 검색합니다. 이후 학교 계정으로 로그인합니다. 만약 비밀번호가 틀리면 로그인되지 않으니, 올바른 비밀번호를 입력하여 로그인합니다. 로그인에 성공하면 화면 오른쪽 상단에 캐릭터 아이콘이 표시되며, 학교 계정의 닉네임을 확인할 수 있습니다. 이렇게 하면 로그인 절차가 완료됩니다.
+
 2. 다운로드가 완료되면 로그인 화면이 나타납니다. 교육용 계정(교사/학생)으로 로그인하세요.
 
 ![image](/images/minecraft/minecraft-tutorial/2.png)
@@ -40,6 +56,40 @@ seriesOrder: 1
 4. 게임 플레이 중 멀미가 느껴질 수 있습니다. 이는 Minecraft 뿐 아니라 대부분의 1인칭 시점 게임에서 발생하는 현상입니다. ESC 버튼을 눌러 설정 화면으로 이동한 후, 화면을 창 모드로 전환하거나 마우스 감도를 낮추고, 모니터와 눈 사이 거리를 떨어뜨리는 것으로 증상을 해결할 수 있습니다.
 
 ![image](/images/minecraft/minecraft-tutorial/4.png)
+
+5. 원활한 Minecraft Education수업을 위한 초기 확인
+
+수업을 위해 확인해야 할 두 가지가 있습니다.
+
+- 학생 닉네임: 각 학생의 닉네임을 확인하여 수업 중 원활한 소통이 가능하도록 준비합니다.
+
+- Minecraft Education 버전: 모든 참가자가 동일한 버전을 사용하고 있는지 확인하여 기능 호환성과 수업 진행에 문제가 없도록 합니다. 버젼이 다르면 온라인 협업을 진행할 수 없습니다.
+
+### | 닉네임 설정의 중요성
+
+![image](/images/minecraft/minecraftedu1/image1d.jpg)
+
+1) 번은 닉네임이 TT김홍순으로 설정된 계정입니다.
+
+2) 번은 닉네임이 minecraft0으로 설정된 계정입니다.
+
+Minecraft Education에서는 닉네임이 한글로 설정된 경우 올바르게 표시되지 않고 빈칸(____)으로 나오는 문제가 발생합니다. 따라서 닉네임은 영어 또는 숫자로 설정하는 것이 권장됩니다.
+
+![image](/images/minecraft/minecraftedu1/image20.jpg)
+
+안타깝게도, 계정의 닉네임은 관리자만 변경할 수 있습니다. 따라서 학생들이 계정을 처음 가입할 때 닉네임을 숫자와 영어로 설정하도록 안내하고 도와주세요. 위 화면은 Microsoft 관리자 계정 인터페이스로, 왼쪽은 TT김홍순, 오른쪽은 minecraft1로 닉네임이 설정되어 있음을 확인할 수 있습니다. 이러한 설정을 통해 Minecraft Education에서 닉네임을 교사가 확인할 수 있도록 사전에 준비할 수 있습니다.
+
+![image](/images/minecraft/minecraftedu1/image23.jpg)
+
+이 영상은 관리자가 닉네임(성, 이름)을 수정하는 화면입니다. 마인크래프트 수업을 진행하기 전에, 학생 계정의 닉네임(성, 이름)을 관리자가 수정해야 할 경우가 있습니다. 그러나 이러한 작업을 최소화하기 위해, Microsoft A3 Plan 가입 시 학생들에게 숫자와 영어를 활용하여 닉네임(성, 이름)을 설정하도록 지도하는 것을 추천합니다. 이를 통해 Minecraft Education에서 닉네임 표시 문제를 예방하고, 관리자의 작업 부담을 줄일 수 있습니다.
+
+### | Minecraft의 버젼 확인
+
+![image](/images/minecraft/minecraftedu1/image26.jpg)
+
+Minecraft Education은 주기적으로 업데이트됩니다. 화면 오른쪽 아래에 현재 버전 정보가 표시됩니다. 현재 버전은 1.21.06이며, 이는 2025년 1월 7일 기준입니다.
+
+버전이 일치해야 온라인 연결이 가능하므로, 수업 전에 모든 참가자가 동일한 버전을 사용하고 있는지 주기적으로 확인해주세요. 이를 통해 원활한 수업 진행을 할 수 있습니다.
 
 # STEP 3. 교육 자료 활용하기
 
