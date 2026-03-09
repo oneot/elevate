@@ -108,7 +108,7 @@ API가 아직 준비되지 않은 경우, Admin은 목업 데이터를 사용해
 
 모든 Admin 경로는 `authenticated` 역할로 제한되어 있으며, 로그인하지 않은 사용자는 자동으로 Entra ID 로그인 페이지로 리다이렉트됩니다.
 
-로그인 후 원래 페이지로 복귀하도록 `401` 응답 오버라이드는 `post_login_redirect_uri=.referrer`를 사용합니다.
+로그인 후 안전하게 앱으로 복귀하도록 `401` 응답 오버라이드는 `post_login_redirect_uri=/dashboard`를 사용합니다.
 
 ## API 계약 (가정)
 
