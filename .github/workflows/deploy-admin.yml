@@ -42,37 +42,11 @@ jobs:
 
       - name: Validate required auth secrets
         run: |
-          if [ -z "${{ secrets.VITE_AZURE_TENANT_ID }}" ]; then
-            echo "❌ ERROR: VITE_AZURE_TENANT_ID secret is not set"
-            exit 1
-          fi
           if [ -z "${{ secrets.VITE_AZURE_CLIENT_ID }}" ]; then
             echo "❌ ERROR: VITE_AZURE_CLIENT_ID secret is not set"
             exit 1
           fi
           echo "✓ Required auth secrets are configured"
-        shell: bash
-
-      - name: Replace Tenant ID in config files
-        working-directory: ./Elevate.Admin
-        run: |
-          # 배포 산출물(dist)에 복사되는 public/staticwebapp.config.json 기준으로 치환
-          echo "Replacing YOUR_TENANT_ID in public/staticwebapp.config.json..."
-          sed -i "s|YOUR_TENANT_ID|${{ secrets.VITE_AZURE_TENANT_ID }}|g" public/staticwebapp.config.json
-          cp public/staticwebapp.config.json staticwebapp.config.json
-          echo "✓ Replacement completed"
-        shell: bash
-
-      - name: Verify config files (no YOUR_TENANT_ID should remain)
-        working-directory: ./Elevate.Admin
-        run: |
-          echo "Verifying config files..."
-          if grep -r "YOUR_TENANT_ID" public/staticwebapp.config.json staticwebapp.config.json; then
-            echo "❌ ERROR: Found unreplaced YOUR_TENANT_ID placeholders!"
-            exit 1
-          else
-            echo "✓ All YOUR_TENANT_ID placeholders replaced successfully"
-          fi
         shell: bash
 
       - name: Build Admin App
@@ -81,7 +55,6 @@ jobs:
         env:
           NODE_ENV: production
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
-          VITE_AZURE_TENANT_ID: ${{ secrets.VITE_AZURE_TENANT_ID }}
           VITE_AZURE_CLIENT_ID: ${{ secrets.VITE_AZURE_CLIENT_ID }}
 
       - name: Deploy to Azure Static Web Apps
