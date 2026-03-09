@@ -4,7 +4,8 @@
       "azureActiveDirectory": {
         "registration": {
           "openIdIssuer": "https://login.microsoftonline.com/62ae463a-9f12-4edf-8544-4f6ca3834524/v2.0",
-          "clientIdSettingName": "AZURE_CLIENT_ID"
+          "clientIdSettingName": "AZURE_CLIENT_ID",
+          "clientSecretSettingName": "AZURE_CLIENT_SECRET_APP_SETTING_NAME"
         },
         "userDetailsClaim": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
       }
@@ -26,7 +27,7 @@
   ],
   "responseOverrides": {
     "401": {
-      "redirect": "/.auth/login/aad",
+      "redirect": "/.auth/login/aad?post_login_redirect_uri=.referrer",
       "statusCode": 302
     },
     "403": {
