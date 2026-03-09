@@ -4,7 +4,6 @@ date: 2026-02-02
 series: "Minecraft Education 입문 가이드"
 seriesOrder: 8
 ---
----
 >**이런 순간, 익숙하지 않으신가요?** <br>
 코딩에 처음 입문하는 학생들은 어려운 문법보다, 눈앞에서 바로 반응이 보이는 활동을 더 재미있어 합니다. 
 Minecraft Education에서 Code Builder로 블록코딩을 하며 Agent를 직접 움직이게 하면, 학생들은 ‘코드 한 줄’이 아니라 ‘Agent의 행동 변화’로 코딩을 직관적으로 이해하게 됩니다. 
