@@ -8,7 +8,7 @@ const ChatWidget = () => {
   const typingTimeoutRef = useRef(null); // 타이핑 타임아웃 관리
 
 
-  useEffect(() => {/* [Azure Function 복구 시 기존 코드 롤백 예정]
+  useEffect(() => {
     try {
       // 1. Vite 환경 변수에서 GitHub Secrets로 주입한 키를 직접 꺼내옵니다.
       const secretKey = import.meta.env.VITE_DIRECT_LINE_SECRET;
@@ -27,7 +27,7 @@ const ChatWidget = () => {
     } catch (err) {
       console.error("비상 연결 실패:", err);
     }
-      */
+    /* [Azure Function 복구 시 기존 코드 롤백 예정]
 
     const getSecureToken = async () => {
       try {
@@ -41,6 +41,7 @@ const ChatWidget = () => {
       }
     };
     getSecureToken();
+    */
 
   }, []); // 빈 배열 유지 (페이지 로드 시 한 번만 실행)
 
