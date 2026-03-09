@@ -1,94 +1,108 @@
 name: Deploy Admin App to Azure Static Web Apps
 
 on:
-    push:
-        branches: [main, develop]
-        paths:
-            - "Elevate.Admin/**"
-            - ".github/workflows/deploy-admin.yml"
-    pull_request:
-        types: [opened, synchronize, reopened, closed]
-        branches: [main, develop]
-        paths:
-            - "Elevate.Admin/**"
-    workflow_dispatch:
+  push:
+    branches: [main, develop]
+    paths:
+      - "Elevate.Admin/**"
+      - ".github/workflows/deploy-admin.yml"
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [main, develop]
+    paths:
+      - "Elevate.Admin/**"
+  workflow_dispatch:
 
 permissions:
-    contents: read
-    pull-requests: write
+  contents: read
+  pull-requests: write
 
 jobs:
-    build-and-deploy:
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.action != 'closed')
-        runs-on: ubuntu-latest
-        name: Build and Deploy
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-              with:
-                  submodules: true
-                  lfs: false
+  build-and-deploy:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Build and Deploy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: false
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "20"
-                  cache: "npm"
-                  cache-dependency-path: Elevate.Admin/package-lock.json
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: Elevate.Admin/package-lock.json
 
-            - name: Install dependencies
-              working-directory: ./Elevate.Admin
-              run: npm install
+      - name: Install dependencies
+        working-directory: ./Elevate.Admin
+        run: npm install
 
-            - name: Replace Tenant ID in config files
-              working-directory: ./Elevate.Admin
-              run: |
-                  # staticwebapp.config.json의 YOUR_TENANT_ID를 실제 값으로 치환
-                  echo "Replacing YOUR_TENANT_ID with Tenant ID in config files..."
-                  sed -i "s|YOUR_TENANT_ID|${{ secrets.VITE_AZURE_TENANT_ID }}|g" staticwebapp.config.json
-                  sed -i "s|YOUR_TENANT_ID|${{ secrets.VITE_AZURE_TENANT_ID }}|g" public/staticwebapp.config.json
-                  echo "✓ Replacement completed"
-              shell: bash
+      - name: Validate required auth secrets
+        run: |
+          if [ -z "${{ secrets.VITE_AZURE_TENANT_ID }}" ]; then
+            echo "❌ ERROR: VITE_AZURE_TENANT_ID secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.VITE_AZURE_CLIENT_ID }}" ]; then
+            echo "❌ ERROR: VITE_AZURE_CLIENT_ID secret is not set"
+            exit 1
+          fi
+          echo "✓ Required auth secrets are configured"
+        shell: bash
 
-            - name: Verify config files (no YOUR_TENANT_ID should remain)
-              working-directory: ./Elevate.Admin
-              run: |
-                  echo "Verifying config files..."
-                  if grep -r "YOUR_TENANT_ID" staticwebapp.config.json public/staticwebapp.config.json; then
-                    echo "❌ ERROR: Found unreplaced YOUR_TENANT_ID placeholders!"
-                    exit 1
-                  else
-                    echo "✓ All YOUR_TENANT_ID placeholders replaced successfully"
-                  fi
-              shell: bash
+      - name: Replace Tenant ID in config files
+        working-directory: ./Elevate.Admin
+        run: |
+          # 배포 산출물(dist)에 복사되는 public/staticwebapp.config.json 기준으로 치환
+          echo "Replacing YOUR_TENANT_ID in public/staticwebapp.config.json..."
+          sed -i "s|YOUR_TENANT_ID|${{ secrets.VITE_AZURE_TENANT_ID }}|g" public/staticwebapp.config.json
+          cp public/staticwebapp.config.json staticwebapp.config.json
+          echo "✓ Replacement completed"
+        shell: bash
 
-            - name: Build Admin App
-              working-directory: ./Elevate.Admin
-              run: npm run build
-              env:
-                  NODE_ENV: production
-                  VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
-                  VITE_AZURE_TENANT_ID: ${{ secrets.VITE_AZURE_TENANT_ID }}
-                  VITE_AZURE_CLIENT_ID: ${{ secrets.VITE_AZURE_CLIENT_ID }}
+      - name: Verify config files (no YOUR_TENANT_ID should remain)
+        working-directory: ./Elevate.Admin
+        run: |
+          echo "Verifying config files..."
+          if grep -r "YOUR_TENANT_ID" public/staticwebapp.config.json staticwebapp.config.json; then
+            echo "❌ ERROR: Found unreplaced YOUR_TENANT_ID placeholders!"
+            exit 1
+          else
+            echo "✓ All YOUR_TENANT_ID placeholders replaced successfully"
+          fi
+        shell: bash
 
-            - name: Deploy to Azure Static Web Apps
-              id: deploy
-              uses: Azure/static-web-apps-deploy@v1
-              with:
-                  azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ADMIN }}
-                  repo_token: ${{ secrets.GITHUB_TOKEN }}
-                  action: "upload"
-                  app_location: "/Elevate.Admin/dist"
-                  skip_app_build: true
+      - name: Build Admin App
+        working-directory: ./Elevate.Admin
+        run: npm run build
+        env:
+          NODE_ENV: production
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_AZURE_TENANT_ID: ${{ secrets.VITE_AZURE_TENANT_ID }}
+          VITE_AZURE_CLIENT_ID: ${{ secrets.VITE_AZURE_CLIENT_ID }}
 
-    close-pull-request:
-        if: github.event_name == 'pull_request' && github.event.action == 'closed'
-        runs-on: ubuntu-latest
-        name: Close Pull Request
-        steps:
-            - name: Close Pull Request
-              id: closepullrequest
-              uses: Azure/static-web-apps-deploy@v1
-              with:
-                  azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ADMIN }}
-                  action: "close"
+      - name: Deploy to Azure Static Web Apps
+        id: deploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ADMIN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "/Elevate.Admin/dist"
+          skip_app_build: true
+
+  close-pull-request:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request
+    steps:
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ADMIN }}
+          action: "close"
+          app_location: "/"

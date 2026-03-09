@@ -89,14 +89,18 @@ API가 아직 준비되지 않은 경우, Admin은 목업 데이터를 사용해
 
 인증 구성은 다음 파일들에서 관리됩니다:
 
-1. **[staticwebapp.config.json](staticwebapp.config.json)**: Azure Static Web Apps 인증 프로바이더 설정
+1. **[public/staticwebapp.config.json](public/staticwebapp.config.json)**: Azure Static Web Apps 인증 프로바이더 설정 (배포 기준 파일)
    - `auth.identityProviders.azureActiveDirectory` 섹션에서 Entra ID 연결
    - `openIdIssuer`에 Tenant ID 하드코딩 필요
+   - `/.auth/*` 경로는 `anonymous` 허용 및 `navigationFallback.exclude` 포함 필수
 
-2. **[infrastructure/terraform/entra-id.tf](../infrastructure/terraform/entra-id.tf)**: Entra ID 앱 등록 리소스
+2. **[staticwebapp.config.json](staticwebapp.config.json)**: 로컬 개발/검증용 동기화 파일
+   - CI 배포 시 `public/staticwebapp.config.json`에서 동기화됨
+
+3. **[infrastructure/terraform/entra-id.tf](../infrastructure/terraform/entra-id.tf)**: Entra ID 앱 등록 리소스
    - `sign_in_audience = "AzureADMyOrg"` 설정
 
-3. **Azure Static Web App 환경 변수** (Azure Portal 또는 CLI에서 설정):
+4. **Azure Static Web App 환경 변수** (Azure Portal 또는 CLI에서 설정):
    - `AZURE_CLIENT_ID`: Entra ID 앱 등록의 Client ID
 
 ### 역할 기반 라우팅
