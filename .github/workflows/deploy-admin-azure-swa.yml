@@ -33,7 +33,7 @@ jobs:
 
             - name: Install dependencies
               working-directory: Elevate.Admin
-              run: npm ci --legacy-peer-deps
+              run: npm install --legacy-peer-deps
 
             - name: Build
               working-directory: Elevate.Admin
