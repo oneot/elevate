@@ -2,5 +2,6 @@ Elevate.Web/.env
 .DS_Store
 .vscode
 documents
-infrastructure
+infra
+TODO.md
 .env.production
