@@ -22,11 +22,6 @@
       "route": "/*",
       "serve": "/index.html",
       "statusCode": 200
-    },
-    {
-      "route": "/.auth/login/*",
-      "serve": "/.auth/login/*",
-      "statusCode": 200
     }
   ],
   "navigationFallback": {
