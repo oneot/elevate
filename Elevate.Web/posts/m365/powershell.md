@@ -65,7 +65,7 @@ PowerShell이 외부 모듈 실행을 차단하는 것일 확률이 높습니다
 1. 변경하고자 하는 정보가 담긴 csv 파일을 생성합니다. 
 샘플 csv 파일을 첨부합니다. 
 userPrincipalName은 사용자의 계정을, displayName은 변경하고자 하는 표시 이름을 입력합니다.
-[MS365 디스플레이 이름_Sample.csv](/attach/powershellsetting/ms365 디스플레이 이름_Sample.csv)
+[MS365 디스플레이 이름_Sample.csv](/attach/powershellsetting/ms365_displayname_Sample.csv)
 
 2. 윈도우 검색 창에서 PowerShell 을 입력하여 검색한 후 마우스 우클릭하여 관리자 권한으로 실행합니다.
 
