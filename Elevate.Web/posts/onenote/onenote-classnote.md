@@ -153,8 +153,3 @@ seriesOrder: 4
 ![로컬 이미지.png](/images/onenote/onenote-classnote/image37.jpg)
 
 7) [OneNote for Windows 10] 앱으로 열린 모습입니다.
-
----
-
-👉 [A3 Plan 교육 사이트 메인](https:/microsofta3.com)
-

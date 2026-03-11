@@ -1,0 +1,89 @@
+title: 🔽 M365 최신버전 오피스 설치하기
+tags: [m365, productivity]
+date: 2026-03-10
+series: "M365 Tips 톺아보기"
+seriesOrder: 3
+---
+# MS365 최신버전 오피스 설치
+
+MS365 A3 플랜은 교육 기관을 위한 구독형 서비스로, 학생과 교사가 최신 Office 애플리케이션(Word, Excel, PowerPoint 등) 및 Microsoft Teams, OneDrive 같은 클라우드 서비스를 활용할 수 있도록 설계된 플랜입니다.이를 통해 협업, 학습, 관리가 한층 더 효율적으로 이루어집니다.Microsoft 365 설치 후, 제공받은 계정으로 로그인하면 PC, 태블릿, 모바일 등 다양한 기기에서 서비스를 사용할 수 있습니다.
+
+---
+
+## 1. Mirosoft 365 최신 버전을 설치하는 이유
+
+MS365 최신 버전 오피스 설치를 하는 이유는, Microsoft의 구독형 서비스인 MS365를 통해 최신 Office 애플리케이션(Word, Excel, PowerPoint, Outlook 등)을 PC, Mac, 태블릿, 스마트폰 등 다양한 기기에서 사용할 수 있도록 설치하는 과정을 의미합니다. 이는 항상 최신 버전의 소프트웨어를 유지하며, 클라우드 서비스와 연동해 작업 효율을 극대화할 수 있다는 장점이 있습니다. 따라서, 업무 효율성을 높이기 위해 데스크탑이나 노트북에 설치하여 사용하실 것을 권장합니다.
+
+---
+
+## 2. Mirosoft 365 최신 버전 설치하기
+
+데스크탑이나 트북에 Microsoft 365를 설치하는 방법은 다음과 같습니다.
+
+### | MS 365 포털 접속
+
+- Microsoft 365 설치 후 활용은 구독형 플랜에서 가능합니다.
+
+![로컬 이미지.png](/images/m365/newversionofficedownload/imageb.jpg)
+
+A3 라이선스 아이디 및 비밀번호를 준비합니다. 브라우저를 열고 [www.office.com](https:/www.office.com)에 접속합니다. [www.office.com](https:/www.office.com) 에 접속 후 로그인 버튼을 누릅니다. 조직(학교) 계정 아이디를 입력하고, 비밀번호를 입력하여 로그인을 합니다. 개인 계정은 Office 365 구독이 안되어 있기 때문에 로그인 하여도 Office365를 사용할 수 없습니다.
+
+![로컬 이미지.png](/images/m365/newversionofficedownload/imagee.jpg)
+
+1) 조직(학교)계정 아이디 입력
+
+2) 조직(학교)계정 비밀번호 입력
+
+### | www.office.com 메인화면
+
+- 로그인이 완료된 office.com 메인화면은 다음과 같습니다.
+
+![로컬 이미지.png](/images/m365/newversionofficedownload/image11.jpg)
+
+1) 홈, 코파일럿, 만들기, 원드라이브, 페이지, 더 많은 앱 등에 연결할 수 있습니다.
+
+2) Powerpoint, Excel, Word 등 최근 작업한 내용을 확인할 수 있습니다.
+
+3) Office365 설치 버튼 입니다.
+
+4) 사용자 계정 정보와 설정을 확인하거나 변경할 수 있습니다.
+
+5) Microsoft 365 사용과 관련된 지원 및 도움말을 받을 수 있습니다.
+
+### | Office 설치
+
+- 3)번의 [설치 등] 버튼을 클릭합니다.
+
+![로컬 이미지.png](/images/m365/newversionofficedownload/image14.jpg)
+
+[Microsoft 365 앱 설치] 를 클릭합니다. 페이지가 이동됩니다. 페이지 이동 후 [Office 설치] 버튼을 클릭합니다.
+
+![로컬 이미지.png](/images/m365/newversionofficedownload/image17.jpg)
+
+다운로드가 완료되면 OfficeSetup.exe. 파일을 실행시킵니다.
+
+![로컬 이미지.png](/images/m365/newversionofficedownload/image1a.jpg)
+
+1) OfficeSetup.exe. 파일을 실행하면 자동으로 온라인에서 다운을 받으며 설치를 시작합니다.
+
+2) 설치가 완료되면 윈도우 오른쪽 하단에 "설치완료" 메세지가 나타납니다.
+
+3) "준비가 완료되었습니다" 창이 나오면 완벽히 설치가 끝나게 됩니다.
+
+---
+
+## 3. Office 365 설치 확인하기
+
+Office 365가 제대로 설치 되었는지 확인하기 위해서는 키보드의 [Win]키를 눌러봅니다.
+
+![로컬 이미지.png](/images/m365/newversionofficedownload/image1e.jpg)
+
+1) 번과 같이 Word, Excel, PowerPoint, Microsoft 365(Office) 아이콘이 보인다면 잘 설치가 된 상태입니다.
+
+2) 번과 같이 Word, Excel, PowerPoint 중 1가지 프로그램을 검색하여 확인하는 방법도 있습니다. PowerPoint 프로그램을 실행해 봅니다.
+
+![로컬 이미지.png](/images/m365/newversionofficedownload/image21.jpg)
+
+Word, Excel, PowerPoint 를 실행 했을 때 위와 같이 오른쪽 상단 [계정] 버튼을 클릭해 봅니다. 조직(학교) 계정 아이디로 로그인이 되어 있다면 정상적으로 Office 365를 사용할 수 있는 상태입니다. 
+
+A3 Plan은 5대의 컴퓨터까지 설치 및 로그인하여 사용할 수 있습니다. Office 365 설치에 대한 설명은 여기서 마치겠습니다. 감사합니다. 🍀
