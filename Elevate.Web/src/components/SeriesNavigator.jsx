@@ -188,6 +188,7 @@ export default function SeriesNavigator({
             })}
           </ol>
         </nav>
+        )}
 
         {(previousPost || nextPost) && (
           <div className="mt-4 pt-4 border-t border-slate-200/70">
