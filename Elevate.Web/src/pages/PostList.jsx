@@ -136,20 +136,28 @@ export default function PostList() {
     return seriesList.length > 0 ? seriesList : null;
   }, [category, seriesByCategory, filteredPosts]);
 
+  // seriesParam이 유효한 시리즈 key이면 해당 시리즈를, 없거나 유효하지 않으면 null(= 전체보기)
   const selectedSeriesData = useMemo(() => {
     if (!availableSeriesData || availableSeriesData.length === 0) return null;
-    const selected = availableSeriesData.find((item) => item.key === seriesParam);
-    return selected || availableSeriesData[0];
+    if (!seriesParam) return null;
+    return availableSeriesData.find((item) => item.key === seriesParam) || null;
   }, [availableSeriesData, seriesParam]);
 
-  const hasSeriesSidebar = Boolean(selectedSeriesData);
+  const hasSeriesSidebar = Boolean(availableSeriesData && availableSeriesData.length > 0);
 
-  // Paginate filtered posts
-  const total = filteredPosts.length;
+  // 시리즈 필터: 선택된 시리즈가 있으면 해당 시리즈 게시글만, 없으면(전체보기) 전체
+  const seriesFilteredPosts = useMemo(() => {
+    if (!selectedSeriesData) return filteredPosts;
+    const seriesPostIds = new Set(selectedSeriesData.posts.map((p) => p.id));
+    return filteredPosts.filter((p) => seriesPostIds.has(p.id));
+  }, [filteredPosts, selectedSeriesData]);
+
+  // Paginate series-filtered posts
+  const total = seriesFilteredPosts.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const currentPage = Math.min(Math.max(pageParam, 1), totalPages);
   const start = (currentPage - 1) * PAGE_SIZE;
-  const posts = filteredPosts.slice(start, start + PAGE_SIZE);
+  const posts = seriesFilteredPosts.slice(start, start + PAGE_SIZE);
 
   const updateUrlParams = (params) => {
     const newParams = new URLSearchParams(searchParams);
@@ -166,22 +174,15 @@ export default function PostList() {
   useEffect(() => {
     if (!isValidCategory) return;
 
-    if (category === 'all') {
-      if (seriesParam) {
-        updateUrlParams({ series: '' });
-      }
+    // all 카테고리 또는 시리즈 데이터가 없으면 series 쿼리 제거
+    if (category === 'all' || !availableSeriesData || availableSeriesData.length === 0) {
+      if (seriesParam) updateUrlParams({ series: '' });
       return;
     }
 
-    if (!availableSeriesData || availableSeriesData.length === 0) {
-      if (seriesParam) {
-        updateUrlParams({ series: '' });
-      }
-      return;
-    }
-
-    if (!seriesParam || !availableSeriesData.some((item) => item.key === seriesParam)) {
-      updateUrlParams({ series: availableSeriesData[0].key });
+    // seriesParam이 있지만 유효하지 않은 값이면 제거 (전체보기로 복귀)
+    if (seriesParam && !availableSeriesData.some((item) => item.key === seriesParam)) {
+      updateUrlParams({ series: '' });
     }
   }, [isValidCategory, category, seriesParam, availableSeriesData]);
 
@@ -262,8 +263,8 @@ export default function PostList() {
         <section className={`w-full ${hasSeriesSidebar ? 'lg:col-span-7 xl:col-span-8' : 'lg:col-span-8'}`}>
           {loading && <div className="text-center py-8">로딩 중...</div>}
           <div className="mb-4 text-sm text-slate-600 min-h-6 flex items-center">
-            {!loading && selectedTags.length > 0 && (
-              <span>{filteredPosts.length}개의 게시글이 선택된 태그와 일치합니다.</span>
+            {!loading && (selectedTags.length > 0 || selectedSeriesData) && (
+              <span>{seriesFilteredPosts.length}개의 게시글이 일치합니다.</span>
             )}
           </div>
           <PostGrid posts={posts} />
@@ -278,6 +279,7 @@ export default function PostList() {
               onSeriesChange={handleSeriesChange}
               category={category}
               currentPostId={null}
+              showAllOption={true}
               sticky={false}
             />
           </aside>

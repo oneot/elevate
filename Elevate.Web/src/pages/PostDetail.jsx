@@ -262,7 +262,7 @@ const PostDetail = () => {
                                                         to={backToListHref}
                                                         className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
                                                     >
-                                                        목록으로 돌아가기
+                                                        목록으로
                                                     </Link>
 
                                                     {nextPost && (
