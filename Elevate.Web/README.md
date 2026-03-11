@@ -10,6 +10,7 @@ English: This repository contains a static blog application for Microsoft Elevat
 - Markdown 기반 게시글을 정적 JSON으로 변환 (`scripts/generate-posts.js`).
 - React + Vite 기반 SPA, Tailwind CSS로 스타일링.
 - 카테고리별 포스트 목록, 태그 필터링, 페이지네이션, 포스트 상세 페이지 제공.
+- 카테고리 페이지에서 시리즈 드롭다운 선택 지원 (`?series=` 쿼리로 선택 상태 유지).
 
 ## 기술 스택 / Tech stack
 

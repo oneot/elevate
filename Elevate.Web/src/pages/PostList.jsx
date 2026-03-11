@@ -27,6 +27,7 @@ export default function PostList() {
   const { category } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const pageParam = parseInt(searchParams.get('page') || '1', 10);
+  const seriesParam = (searchParams.get('series') || '').trim();
   // 4x5 슬롯(20개) 고정 레이아웃을 유지하기 위한 페이지 크기
   const PAGE_SIZE = 20;
 
@@ -101,8 +102,8 @@ export default function PostList() {
     });
   }, [allPosts, selectedTags]);
 
-  // Calculate current series data for sidebar
-  const currentSeriesData = useMemo(() => {
+  // Build available series options for sidebar (category scoped)
+  const availableSeriesData = useMemo(() => {
     if (!category || category === 'all') return null;
     const categorySeries = seriesByCategory[category];
     if (!categorySeries || Object.keys(categorySeries).length === 0) return null;
@@ -115,27 +116,48 @@ export default function PostList() {
       }
     });
 
-    // Find the most common series
+    // Keep only series that can be displayed in the sidebar
     const seriesNames = Object.keys(seriesCounts);
     if (seriesNames.length === 0) return null;
 
-    const primarySeries = seriesNames.sort((a, b) => seriesCounts[b] - seriesCounts[a])[0];
-    const seriesPosts = categorySeries[primarySeries];
+    const seriesList = seriesNames
+      .map((name) => ({
+        key: name,
+        title: name,
+        count: seriesCounts[name] || 0,
+        posts: categorySeries[name] || [],
+      }))
+      .filter((item) => item.posts.length >= 2)
+      .sort((a, b) => {
+        if (b.count !== a.count) return b.count - a.count;
+        return a.title.localeCompare(b.title);
+      });
 
-    if (!seriesPosts || seriesPosts.length < 2) return null;
-
-    return {
-      title: primarySeries,
-      posts: seriesPosts,
-    };
+    return seriesList.length > 0 ? seriesList : null;
   }, [category, seriesByCategory, filteredPosts]);
 
-  // Paginate filtered posts
-  const total = filteredPosts.length;
+  // seriesParam이 유효한 시리즈 key이면 해당 시리즈를, 없거나 유효하지 않으면 null(= 전체보기)
+  const selectedSeriesData = useMemo(() => {
+    if (!availableSeriesData || availableSeriesData.length === 0) return null;
+    if (!seriesParam) return null;
+    return availableSeriesData.find((item) => item.key === seriesParam) || null;
+  }, [availableSeriesData, seriesParam]);
+
+  const hasSeriesSidebar = Boolean(availableSeriesData && availableSeriesData.length > 0);
+
+  // 시리즈 필터: 선택된 시리즈가 있으면 해당 시리즈 게시글만, 없으면(전체보기) 전체
+  const seriesFilteredPosts = useMemo(() => {
+    if (!selectedSeriesData) return filteredPosts;
+    const seriesPostIds = new Set(selectedSeriesData.posts.map((p) => p.id));
+    return filteredPosts.filter((p) => seriesPostIds.has(p.id));
+  }, [filteredPosts, selectedSeriesData]);
+
+  // Paginate series-filtered posts
+  const total = seriesFilteredPosts.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const currentPage = Math.min(Math.max(pageParam, 1), totalPages);
   const start = (currentPage - 1) * PAGE_SIZE;
-  const posts = filteredPosts.slice(start, start + PAGE_SIZE);
+  const posts = seriesFilteredPosts.slice(start, start + PAGE_SIZE);
 
   const updateUrlParams = (params) => {
     const newParams = new URLSearchParams(searchParams);
@@ -148,6 +170,21 @@ export default function PostList() {
     });
     setSearchParams(newParams, { replace: false });
   };
+
+  useEffect(() => {
+    if (!isValidCategory) return;
+
+    // all 카테고리 또는 시리즈 데이터가 없으면 series 쿼리 제거
+    if (category === 'all' || !availableSeriesData || availableSeriesData.length === 0) {
+      if (seriesParam) updateUrlParams({ series: '' });
+      return;
+    }
+
+    // seriesParam이 있지만 유효하지 않은 값이면 제거 (전체보기로 복귀)
+    if (seriesParam && !availableSeriesData.some((item) => item.key === seriesParam)) {
+      updateUrlParams({ series: '' });
+    }
+  }, [isValidCategory, category, seriesParam, availableSeriesData]);
 
   const handlePageChange = (p) => {
     updateUrlParams({ page: String(p) });
@@ -170,6 +207,10 @@ export default function PostList() {
 
   const handleClearAllTags = () => {
     updateUrlParams({ tags: '', page: '1' });
+  };
+
+  const handleSeriesChange = (seriesKey) => {
+    updateUrlParams({ series: seriesKey || '' });
   };
 
   // Early return for invalid category - placed after all hooks
@@ -209,8 +250,8 @@ export default function PostList() {
         </nav>
       </header>
 
-      <div className={`flex flex-col lg:grid gap-6 ${currentSeriesData ? 'lg:grid-cols-12' : 'lg:grid-cols-10'}`}>
-        <aside className="w-full lg:col-span-2">
+      <div className={`flex flex-col lg:grid gap-6 ${hasSeriesSidebar ? 'lg:grid-cols-12' : 'lg:grid-cols-10'}`}>
+        <aside className="w-full lg:col-span-2 lg:sticky lg:top-4 lg:self-start">
           <TagFilter
             allTags={allTags}
             selectedTags={selectedTags}
@@ -219,24 +260,27 @@ export default function PostList() {
           />
         </aside>
 
-        <section className={`w-full ${currentSeriesData ? 'lg:col-span-7 xl:col-span-8' : 'lg:col-span-8'}`}>
+        <section className={`w-full ${hasSeriesSidebar ? 'lg:col-span-7 xl:col-span-8' : 'lg:col-span-8'}`}>
           {loading && <div className="text-center py-8">로딩 중...</div>}
           <div className="mb-4 text-sm text-slate-600 min-h-6 flex items-center">
-            {!loading && selectedTags.length > 0 && (
-              <span>{filteredPosts.length}개의 게시글이 선택된 태그와 일치합니다.</span>
+            {!loading && (selectedTags.length > 0 || selectedSeriesData) && (
+              <span>{seriesFilteredPosts.length}개의 게시글이 일치합니다.</span>
             )}
           </div>
           <PostGrid posts={posts} />
           <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
         </section>
 
-        {currentSeriesData && (
-          <aside className="w-full lg:col-span-3 xl:col-span-2 hidden lg:block">
+        {hasSeriesSidebar && (
+          <aside className="w-full lg:col-span-3 xl:col-span-2 hidden lg:block lg:sticky lg:top-4 lg:self-start">
             <SeriesNavigator
-              seriesPosts={currentSeriesData.posts}
-              seriesTitle={currentSeriesData.title}
+              seriesOptions={availableSeriesData || []}
+              selectedSeries={selectedSeriesData?.key || ''}
+              onSeriesChange={handleSeriesChange}
               category={category}
               currentPostId={null}
+              showAllOption={true}
+              sticky={false}
             />
           </aside>
         )}

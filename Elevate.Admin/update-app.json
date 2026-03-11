@@ -1,7 +1,0 @@
-{
-  "web": {
-    "implicitGrantSettings": {
-      "enableIdTokenIssuance": true
-    }
-  }
-}

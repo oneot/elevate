@@ -1,6 +1,26 @@
 {
   "items": [
     {
+      "id": "m365/powershell",
+      "slug": "powershell",
+      "title": "💡M365 이름 일괄변경 방법",
+      "excerpt": "Powershell_M365 이름변경 방법",
+      "imageUrl": "/images/m365/powershellsetting/image1.png",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-10",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "powershell"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
       "id": "onenote/onenote-with-calendar",
       "slug": "onenote-with-calendar",
       "title": "📘 캘린더와 더 편리하게 사용하기",
@@ -942,7 +962,7 @@
       "seriesOrder": 9
     }
   ],
-  "total": 46,
+  "total": 47,
   "allTags": [
     "account",
     "agent",
@@ -960,6 +980,7 @@
     "onedrive",
     "onenote",
     "powerpoint",
+    "powershell",
     "productivity",
     "prompt",
     "teams",
