@@ -12,14 +12,14 @@
   },
   "routes": [
     {
-      "route": "/.auth/login/github",
-      "statusCode": 404
-    },
-    {
       "route": "/*",
       "allowedRoles": ["authenticated"]
     }
   ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/.auth/*", "*.{css,js,png,jpg,jpeg,gif,svg,ico,json}"]
+  },
   "responseOverrides": {
     "401": {
       "statusCode": 302,
@@ -28,9 +28,5 @@
     "403": {
       "rewrite": "/not-authorized.html"
     }
-  },
-  "navigationFallback": {
-    "rewrite": "/index.html",
-    "exclude": ["/.auth/*", "*.{css,js,png,jpg,jpeg,gif,svg,ico,json}"]
   }
 }
