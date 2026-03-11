@@ -24,6 +24,7 @@ export default function SeriesNavigator({
   nextPost = null,
   backToListHref = '',
   sticky = true,
+  showAllOption = false,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -55,9 +56,16 @@ export default function SeriesNavigator({
     return null;
   }
 
-  const currentSeries = seriesOptions.find((item) => item.key === selectedSeries) || seriesOptions[0];
+  // showAllOption이 자동으로 전체보기 sentinel 항목을 상단에 삽입
+  const effectiveOptions = showAllOption
+    ? [{ key: '', title: '전체보기', posts: [] }, ...seriesOptions]
+    : seriesOptions;
+
+  const currentSeries = effectiveOptions.find((item) => item.key === selectedSeries)
+    || (showAllOption ? effectiveOptions[0] : seriesOptions[0]);
+  const isShowAll = currentSeries?.key === '';
   const seriesPosts = currentSeries?.posts || [];
-  const seriesTitle = currentSeries?.title || '시리즈';
+  const seriesTitle = isShowAll ? '전체보기' : (currentSeries?.title || '시리즈');
 
   const handleSelectSeries = (seriesKey) => {
     onSeriesChange(seriesKey);
@@ -105,7 +113,9 @@ export default function SeriesNavigator({
               onClick={() => setIsOpen((prev) => !prev)}
               className="w-full rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-sm text-slate-700 flex items-center justify-between hover:border-ms-blue/40 focus:outline-none focus:ring-2 focus:ring-ms-blue/40"
             >
-              <span className="truncate mr-2">{seriesTitle} ({seriesPosts.length})</span>
+              <span className="truncate mr-2">
+                {isShowAll ? '전체보기' : `${seriesTitle} (${seriesPosts.length})`}
+              </span>
               <svg
                 className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
                 fill="none"
@@ -122,10 +132,10 @@ export default function SeriesNavigator({
                 aria-labelledby="series-select"
                 className="absolute z-20 mt-2 w-full rounded-xl border border-slate-200 bg-white/95 backdrop-blur shadow-lg p-1.5"
               >
-                {seriesOptions.map((series) => {
+                {effectiveOptions.map((series) => {
                   const isSelected = series.key === currentSeries?.key;
                   return (
-                    <li key={series.key} role="option" aria-selected={isSelected}>
+                    <li key={series.key === '' ? '__all__' : series.key} role="option" aria-selected={isSelected}>
                       <button
                         type="button"
                         onClick={() => handleSelectSeries(series.key)}
@@ -135,7 +145,7 @@ export default function SeriesNavigator({
                             : 'text-slate-700 hover:bg-slate-100'
                         }`}
                       >
-                        {series.title} ({series.posts?.length || 0})
+                        {series.key === '' ? '전체보기' : `${series.title} (${series.posts?.length || 0})`}
                       </button>
                     </li>
                   );
@@ -144,11 +154,14 @@ export default function SeriesNavigator({
             )}
           </div>
 
-          <p className="text-xs text-slate-500">{seriesTitle} · 총 {seriesPosts.length}개</p>
+          <p className="text-xs text-slate-500">
+            {isShowAll ? '시리즈를 선택하면 해당 게시글 목록이 표시됩니다.' : `${seriesTitle} · 총 ${seriesPosts.length}개`}
+          </p>
         </div>
 
-        <nav>
-          <ol className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+        {!isShowAll && (
+          <nav>
+            <ol className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
             {seriesPosts.map((post) => {
               const isActive = currentPostId === post.id;
               return (
@@ -175,36 +188,6 @@ export default function SeriesNavigator({
             })}
           </ol>
         </nav>
-
-        {(previousPost || nextPost) && (
-          <div className="mt-4 pt-4 border-t border-slate-200/70">
-            <div className="flex items-center gap-2">
-              {previousPost ? (
-                <Link
-                  to={getPostHref(previousPost)}
-                  className="flex-1 h-9 rounded-md border border-slate-200 px-2 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
-                >
-                  이전 글
-                </Link>
-              ) : <div className="flex-1 h-9" />}
-
-              <Link
-                to={backToListHref || `/${category}`}
-                className="flex-1 h-9 rounded-md border border-slate-200 px-2 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
-              >
-                목록으로
-              </Link>
-
-              {nextPost ? (
-                <Link
-                  to={getPostHref(nextPost)}
-                  className="flex-1 h-9 rounded-md border border-slate-200 px-2 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
-                >
-                  다음 글
-                </Link>
-              ) : <div className="flex-1 h-9" />}
-            </div>
-          </div>
         )}
       </div>
     </aside>

@@ -245,34 +245,31 @@ const PostDetail = () => {
 
                                         {(prevPost || nextPost) && (
                                             <div className="mt-10 border-t border-slate-200 pt-6">
-                                                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                                                    시리즈 이동
-                                                </div>
-                                                <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center">
-                                                    {prevPost ? (
+                                                <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center justify-center">
+                                                    {prevPost && (
                                                         <Link
                                                             to={buildPostHref(prevPost)}
                                                             className="h-9 rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
                                                         >
                                                             이전 글
                                                         </Link>
-                                                    ) : <div className="hidden sm:block h-9 flex-1" />}
+                                                    )}
 
                                                     <Link
                                                         to={backToListHref}
                                                         className="h-9 rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
                                                     >
-                                                        목록으로 돌아가기
+                                                        목록으로
                                                     </Link>
 
-                                                    {nextPost ? (
+                                                    {nextPost && (
                                                         <Link
                                                             to={buildPostHref(nextPost)}
                                                             className="h-9 rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
                                                         >
                                                             다음 글
                                                         </Link>
-                                                    ) : <div className="hidden sm:block h-9 flex-1" />}
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
