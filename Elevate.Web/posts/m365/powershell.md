@@ -1,6 +1,8 @@
-title: 💡M365 이름 일괄변경 방법
+title: 💡PowerShell로 M365 이름 일괄변경하기
 tags: [m365, powershell]
 date: 2026-03-10
+series: "M365 Tips 톺아보기"
+seriesOrder: 2
 ---
 # Powershell_M365 이름변경 방법
 
