@@ -241,7 +241,7 @@ export default function PostList() {
           <ul className="flex flex-wrap gap-2">
             {VALID_CATEGORIES.map((c) => (
               <li key={c}>
-                <Link to={`/${c}`} className={`inline-block px-3.5 py-2 rounded-full border text-sm sm:text-base ${c === category ? 'bg-ms-blue text-white' : 'bg-white text-slate-700'}`}>
+                <Link to={`/${c}`} className={`inline-block px-3.5 py-2 rounded-full border text-sm sm:text-base transition-all duration-200 ${c === category ? 'bg-ms-blue text-white border-ms-blue shadow-[0_10px_24px_-12px_rgba(0,120,212,0.95)]' : 'bg-white/85 backdrop-blur border-white/70 text-slate-700 hover:border-ms-blue/35 hover:text-ms-blue'}`}>
                   {DISPLAY_NAMES[c]}
                 </Link>
               </li>

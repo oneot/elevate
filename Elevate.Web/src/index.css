@@ -431,6 +431,26 @@ body {
   border-color: #0078D4;
 }
 
+/* Post card glass tone aligned with Home cards */
+.post-card {
+  background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.58) 0%,
+      rgba(255, 255, 255, 0.38) 46%,
+      rgba(255, 255, 255, 0.3) 100%
+    ),
+    rgba(255, 255, 255, 0.32);
+  border-color: rgba(255, 255, 255, 0.72);
+}
+
+.post-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(0, 120, 212, 0.28);
+  box-shadow:
+    0 22px 42px -10px rgba(15, 23, 42, 0.28),
+    inset 0 1px 2px rgba(255, 255, 255, 0.95);
+}
+
 /* Prose / Markdown Styling */
 .prose {
   line-height: 1.75;

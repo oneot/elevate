@@ -244,12 +244,15 @@ const PostDetail = () => {
                                         </article>
 
                                         {(prevPost || nextPost) && (
-                                            <div className="mt-10 border-t border-slate-200 pt-6">
-                                                <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center justify-center">
+                                            <div className="mt-10 border-t border-white/60 pt-6">
+                                                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                                                    시리즈 이동
+                                                </div>
+                                                <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center justify-center rounded-xl border border-white/60 bg-white/70 backdrop-blur px-2.5 py-2">
                                                     {prevPost && (
                                                         <Link
                                                             to={buildPostHref(prevPost)}
-                                                            className="h-9 rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
+                                                            className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
                                                         >
                                                             이전 글
                                                         </Link>
@@ -257,7 +260,7 @@ const PostDetail = () => {
 
                                                     <Link
                                                         to={backToListHref}
-                                                        className="h-9 rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
+                                                        className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
                                                     >
                                                         목록으로
                                                     </Link>
@@ -265,7 +268,7 @@ const PostDetail = () => {
                                                     {nextPost && (
                                                         <Link
                                                             to={buildPostHref(nextPost)}
-                                                            className="h-9 rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
+                                                            className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
                                                         >
                                                             다음 글
                                                         </Link>
