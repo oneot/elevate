@@ -192,9 +192,18 @@ const PostDetail = () => {
             {/* Post Content */}
             <div className="relative z-10 min-h-screen flex flex-col items-center px-4 sm:px-6 py-12">
                 <div className="w-full max-w-7xl">
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_3.4fr_1fr] gap-6">
+                        {/* Table of Contents Sidebar (Left) */}
+                        <div className="hidden lg:block">
+                            <div className="lg:sticky lg:top-4">
+                                {!loading && post && (
+                                    <TableOfContents content={post.content} postTitle={post.title} sticky={false} />
+                                )}
+                            </div>
+                        </div>
+
                         {/* Main Content */}
-                        <div className="lg:col-span-3">
+                        <div>
                             <div className="clean-card no-hover rounded-[2.25rem] sm:rounded-[3rem] p-7 sm:p-10 lg:p-12 bg-white/80 backdrop-blur-xl shadow-2xl border border-white/50">
                                 {/* Breadcrumb */}
                                 <div className="text-sm text-slate-500 mb-6">
@@ -281,9 +290,9 @@ const PostDetail = () => {
                             </div>
                         </div>
 
-                        {/* Series + Table of Contents Sidebar */}
-                        <div className="hidden lg:block lg:col-span-1">
-                            <div className="space-y-4 lg:sticky lg:top-4">
+                        {/* Series Sidebar (Right) */}
+                        <div className="hidden lg:block">
+                            <div className="lg:sticky lg:top-4">
                                 {!loading && post && hasSeriesNavigator && (
                                     <SeriesNavigator
                                         seriesOptions={availableSeriesOptions}
@@ -297,10 +306,6 @@ const PostDetail = () => {
                                         backToListHref={backToListHref}
                                         sticky={false}
                                     />
-                                )}
-
-                                {!loading && post && (
-                                    <TableOfContents content={post.content} postTitle={post.title} sticky={false} />
                                 )}
                             </div>
                         </div>
