@@ -1,4 +1,4 @@
-# MIEE 지원에 대한 모든 것(~2025-2026)
+# MEE 지원에 대한 모든 것(~2025-2026)
 
 
 
@@ -30,7 +30,7 @@
     
 - **25-26**
     
-    출처-MIEE Fellow이상민 선생님 패들렛
+    출처-MEE Fellow이상민 선생님 패들렛
 
     [eng-MIE-Expert-application-questions-2025-2026.docx](/attach/mee/eng-MIE-Expert-application-questions-2025-2026.docx)
     
