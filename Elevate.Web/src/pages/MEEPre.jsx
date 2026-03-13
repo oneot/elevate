@@ -27,7 +27,7 @@ const MEEPre = () => {
           },
           {
             href: "/mee/miee-archive",
-            title: "MIEE 지원 아카이브(~2025-2026)",
+            title: "MEE 지원 아카이브(~2025-2026)",
             desc: "연도별 지원서/모집 링크/문항 요약 자료를 모아둔 페이지입니다.",
             tone: "mint",
           },

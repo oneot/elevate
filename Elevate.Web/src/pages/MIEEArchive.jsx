@@ -24,7 +24,7 @@ const MIEEArchive = () => {
         { type: "sep" },
         { label: "커뮤니티 가입하기", to: "/mee/pre" },
         { type: "sep" },
-        { label: "MIEE 아카이브" },
+        { label: "MEE 아카이브" },
       ]}
       footer={
         <div className="flex items-center justify-start">
