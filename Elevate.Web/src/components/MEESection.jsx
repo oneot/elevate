@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import meeImage from '../assets/mee-image.png'; 
 
 const MEESection = () => {
@@ -74,10 +75,8 @@ const MEESection = () => {
                                 <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent group-hover:translate-x-full transition-transform duration-[1.2s] ease-in-out rounded-full" />
                             </a>
 
-                            <a
-                                href="https://elevateforeducators.microsoft.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
+                            <Link
+                                to="/mee/pre"
                                 className="relative group overflow-hidden inline-flex items-center justify-center 
                                          px-8 py-3.5 rounded-full font-bold text-sky-900
                                          bg-sky-200/60 backdrop-blur-2xl 
@@ -90,7 +89,7 @@ const MEESection = () => {
                                 <span className="relative z-10 drop-shadow-sm">커뮤니티 가입하기</span>
                                 {/* Shine effect */}
                                 <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent group-hover:translate-x-full transition-transform duration-[1.2s] ease-in-out rounded-full" />
-                            </a>
+                            </Link>
                         </div>
                     </div>
                     

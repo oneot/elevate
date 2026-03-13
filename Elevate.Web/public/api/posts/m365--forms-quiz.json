@@ -1,0 +1,23 @@
+{
+  "id": "m365/forms-quiz",
+  "slug": "forms-quiz",
+  "title": "Microsoft Forms 퀴즈 만들기",
+  "excerpt": "5. Forms 퀴즈 만들기 및 기능\r",
+  "imageUrl": "/images/m365/forms/forms-quiz/image.jpg",
+  "author": {
+    "name": "Unknown"
+  },
+  "publishedAt": "2026-03-11",
+  "likes": 0,
+  "comments": 0,
+  "category": "m365",
+  "tags": [
+    "m365",
+    "productivity",
+    "cloud",
+    "forms"
+  ],
+  "series": "Forms 입문 가이드",
+  "seriesOrder": 4,
+  "content": "\n\r\n## 5. Forms 퀴즈 만들기 및 기능\r\n\r\n[https://forms.office.com/](https:/forms.office.com) 에서 [새 퀴즈]를 선택하면 설문이 아닌 퀴즈를 만들 수 있습니다. 전반적인 설정은 앞서 알아본 설문과 같지만, 퀴즈를 사용하게 되면 몇 가지 장점과 기능이 생깁니다.\r\n\r\n![016. 퀴즈 만들기.gif](/images/m365/forms/forms-quiz/image.jpg)\r\n\r\n1) 점수 입력 기능이 있어 문항마다 점수를 다르게 할 수 있습니다.\r\n\r\n2) 자동 채점 기능이 있어 응답자의 답변을 바로 채점을 할 수 있습니다.\r\n\r\n3) 수식 입력 기능이 있어 수식을 넣을 수 있습니다.\r\n\r\n그리고 Teams에서 수업 모듈에 퀴즈를 쉽게 끌어올 수 있습니다.\r\n\r\n---\r\n\r\n### | 선택 항목을 활용한 퀴즈\r\n\r\n![017. 퀴즈 객관식 설정.gif](/images/m365/forms/forms-quiz/image9.jpg)\r\n\r\n선택 항목에서 다음과 같이 수식을 입력할 수 있습니다. 간단한 수식의 경우 질문을 올리면 예시 선지가 다음과 같이 여러 개를 AI가 제공하고, 정답 체크까지 해 줍니다.\r\n\r\n이때 선지의 앞에 초록색 체크를 하는 것은 정답 설정을 하는 것입니다. 미리 정답 설정을 해두게 되면 응답자(학생)들이 퀴즈를 제출하고 자동으로 채점이 되도록 할 수 있습니다.\r\n\r\n![로컬 이미지.png](/images/m365/forms/forms-quiz/imageb.jpg)\r\n\r\n또한 질문 아래의 점수 란에 점수를 입력하여 문제의 배점을 정할 수 있습니다.\r\n\r\n배점을 모두 합친 퀴즈의 총점은 퀴즈 맨 위에 있는 퀴즈 제목 옆에 표시됩니다.\r\n\r\n---\r\n\r\n### | 텍스트 를 활용한 퀴즈\r\n\r\n![018. 주관식 답 설정하기.gif](/images/m365/forms/forms-quiz/image12.jpg)\r\n\r\n텍스트에서도 똑같이 수식을 입력할 수 있습니다. 또는 수식을 활용하지 않고 주관식 단답형 퀴즈를 만들 수 있습니다.\r\n\r\n간단한 질문을 하고 나올 수 있는 답안 중 정답 인정을 할 수 있는 여러 답안을 모범 답안에 추가해두면 퀴즈를 풀었을 때 채점을 좀 더 유연하게 할 수 있습니다.\r\n\r\n텍스트를 이용해서 서논술과 같이 긴 문장을 서술하는 퀴즈를 내고 싶을 때는 점수를 0점으로 하는 방법이 있습니다.\r\n\r\n이 외 가능한 Forms의 여러 항목들을 퀴즈 형식으로 사용하는 것은 설문과 유사합니다."
+}

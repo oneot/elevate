@@ -2,7 +2,7 @@
   "id": "minecraft/minecraftedu6",
   "slug": "minecraftedu6",
   "title": "Minecraft Education 시작하기 6",
-  "excerpt": "Minecraft Education 시작하기 6",
+  "excerpt": "Minecraft Education 시작하기 6\r",
   "imageUrl": "/images/minecraft/minecraftedu6/image7.jpg",
   "author": {
     "name": "Unknown"
@@ -17,5 +17,5 @@
   ],
   "series": "Minecraft Education 입문 가이드",
   "seriesOrder": 6,
-  "content": "# Minecraft Education 시작하기 #6\n\n# 1.명령 프롬프트 및 코딩 교육 방법\n\n- 명령 프롬프트의 사용법과 Minecraft 에이전트를 활용한 간단한 코딩 교육은 본 페이지에서 영상 자료로 안내해드립니다. 아래 영상을 통해 기초 명령어 입력부터 에이전트 제어를 위한 간단한 코드 활용법까지 직관적으로 익히실 수 있습니다.\n\n강의는 매우 심플하며, 아래 순서로 방법을 안내합니다.\n\n1) 기본 명령 프롬프트 활용 방법\n\n2) fill ,  give 명령 프롬프트\n\n3) c키를 눌러 코드 설계\n\n4) Makecode 블록 기본 설계와 좌표의 개념\n\n5) 에이젼트(Agent)의 활용\n\n6) 모양 블록으로 건축하기\n\n위 6가지 내용만 숙지하여도, 건축 프로젝트를 진행하는데 큰 무리는 없습니다. 이후 수업을 진행하며 학생들과 함께 연구하며 새로운 것을 터득하는 방법으로 진행하는 것도 좋은 방법입니다. 아래는 6가지 방법에 대한 안내 영상입니다.\n\n![image](/images/minecraft/minecraftedu6/image7.jpg)\n\n명령 프롬프트 및 코딩 관련 교육 콘텐츠는 지속적으로 업데이트가 됩니다. 최신 기능과 사례 중심의 자료가 주기적으로 추가되므로, 정기적으로 홈페이지를 방문하여 최신 내용을 확인하시는 것을 추천드립니다."
+  "content": "\n# Minecraft Education 시작하기 #6\r\n\r\n# 1.명령 프롬프트 및 코딩 교육 방법\r\n\r\n- 명령 프롬프트의 사용법과 Minecraft 에이전트를 활용한 간단한 코딩 교육은 본 페이지에서 영상 자료로 안내해드립니다. 아래 영상을 통해 기초 명령어 입력부터 에이전트 제어를 위한 간단한 코드 활용법까지 직관적으로 익히실 수 있습니다.\r\n\r\n강의는 매우 심플하며, 아래 순서로 방법을 안내합니다.\r\n\r\n1) 기본 명령 프롬프트 활용 방법\r\n\r\n2) fill ,  give 명령 프롬프트\r\n\r\n3) c키를 눌러 코드 설계\r\n\r\n4) Makecode 블록 기본 설계와 좌표의 개념\r\n\r\n5) 에이젼트(Agent)의 활용\r\n\r\n6) 모양 블록으로 건축하기\r\n\r\n위 6가지 내용만 숙지하여도, 건축 프로젝트를 진행하는데 큰 무리는 없습니다. 이후 수업을 진행하며 학생들과 함께 연구하며 새로운 것을 터득하는 방법으로 진행하는 것도 좋은 방법입니다. 아래는 6가지 방법에 대한 안내 영상입니다.\r\n\r\n![image](/images/minecraft/minecraftedu6/image7.jpg)\r\n\r\n명령 프롬프트 및 코딩 관련 교육 콘텐츠는 지속적으로 업데이트가 됩니다. 최신 기능과 사례 중심의 자료가 주기적으로 추가되므로, 정기적으로 홈페이지를 방문하여 최신 내용을 확인하시는 것을 추천드립니다."
 }
