@@ -194,7 +194,7 @@ const PostDetail = () => {
                 <div className="w-full max-w-7xl">
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_3.4fr_1fr] gap-6">
                         {/* Table of Contents Sidebar (Left) */}
-                        <div className="hidden lg:block">
+                        <div className="hidden lg:block min-w-0">
                             <div className="lg:sticky lg:top-4">
                                 {!loading && post && (
                                     <TableOfContents content={post.content} postTitle={post.title} sticky={false} />
@@ -203,7 +203,7 @@ const PostDetail = () => {
                         </div>
 
                         {/* Main Content */}
-                        <div>
+                        <div className="min-w-0">
                             <div className="clean-card no-hover rounded-[2.25rem] sm:rounded-[3rem] p-7 sm:p-10 lg:p-12 bg-white/80 backdrop-blur-xl shadow-2xl border border-white/50">
                                 {/* Breadcrumb */}
                                 <div className="text-sm text-slate-500 mb-6">
@@ -291,7 +291,7 @@ const PostDetail = () => {
                         </div>
 
                         {/* Series Sidebar (Right) */}
-                        <div className="hidden lg:block">
+                        <div className="hidden lg:block min-w-0">
                             <div className="lg:sticky lg:top-4">
                                 {!loading && post && hasSeriesNavigator && (
                                     <SeriesNavigator

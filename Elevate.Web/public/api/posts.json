@@ -1,9 +1,419 @@
 {
   "items": [
     {
+      "id": "teams/teams-speakerprogress",
+      "slug": "teams-speakerprogress",
+      "title": "Microsoft Teams 발표자 진행(Speaker Progress)으로 학생들의 발표 능력 향상하기",
+      "excerpt": "1. 발표자 진행(Speaker Progress)",
+      "imageUrl": "/images/teams/teams-speakerprogress/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 12
+    },
+    {
+      "id": "teams/teams-searchcoach",
+      "slug": "teams-searchcoach",
+      "title": "Microsoft Teams 검색코치로 안정적으로 정보얻기",
+      "excerpt": "1. Search Coach",
+      "imageUrl": "/images/teams/teams-searchcoach/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 11
+    },
+    {
+      "id": "teams/teams-score",
+      "slug": "teams-score",
+      "title": "Microsoft Teams로 과제 및 성적 생성 관리하기",
+      "excerpt": "1. 팀즈 과제 및 성적",
+      "imageUrl": "/images/teams/teams-score/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 6
+    },
+    {
+      "id": "teams/teams-reflect",
+      "slug": "teams-reflect",
+      "title": "Microsoft Teams Reflect로 학생 정서적 상태 파악하기",
+      "excerpt": "1. Reflect",
+      "imageUrl": "/images/teams/teams-reflect/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 10
+    },
+    {
+      "id": "teams/teams-readingprogress",
+      "slug": "teams-readingprogress",
+      "title": "Microsoft Teams Reading Progress로 학생 읽기능력 향상하기",
+      "excerpt": "1. 읽기 진행(Reading Progress)",
+      "imageUrl": "/images/teams/teams-readingprogress/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 13
+    },
+    {
+      "id": "teams/teams-onlinemeet",
+      "slug": "teams-onlinemeet",
+      "title": "Microsoft Teams 화상회의하기",
+      "excerpt": "1. 팀즈 화상회의(모임) 예약 및 설정",
+      "imageUrl": "/images/teams/teams-onlinemeet/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 9
+    },
+    {
+      "id": "teams/teams-note",
+      "slug": "teams-note",
+      "title": "Microsoft Teams 수업용 전자필기장 생성하기",
+      "excerpt": "1. 팀즈 수업용 전자필기장 생성",
+      "imageUrl": "/images/teams/teams-note/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 7
+    },
+    {
+      "id": "teams/teams-maketeam",
+      "slug": "teams-maketeam",
+      "title": "Microsoft Teams 팀 생성하기",
+      "excerpt": "1. 팀즈 팀 생성",
+      "imageUrl": "/images/teams/teams-maketeam/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 3
+    },
+    {
+      "id": "teams/teams-introduce",
+      "slug": "teams-introduce",
+      "title": "Microsoft Teams란?",
+      "excerpt": "1. Microsoft Teams 소개",
+      "imageUrl": "/images/teams/teams-introduce/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 1
+    },
+    {
+      "id": "teams/teams-insights",
+      "slug": "teams-insights",
+      "title": "Microsoft Teams Insights로 학습관리 및 성과분석하기",
+      "excerpt": "1. Insights",
+      "imageUrl": "/images/teams/teams-insights/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 14
+    },
+    {
+      "id": "teams/teams-home",
+      "slug": "teams-home",
+      "title": "Microsoft Teams 홈페이지 생성하기",
+      "excerpt": "1. 팀즈 홈페이지",
+      "imageUrl": "/images/teams/teams-home/image2.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 2
+    },
+    {
+      "id": "teams/teams-filetap",
+      "slug": "teams-filetap",
+      "title": "Microsoft Teams 파일탭으로 문서관리하기",
+      "excerpt": "1. 팀즈 파일탭",
+      "imageUrl": "/images/teams/teams-filetap/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 5
+    },
+    {
+      "id": "teams/teams-class",
+      "slug": "teams-class",
+      "title": "Microsoft Teams 수업활동으로 수업 체계적으로 관리하기",
+      "excerpt": "1. 팀즈 수업활동",
+      "imageUrl": "/images/teams/teams-class/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 8
+    },
+    {
+      "id": "teams/teams-channel",
+      "slug": "teams-channel",
+      "title": "Microsoft Teams 채널 및 게시물 생성 관리하기",
+      "excerpt": "1. 팀즈 채널",
+      "imageUrl": "/images/teams/teams-channel/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 4
+    },
+    {
+      "id": "onenote/onenote-classnote",
+      "slug": "onenote-classnote",
+      "title": "📘 Onenote 수업용 전자필기장 - 과제, 수학도우미",
+      "excerpt": "1. OneNote ClassNote (수업용 전자필기장)의 구조",
+      "imageUrl": "/images/onenote/onenote-classnote/image3.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "onenote",
+      "tags": [
+        "onenote",
+        "productivity"
+      ],
+      "series": "OneNote 입문 가이드",
+      "seriesOrder": 4
+    },
+    {
+      "id": "m365/forms-share",
+      "slug": "forms-share",
+      "title": "Microsoft Forms 설정 및 결과 확인하기",
+      "excerpt": "6. Forms 설정하기",
+      "imageUrl": "/images/m365/forms/forms-share/image3.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "cloud",
+        "forms"
+      ],
+      "series": "Forms 입문 가이드",
+      "seriesOrder": 5
+    },
+    {
+      "id": "m365/forms-quiz",
+      "slug": "forms-quiz",
+      "title": "Microsoft Forms 퀴즈 만들기",
+      "excerpt": "5. Forms 퀴즈 만들기 및 기능",
+      "imageUrl": "/images/m365/forms/forms-quiz/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "cloud",
+        "forms"
+      ],
+      "series": "Forms 입문 가이드",
+      "seriesOrder": 4
+    },
+    {
+      "id": "m365/forms-question",
+      "slug": "forms-question",
+      "title": "Microsoft Forms 질문 항목 양식 알아보기",
+      "excerpt": "2. 질문 양식 알아보기",
+      "imageUrl": "/images/m365/forms/forms-question/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "cloud",
+        "forms"
+      ],
+      "series": "Forms 입문 가이드",
+      "seriesOrder": 2
+    },
+    {
+      "id": "m365/forms-option",
+      "slug": "forms-option",
+      "title": "Microsoft Forms 섹션 나누기",
+      "excerpt": "3. Forms 섹션 나누기",
+      "imageUrl": "/images/m365/forms/forms-option/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "cloud",
+        "forms"
+      ],
+      "series": "Forms 입문 가이드",
+      "seriesOrder": 3
+    },
+    {
+      "id": "m365/forms-inschool",
+      "slug": "forms-inschool",
+      "title": "Microsoft Forms 시작하기",
+      "excerpt": "Microsoft Forms란?",
+      "imageUrl": "/images/m365/forms/forms-inschool/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "cloud",
+        "forms"
+      ],
+      "series": "Forms 입문 가이드",
+      "seriesOrder": 1
+    },
+    {
       "id": "m365/powershell",
       "slug": "powershell",
-      "title": "💡M365 이름 일괄변경 방법",
+      "title": "💡PowerShell로 M365 이름 일괄변경하기",
       "excerpt": "Powershell_M365 이름변경 방법",
       "imageUrl": "/images/m365/powershellsetting/image1.png",
       "author": {
@@ -17,8 +427,28 @@
         "m365",
         "powershell"
       ],
-      "series": null,
-      "seriesOrder": null
+      "series": "M365 Tips 톺아보기",
+      "seriesOrder": 2
+    },
+    {
+      "id": "m365/newversionoffice-download",
+      "slug": "newversionoffice-download",
+      "title": "🔽 M365 최신버전 오피스 설치하기",
+      "excerpt": "MS365 최신버전 오피스 설치",
+      "imageUrl": "/images/m365/newversionofficedownload/imageb.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-10",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity"
+      ],
+      "series": "M365 Tips 톺아보기",
+      "seriesOrder": 3
     },
     {
       "id": "onenote/onenote-with-calendar",
@@ -37,8 +467,8 @@
         "onenote",
         "productivity"
       ],
-      "series": null,
-      "seriesOrder": null
+      "series": "OneNote 입문 가이드",
+      "seriesOrder": 5
     },
     {
       "id": "onenote/onenote-mobile",
@@ -57,8 +487,8 @@
         "onenote",
         "productivity"
       ],
-      "series": null,
-      "seriesOrder": null
+      "series": "OneNote 입문 가이드",
+      "seriesOrder": 3
     },
     {
       "id": "onenote/onenote-in-class",
@@ -77,8 +507,8 @@
         "onenote",
         "productivity"
       ],
-      "series": null,
-      "seriesOrder": null
+      "series": "OneNote 입문 가이드",
+      "seriesOrder": 2
     },
     {
       "id": "minecraft/minecraftedu7",
@@ -621,28 +1051,6 @@
       "seriesOrder": 1
     },
     {
-      "id": "teams/teams-tutorial",
-      "slug": "teams-tutorial",
-      "title": "📘 Teams로 학급 만들고 관리하기 - 기본 세팅부터 운영까지",
-      "excerpt": "STEP 1. Teams로 학급 관리하기 – 왜 Teams인가요?",
-      "imageUrl": "/images/teams/teams-0/img0_0.png",
-      "author": {
-        "name": "Unknown"
-      },
-      "publishedAt": "2026-02-27",
-      "likes": 0,
-      "comments": 0,
-      "category": "teams",
-      "tags": [
-        "teams",
-        "collaboration",
-        "productivity",
-        "tutorial"
-      ],
-      "series": null,
-      "seriesOrder": null
-    },
-    {
       "id": "minecraft/minecraft-tutorial",
       "slug": "minecraft-tutorial",
       "title": "⛏️ Minecraft와 함께 게임으로 학습하기",
@@ -724,28 +1132,8 @@
         "onenote",
         "productivity"
       ],
-      "series": null,
-      "seriesOrder": null
-    },
-    {
-      "id": "teams/teams-1",
-      "slug": "teams-1",
-      "title": "📄 Teams 과제, 퀴즈로 수업을 제출하고 확인하고 피드백하기까지 한 번에 관리하기",
-      "excerpt": "이런 순간, 필요하지 않으신가요? ",
-      "imageUrl": "/images/teams/teams-1/img1.png",
-      "author": {
-        "name": "Unknown"
-      },
-      "publishedAt": "2026-02-02",
-      "likes": 0,
-      "comments": 0,
-      "category": "teams",
-      "tags": [
-        "teams",
-        "collaboration"
-      ],
-      "series": null,
-      "seriesOrder": null
+      "series": "OneNote 입문 가이드",
+      "seriesOrder": 1
     },
     {
       "id": "minecraft/minecraft-education-block-coding",
@@ -787,7 +1175,7 @@
         "education",
         "tutorial"
       ],
-      "series": "M365 활용 가이드",
+      "series": "M365 Tips 톺아보기",
       "seriesOrder": 1
     },
     {
@@ -809,8 +1197,30 @@
         "cloud",
         "onedrive"
       ],
-      "series": "M365 활용 가이드",
-      "seriesOrder": 2
+      "series": "Onedrive 입문 가이드",
+      "seriesOrder": 1
+    },
+    {
+      "id": "m365/onedrive-mobile",
+      "slug": "onedrive-mobile",
+      "title": "📖 OneDrive 모바일로 사용하기",
+      "excerpt": "1. 모바일 OneDrive",
+      "imageUrl": "/images/m365/onedrive-mobile/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-02",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "cloud",
+        "onedrive"
+      ],
+      "series": "Onedrive 입문 가이드",
+      "seriesOrder": 5
     },
     {
       "id": "excel/excel-2",
@@ -962,17 +1372,17 @@
       "seriesOrder": 9
     }
   ],
-  "total": 47,
+  "total": 67,
   "allTags": [
     "account",
     "agent",
     "ai",
     "cloud",
     "coding",
-    "collaboration",
     "copilot",
     "education",
     "excel",
+    "forms",
     "gaming",
     "m365",
     "minecraft",
@@ -988,59 +1398,181 @@
     "word"
   ],
   "seriesByCategory": {
-    "minecraft": {
-      "Minecraft Education 입문 가이드": [
+    "teams": {
+      "Teams 입문 가이드": [
         {
-          "id": "minecraft/minecraft-tutorial",
-          "slug": "minecraft-tutorial",
-          "title": "⛏️ Minecraft와 함께 게임으로 학습하기",
+          "id": "teams/teams-introduce",
+          "slug": "teams-introduce",
+          "title": "Microsoft Teams란?",
           "seriesOrder": 1
         },
         {
-          "id": "minecraft/minecraftedu2",
-          "slug": "minecraftedu2",
-          "title": "Minecraft Education 시작하기 2",
+          "id": "teams/teams-home",
+          "slug": "teams-home",
+          "title": "Microsoft Teams 홈페이지 생성하기",
           "seriesOrder": 2
         },
         {
-          "id": "minecraft/minecraftedu3",
-          "slug": "minecraftedu3",
-          "title": "Minecraft Education 시작하기 3",
+          "id": "teams/teams-maketeam",
+          "slug": "teams-maketeam",
+          "title": "Microsoft Teams 팀 생성하기",
           "seriesOrder": 3
         },
         {
-          "id": "minecraft/minecraftedu4",
-          "slug": "minecraftedu4",
-          "title": "Minecraft Education 시작하기 4",
+          "id": "teams/teams-channel",
+          "slug": "teams-channel",
+          "title": "Microsoft Teams 채널 및 게시물 생성 관리하기",
           "seriesOrder": 4
         },
         {
-          "id": "minecraft/minecraftedu5",
-          "slug": "minecraftedu5",
-          "title": "Minecraft Education 시작하기 5",
+          "id": "teams/teams-filetap",
+          "slug": "teams-filetap",
+          "title": "Microsoft Teams 파일탭으로 문서관리하기",
           "seriesOrder": 5
         },
         {
-          "id": "minecraft/minecraftedu6",
-          "slug": "minecraftedu6",
-          "title": "Minecraft Education 시작하기 6",
+          "id": "teams/teams-score",
+          "slug": "teams-score",
+          "title": "Microsoft Teams로 과제 및 성적 생성 관리하기",
           "seriesOrder": 6
         },
         {
-          "id": "minecraft/minecraftedu7",
-          "slug": "minecraftedu7",
-          "title": "Minecraft Education 시작하기 7",
+          "id": "teams/teams-note",
+          "slug": "teams-note",
+          "title": "Microsoft Teams 수업용 전자필기장 생성하기",
           "seriesOrder": 7
         },
         {
-          "id": "minecraft/minecraft-education-block-coding",
-          "slug": "minecraft-education-block-coding",
-          "title": "Minecraft Education Block Coding",
+          "id": "teams/teams-class",
+          "slug": "teams-class",
+          "title": "Microsoft Teams 수업활동으로 수업 체계적으로 관리하기",
           "seriesOrder": 8
+        },
+        {
+          "id": "teams/teams-onlinemeet",
+          "slug": "teams-onlinemeet",
+          "title": "Microsoft Teams 화상회의하기",
+          "seriesOrder": 9
+        },
+        {
+          "id": "teams/teams-reflect",
+          "slug": "teams-reflect",
+          "title": "Microsoft Teams Reflect로 학생 정서적 상태 파악하기",
+          "seriesOrder": 10
+        },
+        {
+          "id": "teams/teams-searchcoach",
+          "slug": "teams-searchcoach",
+          "title": "Microsoft Teams 검색코치로 안정적으로 정보얻기",
+          "seriesOrder": 11
+        },
+        {
+          "id": "teams/teams-speakerprogress",
+          "slug": "teams-speakerprogress",
+          "title": "Microsoft Teams 발표자 진행(Speaker Progress)으로 학생들의 발표 능력 향상하기",
+          "seriesOrder": 12
+        },
+        {
+          "id": "teams/teams-readingprogress",
+          "slug": "teams-readingprogress",
+          "title": "Microsoft Teams Reading Progress로 학생 읽기능력 향상하기",
+          "seriesOrder": 13
+        },
+        {
+          "id": "teams/teams-insights",
+          "slug": "teams-insights",
+          "title": "Microsoft Teams Insights로 학습관리 및 성과분석하기",
+          "seriesOrder": 14
+        }
+      ]
+    },
+    "onenote": {
+      "OneNote 입문 가이드": [
+        {
+          "id": "onenote/onenote",
+          "slug": "onenote",
+          "title": "📘 Onenote로 자료 정리하기 기초 - 기본 기능부터 유용한 Tip까지",
+          "seriesOrder": 1
+        },
+        {
+          "id": "onenote/onenote-in-class",
+          "slug": "onenote-in-class",
+          "title": "📘 Onenote 학교에서 바로 사용해보기 - 교무수첩, 공문서철, 상담록",
+          "seriesOrder": 2
+        },
+        {
+          "id": "onenote/onenote-mobile",
+          "slug": "onenote-mobile",
+          "title": "📘 모바일에서도 노트 바로 확인하기",
+          "seriesOrder": 3
+        },
+        {
+          "id": "onenote/onenote-classnote",
+          "slug": "onenote-classnote",
+          "title": "📘 Onenote 수업용 전자필기장 - 과제, 수학도우미",
+          "seriesOrder": 4
+        },
+        {
+          "id": "onenote/onenote-with-calendar",
+          "slug": "onenote-with-calendar",
+          "title": "📘 캘린더와 더 편리하게 사용하기",
+          "seriesOrder": 5
         }
       ]
     },
     "m365": {
+      "Forms 입문 가이드": [
+        {
+          "id": "m365/forms-inschool",
+          "slug": "forms-inschool",
+          "title": "Microsoft Forms 시작하기",
+          "seriesOrder": 1
+        },
+        {
+          "id": "m365/forms-question",
+          "slug": "forms-question",
+          "title": "Microsoft Forms 질문 항목 양식 알아보기",
+          "seriesOrder": 2
+        },
+        {
+          "id": "m365/forms-option",
+          "slug": "forms-option",
+          "title": "Microsoft Forms 섹션 나누기",
+          "seriesOrder": 3
+        },
+        {
+          "id": "m365/forms-quiz",
+          "slug": "forms-quiz",
+          "title": "Microsoft Forms 퀴즈 만들기",
+          "seriesOrder": 4
+        },
+        {
+          "id": "m365/forms-share",
+          "slug": "forms-share",
+          "title": "Microsoft Forms 설정 및 결과 확인하기",
+          "seriesOrder": 5
+        }
+      ],
+      "M365 Tips 톺아보기": [
+        {
+          "id": "m365/signup",
+          "slug": "signup",
+          "title": "📘 Microsoft 365 교육용 계정 만들기 - 교육청 포털에서 시작하기",
+          "seriesOrder": 1
+        },
+        {
+          "id": "m365/powershell",
+          "slug": "powershell",
+          "title": "💡PowerShell로 M365 이름 일괄변경하기",
+          "seriesOrder": 2
+        },
+        {
+          "id": "m365/newversionoffice-download",
+          "slug": "newversionoffice-download",
+          "title": "🔽 M365 최신버전 오피스 설치하기",
+          "seriesOrder": 3
+        }
+      ],
       "Word Online 입문 가이드": [
         {
           "id": "m365/wordonline1",
@@ -1117,18 +1649,70 @@
           "seriesOrder": 7
         }
       ],
-      "M365 활용 가이드": [
-        {
-          "id": "m365/signup",
-          "slug": "signup",
-          "title": "📘 Microsoft 365 교육용 계정 만들기 - 교육청 포털에서 시작하기",
-          "seriesOrder": 1
-        },
+      "Onedrive 입문 가이드": [
         {
           "id": "m365/onedrive-tutorial",
           "slug": "onedrive-tutorial",
           "title": "📖 Onedrive로 어디서나 안전하게 저장·공유·협업하기",
+          "seriesOrder": 1
+        },
+        {
+          "id": "m365/onedrive-mobile",
+          "slug": "onedrive-mobile",
+          "title": "📖 OneDrive 모바일로 사용하기",
+          "seriesOrder": 5
+        }
+      ]
+    },
+    "minecraft": {
+      "Minecraft Education 입문 가이드": [
+        {
+          "id": "minecraft/minecraft-tutorial",
+          "slug": "minecraft-tutorial",
+          "title": "⛏️ Minecraft와 함께 게임으로 학습하기",
+          "seriesOrder": 1
+        },
+        {
+          "id": "minecraft/minecraftedu2",
+          "slug": "minecraftedu2",
+          "title": "Minecraft Education 시작하기 2",
           "seriesOrder": 2
+        },
+        {
+          "id": "minecraft/minecraftedu3",
+          "slug": "minecraftedu3",
+          "title": "Minecraft Education 시작하기 3",
+          "seriesOrder": 3
+        },
+        {
+          "id": "minecraft/minecraftedu4",
+          "slug": "minecraftedu4",
+          "title": "Minecraft Education 시작하기 4",
+          "seriesOrder": 4
+        },
+        {
+          "id": "minecraft/minecraftedu5",
+          "slug": "minecraftedu5",
+          "title": "Minecraft Education 시작하기 5",
+          "seriesOrder": 5
+        },
+        {
+          "id": "minecraft/minecraftedu6",
+          "slug": "minecraftedu6",
+          "title": "Minecraft Education 시작하기 6",
+          "seriesOrder": 6
+        },
+        {
+          "id": "minecraft/minecraftedu7",
+          "slug": "minecraftedu7",
+          "title": "Minecraft Education 시작하기 7",
+          "seriesOrder": 7
+        },
+        {
+          "id": "minecraft/minecraft-education-block-coding",
+          "slug": "minecraft-education-block-coding",
+          "title": "Minecraft Education Block Coding",
+          "seriesOrder": 8
         }
       ]
     },

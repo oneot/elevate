@@ -1,0 +1,21 @@
+{
+  "id": "teams/teams-home",
+  "slug": "teams-home",
+  "title": "Microsoft Teams 홈페이지 생성하기",
+  "excerpt": "1. 팀즈 홈페이지",
+  "imageUrl": "/images/teams/teams-home/image2.jpg",
+  "author": {
+    "name": "Unknown"
+  },
+  "publishedAt": "2026-03-11",
+  "likes": 0,
+  "comments": 0,
+  "category": "teams",
+  "tags": [
+    "teams",
+    "productivity"
+  ],
+  "series": "Teams 입문 가이드",
+  "seriesOrder": 2,
+  "content": "## 1. 팀즈 홈페이지\n\n홈페이지는 팀즈의 전반적인 상황을 보여주거나 그 외에 이 팀에 필요한 다양한 요소나 콘텐츠를 추가 하여 보여줄 수 있는 옵션입니다. 정보 공유 허브, 공지 사항 및 업데이트, 맞춤형 콘텐츠 제공, 팀 생산성 향상을 돕습니다. 팀의 커뮤니케이션과 정보 전달을 원활하게 하고, 모든 팀원 이 정보에 접근할 수 있도록 돕는 중요한 기능입니다.\n\n### | 홈페이지 생성하기\n\n![로컬 이미지.png](/images/teams/teams-home/image2.jpg)\n\n1. 팀에 들어가서 보이는 메뉴 중에 [홈페이지]를 선택합니다. 그러면 아직 대부분 정보가 없는 기본적인 홈페이지가 생성됩니다. 비어 있는 부분을 필요한 정보로 채우거나, 삭제, 추가, 편집을 통해 팀에 필요한 홈페이지로 만들 수 있습니다.\n\n2. 홈페이지를 수정하기 위해서는 우측 상단의 [편집]을 선택합니다.\n\n![로컬 이미지.png](/images/teams/teams-home/image5.jpg)\n\n---\n\n## 2. 홈페이지 메뉴\n\n### | 홈페이지 기본 메뉴 수정하기\n\n1) 처음 홈페이지에 제공되는 디자인을 반드시 그대로 사용할 필요는 없습니다.\n\n먼저 홈페이지 메인에 보이는 사진을 수정해 보겠습니다. 이미지 탐색을 누르면 이미지를 업로드하거나 검색하여 변경 할 수 있게 됩니다.\n\n![로컬 이미지.png](/images/teams/teams-home/imagea.jpg)\n\n2) 원하는 방법을 통해 사진을 추가하면 메인 화면의 사진이 변경됩니다.\n\n![로컬 이미지.png](/images/teams/teams-home/imagec.jpg)\n\n3) 기존에 제공된 메뉴도 위치 이동이 가능하고, 메뉴의 형태를 수정하거나 필요가 없다면 클릭 후 휴지통 아이콘을 통해 제거할 수 있습니다.\n\n![로컬 이미지.png](/images/teams/teams-home/imagee.jpg)\n\n### | 섹션 추가하기\n\n1) 홈페이지에 메뉴를 추가할 때는 [섹션]을 생성해서 넣으면 더 효과적으로 배치할 수 있습니다. 섹션 라인의 [+]아이콘에 마우스를 가져가면 섹션을 추가할 수 있습니다. 섹션은 몇 열로 어떤 형태로 콘텐츠를 넣을지 선택할 수 있습니다.\n\n![로컬 이미지.png](/images/teams/teams-home/image11.jpg)\n\n2) 만약 ‘2열’을 선택했다면 다음과 같이 웹 파트(콘텐츠 메뉴)를 넣을 수 있습니다. 여기에서는 왼쪽은 유튜브, 오른쪽은 Bing 지도를 넣었습니다.\n\n![로컬 이미지.png](/images/teams/teams-home/image13.jpg)\n\n### | 웹 파트(콘텐츠 메뉴) 추가하기\n\n1) 섹션을 결정하고 웹파트를 추가하여 홈페이지에 필요한 콘텐츠를 넣어 제작할 수 있습니다. 섹션 안으로 마우스를 이동시키면 녹색 줄이 생성되면서 [새 웹파트를 추가] 하는 옵션이 생성됩니다. [+] 아이콘을 클릭하고 필요한 [웹 파트]를 추가합니다.\n\n![로컬 이미지.png](/images/teams/teams-home/image17.jpg)\n\n### | 웹 파트의 종류\n\n웹 파트는 다음과 같이 상당히 많은 종류가 있습니다.\n\n![로컬 이미지.png](/images/teams/teams-home/image1a.jpg)\n\n![로컬 이미지.png](/images/teams/teams-home/image1b.jpg)\n\n![로컬 이미지.png](/images/teams/teams-home/image1c.jpg)\n\n1) 예를 들어서 [과제]를 추가하면 팀즈에서 발생하는 과제가 표시되고. [그룹 일정]을 ‘수업 시간표’로 만들면 화상회의 일정이 나오게 됩니다\n\n![로컬 이미지.png](/images/teams/teams-home/image1d.jpg)\n\n2) 또 [Planner]를 이용해서 학급별 일정을 다음과 같이 생성할 수도 있고 [카운트 다운 타이머]를 이용 해서 일정이 다가옴을 알릴 수도 있습니다\n\n![로컬 이미지.png](/images/teams/teams-home/image1f.jpg)\n\n"
+}

@@ -1,0 +1,21 @@
+{
+  "id": "teams/teams-class",
+  "slug": "teams-class",
+  "title": "Microsoft Teams 수업활동으로 수업 체계적으로 관리하기",
+  "excerpt": "1. 팀즈 수업활동",
+  "imageUrl": "/images/teams/teams-class/image.jpg",
+  "author": {
+    "name": "Unknown"
+  },
+  "publishedAt": "2026-03-11",
+  "likes": 0,
+  "comments": 0,
+  "category": "teams",
+  "tags": [
+    "teams",
+    "productivity"
+  ],
+  "series": "Teams 입문 가이드",
+  "seriesOrder": 8,
+  "content": "## 1. 팀즈 수업활동\n\n수업활동은 팀즈의 학습 활동을 좀 더 체계적으로 모듈화 할 수 있도록 도와주는 메뉴입니다. 교사들이 수업 자료와 링크, 과제 또는 수업용 전자필기장을 추가하여 더 체계적으로 수업을 관리할 수 있습니다.\n\n![로컬 이미지.png](/images/teams/teams-class/image.jpg)\n\n### | 수업활동 만들기 - 모듈생성\n\n1. 팀에서 [수업활동] 탭을 선택합니다. 그리고 [모듈 추가]를 선택합니다. 기존에 사용한 모듈을 재사용할 수도 있고 새로운 모듈을 추가할 수도 있습니다. 또한 AI를 사용하는 모듈 아이디어를 사용할 수도 있습니다.\n\n![로컬 이미지.png](/images/teams/teams-class/image2.jpg)\n\n![로컬 이미지.png](/images/teams/teams-class/image4.jpg)\n\n2.  여기서는 AI를 사용해서 모듈을 추가해 보겠습니다.\n\n![로컬 이미지.png](/images/teams/teams-class/image6.jpg)\n\n3. 초안 모듈을 완성하였다면 [초안 모듈 추가]를 클릭합니다.\n\n![로컬 이미지.png](/images/teams/teams-class/image8.jpg)\n\n4. 그러면 그림과 같이 모듈 초안이 추가된 것을 확인할 수 있습니다.\n\n### | 수업활동 만들기 - 모듈 활용하기\n\n1) 모듈에는 기본적인 정보를 입력한 후 관련 자료를 추가할 수 있습니다. 모듈 하단의 [+여기에 리소스를 추가하거나 파일을 드롭]을 선택하거나 상단의 [+]아이콘을 클릭해 줍니다.\n\n![로컬 이미지.png](/images/teams/teams-class/imagea.jpg)\n\n2) 추가할 수 있는 자료로는 파일, 과제, 수업용 전자 필기장, 링크, 채널이 있습니다. 만약 파일, 과제, 수업용 전자필기장, 링크 이 4가지를 추가하였다고 가정한다면 다음과 같이 보이게 됩니다.\n\n추가 자료 업로드까지 마쳤다면 [게시]를 클릭합니다.\n\n![로컬 이미지.png](/images/teams/teams-class/imagec.jpg)\n\n![로컬 이미지.png](/images/teams/teams-class/imagee.jpg)\n\nTip) 만약 모듈에서 첨부 자료를 [과제]로 하는 경우에는 실제로 팀즈 과제로 출제 되게 됩니다.\n\n![로컬 이미지.png](/images/teams/teams-class/imagef.jpg)\n\n3) 앞 단계에서 게시를 클릭하면 완전한 게시 여부를 물어보게 되는데 게시를 완료하려면 [게시]를 클릭합니다.\n\n4) 게시가 완료된 모습입니다.\n\n![로컬 이미지.png](/images/teams/teams-class/image11.jpg)"
+}
