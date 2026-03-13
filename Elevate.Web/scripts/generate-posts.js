@@ -31,6 +31,66 @@ function stripMarkdown(md) {
     .trim();
 }
 
+function analyzeContentQuality(content) {
+  const warnings = [];
+
+  const MAX_LINE_LENGTH = 180;
+  const MAX_CODEBLOCK_LINES = 120;
+  const MAX_TABLE_COLUMNS = 7;
+
+  const lines = content.split('\n');
+
+  let longestLineLength = 0;
+  let longestLineNumber = -1;
+  lines.forEach((line, index) => {
+    const len = line.length;
+    if (len > longestLineLength) {
+      longestLineLength = len;
+      longestLineNumber = index + 1;
+    }
+  });
+
+  if (longestLineLength > MAX_LINE_LENGTH) {
+    warnings.push(
+      `긴 단일 행 감지: ${longestLineLength}자 (line ${longestLineNumber}, 권장 <= ${MAX_LINE_LENGTH})`
+    );
+  }
+
+  const codeBlocks = content.match(/```[\s\S]*?```/g) || [];
+  let largestCodeBlockLines = 0;
+  codeBlocks.forEach((block) => {
+    const blockLineCount = Math.max(0, block.split('\n').length - 2);
+    if (blockLineCount > largestCodeBlockLines) {
+      largestCodeBlockLines = blockLineCount;
+    }
+  });
+  if (largestCodeBlockLines > MAX_CODEBLOCK_LINES) {
+    warnings.push(
+      `대형 코드블록 감지: 최대 ${largestCodeBlockLines}줄 (권장 <= ${MAX_CODEBLOCK_LINES})`
+    );
+  }
+
+  let maxTableColumns = 0;
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed.includes('|')) return;
+    const columnCount = trimmed
+      .split('|')
+      .map((cell) => cell.trim())
+      .filter((cell) => cell.length > 0).length;
+    if (columnCount > maxTableColumns) {
+      maxTableColumns = columnCount;
+    }
+  });
+  if (maxTableColumns > MAX_TABLE_COLUMNS) {
+    warnings.push(
+      `대형 표 감지: 최대 ${maxTableColumns}열 (권장 <= ${MAX_TABLE_COLUMNS})`
+    );
+  }
+
+  return warnings;
+}
+
 async function ensureDir(dir) {
   try {
     await fs.mkdir(dir, { recursive: true });
@@ -80,6 +140,13 @@ async function walkPosts(dir) {
         }
       }
       const { data, content } = matter(raw);
+      const qualityWarnings = analyzeContentQuality(content);
+      if (qualityWarnings.length > 0) {
+        const relativePath = path.relative(ROOT, filePath);
+        qualityWarnings.forEach((message) => {
+          console.warn(`[content-quality] ${relativePath}: ${message}`);
+        });
+      }
 
       const filenameSlug = f.name.replace(/\.mdx?$/, '');
       const slug = (data.slug && String(data.slug).trim()) || filenameSlug;

@@ -1,0 +1,23 @@
+{
+  "id": "m365/onedrive-mobile",
+  "slug": "onedrive-mobile",
+  "title": "📖 OneDrive 모바일로 사용하기",
+  "excerpt": "1. 모바일 OneDrive",
+  "imageUrl": "/images/m365/onedrive-mobile/image.jpg",
+  "author": {
+    "name": "Unknown"
+  },
+  "publishedAt": "2026-02-02",
+  "likes": 0,
+  "comments": 0,
+  "category": "m365",
+  "tags": [
+    "m365",
+    "productivity",
+    "cloud",
+    "onedrive"
+  ],
+  "series": "Onedrive 입문 가이드",
+  "seriesOrder": 5,
+  "content": "\n## 1. 모바일 OneDrive\n\nOneDrive는 모바일에서도 최적화가 잘 되어 있습니다. 학교 업무용 컴퓨터에서 작업하던 문서를 핸드폰에서 확인해야 할 때 유용하게 사용됩니다. ios와 Andriod 모두 사용 가능합니다.\n\nOneDrive 모바일의 사용자 인터페이스는 다음과 같습니다.\n\n![027. 모바일 원드라이브 계정 전환.gif](/images/m365/onedrive-mobile/image.jpg)\n\n데스크탑과 마찬가지로 하나의 OneDrive에 여러 계정을 넣어서 사용할 수 있습니다. 다만, 계정을 변경하는 UI가 조금 다르지만 전반적으로 비슷합니다.\n\n---\n\n### | iOS에서 OneDrive 활용\n\n아이폰은 App Store에서 OneDrive를 검색하여 OneDrive 앱을 모바일에 설치할 수 있습니다.\n\n좌측 상단의 계정 아이콘을 클릭하면 로그인 된 계정 중 원하는 계정을 선택할 수 있습니다.\n\n원하는 계정을 선택한 후에 하단의 [파일] 탭을 선택하면 파일을 폴더 또는 파일별로 볼 수 있습니다.\n\n---\n\n### | Andriod에서 OneDrive 활용\n\n안드로이드는 Play Store에서 OneDrive를 검색하여 OneDrive 앱을 모바일에 설치할 수 있습니다.\n\n좌측 상단의 계정 아이콘을 클릭하면 로그인 된 계정 중 원하는 계정을 선택할 수 있습니다.\n\n원하는 계정을 선택한 후에 상단의 [파일], [미디어] 등 여러 탭을 선택하면 원하는 탭에 맞추어 문서를 볼 수 있습니다.\n\n---\n\n### | OneDrive\n\nOneDrive에 파일을 정리해두면 데스크탑, 모바일 모두에서 쉽게 파일의 이동이 용이합니다. 또한 용량도 매우 큰 편이어서 5년 이상 한 계정에 문서를 모은다 하더라도 넉넉하게 사용할 수 있습니다.\n\nOneDrive는 위의 기능을 어디에 사용하냐에 따라서 학교 업무를 위한 것이 되기도 하고, 수업을 위한 도구가 될 수도 있습니다. 그리고 클라우드 서비스의 가장 기초가 되는 것으로 다른 MS 플랫폼의 협업을 위한 발판이 되기도 합니다.\n\n"
+}

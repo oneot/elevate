@@ -1,6 +1,6 @@
 import { useParams, Navigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -108,7 +108,7 @@ const PostDetail = () => {
         return availableSeriesOptions.find((item) => item.key === selectedSeriesKey) || null;
     }, [availableSeriesOptions, selectedSeriesKey]);
 
-    const selectedSeriesPosts = selectedSeries?.posts || [];
+    const selectedSeriesPosts = useMemo(() => selectedSeries?.posts || [], [selectedSeries]);
 
     const currentSeriesIndex = useMemo(() => {
         if (!post || selectedSeriesPosts.length === 0) return -1;
@@ -136,30 +136,31 @@ const PostDetail = () => {
         return `/${normalizedCategory}/${targetPost.slug}${query ? `?${query}` : ''}`;
     };
 
-    const updateSeriesQuery = (seriesKey) => {
+    const updateSeriesQuery = useCallback((seriesKey, options = {}) => {
+        const { replace = false } = options;
         const newParams = new URLSearchParams(searchParams);
         if (seriesKey) {
             newParams.set('series', seriesKey);
         } else {
             newParams.delete('series');
         }
-        setSearchParams(newParams, { replace: false });
-    };
+        setSearchParams(newParams, { replace });
+    }, [searchParams, setSearchParams]);
 
     useEffect(() => {
         if (!post) return;
 
         if (availableSeriesOptions.length === 0) {
             if (seriesParam) {
-                updateSeriesQuery('');
+                updateSeriesQuery('', { replace: true });
             }
             return;
         }
 
         if (selectedSeriesKey && seriesParam !== selectedSeriesKey) {
-            updateSeriesQuery(selectedSeriesKey);
+            updateSeriesQuery(selectedSeriesKey, { replace: true });
         }
-    }, [post, availableSeriesOptions, selectedSeriesKey, seriesParam]);
+    }, [post, availableSeriesOptions, selectedSeriesKey, seriesParam, updateSeriesQuery]);
 
     // 유효하지 않은 카테고리인 경우 404로 리다이렉트
     if (!VALID_CATEGORIES.includes(normalizedCategory)) {
@@ -194,7 +195,7 @@ const PostDetail = () => {
                 <div className="w-full max-w-7xl">
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_3.4fr_1fr] gap-6">
                         {/* Table of Contents Sidebar (Left) */}
-                        <div className="hidden lg:block">
+                        <div className="hidden lg:block min-w-0">
                             <div className="lg:sticky lg:top-4">
                                 {!loading && post && (
                                     <TableOfContents content={post.content} postTitle={post.title} sticky={false} />
@@ -203,7 +204,7 @@ const PostDetail = () => {
                         </div>
 
                         {/* Main Content */}
-                        <div>
+                        <div className="min-w-0">
                             <div className="clean-card no-hover rounded-[2.25rem] sm:rounded-[3rem] p-7 sm:p-10 lg:p-12 bg-white/80 backdrop-blur-xl shadow-2xl border border-white/50">
                                 {/* Breadcrumb */}
                                 <div className="text-sm text-slate-500 mb-6">
@@ -291,7 +292,7 @@ const PostDetail = () => {
                         </div>
 
                         {/* Series Sidebar (Right) */}
-                        <div className="hidden lg:block">
+                        <div className="hidden lg:block min-w-0">
                             <div className="lg:sticky lg:top-4">
                                 {!loading && post && hasSeriesNavigator && (
                                     <SeriesNavigator
