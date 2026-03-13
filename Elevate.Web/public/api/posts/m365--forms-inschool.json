@@ -1,0 +1,23 @@
+{
+  "id": "m365/forms-inschool",
+  "slug": "forms-inschool",
+  "title": "Microsoft Forms 시작하기",
+  "excerpt": "Microsoft Forms란?",
+  "imageUrl": "/images/m365/forms/forms-inschool/image.jpg",
+  "author": {
+    "name": "Unknown"
+  },
+  "publishedAt": "2026-03-11",
+  "likes": 0,
+  "comments": 0,
+  "category": "m365",
+  "tags": [
+    "m365",
+    "productivity",
+    "cloud",
+    "forms"
+  ],
+  "series": "Forms 입문 가이드",
+  "seriesOrder": 1,
+  "content": "## Microsoft Forms란?\n\nMicrosoft Forms는 선생님들께서 설문조사와 퀴즈를 만들 수 있도록 도와주는 디자인이 뛰어나고 직관적인 UI를 가진 MS 플랫폼의 도구입니다.\n\n클라우드 기반으로 작동하기 때문에 언제 어디서나 접근할 수 있습니다. Forms 클라우드에 저장이 되어 [https://forms.office.com/](https:/forms.office.com) 에서 작성한 Forms를 한 눈에 확인할 수 있습니다.\n\n설문과 퀴즈는 매우 다양한 상황에 활용이 되며, 다양한 기능과 장점을 가진 플랫폼입니다. 수업 시작 또는 수업 마무리 단계에서 형성 평가나 단원 평가에 활용하거나, 고등·대학교 진학 설문, 학교 만족도 조사, 학급 학생 특성 조사 등 다양한 방면에서 활용할 수 있습니다.\n\n## 1. Microsoft Forms 기능 활용\n\nForms는 클라우드 기반 서비스로 별도의 설치 없이 웹 브라우저에서 사용할 수 있습니다. 먼저 [https://forms.office.com/](https:/forms.microsoft.com) 으로 이동합니다.\n\nForms를 사용하기 위해서는 Microsoft 계정이 필요합니다. 학교 계정으로 로그인 한 후 사용할 수 있습니다. 사이트에 들어가면 아래와 같은 화면이 나옵니다.\n\n[새 양식]을 클릭하여 새로운 Forms를 만들어 보겠습니다.\n\n[새 양식]과 [새 퀴즈]의 차이는 간단하게는 점수화의 유무라고 할 수 있습니다.\n\n1) [새 양식]의 경우 설문을 위한 용도로 많이 활용을 합니다.\n\n2) [새 퀴즈]의 경우 문제를 내기 위한 용도나 Teams와 연동하기 위한 용도로 많이 활용합니다.\n\n![001.gif](/images/m365/forms/forms-inschool/image.jpg)\n\n먼저 [새 양식]을 클릭한 후 제목과 설명 글을 작성합니다. 제목은 설문지 링크 또는 QR을 받아 설문지를 열었을 때 제일 먼저 보이는 설문지의 이름이고, 양식 설명은 해당 설문지가 무엇인지 설명하는 용도로 많이 사용합니다.\n\n[빠른 시작]을 클릭하면 다앙한 설문 형식을 선택할 수 있습니다."
+}
