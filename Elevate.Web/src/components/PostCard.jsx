@@ -14,9 +14,9 @@ const PostCard = ({ post }) => {
   return (
     <article
       ref={cardRef}
-      className="reveal-card post-card clean-card rounded-[2rem] p-5 sm:p-6 transition-all duration-300 group h-full w-full max-w-full"
+      className="reveal-card post-card clean-card rounded-[2rem] p-5 sm:p-6 transition-all duration-300 group h-full w-full max-w-full focus:outline-none focus:ring-2 focus:ring-ms-blue/30"
     >
-      <Link to={to} aria-label={`Open post ${title}`} className="card-link block h-full rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-ms-blue/30">
+      <Link to={to} aria-label={`Open post ${title}`} className="card-link block h-full rounded-[1.5rem] ">
         <div className="flex flex-col h-full">
           <div className="w-full rounded-xl overflow-hidden bg-white/70 border border-white/60" style={{height: 150}}>
             {imageUrl ? (
