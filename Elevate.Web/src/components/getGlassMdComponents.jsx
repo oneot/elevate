@@ -20,10 +20,10 @@ export default function getGlassMdComponents(options = {}) {
       bar: "bg-gradient-to-b from-emerald-500/55 via-teal-500/42 to-cyan-500/30",
     },
   };
+
   const getTone = (t) => tone[t] ?? tone.blue;
 
   const isDownloadableFile = (href) => {
-    // same-origin downloadable types
     return (
       typeof href === "string" &&
       (href.startsWith("/attach/") || href.startsWith("/downloads/")) &&
@@ -45,7 +45,6 @@ export default function getGlassMdComponents(options = {}) {
     a: ({ href, children, ...props }) => {
       if (!href) return <a {...props}>{children}</a>;
 
-      // ✅ /mee/pre page link cards
       const card = linkCards.find((c) => c.href === href);
       if (card) {
         const t = getTone(card.tone);
@@ -91,7 +90,6 @@ export default function getGlassMdComponents(options = {}) {
         );
       }
 
-      // ✅ downloadable attachments: force download
       if (isDownloadableFile(href)) {
         const filename = filenameFromHref(href);
         return (
@@ -132,18 +130,29 @@ export default function getGlassMdComponents(options = {}) {
       );
     },
 
-    h1: ({ children }) => (
-      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 mb-4 mt-2">
+    h1: ({ node, children, className = "", ...props }) => (
+      <h1
+        {...props}
+        className={`text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 mb-4 mt-2 ${className}`}
+      >
         {children}
       </h1>
     ),
-    h2: ({ children }) => (
-      <h2 className="text-2xl font-bold tracking-tight text-slate-900 mb-3 mt-10">
+
+    h2: ({ node, children, className = "", ...props }) => (
+      <h2
+        {...props}
+        className={`text-2xl font-bold tracking-tight text-slate-900 mb-3 mt-10 ${className}`}
+      >
         {children}
       </h2>
     ),
-    h3: ({ children }) => (
-      <h3 className="text-xl font-semibold text-slate-800 mb-2 mt-6">
+
+    h3: ({ node, children, className = "", ...props }) => (
+      <h3
+        {...props}
+        className={`text-xl font-semibold text-slate-800 mb-2 mt-6 ${className}`}
+      >
         {children}
       </h3>
     ),
@@ -157,11 +166,13 @@ export default function getGlassMdComponents(options = {}) {
         {children}
       </ul>
     ),
+
     ol: ({ children }) => (
       <ol className="mb-5 ml-5 list-decimal space-y-1 text-[15px] leading-7 text-slate-800">
         {children}
       </ol>
     ),
+
     li: ({ children }) => <li className="pl-1">{children}</li>,
 
     blockquote: ({ children }) => (
@@ -193,11 +204,13 @@ export default function getGlassMdComponents(options = {}) {
         </table>
       </div>
     ),
+
     th: ({ children }) => (
       <th className="px-4 py-3 font-semibold text-slate-900 bg-white/10 border-b border-slate-200/60">
         {children}
       </th>
     ),
+
     td: ({ children }) => (
       <td className="px-4 py-3 border-b border-slate-200/50 align-top">
         {children}

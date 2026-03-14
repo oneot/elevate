@@ -5,8 +5,9 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeSlug from "rehype-slug";
 
-import GlassDocLayout from "../components/mee/GlassDocLayout";
-import getGlassMdComponents from "../components/mee/getGlassMdComponents.jsx";
+import GlassDocLayout from "../components/GlassDocLayout";
+import getGlassMdComponents from "../components/getGlassMdComponents.jsx";
+import TableOfContents from "../components/TableOfContents";
 
 import preMeeMd from "../content/mee/pre-mee.md?raw";
 
@@ -43,12 +44,17 @@ const MEEPre = () => {
         { type: "sep" },
         { label: "커뮤니티 가입하기" },
       ]}
+      rightAside={
+        <TableOfContents
+          content={preMeeMd}
+          postTitle="Pre-MEE E(Explorer) 지원 매뉴얼"
+        />
+      }
       footer={
         <div className="flex items-center justify-end">
-          {/* ✅ go to home and jump to MEE section */}
           <Link
             to="/#mee"
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.06] backdrop-blur-[20px] px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-white/[0.10]"
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm backdrop-blur-[20px] transition hover:bg-white/[0.10]"
           >
             <span className="text-slate-500">←</span>
             Microsoft Elevate
@@ -56,13 +62,15 @@ const MEEPre = () => {
         </div>
       }
     >
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw, rehypeSlug]}
-        components={mdComponents}
-      >
-        {preMeeMd}
-      </ReactMarkdown>
+      <article>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeRaw, rehypeSlug]}
+          components={mdComponents}
+        >
+          {preMeeMd}
+        </ReactMarkdown>
+      </article>
     </GlassDocLayout>
   );
 };

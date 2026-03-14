@@ -17,11 +17,11 @@
     
 ### MEE ⇒  MEEE(EXPERT)
     
-## - 기존 MIEE 선생님들께 보이는 화면
+#### - 기존 MIEE 선생님들께 보이는 화면
 
 ![image.png](/images/mee/pre/image1.png)
 
-## - MEE 커뮤니티 미가입 선생님들께 보이는 화면
+#### - MEE 커뮤니티 미가입 선생님들께 보이는 화면
 
 ![image.png](/images/mee/pre/image2.png)
     

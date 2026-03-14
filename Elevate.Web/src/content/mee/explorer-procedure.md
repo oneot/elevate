@@ -26,7 +26,7 @@
 
 ---
         
-### 1.  MEE 계정 생성하기
+## 1.  MEE 계정 생성하기
 
 1.[Microsoft Elevate for Educators](https://elevateforeducators.microsoft.com/EducatorLanding) ← 왼쪽 링크에 접속하고 **Join our educator community**를 클릭합니다.
     
@@ -146,7 +146,7 @@ For your primary email, please make sure you use a mailbox you can always access
 
 ---
 
-### 2.  Microsoft Learn 가입
+## 2.  Microsoft Learn 가입
 
 - **i) MS Learn이란?**
     
@@ -198,7 +198,7 @@ For your primary email, please make sure you use a mailbox you can always access
     
 ---
 
-### 3.  MEE  지원을 위해 필요한 학습 경로를 완료하기
+## 3.  MEE  지원을 위해 필요한 학습 경로를 완료하기
 
 - **Learning Path(학습 경로)란?**
     
@@ -303,7 +303,7 @@ For your primary email, please make sure you use a mailbox you can always access
 
 ---
 
-### 4. 지원서 작성하기 및 Learning path 내역 인증
+## 4. 지원서 작성하기 및 Learning path 내역 인증
 
 ### I. 지원서 작성하기
 

@@ -5,8 +5,9 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeSlug from "rehype-slug";
 
-import GlassDocLayout from "../components/mee/GlassDocLayout";
-import getGlassMdComponents from "../components/mee/getGlassMdComponents.jsx";
+import GlassDocLayout from "../components/GlassDocLayout";
+import getGlassMdComponents from "../components/getGlassMdComponents.jsx";
+import TableOfContents from "../components/TableOfContents";
 
 import explorerProcedureMd from "../content/mee/explorer-procedure.md?raw";
 
@@ -26,6 +27,12 @@ const MEEExplorerProcedure = () => {
         { type: "sep" },
         { label: "Explorer 지원 절차" },
       ]}
+      rightAside={
+        <TableOfContents
+          content={explorerProcedureMd}
+          postTitle="MEE(Explorer) 지원 절차"
+        />
+      }
       footer={
         <div className="flex items-center justify-start">
           <Link
@@ -38,13 +45,15 @@ const MEEExplorerProcedure = () => {
         </div>
       }
     >
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw, rehypeSlug]}
-        components={mdComponents}
-      >
-        {explorerProcedureMd}
-      </ReactMarkdown>
+      <article>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeRaw, rehypeSlug]}
+          components={mdComponents}
+        >
+          {explorerProcedureMd}
+        </ReactMarkdown>
+      </article>
     </GlassDocLayout>
   );
 };
