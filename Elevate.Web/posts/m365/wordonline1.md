@@ -1,0 +1,73 @@
+title: Microsoft Word_ 글로벌 문서 작업 플랫폼 Word! 온라인 접속 방법 및 데이터 관리
+tags: [word, m365]
+date: 2026-03-09
+series: "Word Online 입문 가이드"
+seriesOrder: 1
+---
+## 1. Word 온라인이란?
+
+Word 온라인은 Microsoft Word의 웹 기반 버전으로, 설치 없이 브라우저를 통해 문서를 작성, 편집, 공유할 수 있는 서비스입니다. Microsoft 365 A3 계정으로 어디서나 접속 및 작업이 가능합니다.
+
+---
+
+## 2. Word 온라인 접속 방법
+
+다음과 같은 방법으로 Word온라인을 접속할 수 있습니다.
+
+![image](/images/m365/wordonline1/image8.jpg)
+
+Chrome, Edge, Safari 등 인터넷 브라우저를 실행한 후 주소창에 [https://www.office.com](https:/www.office.com) 입력 후 접속합니다. Office 365 로그인 화면이 나타난 다면 Microsoft A3 계정(학교) 정보를 입력하고 로그인합니다
+
+![image](/images/m365/wordonline1/imageb.jpg)
+
+1) 계정에 로그인 되어 있는지 다시 한번 확인합니다. 혹시 개인 계정에 로그인 되어 있다면, 로그아웃 후 다시 학교 계정으로 로그인합니다.
+
+2) [앱] 버튼을 클릭하여 열어줍니다.
+
+![image](/images/m365/wordonline1/imagee.jpg)
+
+Word 아이콘을 클릭하면, Word 온라인이 실행되며 아래 그림 화면으로 이동됩니다.
+
+![image](/images/m365/wordonline1/image11.jpg)
+
+1) Word 아이콘이 클릭되며 Word Online이 실행되었습니다.
+
+2) 최근 작업 문서 목록이 표시됩니다.
+
+3) 빈 문서 템플릿을 클릭하면 새 문서가 만들어 집니다.
+
+4) 템플릿 메뉴를 통해 다양한 문서 템플릿(일반 메모, APA 스타일 논문, 보고서 등)을 선택할 수 있습니다. 이밖에도 행사 전단지, 집안일 차트, 간편한 학생 보고서 등 다양한 템플릿을 제공합니다.
+
+---
+
+## 3. Word 온라인을 접속하는 다른 방법들
+
+Word 온라인은 Microsoft 365를 설치하여 접속도 가능하며, 스마트 폰 혹은 스마트 테블릿(IOS & Android 모두 가능) 앱을 활용하여 접속 가능합니다. 또한, Edge 사이드바를 활용하여 접속 또한 가능합니다.
+
+### | Microsoft 365 설치 후 실행 연결
+
+![image](/images/m365/wordonline1/image17.jpg)
+
+Microsoft 설치 후 [Win] 키를 누르고 Word를 검색합니다. Word를 실행 시킨 후 프로필 클릭하여 A3계정으로 로그인합니다.
+
+### | 스마트 폰 및 스마트 테블릿 어플 활용 연결
+
+![image](/images/m365/wordonline1/image1a.jpg)
+
+IOS App Store & Android Google Play Store에서 Word를 검색하고 설치해주세요. 왼쪽은 아애패드에서 실행시킨 예시입니다. Word앱 실행 후 A3계정으로 로그인하면 연결이 완료됩니다.
+
+### | Edge 사이드바 Microsoft 365를 활용한 연결
+
+![image](/images/m365/wordonline1/image1d.jpg)
+
+Edge에서는 자주 사용하는 즐겨찾기를 사이드바에 추가하여 간편하게 사용할 수 있습니다. Microsoft 365를 사이드바에 추가한 뒤, A3 계정으로 로그인하여 Word를 선택하면 손쉽게 연결 및 사용이 가능합니다.
+
+---
+
+## 4. Word 온라인에서 작업한 파일의 초기 저장 위치?
+
+Word 온라인에서 작업한 파일은 Onedrive의 상위 폴더에 저장이 되어 있습니다.
+
+![image](/images/m365/wordonline1/image21.jpg)
+
+Word Online에서 [빈 문서]를 클릭하면 워드 작업창이 열리며, 동시에 A3 계정의 OneDrive에 파일이 자동으로 생성되고 클라우드에 저장됩니다. OneDrive에 로그인한 후 상위 폴더에서 '문서.docx'라는 파일이 생성된 것을 확인할 수 있습니다. 이 파일은 OneDrive에서 워드 전용 폴더를 만들어 이동시킬 수 있으며, 목적에 맞게 체계적으로 관리할 수 있습니다.

@@ -2,6 +2,8 @@ title: Prompt Coach
 tags: [copilot, ai, agent]
 date: 2026-02-02
 excerpt: ‘프롬프트 코치(Prompt Coach)’로 똑똑하게 AI 프롬프트 작성하기
+series: "Copilot 입문 가이드"
+seriesOrder: 7
 ---
 >**이런 순간, 익숙하지 않으신가요?** <br>
 교사가 수업 준비나 자료 제작 과정에서 가장 많이 겪는 어려움 중 하나는 AI에게 정확히 원하는 결과를 얻기 위한 프롬프트 작성 부담입니다.

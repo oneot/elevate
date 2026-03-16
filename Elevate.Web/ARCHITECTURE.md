@@ -112,15 +112,15 @@ excerpt: "선택적 요약"
 
 #### Step 3.2: 블로그 카테고리 선택
 
-**경로**: `/blog`
+**경로**: `/blog` (사용 중단, 이제 404)
 
-- `src/pages/Blog.jsx` 렌더링
+- 이전에는 `src/pages/Blog.jsx` 렌더링
 - 사용 가능한 카테고리 나열
-- 사용자가 카테고리 클릭 → `/blog/:category`로 이동
+- 현재는 홈 페이지로 대체 또는 직접 `/:category`로 이동
 
 #### Step 3.3: 카테고리별 게시글 목록
 
-**경로**: `/blog/:category`
+**경로**: `/:category`
 
 - `src/pages/PostList.jsx` 렌더링
 - **데이터 페칭**:
@@ -143,7 +143,7 @@ excerpt: "선택적 요약"
 
 #### Step 3.4: 게시글 상세 페이지
 
-**경로**: `/blog/:category/:postId`
+**경로**: `/:category/:postId`
 
 - `src/pages/PostDetail.jsx` 렌더링
 - **데이터 페칭**:
@@ -244,9 +244,8 @@ const mainSeries = Object.entries(seriesCounts)
 | 경로 | 페이지 | 설명 |
 |------|--------|------|
 | `/` | `Home.jsx` | 홈페이지 (변수 섹션) |
-| `/blog` | `Blog.jsx` | 블로그 카테고리 선택 |
-| `/blog/:category` | `PostList.jsx` | 카테고리별 게시글 목록 (필터, 페이지네이션) |
-| `/blog/:category/:postId` | `PostDetail.jsx` | 개별 게시글 상세 |
+| `/:category` | `PostList.jsx` | 카테고리별 게시글 목록 (필터, 페이지네이션) |
+| `/:category/:postId` | `PostDetail.jsx` | 개별 게시글 상세 |
 | `*` | `NotFound.jsx` | 404 에러 |
 
 ---

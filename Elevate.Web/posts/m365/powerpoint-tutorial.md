@@ -1,14 +1,21 @@
 title: 📖 PowerPoint로 쉽게 강의자료 만들기
 tags: [m365, productivity, office, powerpoint]
 date: 2026-02-16
-series: "M365 활용 가이드"
-seriesOrder: 3
+series: "PowerPoint Online 입문 가이드"
+seriesOrder: 1
 ---
 # STEP 1. PowerPoint
 
 ## PowerPoint란?
 
-- 아이디어를 시각적인 슬라이드로 구성해 효과적으로 전달하고, 함께 편집하며 발표 자료를 만들 수 있게 해주는 프레젠테이션 도구
+PowerPoint는 Microsoft에서 제공하는 대표적인 프레젠테이션 도구입니다. 시각적이고 설득력있는 프레젠테이션을 손쉽게 만들 수 있도록 도와주기도 합니다. PowerPoint를 이용하면 텍스트, 이미지, 그래프, 비디오 등을 슬라이드에 삽입하고, 애니메이션과 전환 효과를 이용해서 발표를 더욱 효과적으로 만들 수 있습니다.
+
+PowerPoint를 활용하면 학교에서 사용하는 여러가지 안내 사항을 PDF, GIF, MP4, JPEG 등 다양한 포멧으로 바꾸어 전달할 수 있습니다. 또한 시험 문제에 사용할 이미지 생성 등 학교에서 활용도가 매우 높은 MS 플랫폼이기도 합니다.
+
+## 1. PowerPoint의 종류
+
+PowerPoint는 오프라인 작업과 기능 완전성이 뛰어난 MS 365 앱 버전, 기능 호환은 좋지만 업데이트가 필요한 PowerPoint 2019, [https://office.com/](https:/office.com) 에서 사용하는 웹상의 PowerPoint 그리고 스마트폰 PowerPoint 앱이 있습니다.
+
 
 ## 교육용 계정으로 사용했을 때는…
 
@@ -35,6 +42,20 @@ seriesOrder: 3
 
 ![image](/images/m365/powerpoint-tutorial/5.png)
 
+### | PowerPoint for Web (웹버전 PowerPoint)
+
+웹 버전(PowerPoint for Web)의 경우 다음과 같은 특징이 있습니다.
+
+![image](/images/m365/pptonline1/image2.jpg)
+
+1. 접근성: Edge 등 여러 브라우저를 통해서 언제 어디서나 접근가능합니다. 설치가 필요 없으므로 어떤 디바이스에서도 사용할 수 있습니다.
+
+2. 실시간 협업: 여러 사용자가 동시에 문서를 편집할 수 있습니다. 동기화가 매우 빠르게 잘 일어납니다.
+
+3. 저장 및 공유: 제작중인 PowerPoint는 OneDrive에 자동으로 저장 되며, OneDrive에 저장이 된 후에는 공유 및 협업 기능이 활성화 됩니다.
+
+다만, 웹 버전은 PowerPoint의 기본적인 기능만 지원하며, 3D 이미지를 넣는 등 고급 기능이나 일부 애니메이션 및 전환 효과는 지원하지 않습니다.
+
 # STEP 3. 앱에서 고도화된 작업해보기
 
 1. 아래의 링크로 들어가서 ‘앱 설치’ → ‘Microsoft 365 앱’을 선택합니다.
@@ -60,6 +81,18 @@ seriesOrder: 3
 ![image](/images/m365/powerpoint-tutorial/7.png)
 
 ![image](/images/m365/powerpoint-tutorial/8.png)
+
+### | PowerPoint for Desktop(앱 버전 PowerPoint)
+
+앱 버전(PowerPoint for Desktop)의 경우 다음과 같은 특징이 있습니다.
+
+1. 기능 완전성: 모든 기능을 지원합니다. 고급 디자인 도구, 애니메이션, 전환 효과 등 모든 기능을 사용할 수 있습니다.
+
+2. 오프라인 작업: 인터넷 연결이 없이도 작업할 수 있어 언제든지 프레젠테이션을 수정할 수 있습니다.
+
+3. 성능: 고사양 컴퓨터에서 더 빠르고 정적으로 동작하며, 대용량 파일도 쉽게 처리할 수 있습니다.
+
+앱 버전으로 만든 PowerPoint를 OneDrive에 저장하게 되면 그때부터 협업 및 공유가 가능해집니다. 또한 OneDrive에 저장을 하고 나면 버전 기록과 자동 저장이 가능해집니다.
 
 예를 들어, 아래의 기능들을 더 원활하게 사용할 수 있습니다.
 

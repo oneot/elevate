@@ -125,7 +125,7 @@ const TableOfContentsItem = ({ heading, activeId, onLinkClick }) => {
   );
 };
 
-const TableOfContents = ({ content, postTitle }) => {
+const TableOfContents = ({ content, postTitle, sticky = true }) => {
   const [activeId, setActiveId] = useState('');
   const [headings, setHeadings] = useState([]);
   const observerRef = useRef(null);
@@ -280,7 +280,7 @@ const TableOfContents = ({ content, postTitle }) => {
   }
 
   return (
-    <nav className="clean-card no-hover p-4 sticky top-4 max-h-[calc(100vh-120px)] overflow-y-auto rounded-2xl bg-white/80 backdrop-blur-xl border border-white/50">
+    <nav className={`${sticky ? 'sticky top-4 ' : ''}clean-card no-hover p-4 max-h-[calc(100vh-120px)] overflow-y-auto rounded-2xl bg-white/80 backdrop-blur-xl border border-white/50`}>
       <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
         목차
       </div>

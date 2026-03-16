@@ -16,11 +16,17 @@ const Navigation = () => {
                     href="https://forms.office.com/r/YvQz3WbhZt"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center px-4 py-2 md:px-5 md:py-2.5 rounded-full min-h-10
-                               bg-slate-900 text-white text-sm font-semibold whitespace-nowrap
-                               hover:bg-slate-700 transition-all shadow-lg shadow-slate-900/20"
+                    className="relative group overflow-hidden inline-flex items-center px-4 py-2 md:px-5 md:py-2.5 rounded-full min-h-10
+                            text-slate-800 text-sm font-semibold whitespace-nowrap
+                            bg-white/40 backdrop-blur-xl 
+                            border border-white/60 border-b-white/20
+                            shadow-[0_4px_12px_rgba(0,0,0,0.15),inset_0_1px_2px_rgba(255,255,255,0.9)]
+                            transition-all duration-300 ease-out
+                            hover:bg-white/60 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25),inset_0_1px_2px_rgba(255,255,255,1)]
+                            active:scale-95"
                 >
-                    문의하기
+                    <span className="relative z-10 drop-shadow-sm">문의하기</span>
+                    <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/70 to-transparent group-hover:translate-x-full transition-transform duration-[1.2s] ease-in-out rounded-full" />
                 </a>
             </div>
         </nav>

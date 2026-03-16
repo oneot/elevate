@@ -1,10 +1,11 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import meeImage from '../assets/mee-image.png'; 
 
 const MEESection = () => {
     return (
         <section id="mee-section" className="py-20 px-6 max-w-7xl mx-auto">
-            <div className="bg-white rounded-[40px] p-10 lg:p-16 relative overflow-hidden text-center lg:text-left shadow-2xl border border-slate-100 fade-in-section">
+            <div className="bg-white/40 backdrop-blur-2xl rounded-[40px] p-10 lg:p-16 relative overflow-hidden text-center lg:text-left border border-white/60 border-b-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_1px_2px_rgba(255,255,255,0.9)] fade-in-section">
                 
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-blue-100 via-sky-50 to-transparent rounded-full translate-x-1/4 -translate-y-1/4 z-0"></div>
 
@@ -74,10 +75,8 @@ const MEESection = () => {
                                 <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent group-hover:translate-x-full transition-transform duration-[1.2s] ease-in-out rounded-full" />
                             </a>
 
-                            <a
-                                href="https://elevateforeducators.microsoft.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
+                            <Link
+                                to="/mee/pre"
                                 className="relative group overflow-hidden inline-flex items-center justify-center 
                                          px-8 py-3.5 rounded-full font-bold text-sky-900
                                          bg-sky-200/60 backdrop-blur-2xl 
@@ -90,7 +89,7 @@ const MEESection = () => {
                                 <span className="relative z-10 drop-shadow-sm">커뮤니티 가입하기</span>
                                 {/* Shine effect */}
                                 <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent group-hover:translate-x-full transition-transform duration-[1.2s] ease-in-out rounded-full" />
-                            </a>
+                            </Link>
                         </div>
                     </div>
                     

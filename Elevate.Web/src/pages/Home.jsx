@@ -1,4 +1,6 @@
 import { Helmet } from 'react-helmet-async';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 // Icons
 import copilotIcon from '../assets/NewMicrosoft365Icons/copilot-logo-500.png';
@@ -16,6 +18,7 @@ import Footer from '../components/Footer';
 import ChatWidget from '../components/ChatWidget';
 import FeatureCard from '../components/FeatureCard';
 import MEESection from '../components/MEESection';
+import GlobalTrainingPartner from '../components/GlobalTrainingPartner';
 
 // Hooks
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
@@ -23,19 +26,37 @@ import { useMobileRevealAnimation } from '../hooks/useMobileRevealAnimation';
 import { useHeroAnimation } from '../hooks/useHeroAnimation';
 
 const Home = () => {
+    const location = useLocation();
+
     // 애니메이션 훅 적용
     useScrollAnimation();
     useMobileRevealAnimation();
     useHeroAnimation();
 
+    // ✅ /#mee 로 들어오면 MEE 섹션으로 스크롤
+    useEffect(() => {
+        if (location.hash === '#mee') {
+            // 레이아웃이 완전히 잡힌 다음 스크롤되도록 약간 딜레이
+            requestAnimationFrame(() => {
+                const el = document.getElementById('mee');
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                    // (선택) 상단 고정 네비가 있을 경우 살짝 위로 당기기
+                    // window.scrollBy({ top: -80, left: 0, behavior: 'smooth' });
+                }
+            });
+        }
+    }, [location.hash]);
+
     // 기능 카드 데이터
     const features = [
         {
-            title: 'M365 개요',
+            title: 'M365',
             description: '교실 운영을 통합하고 학습 활동을 지속적으로 이어가는 방법을 소개합니다.',
             icon: m365Icon,
             iconType: 'image',
-            to: '/blog/m365',
+            to: '/m365',
             colorScheme: 'orange',
             ariaLabel: 'M365 개요 페이지로 이동'
         },
@@ -44,7 +65,7 @@ const Home = () => {
             description: '선생님의 업무 시간은 줄이고, 학생들의 창의력은 확장합니다.',
             icon: copilotIcon,
             iconType: 'image',
-            to: '/blog/copilot',
+            to: '/copilot',
             colorScheme: 'blue',
             ariaLabel: 'Copilot 페이지로 이동'
         },
@@ -54,7 +75,7 @@ const Home = () => {
             icon: teamsIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
-            to: '/blog/teams',
+            to: '/teams',
             colorScheme: 'indigo',
             ariaLabel: 'Microsoft Teams 페이지로 이동'
         },
@@ -64,7 +85,7 @@ const Home = () => {
             icon: minecraftIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
-            to: '/blog/minecraft',
+            to: '/minecraft',
             colorScheme: 'green',
             ariaLabel: 'Minecraft EDU 페이지로 이동'
         },
@@ -74,7 +95,7 @@ const Home = () => {
             icon: excelIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
-            to: '/blog/excel',
+            to: '/excel',
             colorScheme: 'emerald',
             ariaLabel: 'Excel 페이지로 이동'
         },
@@ -84,19 +105,9 @@ const Home = () => {
             icon: onenoteIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
-            to: '/blog/onenote',
+            to: '/onenote',
             colorScheme: 'violet',
             ariaLabel: 'OneNote 페이지로 이동'
-        },
-        {
-            title: 'Elevate Blog',
-            description: 'M365의 업데이트 소식들을 한 곳에서 확인하세요.',
-            icon: '📦',
-            iconType: 'emoji',
-            to: '/blog',
-            colorScheme: 'slate',
-            ctaLabel: '전체 보기 →',
-            ariaLabel: 'Elevate Blog 전체 페이지로 이동'
         }
     ];
 
@@ -125,8 +136,8 @@ const Home = () => {
             {/* Microsoft 365 Section */}
             <section id="m365-section" className="py-16 md:py-20 px-4 sm:px-6 max-w-7xl mx-auto">
                 <div className="mb-10 md:mb-12 text-center fade-in-section">
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 md:mb-4 text-slate-900">Explore Microsoft AI</h2>
-                    <p className="text-slate-500 text-base sm:text-lg">교육 현장을 변화시키는 강력한 도구들을 만나보세요.</p>
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-4 md:mb-6 tracking-tight text-slate-900">Explore Microsoft AI</h2>
+                    <p className="text-slate-500 text-base sm:text-lg">교실 속 작은 변화를 돕는 실용적인 AI 도구들을 만나보세요.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 auto-rows-auto sm:auto-rows-[240px]">
@@ -138,10 +149,14 @@ const Home = () => {
                     ))}
                 </div>
             </section>
-        
-            <CopilotStudioSection />
 
-            <MEESection />
+            <CopilotStudioSection />
+            
+            <section id="mee">
+                <MEESection />
+            </section>
+
+            <GlobalTrainingPartner />
 
             <Footer />
             <ChatWidget />

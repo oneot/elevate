@@ -92,23 +92,46 @@ const KoreaMap = ({ hoveredRegion, onPointEnter, onPointMove, onPointLeave, onPo
                 <polygon points="632.9 678.3 632.5 678 631.2 678.9 628.4 679.9 630.6 674.2 631.1 672.3 631.1 670.1 630.5 668.5 629.7 666.9 629.1 665 629 664 629.9 657.9 629.9 656.3 629.3 654.9 626.9 654 624.8 655.6 624 658.7 625.6 661.7 616.1 667.1 614.4 666.9 614.5 669.5 615.1 672.3 616.6 674.8 619.1 676.5 619.1 677.5 616.6 677.3 614.8 676.4 613 675.3 610.7 674.3 609.4 674.3 604.3 675.3 602.5 676.1 600.5 677.4 598.7 679.2 597.8 681.1 598.2 684.2 599.8 686.6 601.7 688.7 603.3 691.1 605.4 689.4 610.3 687.2 611.7 685.5 613.5 686.6 612.8 689.5 612.7 692.1 611.8 693.9 608.4 694.6 607.5 695.5 607.5 697.4 608.1 699.3 609.3 700.2 613.5 698 612.8 700.4 612.7 702.4 613.5 703.9 615.4 704.8 610.7 708.1 613.7 707.9 623.5 704.9 625.6 703 624.5 701.8 622.3 700.8 620.7 699.6 621.4 697.4 623.8 694.7 624.2 693.5 624.6 691.1 626.2 692.3 628.7 693.6 631.1 694.4 632.1 694 631.8 691.5 630 687.7 629.3 685.5 631.1 686.3 632.3 685.1 632.9 683 633.1 681.1 633.1 681.1 632.9 678.3"/>
                 <path d="M589.68,688.72c.48.11.92.33,1.32.58h0s-1.4-1.3-1.4-1.3l-1.89.08c.65.26,1.3.48,1.97.64Z"/>
             </g>
-            {/* Interaction Points */}
-            <g id="map-points">
-                {points.map((point) => (
+<g id="map-points">
+    {points.map((point) => {
+        const isHovered = hoveredRegion === point.key;
+        const pointRadius = isHovered ? Math.max(14, point.r + 5) : point.r;
+        const ringRadius = pointRadius + 8;
+
+        return (
+            <g
+                key={point.key}
+                className={`map-point-wrap ${isHovered ? 'is-hovered' : ''}`}
+                onMouseEnter={(e) => onPointEnter(e, point.key)}
+                onMouseMove={onPointMove}
+                onMouseLeave={onPointLeave}
+                onClick={() => onPointClick && onPointClick(point.key)}
+            >
+                {/* 회전 링 */}
+                <g
+                    className="map-point-orbit"
+                    style={{ transformOrigin: `${point.cx}px ${point.cy}px` }}
+                >
                     <circle
-                        key={point.key}
                         cx={point.cx}
                         cy={point.cy}
-                        r={hoveredRegion === point.key ? Math.max(14, point.r + 5) : point.r}
-                        className="map-point"
-                        style={point.style}
-                        onMouseEnter={(e) => onPointEnter(e, point.key)}
-                        onMouseMove={onPointMove}
-                        onMouseLeave={onPointLeave}
-                        onClick={() => onPointClick && onPointClick(point.key)}
+                        r={ringRadius}
+                        className="map-point-ring"
                     />
-                ))}
+                </g>
+
+                {/* 기존 점 */}
+                <circle
+                    cx={point.cx}
+                    cy={point.cy}
+                    r={pointRadius}
+                    className="map-point"
+                    style={point.style}
+                />
             </g>
+        );
+    })}
+</g>
         </svg>
     );
 };

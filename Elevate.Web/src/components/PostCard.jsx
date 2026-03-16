@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 const PostCard = ({ post }) => {
   const { id, slug, title, excerpt, imageUrl, author, publishedAt, likes = 0, comments = 0, category, tags = [] } = post;
   const safeCategory = category || 'all';
-  const to = `/blog/${safeCategory}/${slug || id}`;
+  const to = `/${safeCategory}/${slug || id}`;
   const [showAllTags, setShowAllTags] = useState(false);
   const moreRef = useRef(null);
   const cardRef = useRef(null);
@@ -14,15 +14,15 @@ const PostCard = ({ post }) => {
   return (
     <article
       ref={cardRef}
-      className="hover:shadow-lg reveal-card post-card rounded-2xl p-5 sm:p-6 shadow-soft transition group bg-white h-full w-full max-w-full"
+      className="reveal-card post-card clean-card rounded-[2rem] p-5 sm:p-6 transition-all duration-300 group h-full w-full max-w-full focus:outline-none focus:ring-2 focus:ring-ms-blue/30"
     >
-      <Link to={to} aria-label={`Open post ${title}`} className="block focus:outline-none focus:ring-2 focus:ring-ms-blue/30 h-full">
+      <Link to={to} aria-label={`Open post ${title}`} className="card-link block h-full rounded-[1.5rem] ">
         <div className="flex flex-col h-full">
-          <div className="w-full rounded-md overflow-hidden bg-slate-100" style={{height: 150}}>
+          <div className="w-full rounded-xl overflow-hidden bg-white/70 border border-white/60" style={{height: 150}}>
             {imageUrl ? (
-              <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+              <img src={imageUrl} alt={title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-400">No image</div>
+              <div className="w-full h-full flex items-center justify-center text-slate-500 text-sm bg-slate-50/70">No image</div>
             )}
           </div>
 
@@ -47,14 +47,14 @@ const PostCard = ({ post }) => {
 
             {tags.length > 0 && (
               <div
-                className="relative flex flex-wrap items-center gap-1 mt-2 max-w-full min-w-0 mt-auto"
+                className="relative flex flex-wrap items-center gap-1 pt-2 max-w-full min-w-0 mt-auto"
                 onMouseEnter={() => setShowAllTags(true)}
                 onMouseLeave={() => setShowAllTags(false)}
               >
                 {tags.slice(0, 2).map((tag) => (
                   <span
                     key={tag}
-                    className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full shrink-0 max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap"
+                    className="text-xs px-2 py-0.5 bg-white/80 border border-white/70 text-slate-600 rounded-full shrink-0 max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap"
                   >
                     {tag}
                   </span>
@@ -64,7 +64,7 @@ const PostCard = ({ post }) => {
                     <button
                       ref={moreRef}
                       type="button"
-                      className="text-xs px-2.5 py-1 text-slate-500 border border-slate-200 rounded-full bg-white/80 hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ms-blue"
+                      className="text-xs px-2.5 py-1 text-slate-500 border border-white/70 rounded-full bg-white/80 hover:border-ms-blue/30 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ms-blue"
                       onFocus={() => setShowAllTags(true)}
                       onBlur={() => setShowAllTags(false)}
                       onClick={() => setShowAllTags((v) => !v)}
@@ -76,13 +76,13 @@ const PostCard = ({ post }) => {
                     {showAllTags && (
                       <div
                         role="tooltip"
-                        className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-20 w-max max-w-[240px] rounded-xl border border-slate-200 bg-white shadow-lg p-3 text-xs text-slate-700"
+                        className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-20 w-max max-w-[240px] rounded-xl border border-white/70 bg-white/90 backdrop-blur-xl shadow-lg p-3 text-xs text-slate-700"
                       >
                         <div className="flex flex-wrap gap-1">
                           {tags.slice(2).map((tag) => (
                             <span
                               key={tag}
-                              className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 whitespace-nowrap max-w-[160px] overflow-hidden text-ellipsis"
+                              className="px-2 py-0.5 rounded-full bg-white/80 border border-white/70 text-slate-600 whitespace-nowrap max-w-[160px] overflow-hidden text-ellipsis"
                             >
                               {tag}
                             </span>

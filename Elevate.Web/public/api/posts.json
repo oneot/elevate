@@ -1,10 +1,651 @@
 {
   "items": [
     {
+      "id": "m365/powershell",
+      "slug": "powershell",
+      "title": "💡M365 이름 일괄변경 방법",
+      "excerpt": "Powershell_M365 이름변경 방법",
+      "imageUrl": "/images/m365/powershellsetting/image1.png",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-10",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "powershell"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "onenote/onenote-with-calendar",
+      "slug": "onenote-with-calendar",
+      "title": "📘 캘린더와 더 편리하게 사용하기",
+      "excerpt": "1. Onetastic\r",
+      "imageUrl": "/images/onenote/onenote-with-calendar/1.webp",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "onenote",
+      "tags": [
+        "onenote",
+        "productivity"
+      ],
+      "series": "OneNote 입문 가이드",
+      "seriesOrder": 5
+    },
+    {
+      "id": "onenote/onenote-mobile",
+      "slug": "onenote-mobile",
+      "title": "📘 모바일에서도 노트 바로 확인하기",
+      "excerpt": "1. 원노트 모바일 앱 활용하기\r",
+      "imageUrl": "/images/onenote/onenote-mobile/1.webp",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "onenote",
+      "tags": [
+        "onenote",
+        "productivity"
+      ],
+      "series": "OneNote 입문 가이드",
+      "seriesOrder": 3
+    },
+    {
+      "id": "onenote/onenote-in-class",
+      "slug": "onenote-in-class",
+      "title": "📘 Onenote 학교에서 바로 사용해보기 - 교무수첩, 공문서철, 상담록",
+      "excerpt": "STEP 1. Onenote 구조 이해하기\r",
+      "imageUrl": "/images/onenote/onenote-in-class/1.webp",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "onenote",
+      "tags": [
+        "onenote",
+        "productivity"
+      ],
+      "series": "OneNote 입문 가이드",
+      "seriesOrder": 2
+    },
+    {
+      "id": "minecraft/minecraftedu7",
+      "slug": "minecraftedu7",
+      "title": "Minecraft Education 시작하기 7",
+      "excerpt": "Minecraft Education 시작하기 7\r",
+      "imageUrl": "/images/minecraft/minecraftedu7/image9.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "minecraft",
+      "tags": [
+        "minecraft",
+        "education"
+      ],
+      "series": "Minecraft Education 입문 가이드",
+      "seriesOrder": 7
+    },
+    {
+      "id": "minecraft/minecraftedu6",
+      "slug": "minecraftedu6",
+      "title": "Minecraft Education 시작하기 6",
+      "excerpt": "Minecraft Education 시작하기 6\r",
+      "imageUrl": "/images/minecraft/minecraftedu6/image7.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "minecraft",
+      "tags": [
+        "minecraft",
+        "education"
+      ],
+      "series": "Minecraft Education 입문 가이드",
+      "seriesOrder": 6
+    },
+    {
+      "id": "minecraft/minecraftedu5",
+      "slug": "minecraftedu5",
+      "title": "Minecraft Education 시작하기 5",
+      "excerpt": "Minecraft Education 시작하기 5\r",
+      "imageUrl": "/images/minecraft/minecraftedu5/image7.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "minecraft",
+      "tags": [
+        "minecraft",
+        "education"
+      ],
+      "series": "Minecraft Education 입문 가이드",
+      "seriesOrder": 5
+    },
+    {
+      "id": "minecraft/minecraftedu4",
+      "slug": "minecraftedu4",
+      "title": "Minecraft Education 시작하기 4",
+      "excerpt": "Minecraft Education 시작하기 4\r",
+      "imageUrl": "/images/minecraft/minecraftedu4/image9.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "minecraft",
+      "tags": [
+        "minecraft",
+        "education"
+      ],
+      "series": "Minecraft Education 입문 가이드",
+      "seriesOrder": 4
+    },
+    {
+      "id": "minecraft/minecraftedu3",
+      "slug": "minecraftedu3",
+      "title": "Minecraft Education 시작하기 3",
+      "excerpt": "Minecraft Education 시작하기 3\r",
+      "imageUrl": "/images/minecraft/minecraftedu3/image5.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "minecraft",
+      "tags": [
+        "minecraft",
+        "education"
+      ],
+      "series": "Minecraft Education 입문 가이드",
+      "seriesOrder": 3
+    },
+    {
+      "id": "minecraft/minecraftedu2",
+      "slug": "minecraftedu2",
+      "title": "Minecraft Education 시작하기 2",
+      "excerpt": "Minecraft Education 시작하기 2\r",
+      "imageUrl": "/images/minecraft/minecraftedu2/image3.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "minecraft",
+      "tags": [
+        "minecraft",
+        "education"
+      ],
+      "series": "Minecraft Education 입문 가이드",
+      "seriesOrder": 2
+    },
+    {
+      "id": "m365/wordonline5",
+      "slug": "wordonline5",
+      "title": "Microsoft Word_ 기본 템플릿을 이용하여 학교 현장 활용 방안",
+      "excerpt": "1. 행사 전단 템플릿 활용하여 학교 축제 전단지 만들기\r",
+      "imageUrl": "/images/m365/wordonline5/image7.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "word",
+        "m365"
+      ],
+      "series": "Word Online 입문 가이드",
+      "seriesOrder": 5
+    },
+    {
+      "id": "m365/wordonline4",
+      "slug": "wordonline4",
+      "title": "Microsoft Word_ 워드를 사용할 때 반드시 알아야할 꿀팁 모음",
+      "excerpt": "1. 스타일 기능을 활용한 상담일지 작성\r",
+      "imageUrl": "/images/m365/wordonline4/image7.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "word",
+        "m365"
+      ],
+      "series": "Word Online 입문 가이드",
+      "seriesOrder": 4
+    },
+    {
+      "id": "m365/wordonline3",
+      "slug": "wordonline3",
+      "title": "Microsoft Word_ 워드 온라인 인터페이스 한방에 이해하기_02",
+      "excerpt": "2. 워드 온라인 세부 인터페이스 설명\r",
+      "imageUrl": "/images/m365/wordonline3/image5.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "word",
+        "m365"
+      ],
+      "series": "Word Online 입문 가이드",
+      "seriesOrder": 3
+    },
+    {
+      "id": "m365/wordonline2",
+      "slug": "wordonline2",
+      "title": "Microsoft Word_ 워드 온라인 인터페이스 한방에 이해하기_01",
+      "excerpt": "1. 워드 온라인 기본 화면 인터페이스 설명\r",
+      "imageUrl": "/images/m365/wordonline2/image5.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "word",
+        "m365"
+      ],
+      "series": "Word Online 입문 가이드",
+      "seriesOrder": 2
+    },
+    {
+      "id": "m365/wordonline1",
+      "slug": "wordonline1",
+      "title": "Microsoft Word_ 글로벌 문서 작업 플랫폼 Word! 온라인 접속 방법 및 데이터 관리",
+      "excerpt": "1. Word 온라인이란?\r",
+      "imageUrl": "/images/m365/wordonline1/image8.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "word",
+        "m365"
+      ],
+      "series": "Word Online 입문 가이드",
+      "seriesOrder": 1
+    },
+    {
+      "id": "m365/pptonline6",
+      "slug": "pptonline6",
+      "title": "PowerPoint Online 시작하기 6",
+      "excerpt": "PowerPoint Online 시작하기 6\r",
+      "imageUrl": "/images/m365/pptonline6/image3.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "powerpoint",
+        "m365"
+      ],
+      "series": "PowerPoint Online 입문 가이드",
+      "seriesOrder": 7
+    },
+    {
+      "id": "m365/pptonline5",
+      "slug": "pptonline5",
+      "title": "PowerPoint Online 시작하기 5",
+      "excerpt": "PowerPoint Online 시작하기 5\r",
+      "imageUrl": "/images/m365/pptonline5/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "powerpoint",
+        "m365"
+      ],
+      "series": "PowerPoint Online 입문 가이드",
+      "seriesOrder": 6
+    },
+    {
+      "id": "m365/pptonline4",
+      "slug": "pptonline4",
+      "title": "PowerPoint Online 시작하기 4",
+      "excerpt": "PowerPoint Online 시작하기 4\r",
+      "imageUrl": "/images/m365/pptonline4/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "powerpoint",
+        "m365"
+      ],
+      "series": "PowerPoint Online 입문 가이드",
+      "seriesOrder": 5
+    },
+    {
+      "id": "m365/pptonline3",
+      "slug": "pptonline3",
+      "title": "PowerPoint Online 시작하기 3",
+      "excerpt": "PowerPoint Online 시작하기 3\r",
+      "imageUrl": "/images/m365/pptonline3/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "powerpoint",
+        "m365"
+      ],
+      "series": "PowerPoint Online 입문 가이드",
+      "seriesOrder": 4
+    },
+    {
+      "id": "m365/pptonline2",
+      "slug": "pptonline2",
+      "title": "PowerPoint Online 시작하기 2",
+      "excerpt": "PowerPoint Online 시작하기 2\r",
+      "imageUrl": "/images/m365/pptonline2/image3.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "powerpoint",
+        "m365"
+      ],
+      "series": "PowerPoint Online 입문 가이드",
+      "seriesOrder": 3
+    },
+    {
+      "id": "m365/pptonline1",
+      "slug": "pptonline1",
+      "title": "PowerPoint Online 시작하기 1",
+      "excerpt": "1. PowerPoint web 알아보기\r",
+      "imageUrl": "/images/m365/pptonline1/image13.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "powerpoint",
+        "m365"
+      ],
+      "series": "PowerPoint Online 입문 가이드",
+      "seriesOrder": 2
+    },
+    {
+      "id": "excel/excelonline5",
+      "slug": "excelonline5",
+      "title": "Excel Online 시작하기 5",
+      "excerpt": "Excel Online 시작하기 5\r",
+      "imageUrl": "/images/excel/excelonline5/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "excel",
+      "tags": [
+        "excel",
+        "m365"
+      ],
+      "series": "Excel 입문 가이드",
+      "seriesOrder": 6
+    },
+    {
+      "id": "excel/excelonline4",
+      "slug": "excelonline4",
+      "title": "Excel Online 시작하기 4",
+      "excerpt": "Excel Online 시작하기 4\r",
+      "imageUrl": "/images/excel/excelonline4/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "excel",
+      "tags": [
+        "excel",
+        "m365"
+      ],
+      "series": "Excel 입문 가이드",
+      "seriesOrder": 5
+    },
+    {
+      "id": "excel/excelonline3",
+      "slug": "excelonline3",
+      "title": "Excel Online 시작하기 3",
+      "excerpt": "Excel Online 시작하기 3\r",
+      "imageUrl": "/images/excel/excelonline3/image7.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "excel",
+      "tags": [
+        "excel",
+        "m365"
+      ],
+      "series": "Excel 입문 가이드",
+      "seriesOrder": 4
+    },
+    {
+      "id": "excel/excelonline2",
+      "slug": "excelonline2",
+      "title": "Excel Online 시작하기 2",
+      "excerpt": "Excel Online 시작하기 2\r",
+      "imageUrl": "/images/excel/excelonline2/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "excel",
+      "tags": [
+        "excel",
+        "m365"
+      ],
+      "series": "Excel 입문 가이드",
+      "seriesOrder": 3
+    },
+    {
+      "id": "excel/excelonline1",
+      "slug": "excelonline1",
+      "title": "Excel Online 시작하기 1",
+      "excerpt": "1. Excel Web 알아보기\r",
+      "imageUrl": "/images/excel/excelonline1/image10.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "excel",
+      "tags": [
+        "excel",
+        "m365"
+      ],
+      "series": "Excel 입문 가이드",
+      "seriesOrder": 2
+    },
+    {
+      "id": "copilot/copilot5",
+      "slug": "copilot5",
+      "title": "Copilot with Edge_ 코파일럿 교육 현장에서 활용하는 6가지 방법",
+      "excerpt": "1. Copilot + Edge로 AIDT처럼 활용하기\r",
+      "imageUrl": "/images/m365Copilot/copilot5/image5.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "copilot",
+      "tags": [
+        "copilot",
+        "m365"
+      ],
+      "series": "Copilot 입문 가이드",
+      "seriesOrder": 5
+    },
+    {
+      "id": "copilot/copilot4",
+      "slug": "copilot4",
+      "title": "Copilot with Edge_ 엣지와 함께쓰면 더 빛나는 코파일럿의 기능들",
+      "excerpt": "1. Copilot with Edge를 하는 이유\r",
+      "imageUrl": "/images/m365Copilot/copilot4/image8.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "copilot",
+      "tags": [
+        "copilot",
+        "m365"
+      ],
+      "series": "Copilot 입문 가이드",
+      "seriesOrder": 4
+    },
+    {
+      "id": "copilot/copilot3",
+      "slug": "copilot3",
+      "title": "Microsoft Designer_ 학교 계정 코파일럿으로도 충분합니다. 당신도 AI 전문가!",
+      "excerpt": "1. Web Microsoft Copilot 인터페이스\r",
+      "imageUrl": "/images/m365Copilot/copilot3/image5.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "copilot",
+      "tags": [
+        "copilot",
+        "m365"
+      ],
+      "series": "Copilot 입문 가이드",
+      "seriesOrder": 3
+    },
+    {
+      "id": "copilot/copilot2",
+      "slug": "copilot2",
+      "title": "Microsoft Designer + Copilot 예술 지식 없이도 전문 디자이너로!",
+      "excerpt": "1. Microsoft Designer 란?\r",
+      "imageUrl": "/images/m365Copilot/copilot2/image8.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "copilot",
+      "tags": [
+        "copilot",
+        "m365"
+      ],
+      "series": "Copilot 입문 가이드",
+      "seriesOrder": 2
+    },
+    {
+      "id": "copilot/copilot1",
+      "slug": "copilot1",
+      "title": "Copilot_ 학교의 혁신을 이끄는 AI 파트너, 코파일럿, 지금 시작하세요!",
+      "excerpt": "1. Copilot이란?\r",
+      "imageUrl": "/images/m365Copilot/copilot1/image5.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "copilot",
+      "tags": [
+        "copilot",
+        "m365"
+      ],
+      "series": "Copilot 입문 가이드",
+      "seriesOrder": 1
+    },
+    {
+      "id": "minecraft/minecraft-tutorial",
+      "slug": "minecraft-tutorial",
+      "title": "⛏️ Minecraft와 함께 게임으로 학습하기",
+      "excerpt": "STEP 1. Minecraft Education\r",
+      "imageUrl": "/images/minecraft/minecraft-tutorial/1.png",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-16",
+      "likes": 0,
+      "comments": 0,
+      "category": "minecraft",
+      "tags": [
+        "gaming",
+        "education",
+        "minecraft"
+      ],
+      "series": "Minecraft Education 입문 가이드",
+      "seriesOrder": 1
+    },
+    {
       "id": "m365/powerpoint-tutorial",
       "slug": "powerpoint-tutorial",
       "title": "📖 PowerPoint로 쉽게 강의자료 만들기",
-      "excerpt": "STEP 1. PowerPoint",
+      "excerpt": "STEP 1. PowerPoint\r",
       "imageUrl": "/images/m365/powerpoint-tutorial/1.png",
       "author": {
         "name": "Unknown"
@@ -19,15 +660,15 @@
         "office",
         "powerpoint"
       ],
-      "series": "M365 활용 가이드",
-      "seriesOrder": 3
+      "series": "PowerPoint Online 입문 가이드",
+      "seriesOrder": 1
     },
     {
       "id": "excel/excel-tutorial",
       "slug": "excel-tutorial",
       "title": "📖 Excel로 데이터 쉽게 관리하기",
-      "excerpt": "STEP 1. Excel",
-      "imageUrl": "/images/excel/excel-tutorial/1.png",
+      "excerpt": "STEP 1. Excel\r",
+      "imageUrl": "/images/excel/excelonline1/image2.jpg",
       "author": {
         "name": "Unknown"
       },
@@ -41,14 +682,14 @@
         "office",
         "excel"
       ],
-      "series": "Excel 활용 가이드",
+      "series": "Excel 입문 가이드",
       "seriesOrder": 1
     },
     {
       "id": "onenote/onenote",
       "slug": "onenote",
       "title": "📘 Onenote로 자료 정리하기 기초 - 기본 기능부터 유용한 Tip까지",
-      "excerpt": "이런 순간, 익숙하지 않으신가요? ",
+      "excerpt": "이런 순간, 익숙하지 않으신가요? \r",
       "imageUrl": "/images/onenote/onenote/0.png",
       "author": {
         "name": "Unknown"
@@ -61,56 +702,14 @@
         "onenote",
         "productivity"
       ],
-      "series": null,
-      "seriesOrder": null
-    },
-    {
-      "id": "teams/teams-2",
-      "slug": "teams-2",
-      "title": "📄 Teams 과제, 퀴즈로 수업을 제출하고 확인하고 피드백하기까지 한 번에 관리하기",
-      "excerpt": "이런 순간, 필요하지 않으신가요? ",
-      "imageUrl": "/images/teams/teams-1/img1.png",
-      "author": {
-        "name": "Unknown"
-      },
-      "publishedAt": "2026-02-02",
-      "likes": 0,
-      "comments": 0,
-      "category": "teams",
-      "tags": [
-        "teams",
-        "collaboration"
-      ],
-      "series": null,
-      "seriesOrder": null
-    },
-    {
-      "id": "teams/teams-1",
-      "slug": "teams-1",
-      "title": "📘 Teams로 학급 만들고 관리하기 : 기본 세팅부터 운영까지",
-      "excerpt": "이런 순간, 익숙하지 않으신가요? ",
-      "imageUrl": "/images/teams/teams-0/img1.png",
-      "author": {
-        "name": "Unknown"
-      },
-      "publishedAt": "2026-02-02",
-      "likes": 0,
-      "comments": 0,
-      "category": "teams",
-      "tags": [
-        "teams",
-        "collaboration",
-        "productivity",
-        "tutorial"
-      ],
-      "series": null,
-      "seriesOrder": null
+      "series": "OneNote 입문 가이드",
+      "seriesOrder": 1
     },
     {
       "id": "minecraft/minecraft-education-block-coding",
       "slug": "minecraft-education-block-coding",
       "title": "Minecraft Education Block Coding",
-      "excerpt": "STEP 0: 시나리오",
+      "excerpt": "이런 순간, 익숙하지 않으신가요? \r",
       "imageUrl": "/images/minecraft/minecraft-block-coding/img1.png",
       "author": {
         "name": "Unknown"
@@ -124,14 +723,14 @@
         "gaming",
         "coding"
       ],
-      "series": null,
-      "seriesOrder": null
+      "series": "Minecraft Education 입문 가이드",
+      "seriesOrder": 8
     },
     {
       "id": "m365/signup",
       "slug": "signup",
       "title": "📘 Microsoft 365 교육용 계정 만들기 - 교육청 포털에서 시작하기",
-      "excerpt": "STEP 0. 어디서 만들어야 할까?",
+      "excerpt": "STEP 0. 어디서 만들어야 할까?\r",
       "imageUrl": "/images/m365/signup/img1.png",
       "author": {
         "name": "Unknown"
@@ -146,14 +745,14 @@
         "education",
         "tutorial"
       ],
-      "series": "M365 활용 가이드",
+      "series": "M365 Tips 톺아보기",
       "seriesOrder": 1
     },
     {
       "id": "m365/onedrive-tutorial",
       "slug": "onedrive-tutorial",
       "title": "📖 Onedrive로 어디서나 안전하게 저장·공유·협업하기",
-      "excerpt": "STEP 1. Onedrive",
+      "excerpt": "STEP 1. Onedrive\r",
       "imageUrl": "/images/m365/onedrive-tutorial/1.png",
       "author": {
         "name": "Unknown"
@@ -174,8 +773,8 @@
     {
       "id": "excel/excel-2",
       "slug": "excel-2",
-      "title": "Excel (2)",
-      "excerpt": "Excel로 급식지도 담당 배정하기",
+      "title": "Excel로 급식지도 담당 한번에 배정하기",
+      "excerpt": "이런 순간, 익숙하지 않으신가요? \r",
       "imageUrl": "/images/m365/excel-2/img1.png",
       "author": {
         "name": "Unknown"
@@ -190,14 +789,14 @@
         "office",
         "excel"
       ],
-      "series": "Excel 활용 가이드",
-      "seriesOrder": 3
+      "series": "Excel 입문 가이드",
+      "seriesOrder": 8
     },
     {
       "id": "excel/excel-1",
       "slug": "excel-1",
-      "title": "Excel (1)",
-      "excerpt": "이런 순간, 익숙하지 않으신가요? ",
+      "title": "Excel로 담당 학급 성적 관리하기",
+      "excerpt": "이런 순간, 익숙하지 않으신가요? \r",
       "imageUrl": "/images/m365/excel-1/img0.png",
       "author": {
         "name": "Unknown"
@@ -212,8 +811,8 @@
         "office",
         "excel"
       ],
-      "series": "Excel 활용 가이드",
-      "seriesOrder": 2
+      "series": "Excel 입문 가이드",
+      "seriesOrder": 7
     },
     {
       "id": "copilot/prompt-coach",
@@ -233,8 +832,8 @@
         "ai",
         "agent"
       ],
-      "series": null,
-      "seriesOrder": null
+      "series": "Copilot 입문 가이드",
+      "seriesOrder": 7
     },
     {
       "id": "copilot/research",
@@ -254,14 +853,14 @@
         "ai",
         "prompt"
       ],
-      "series": null,
-      "seriesOrder": null
+      "series": "Copilot 입문 가이드",
+      "seriesOrder": 8
     },
     {
       "id": "copilot/custom-agent",
       "slug": "custom-agent",
       "title": "M365 Copilot으로 나만의 에이전트 만들기",
-      "excerpt": "STEP 0. 시나리오",
+      "excerpt": "이런 순간, 익숙하지 않으신가요? \r",
       "imageUrl": "/images/m365Copilot/copilotAgent/img1.png",
       "author": {
         "name": "Unknown"
@@ -275,8 +874,8 @@
         "ai",
         "productivity"
       ],
-      "series": null,
-      "seriesOrder": null
+      "series": "Copilot 입문 가이드",
+      "seriesOrder": 10
     },
     {
       "id": "copilot/copilot-chat",
@@ -296,8 +895,8 @@
         "ai",
         "tutorial"
       ],
-      "series": null,
-      "seriesOrder": null
+      "series": "Copilot 입문 가이드",
+      "seriesOrder": 6
     },
     {
       "id": "copilot/analyst",
@@ -317,21 +916,21 @@
         "productivity",
         "agent"
       ],
-      "series": null,
-      "seriesOrder": null
+      "series": "Copilot 입문 가이드",
+      "seriesOrder": 9
     }
   ],
-  "total": 15,
+  "total": 67,
   "allTags": [
     "account",
     "agent",
     "ai",
     "cloud",
     "coding",
-    "collaboration",
     "copilot",
     "education",
     "excel",
+    "forms",
     "gaming",
     "m365",
     "minecraft",
@@ -339,14 +938,170 @@
     "onedrive",
     "onenote",
     "powerpoint",
+    "powershell",
     "productivity",
     "prompt",
     "teams",
-    "tutorial"
+    "tutorial",
+    "word"
   ],
   "seriesByCategory": {
+    "teams": {
+      "Teams 입문 가이드": [
+        {
+          "id": "teams/teams-introduce",
+          "slug": "teams-introduce",
+          "title": "Microsoft Teams란?",
+          "seriesOrder": 1
+        },
+        {
+          "id": "teams/teams-home",
+          "slug": "teams-home",
+          "title": "Microsoft Teams 홈페이지 생성하기",
+          "seriesOrder": 2
+        },
+        {
+          "id": "teams/teams-maketeam",
+          "slug": "teams-maketeam",
+          "title": "Microsoft Teams 팀 생성하기",
+          "seriesOrder": 3
+        },
+        {
+          "id": "teams/teams-channel",
+          "slug": "teams-channel",
+          "title": "Microsoft Teams 채널 및 게시물 생성 관리하기",
+          "seriesOrder": 4
+        },
+        {
+          "id": "teams/teams-filetap",
+          "slug": "teams-filetap",
+          "title": "Microsoft Teams 파일탭으로 문서관리하기",
+          "seriesOrder": 5
+        },
+        {
+          "id": "teams/teams-score",
+          "slug": "teams-score",
+          "title": "Microsoft Teams로 과제 및 성적 생성 관리하기",
+          "seriesOrder": 6
+        },
+        {
+          "id": "teams/teams-note",
+          "slug": "teams-note",
+          "title": "Microsoft Teams 수업용 전자필기장 생성하기",
+          "seriesOrder": 7
+        },
+        {
+          "id": "teams/teams-class",
+          "slug": "teams-class",
+          "title": "Microsoft Teams 수업활동으로 수업 체계적으로 관리하기",
+          "seriesOrder": 8
+        },
+        {
+          "id": "teams/teams-onlinemeet",
+          "slug": "teams-onlinemeet",
+          "title": "Microsoft Teams 화상회의하기",
+          "seriesOrder": 9
+        },
+        {
+          "id": "teams/teams-reflect",
+          "slug": "teams-reflect",
+          "title": "Microsoft Teams Reflect로 학생 정서적 상태 파악하기",
+          "seriesOrder": 10
+        },
+        {
+          "id": "teams/teams-searchcoach",
+          "slug": "teams-searchcoach",
+          "title": "Microsoft Teams 검색코치로 안정적으로 정보얻기",
+          "seriesOrder": 11
+        },
+        {
+          "id": "teams/teams-speakerprogress",
+          "slug": "teams-speakerprogress",
+          "title": "Microsoft Teams 발표자 진행(Speaker Progress)으로 학생들의 발표 능력 향상하기",
+          "seriesOrder": 12
+        },
+        {
+          "id": "teams/teams-readingprogress",
+          "slug": "teams-readingprogress",
+          "title": "Microsoft Teams Reading Progress로 학생 읽기능력 향상하기",
+          "seriesOrder": 13
+        },
+        {
+          "id": "teams/teams-insights",
+          "slug": "teams-insights",
+          "title": "Microsoft Teams Insights로 학습관리 및 성과분석하기",
+          "seriesOrder": 14
+        }
+      ]
+    },
+    "onenote": {
+      "OneNote 입문 가이드": [
+        {
+          "id": "onenote/onenote",
+          "slug": "onenote",
+          "title": "📘 Onenote로 자료 정리하기 기초 - 기본 기능부터 유용한 Tip까지",
+          "seriesOrder": 1
+        },
+        {
+          "id": "onenote/onenote-in-class",
+          "slug": "onenote-in-class",
+          "title": "📘 Onenote 학교에서 바로 사용해보기 - 교무수첩, 공문서철, 상담록",
+          "seriesOrder": 2
+        },
+        {
+          "id": "onenote/onenote-mobile",
+          "slug": "onenote-mobile",
+          "title": "📘 모바일에서도 노트 바로 확인하기",
+          "seriesOrder": 3
+        },
+        {
+          "id": "onenote/onenote-classnote",
+          "slug": "onenote-classnote",
+          "title": "📘 Onenote 수업용 전자필기장 - 과제, 수학도우미",
+          "seriesOrder": 4
+        },
+        {
+          "id": "onenote/onenote-with-calendar",
+          "slug": "onenote-with-calendar",
+          "title": "📘 캘린더와 더 편리하게 사용하기",
+          "seriesOrder": 5
+        }
+      ]
+    },
     "m365": {
-      "M365 활용 가이드": [
+      "Forms 입문 가이드": [
+        {
+          "id": "m365/forms-inschool",
+          "slug": "forms-inschool",
+          "title": "Microsoft Forms 시작하기",
+          "seriesOrder": 1
+        },
+        {
+          "id": "m365/forms-question",
+          "slug": "forms-question",
+          "title": "Microsoft Forms 질문 항목 양식 알아보기",
+          "seriesOrder": 2
+        },
+        {
+          "id": "m365/forms-option",
+          "slug": "forms-option",
+          "title": "Microsoft Forms 섹션 나누기",
+          "seriesOrder": 3
+        },
+        {
+          "id": "m365/forms-quiz",
+          "slug": "forms-quiz",
+          "title": "Microsoft Forms 퀴즈 만들기",
+          "seriesOrder": 4
+        },
+        {
+          "id": "m365/forms-share",
+          "slug": "forms-share",
+          "title": "Microsoft Forms 설정 및 결과 확인하기",
+          "seriesOrder": 5
+        }
+      ],
+      "M365 Tips 톺아보기": [
         {
           "id": "m365/signup",
           "slug": "signup",
@@ -354,21 +1109,163 @@
           "seriesOrder": 1
         },
         {
-          "id": "m365/onedrive-tutorial",
-          "slug": "onedrive-tutorial",
-          "title": "📖 Onedrive로 어디서나 안전하게 저장·공유·협업하기",
+          "id": "m365/powershell",
+          "slug": "powershell",
+          "title": "💡PowerShell로 M365 이름 일괄변경하기",
           "seriesOrder": 2
         },
+        {
+          "id": "m365/newversionoffice-download",
+          "slug": "newversionoffice-download",
+          "title": "🔽 M365 최신버전 오피스 설치하기",
+          "seriesOrder": 3
+        }
+      ],
+      "Word Online 입문 가이드": [
+        {
+          "id": "m365/wordonline1",
+          "slug": "wordonline1",
+          "title": "Microsoft Word_ 글로벌 문서 작업 플랫폼 Word! 온라인 접속 방법 및 데이터 관리",
+          "seriesOrder": 1
+        },
+        {
+          "id": "m365/wordonline2",
+          "slug": "wordonline2",
+          "title": "Microsoft Word_ 워드 온라인 인터페이스 한방에 이해하기_01",
+          "seriesOrder": 2
+        },
+        {
+          "id": "m365/wordonline3",
+          "slug": "wordonline3",
+          "title": "Microsoft Word_ 워드 온라인 인터페이스 한방에 이해하기_02",
+          "seriesOrder": 3
+        },
+        {
+          "id": "m365/wordonline4",
+          "slug": "wordonline4",
+          "title": "Microsoft Word_ 워드를 사용할 때 반드시 알아야할 꿀팁 모음",
+          "seriesOrder": 4
+        },
+        {
+          "id": "m365/wordonline5",
+          "slug": "wordonline5",
+          "title": "Microsoft Word_ 기본 템플릿을 이용하여 학교 현장 활용 방안",
+          "seriesOrder": 5
+        }
+      ],
+      "PowerPoint Online 입문 가이드": [
         {
           "id": "m365/powerpoint-tutorial",
           "slug": "powerpoint-tutorial",
           "title": "📖 PowerPoint로 쉽게 강의자료 만들기",
+          "seriesOrder": 1
+        },
+        {
+          "id": "m365/pptonline1",
+          "slug": "pptonline1",
+          "title": "PowerPoint Online 시작하기 1",
+          "seriesOrder": 2
+        },
+        {
+          "id": "m365/pptonline2",
+          "slug": "pptonline2",
+          "title": "PowerPoint Online 시작하기 2",
           "seriesOrder": 3
+        },
+        {
+          "id": "m365/pptonline3",
+          "slug": "pptonline3",
+          "title": "PowerPoint Online 시작하기 3",
+          "seriesOrder": 4
+        },
+        {
+          "id": "m365/pptonline4",
+          "slug": "pptonline4",
+          "title": "PowerPoint Online 시작하기 4",
+          "seriesOrder": 5
+        },
+        {
+          "id": "m365/pptonline5",
+          "slug": "pptonline5",
+          "title": "PowerPoint Online 시작하기 5",
+          "seriesOrder": 6
+        },
+        {
+          "id": "m365/pptonline6",
+          "slug": "pptonline6",
+          "title": "PowerPoint Online 시작하기 6",
+          "seriesOrder": 7
+        }
+      ],
+      "Onedrive 입문 가이드": [
+        {
+          "id": "m365/onedrive-tutorial",
+          "slug": "onedrive-tutorial",
+          "title": "📖 Onedrive로 어디서나 안전하게 저장·공유·협업하기",
+          "seriesOrder": 1
+        },
+        {
+          "id": "m365/onedrive-mobile",
+          "slug": "onedrive-mobile",
+          "title": "📖 OneDrive 모바일로 사용하기",
+          "seriesOrder": 5
+        }
+      ]
+    },
+    "minecraft": {
+      "Minecraft Education 입문 가이드": [
+        {
+          "id": "minecraft/minecraft-tutorial",
+          "slug": "minecraft-tutorial",
+          "title": "⛏️ Minecraft와 함께 게임으로 학습하기",
+          "seriesOrder": 1
+        },
+        {
+          "id": "minecraft/minecraftedu2",
+          "slug": "minecraftedu2",
+          "title": "Minecraft Education 시작하기 2",
+          "seriesOrder": 2
+        },
+        {
+          "id": "minecraft/minecraftedu3",
+          "slug": "minecraftedu3",
+          "title": "Minecraft Education 시작하기 3",
+          "seriesOrder": 3
+        },
+        {
+          "id": "minecraft/minecraftedu4",
+          "slug": "minecraftedu4",
+          "title": "Minecraft Education 시작하기 4",
+          "seriesOrder": 4
+        },
+        {
+          "id": "minecraft/minecraftedu5",
+          "slug": "minecraftedu5",
+          "title": "Minecraft Education 시작하기 5",
+          "seriesOrder": 5
+        },
+        {
+          "id": "minecraft/minecraftedu6",
+          "slug": "minecraftedu6",
+          "title": "Minecraft Education 시작하기 6",
+          "seriesOrder": 6
+        },
+        {
+          "id": "minecraft/minecraftedu7",
+          "slug": "minecraftedu7",
+          "title": "Minecraft Education 시작하기 7",
+          "seriesOrder": 7
+        },
+        {
+          "id": "minecraft/minecraft-education-block-coding",
+          "slug": "minecraft-education-block-coding",
+          "title": "Minecraft Education Block Coding",
+          "seriesOrder": 8
         }
       ]
     },
     "excel": {
-      "Excel 활용 가이드": [
+      "Excel 입문 가이드": [
         {
           "id": "excel/excel-tutorial",
           "slug": "excel-tutorial",
@@ -376,16 +1273,110 @@
           "seriesOrder": 1
         },
         {
+          "id": "excel/excelonline1",
+          "slug": "excelonline1",
+          "title": "Excel Online 시작하기 1",
+          "seriesOrder": 2
+        },
+        {
+          "id": "excel/excelonline2",
+          "slug": "excelonline2",
+          "title": "Excel Online 시작하기 2",
+          "seriesOrder": 3
+        },
+        {
+          "id": "excel/excelonline3",
+          "slug": "excelonline3",
+          "title": "Excel Online 시작하기 3",
+          "seriesOrder": 4
+        },
+        {
+          "id": "excel/excelonline4",
+          "slug": "excelonline4",
+          "title": "Excel Online 시작하기 4",
+          "seriesOrder": 5
+        },
+        {
+          "id": "excel/excelonline5",
+          "slug": "excelonline5",
+          "title": "Excel Online 시작하기 5",
+          "seriesOrder": 6
+        },
+        {
           "id": "excel/excel-1",
           "slug": "excel-1",
-          "title": "Excel (1)",
-          "seriesOrder": 2
+          "title": "Excel로 담당 학급 성적 관리하기",
+          "seriesOrder": 7
         },
         {
           "id": "excel/excel-2",
           "slug": "excel-2",
-          "title": "Excel (2)",
+          "title": "Excel로 급식지도 담당 한번에 배정하기",
+          "seriesOrder": 8
+        }
+      ]
+    },
+    "copilot": {
+      "Copilot 입문 가이드": [
+        {
+          "id": "copilot/copilot1",
+          "slug": "copilot1",
+          "title": "Copilot_ 학교의 혁신을 이끄는 AI 파트너, 코파일럿, 지금 시작하세요!",
+          "seriesOrder": 1
+        },
+        {
+          "id": "copilot/copilot2",
+          "slug": "copilot2",
+          "title": "Microsoft Designer + Copilot 예술 지식 없이도 전문 디자이너로!",
+          "seriesOrder": 2
+        },
+        {
+          "id": "copilot/copilot3",
+          "slug": "copilot3",
+          "title": "Microsoft Designer_ 학교 계정 코파일럿으로도 충분합니다. 당신도 AI 전문가!",
           "seriesOrder": 3
+        },
+        {
+          "id": "copilot/copilot4",
+          "slug": "copilot4",
+          "title": "Copilot with Edge_ 엣지와 함께쓰면 더 빛나는 코파일럿의 기능들",
+          "seriesOrder": 4
+        },
+        {
+          "id": "copilot/copilot5",
+          "slug": "copilot5",
+          "title": "Copilot with Edge_ 코파일럿 교육 현장에서 활용하는 6가지 방법",
+          "seriesOrder": 5
+        },
+        {
+          "id": "copilot/copilot-chat",
+          "slug": "copilot-chat",
+          "title": "M365 Copilot과 채팅하기",
+          "seriesOrder": 6
+        },
+        {
+          "id": "copilot/prompt-coach",
+          "slug": "prompt-coach",
+          "title": "Prompt Coach",
+          "seriesOrder": 7
+        },
+        {
+          "id": "copilot/research",
+          "slug": "research",
+          "title": "🔎 작년 계획안 또 찾고 계신가요? '리서치 도구'로 바로 재사용하기",
+          "seriesOrder": 8
+        },
+        {
+          "id": "copilot/analyst",
+          "slug": "analyst",
+          "title": "🔎 수행평가 채점은 끝났는데... 다음 수업은 어떻게 하시나요? ‘분석가(Analyst)’로 수행평가 결과 바로 수업에 쓰기",
+          "seriesOrder": 9
+        },
+        {
+          "id": "copilot/custom-agent",
+          "slug": "custom-agent",
+          "title": "M365 Copilot으로 나만의 에이전트 만들기",
+          "seriesOrder": 10
         }
       ]
     }

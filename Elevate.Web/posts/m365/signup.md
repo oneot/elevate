@@ -1,7 +1,7 @@
 title: 📘 Microsoft 365 교육용 계정 만들기 - 교육청 포털에서 시작하기
 tags: [m365, account, education, tutorial]
 date: 2026-02-02
-series: "M365 활용 가이드"
+series: "M365 Tips 톺아보기"
 seriesOrder: 1
 ---
 

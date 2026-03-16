@@ -1,0 +1,21 @@
+{
+  "id": "m365/pptonline3",
+  "slug": "pptonline3",
+  "title": "PowerPoint Online 시작하기 3",
+  "excerpt": "PowerPoint Online 시작하기 3\r",
+  "imageUrl": "/images/m365/pptonline3/image.jpg",
+  "author": {
+    "name": "Unknown"
+  },
+  "publishedAt": "2026-03-09",
+  "likes": 0,
+  "comments": 0,
+  "category": "m365",
+  "tags": [
+    "powerpoint",
+    "m365"
+  ],
+  "series": "PowerPoint Online 입문 가이드",
+  "seriesOrder": 4,
+  "content": "\n# PowerPoint Online 시작하기 #3\r\n\r\n## 1. PowerPoint 그리기 및 디자인\r\n\r\n### | Power Point 그리기\r\n\r\nPowerPoint에서는 그리기 옵션을 제공합니다. 텍스트나 도형으로 표현이 되지 않는 부분이나 강의를 하다가 표시를 해야 하는 부분 등에 활용하기 좋은 옵션입니다.\r\n\r\n![image](/images/m365/pptonline3/image.jpg)\r\n\r\n선택을 클릭하면 그리기 옵션에서 나오게 되고, 터치로 그리기를 선택하면 슬라이스 위에서 이루어지는 모든 터치와 클릭은 그리기가 됩니다.\r\n\r\n스텐실을 이용하면 자가 활성화 되어 직선을 그리는데 도움을 줍니다.\r\n\r\n![image](/images/m365/pptonline3/image2.jpg)\r\n\r\n매우 직관적인 UI를 가진 기능으로 펜을 선택한 후 v를 클릭하면 펜 또는 형광펜의 색상을 변경할 수 있습니다.\r\n\r\n잘 못 그린 그리기는 한 획 단위로 지우개로 지울 수 있습니다. 또한 올가미를 이용하여 여러 개의 그리기를 한 번에 선택할 수도 있습니다.\r\n\r\n---\r\n\r\n### | 디자인 및 레이아웃\r\n\r\nPowerPoint에서는 기본적인 디자인과 레이아웃을 제공해줍니다. 만약 텍스트 상자의 위치나 서식등을 커스터마이징 하지 않는 다면, 제공된 레이아웃을 활용을 하면 됩니다. 그리고 제공된 레이아웃끼리의 호환이 잘 되므로 각 슬라이드에 맞는 레이아웃을 선택하면 보기 좋은 슬라이드가 완성됩니다.\r\n\r\n![image](/images/m365/pptonline3/imagea.jpg)\r\n\r\n몇 가지의 디자인은 흰색 배경, 검은색 배경 모두를 지원하지만 그렇지 않은 것도 있습니다.\r\n\r\n디자인을 이것 저것 클릭해보면서 원하는 디자인을 찾아도 좋지만, 자율성과 창의성을 추구하는 PowerPoint에 익숙해지면 더 많은 디자인을 직접 할 수 있어서 사용 빈도가 점점 줄어들게 됩니다. 디자인에 대한 수요가 줄어드는 반면에 증가하는 수요는 슬라이드 설정입니다.\r\n\r\n![image](/images/m365/pptonline3/imagec.jpg)\r\n\r\n1. 슬라이드 크기는 프레젠테이션 용도에 맞게 변경할 수 있습니다. 크게는 다음 두 가지가 있습니다.\r\n\r\n    a. 표준(4:3)\r\n\r\n    b. 와이드스크린(16:9)\r\n\r\n    이 중에서 PowerPoint를 열면 와이드스크린이 먼저 활성화됩니다.\r\n\r\n    이때 표준으로 변경하거나 [사용자 지정 슬라이드 크기..]에 들어가서 크기를 커스텀 할 수 있습니다. A4, B4 등 다양한 크기로 변경 가능합니다.\r\n\r\n2. 배경 서식은 슬라이드의 배경을 설정하는 것입니다.\r\n\r\n    a. 단색 채우기: 배경을 단색으로 채우는 것으로 프레젠테이션에 걸맞는 색을 선택하면 됩니다.\r\n\r\n    b. 사진 삽입: 스톡 이미지 또는 디바이스에서 업로드 가능합니다.\r\n\r\n    c. 모두 적용: 하나의 슬라이드에 적용된 배경을 다른 모든 슬라이드에 적용합니다.\r\n\r\n    이렇게 크기와 배경 서식을 각각 디자인한다면 PowerPoint에서 제공하는 기본 디자인에 대한 수요는 감소할 수 있습니다.\r\n\r\n---\r\n\r\n### | 그리기, 디자인 활용\r\n\r\n그리기와 디자인을 활용하여 아래와 같이 슬라이드를 조금 더 디자인할 수 있습니다.\r\n\r\n![image](/images/m365/pptonline3/image14.jpg)\r\n\r\n이 외에도 필요성에 맞추어 슬라이드의 크기를 조절할 수도 있습니다."
+}

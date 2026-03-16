@@ -1,0 +1,21 @@
+{
+  "id": "m365/pptonline5",
+  "slug": "pptonline5",
+  "title": "PowerPoint Online 시작하기 5",
+  "excerpt": "PowerPoint Online 시작하기 5\r",
+  "imageUrl": "/images/m365/pptonline5/image.jpg",
+  "author": {
+    "name": "Unknown"
+  },
+  "publishedAt": "2026-03-09",
+  "likes": 0,
+  "comments": 0,
+  "category": "m365",
+  "tags": [
+    "powerpoint",
+    "m365"
+  ],
+  "series": "PowerPoint Online 입문 가이드",
+  "seriesOrder": 6,
+  "content": "\n# PowerPoint Online 시작하기 #5\r\n\r\n## 1. PowerPoint 저장 및 내보내기\r\n\r\n| 공유 및 협업을 위한 [검토] 탭\r\n\r\n검토 탭은 PowerPoint의 공유 및 협업을 위한 탭이라고 볼 수 있습니다. 학교에서 PowerPoint의 슬라이드에 함께 작업해야 하는 일이 있을 때 사용할 수 있습니다. 다만, 개인이 수업 등을 위해 PowerPoint를 쓰는 경우에는 자주 쓰이는 기능은 아닙니다.\r\n\r\n![image](/images/m365/pptonline5/image.jpg)\r\n\r\n1. 슬라이드 확인\r\n\r\n    a. 언어 교정 및 슬라이드 확인이 가능합니다.\r\n\r\n    b. 맞춤법 설정을 할 수 있습니다.\r\n\r\n2. 접근성 검사\r\n\r\n    a. 프레젠테이션이 모든 사용자(특히 장애가 있는 사용자)에게 적합한지를 판단해줍니다.\r\n\r\n    b. 화면 읽기 장치와 호환이 되는지, 색 대비가 충분한지 등을 검토해줍니다.\r\n\r\n3. 모두 읽은 상태로 표시 / 변경 내용 표시\r\n\r\n    a. 문서에서 추가된 메모와 검토 내용을 읽음 처리 합니다.\r\n\r\n    b. 협업 중 다른 사람이 남긴 메모를 확인하고 정리할 수 있습니다.\r\n\r\n    c. 다른 사용자가 수정한 문서의 변경 사항을 확인할 수 있도록 해줍니다.\r\n\r\n4. 메모 표시\r\n\r\n    ![image](/images/m365/pptonline5/image2.jpg)\r\n\r\n    a. 슬라이드에 메모를 남겨 협업을 위한 소통의 도구로 사용할 수 있습니다.\r\n\r\n    b. 메모를 달고 삭제할 수 있으며, 다음 메모와 이전 메모로 이동할 수 있습니다.\r\n\r\n---\r\n\r\n### | PowerPoint 저장 및 공유\r\n\r\nPowerPoint를 저장하고 공유하기 위해서는 [파일] 탭을 활용하면 됩니다.\r\n\r\n![image](/images/m365/pptonline5/image9.jpg)\r\n\r\n파일에 있는 기능은 크게 PowerPoint를 Web으로 끌고 오는 기능, 내보내는 기능, 해당 파워포인트 정보 변경 기능이 있습니다.\r\n\r\n1. 새로 만들기: 빈 프레젠테이션(빈 템플릿)을 새로 열거나 템플릿을 찾아볼 수 있습니다.\r\n\r\n2. 열기: One Drive에 있는 PowerPoint를 열거나, 혹은 디바이스에 있는 PowerPoint를 열 수 있습니다.\r\n\r\n    ![image](/images/m365/pptonline5/imageb.jpg)\r\n\r\n3. 공유: One Drive에 저장 된 후 편집되는 PowerPoint는 공유 및 협업이 가능합니다.\r\n\r\n    [파일]-[공유] 에서는 다음과 같은 설정이 가능합니다.\r\n\r\n    ![image](/images/m365/pptonline5/imagec.jpg)\r\n\r\n    공유 링크를 이용하면 위와 같이 하나의 프레젠테이션에서 함께 협업하며 슬라이드를 편집할 수 있습니다. 다만 같은 텍스트 상자가 개체를 동시에 고르면 먼저 선택한 사람에게 편집 권한이 우선 부여 됩니다.\r\n\r\n    a. 다른 사용자와 공유\r\n\r\n    ![image](/images/m365/pptonline5/imagee.jpg)\r\n\r\n    [다른 사용자와 공유]를 클릭하면 해당 프레젠테이션을 다른 사람들과 공유할 수 있게 됩니다. 이 때 몇 가지 설정을 할 수 있습니다. [링크 복사] 옆에 있는 [⚙️]를 선택하면 공유 링크를 설정할 수 있습니다.\r\n\r\n    ![image](/images/m365/pptonline5/imagef.jpg)\r\n\r\n    링크가 있는 누구나 접근을 가능하게 할 것인지, 혹은 링크가 있는 학교 구성원(교사, 학생 등 도메인이 같은 계정)만 접근 가능하게 할 것인지, 또는 직접 추가한 몇 명만 엑세스가 가능하게 할 것인지를 설정할 수 있습니다.\r\n\r\n    그리고 [설정 더 보기]에서는 링크가 있는 사용자에게 편집 권한, 보기 권한, 다운로드 불가 등의 설정을 할 수 있습니다.\r\n\r\n    b. 이 프레젠테이션에 대한 링크 복사: 프레젠테이션의 링크를 생성할 수 있습니다.\r\n\r\n    c. < / >: 단락링크(Embed Link)로 html 형식으로 공유되는 링크입니다.\r\n\r\n    d. 엑세스 관리: 프레젠테이션이 공유되었을 때 공유 설정을 변경할 수 있습니다.\r\n\r\n4. 복사본 만들기\r\n\r\n    a. 온라인으로 복사본 만들기: Web 상에서 복사본을 생성합니다.\r\n\r\n    b. 복사본 다운로드\r\n\r\n    ![image](/images/m365/pptonline5/image12.jpg)\r\n\r\n    디바이스에 Web에서 작성한 PowerPoint를 .pptx 형식으로 다운로드 합니다. PowerPoint 앱으로 활용할 수 있습니다.\r\n\r\n5. 인쇄\r\n\r\n    인쇄 옵션에서는 프레젠테이션 인쇄에 대한 설정을 할 수 있습니다. 전체를 인쇄할 지, 스크립트(슬라이드 노트)를 포함한 인쇄를 할 지 또는 유인물 형식으로 인쇄할 지를 설정할 수 있습니다.\r\n\r\n---\r\n\r\n### | 버전 기록\r\n\r\nPowerPoint의 버전 기록 기능은 파일의 이전 버전들을 확인하고 필요 시 복원할 수 있도록 도와주는 매우 유용한 도구입니다. 이 기능은 특히 협업 작업 시 유용합니다.\r\n\r\n![image](/images/m365/pptonline5/image1a.jpg)\r\n\r\n예를 들어, 학생들끼리 작업을 하다가 실수로 콘텐츠가 삭제되거나 변경된 경우에도 쉽게 복원할 수 있습니다.\r\n"
+}

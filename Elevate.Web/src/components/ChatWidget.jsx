@@ -7,8 +7,8 @@ const ChatWidget = () => {
   const [isBotTyping, setIsBotTyping] = useState(false); // 봇 타이핑 상태 관리
   const typingTimeoutRef = useRef(null); // 타이핑 타임아웃 관리
 
-// [Azure Function 복구 시 기존 코드 롤백 예정]
-  useEffect(() => {
+
+  useEffect(() => {    /* [Azure Function 복구 시 기존 코드 롤백 예정]
     try {
       // 1. Vite 환경 변수에서 GitHub Secrets로 주입한 키를 직접 꺼내옵니다.
       const secretKey = import.meta.env.VITE_DIRECT_LINE_SECRET;
@@ -27,9 +27,8 @@ const ChatWidget = () => {
     } catch (err) {
       console.error("비상 연결 실패:", err);
     }
+    */
 
-    /* ==========================================
-       [기존 코드 보존]
     const getSecureToken = async () => {
       try {
         const response = await fetch('https://af01-ceh2a2e2ezgda9a6.koreacentral-01.azurewebsites.net/api/GetToken');
@@ -42,7 +41,8 @@ const ChatWidget = () => {
       }
     };
     getSecureToken();
-    ========================================== */
+
+
   }, []); // 빈 배열 유지 (페이지 로드 시 한 번만 실행)
 
   // ✅ 로딩 애니메이션 (말풍선 배경 제거됨, 점만 둥둥)

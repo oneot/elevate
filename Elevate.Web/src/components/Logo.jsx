@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 const Logo = ({isBlog}) => {
     return (
-        <Link to={isBlog ? "/blog" : "/"} className="flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-3">
             <svg width="24" height="24" viewBox="0 0 23 23" fill="none">
                 <path d="M0 0H10.5V10.5H0V0Z" fill="#F25022"/>
                 <path d="M12.5 0H23V10.5H12.5V0Z" fill="#7FBA00"/>

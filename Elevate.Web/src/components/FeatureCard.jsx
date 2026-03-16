@@ -95,7 +95,11 @@ const FeatureCard = ({
                     <h3 className={`text-xl font-bold ${colors.titleColor}`}>{title}</h3>
                     <p className="text-sm text-slate-500" dangerouslySetInnerHTML={{ __html: description }} />
                 </div>
-                <div className={`card-cta mt-4 sm:mt-0 ${colors.ctaColor} text-xs font-bold opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0`}>
+                <div className={`card-cta mt-6 sm:mt-0 ${colors.ctaColor} text-xs font-bold 
+                    opacity-100 translate-x-0 
+                    sm:opacity-0 sm:translate-x-[-10px] 
+                    sm:group-hover:opacity-100 sm:group-hover:translate-x-0 
+                    transition-all duration-300`}>
                     {ctaLabel}
                 </div>
             </div>
