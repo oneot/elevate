@@ -2,7 +2,7 @@ title: 📖 OneDrive 모바일로 사용하기
 tags: [m365, productivity, cloud, onedrive]
 date: 2026-02-02
 series: "Onedrive 입문 가이드"
-seriesOrder: 5
+seriesOrder: 2
 ---
 
 ## 1. 모바일 OneDrive
