@@ -61,6 +61,10 @@ npm run build
    - 로컬 빌드 절차, 배포 전 체크리스트, 환경변수 설정
    - 프로덕션 배포나 CI/CD 파이프라인 구성 시 참고
 
+6. **Microsoft Clarity 적용 가이드** ([CLARITY_INTEGRATION_GUIDE.md](CLARITY_INTEGRATION_GUIDE.md))
+   - Clarity 설치 방식 비교, React/Vite 권장 구현 절차, Consent v2 연동, 검증/트러블슈팅
+   - 분석 도입 작업(신규/유지보수) 시 가장 먼저 참고
+
 ## 기여 / Contributing
 
 프로젝트에 기여하려면 [CONTRIBUTING.md](CONTRIBUTING.md)를 참고해주세요.
