@@ -30,6 +30,15 @@ npm run dev
 npm run build
 ```
 
+## 환경변수 / Environment variables
+
+Clarity 도입 이후 운영 배포 시 아래 변수를 사용합니다.
+
+- `VITE_CLARITY_ENABLED`: `true`면 Clarity 활성화, 그 외 값은 비활성
+- `VITE_CLARITY_PROJECT_ID`: Microsoft Clarity 프로젝트 ID
+
+로컬 개발에서는 기본적으로 비활성을 권장합니다.
+
 ## 프로젝트 구조 (요약) / Project structure (summary)
 
 - `src/` — React 소스

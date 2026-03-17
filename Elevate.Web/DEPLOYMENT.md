@@ -140,6 +140,11 @@ npm run preview
 - [ ] 외부 링크가 신뢰할 수 있는 도메인인가?
 - [ ] HTTPS 전용 호스팅으로 설정되었는가?
 
+### 분석(Clarity)
+- [ ] `VITE_CLARITY_ENABLED` 값이 배포 환경에 맞게 설정되었는가?
+- [ ] `VITE_CLARITY_PROJECT_ID`가 GitHub Secrets에 설정되었는가?
+- [ ] 배포 후 `https://www.clarity.ms/collect` 요청이 확인되는가?
+
 ---
 
 ## 호스팅 플랫폼별 배포
@@ -225,6 +230,14 @@ https://<site-name>.netlify.app/
 2. Source: GitHub Actions
 3. 아래 단계 진행
 ```
+
+현재 저장소는 [../.github/workflows/deploy.yml](../.github/workflows/deploy.yml) 워크플로우를 사용합니다.
+Clarity 관련 값은 GitHub Actions에서 다음처럼 주입합니다.
+
+- Repository Variables: `VITE_CLARITY_ENABLED` (권장값: `true`)
+- Repository Secrets: `VITE_CLARITY_PROJECT_ID`
+
+운영에서는 ID 누락 시 추적이 시작되지 않으므로, 배포 전 Secret 유무를 반드시 확인하세요.
 
 #### 2단계: 배포 스크립트 생성
 `.github/workflows/deploy.yml`:
