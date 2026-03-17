@@ -1,170 +1,365 @@
-const { getPostsContainer, getAssetsContainer } = require('../services/cosmosClient');
 const crypto = require('crypto');
-const path = require('path');
-const fs = require('fs');
 
-// Utility to generate unique IDs
-const generateId = () => crypto.randomBytes(16).toString('hex');
+const { getAssetsContainer, getPostsContainer } = require('../services/cosmosClient');
+const { issueBlobUploadSas, deleteBlobByUrl } = require('../services/storageClient');
+const { sendError } = require('../utils/http');
+const { toSlugBase } = require('../utils/slug');
 
-// Create a new post (POST /api/admin/posts)
+const allowedStatuses = new Set(['draft', 'published', 'archived']);
+const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const maxImageSizeBytes = 10 * 1024 * 1024;
+
+function createUuid() {
+  if (typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return crypto.randomBytes(16).toString('hex');
+}
+
+function validatePostCreatePayload(body) {
+  if (!body || typeof body !== 'object') {
+    return 'Invalid request payload';
+  }
+
+  if (!body.title || typeof body.title !== 'string') {
+    return 'title is required';
+  }
+
+  if (!body.category || typeof body.category !== 'string') {
+    return 'category is required';
+  }
+
+  if (!body.contentMarkdown || typeof body.contentMarkdown !== 'string') {
+    return 'contentMarkdown is required';
+  }
+
+  if (!Array.isArray(body.tags)) {
+    return 'tags must be an array';
+  }
+
+  if (!allowedStatuses.has(body.status)) {
+    return 'status must be one of draft, published, archived';
+  }
+
+  return null;
+}
+
+function validatePostUpdatePayload(body) {
+  if (!body || typeof body !== 'object') {
+    return 'Invalid request payload';
+  }
+
+  if (body.title !== undefined && (typeof body.title !== 'string' || body.title.length === 0)) {
+    return 'title must be a non-empty string';
+  }
+
+  if (body.tags !== undefined && !Array.isArray(body.tags)) {
+    return 'tags must be an array';
+  }
+
+  if (body.status !== undefined && !allowedStatuses.has(body.status)) {
+    return 'status must be one of draft, published, archived';
+  }
+
+  return null;
+}
+
+async function findPostById(container, id) {
+  const querySpec = {
+    query: 'SELECT TOP 1 * FROM p WHERE p.id = @id',
+    parameters: [{ name: '@id', value: id }]
+  };
+
+  const { resources } = await container.items.query(querySpec).fetchAll();
+  return resources[0] || null;
+}
+
+async function slugExists(container, slug, excludeId) {
+  const parameters = [{ name: '@slug', value: slug }];
+  let query = 'SELECT TOP 1 p.id FROM p WHERE p.slug = @slug';
+
+  if (excludeId) {
+    query += ' AND p.id != @excludeId';
+    parameters.push({ name: '@excludeId', value: excludeId });
+  }
+
+  const { resources } = await container.items.query({ query, parameters }).fetchAll();
+  return resources.length > 0;
+}
+
+async function resolveUniqueSlug(container, requestedSlug, title, excludeId) {
+  const base = toSlugBase(requestedSlug || title);
+  let index = 1;
+  let candidate = base;
+
+  while (await slugExists(container, candidate, excludeId)) {
+    index += 1;
+    candidate = `${base}-${index}`;
+  }
+
+  return candidate;
+}
+
+function toPostResponse(post) {
+  return {
+    id: post.id,
+    slug: post.slug,
+    category: post.category,
+    title: post.title,
+    excerpt: post.excerpt || '',
+    contentMarkdown: post.contentMarkdown || '',
+    tags: Array.isArray(post.tags) ? post.tags : [],
+    status: post.status,
+    publishedAt: post.publishedAt || null,
+    updatedAt: post.updatedAt,
+    series: post.series || null,
+    thumbnail: post.thumbnail || null
+  };
+}
+
 exports.createPost = async (req, res) => {
+  const correlationId = req.correlationId;
+  const validationError = validatePostCreatePayload(req.body);
+
+  if (validationError) {
+    return sendError(res, 400, 'BadRequest', validationError, correlationId);
+  }
+
   try {
-    const { title, slug, htmlBody, excerpt, authorUpn, tags, category, thumbnailUrl, status } = req.body;
-    
-    // Validate required fields based on architecture schema
-    if (!title || !slug) {
-      return res.status(400).json({ error: "Title and slug are required" });
-    }
-
     const container = getPostsContainer();
-    
-    // Check if slug already exists
-    const querySpec = {
-      query: `SELECT * FROM p WHERE p.slug = @slug`,
-      parameters: [{ name: "@slug", value: slug }]
-    };
-    const { resources: existing } = await container.items.query(querySpec).fetchAll();
-    if (existing.length > 0) {
-      return res.status(409).json({ error: "Slug already exists. Please choose a unique slug." });
+    const now = new Date().toISOString();
+    let slug;
+
+    if (req.body.slug) {
+      slug = toSlugBase(req.body.slug);
+      if (await slugExists(container, slug, null)) {
+        return sendError(res, 409, 'Conflict', 'Duplicate slug', correlationId);
+      }
+    } else {
+      slug = await resolveUniqueSlug(container, null, req.body.title, null);
     }
 
-    // Prepare document
-    const now = new Date().toISOString();
-    const newPost = {
-      id: `post-${generateId()}`,
-      partitionKey: "site#main",
+    const post = {
+      id: createUuid(),
+      partitionKey: req.body.category,
       slug,
-      title,
-      htmlBody: htmlBody || "",
-      excerpt: excerpt || "",
-      status: status || "draft",
-      authorUpn: authorUpn || "unknown", // In production, extract from Entra ID Token
-      tags: tags || [],
-      category: category || "Uncategorized",
-      thumbnailUrl: thumbnailUrl || null,
-      publishedAt: status === 'published' ? now : null,
+      category: req.body.category,
+      title: req.body.title,
+      excerpt: req.body.excerpt || '',
+      contentMarkdown: req.body.contentMarkdown,
+      tags: req.body.tags,
+      series: req.body.series || null,
+      thumbnail: req.body.thumbnail || null,
+      status: req.body.status,
+      publishedAt: req.body.status === 'published' ? now : null,
+      updatedAt: now,
+      createdAt: now
+    };
+
+    const { resource } = await container.items.create(post);
+    return res.status(201).json(toPostResponse(resource));
+  } catch (error) {
+    console.error('[createPost] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.updatePost = async (req, res) => {
+  const correlationId = req.correlationId;
+  const validationError = validatePostUpdatePayload(req.body);
+
+  if (validationError) {
+    return sendError(res, 400, 'BadRequest', validationError, correlationId);
+  }
+
+  try {
+    const container = getPostsContainer();
+    const existing = await findPostById(container, req.params.id);
+
+    if (!existing) {
+      return sendError(res, 404, 'NotFound', 'Resource not found', correlationId);
+    }
+
+    const now = new Date().toISOString();
+    const updated = {
+      ...existing,
+      title: req.body.title !== undefined ? req.body.title : existing.title,
+      excerpt: req.body.excerpt !== undefined ? req.body.excerpt : existing.excerpt,
+      contentMarkdown: req.body.contentMarkdown !== undefined ? req.body.contentMarkdown : existing.contentMarkdown,
+      tags: req.body.tags !== undefined ? req.body.tags : existing.tags,
+      series: req.body.series !== undefined ? req.body.series : existing.series,
+      thumbnail: req.body.thumbnail !== undefined ? req.body.thumbnail : existing.thumbnail,
+      status: req.body.status !== undefined ? req.body.status : existing.status,
+      updatedAt: now
+    };
+
+    if (existing.status !== 'published' && updated.status === 'published') {
+      updated.publishedAt = now;
+    }
+
+    if (updated.status === 'draft') {
+      updated.publishedAt = null;
+    }
+
+    const { resource } = await container.item(existing.id, existing.partitionKey || existing.category).replace(updated);
+    return res.json(toPostResponse(resource));
+  } catch (error) {
+    console.error('[updatePost] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.deletePost = async (req, res) => {
+  const correlationId = req.correlationId;
+
+  try {
+    const container = getPostsContainer();
+    const existing = await findPostById(container, req.params.id);
+
+    if (!existing) {
+      return sendError(res, 404, 'NotFound', 'Resource not found', correlationId);
+    }
+
+    await container.item(existing.id, existing.partitionKey || existing.category).delete();
+    return res.status(204).send();
+  } catch (error) {
+    console.error('[deletePost] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.issueUploadSas = async (req, res) => {
+  const correlationId = req.correlationId;
+  const { fileName, contentType, sizeBytes } = req.body || {};
+
+  if (!fileName || !contentType) {
+    return sendError(res, 400, 'BadRequest', 'fileName and contentType are required', correlationId);
+  }
+
+  if (!allowedMimeTypes.has(contentType)) {
+    return sendError(res, 400, 'BadRequest', 'Unsupported contentType', correlationId);
+  }
+
+  if (sizeBytes !== undefined && (typeof sizeBytes !== 'number' || sizeBytes <= 0 || sizeBytes > maxImageSizeBytes)) {
+    return sendError(res, 400, 'BadRequest', 'Invalid sizeBytes', correlationId);
+  }
+
+  try {
+    const payload = await issueBlobUploadSas({
+      fileName,
+      contentType
+    });
+
+    return res.json(payload);
+  } catch (error) {
+    console.error('[issueUploadSas] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.createAssetMetadata = async (req, res) => {
+  const correlationId = req.correlationId;
+  const { postId, blobUrl, contentType, sizeBytes, fileName } = req.body || {};
+
+  if (!blobUrl || !contentType || !sizeBytes || !fileName) {
+    return sendError(res, 400, 'BadRequest', 'Invalid request payload', correlationId);
+  }
+
+  try {
+    const container = getAssetsContainer();
+    const assetId = createUuid();
+    const now = new Date().toISOString();
+
+    const assetDocument = {
+      id: assetId,
+      partitionKey: postId || 'unassigned',
+      postId: postId || null,
+      blobUrl,
+      contentType,
+      sizeBytes,
+      fileName,
+      width: 0,
+      height: 0,
       createdAt: now,
       updatedAt: now
     };
 
-    const { resource: createdItem } = await container.items.create(newPost);
-    res.status(201).json(createdItem);
-  } catch (error) {
-    console.error("Error creating post:", error);
-    res.status(500).json({ error: "Failed to create post" });
-  }
-};
+    await container.items.create(assetDocument);
 
-// Update an existing post (PUT /api/admin/posts/:id)
-exports.updatePost = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updateData = req.body;
-    const container = getPostsContainer();
-    const partitionKey = "site#main";
-
-    // Read the existing item to ensure it exists and get its current state
-    const { resource: existingPost, statusCode } = await container.item(id, partitionKey).read();
-    
-    if (statusCode === 404) {
-      return res.status(404).json({ error: "Post not found" });
-    }
-
-    // Merge updates
-    const updatedPost = {
-      ...existingPost,
-      ...updateData,
-      id, // ensure ID doesn't change
-      partitionKey, // ensure PK doesn't change
-      updatedAt: new Date().toISOString()
-    };
-
-    // If status changed to published, update publishedAt if not already set
-    if (updateData.status === 'published' && existingPost.status !== 'published' && !existingPost.publishedAt) {
-      updatedPost.publishedAt = new Date().toISOString();
-    } else if (updateData.status === 'draft') {
-      updatedPost.publishedAt = null;
-    }
-
-    const { resource: savedItem } = await container.item(id, partitionKey).replace(updatedPost);
-    res.json(savedItem);
-  } catch (error) {
-    console.error(`Error updating post ${req.params.id}:`, error);
-    res.status(500).json({ error: "Failed to update post" });
-  }
-};
-
-// Delete a post (DELETE /api/admin/posts/:id)
-exports.deletePost = async (req, res) => {
-   try {
-    const { id } = req.params;
-    const container = getPostsContainer();
-    const partitionKey = "site#main";
-
-    const { statusCode } = await container.item(id, partitionKey).delete();
-    
-    if (statusCode === 404) {
-      return res.status(404).json({ error: "Post not found" });
-    }
-    
-    res.status(204).send();
-  } catch (error) {
-    console.error(`Error deleting post ${req.params.id}:`, error);
-    res.status(500).json({ error: "Failed to delete post" });
-  }
-};
-
-// Handle Local File Upload (POST /api/admin/upload-local)
-exports.uploadLocalAsset = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
-
-    // req.file is populated by multer in the router
-    const fileUrl = `/uploads/${req.file.filename}`;
-    
-    res.status(201).json({
-      url: fileUrl,
-      filename: req.file.filename,
-      mimetype: req.file.mimetype,
-      size: req.file.size
+    return res.status(201).json({
+      assetId,
+      url: blobUrl,
+      mimeType: contentType,
+      sizeBytes,
+      width: 0,
+      height: 0
     });
   } catch (error) {
-    console.error("Error handling local upload:", error);
-    res.status(500).json({ error: "Failed to handle file upload" });
+    console.error('[createAssetMetadata] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
   }
 };
 
-// Save metadata for an asset (POST /api/admin/assets)
-exports.createAssetMetadata = async (req, res) => {
-  try {
-    const { postId, blobUrl, contentType, sizeBytes, width, height } = req.body;
-    
-    if (!postId || !blobUrl) {
-      return res.status(400).json({ error: "postId and blobUrl are required" });
-    }
+exports.deleteAsset = async (req, res) => {
+  const correlationId = req.correlationId;
 
+  try {
     const container = getAssetsContainer();
-    const now = new Date().toISOString();
-    
-    const newAsset = {
-      id: `asset-${generateId()}`,
-      partitionKey: `post#${postId}`,
-      postId,
-      blobUrl,
-      cdnUrl: null, // Since we don't use a CDN right now
-      contentType: contentType || "application/octet-stream",
-      sizeBytes: sizeBytes || 0,
-      width: width || null,
-      height: height || null,
-      createdAt: now
+    const querySpec = {
+      query: 'SELECT TOP 1 * FROM c WHERE c.id = @id',
+      parameters: [{ name: '@id', value: req.params.assetId }]
     };
 
-    const { resource: createdItem } = await container.items.create(newAsset);
-    res.status(201).json(createdItem);
+    const { resources } = await container.items.query(querySpec).fetchAll();
+    const asset = resources[0];
+
+    if (!asset) {
+      return sendError(res, 404, 'NotFound', 'Resource not found', correlationId);
+    }
+
+    await container.item(asset.id, asset.partitionKey).delete();
+    await deleteBlobByUrl(asset.blobUrl);
+
+    return res.status(204).send();
   } catch (error) {
-    console.error("Error creating asset metadata:", error);
-    res.status(500).json({ error: "Failed to create asset metadata" });
+    console.error('[deleteAsset] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.getAnalyticsSummary = async (req, res) => {
+  const correlationId = req.correlationId;
+
+  try {
+    const postsContainer = getPostsContainer();
+
+    const querySpec = {
+      query: "SELECT p.title, p.slug, p.views, p.uniqueVisitors FROM p WHERE p.status = 'published'"
+    };
+
+    const { resources } = await postsContainer.items.query(querySpec).fetchAll();
+    const totalPv = resources.reduce((sum, post) => sum + (Number(post.views) || 0), 0);
+    const totalUv = resources.reduce((sum, post) => sum + (Number(post.uniqueVisitors) || 0), 0);
+
+    const topPosts = resources
+      .map((post) => ({
+        title: post.title,
+        views: Number(post.views) || 0,
+        slug: post.slug
+      }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 5);
+
+    return res.json({
+      totalPv,
+      totalUv,
+      avgTimeOnPage: '00:00:00',
+      dailyTrend: [],
+      topPosts
+    });
+  } catch (error) {
+    console.error('[getAnalyticsSummary] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
   }
 };

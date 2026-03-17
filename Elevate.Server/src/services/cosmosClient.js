@@ -1,42 +1,45 @@
-const { CosmosClient } = require("@azure/cosmos");
-const { DefaultAzureCredential } = require("@azure/identity");
-
-// Fallback logic for local development vs App Service Managed Identity
-// The endpoint URL of the Cosmos DB account
-const endpoint = process.env.COSMOS_ENDPOINT;
-
-if (!endpoint) {
-  throw new Error("Please define COSMOS_ENDPOINT in your .env file.");
-}
+const { CosmosClient } = require('@azure/cosmos');
+const { DefaultAzureCredential } = require('@azure/identity');
 
 let client;
 
-try {
-  // Try to use a connection key first (for local testing/Dev)
-  const accountKey = process.env.COSMOS_KEY;
-  
-  if (process.env.NODE_ENV !== 'production' && accountKey) {
-     client = new CosmosClient({ endpoint, key: accountKey });
-     console.log("Cosmos DB Client initialized with Account Key (Local Mode)");
-  } else {
-    // Use DefaultAzureCredential which supports Managed Identity in App Service
-    const credential = new DefaultAzureCredential();
-    client = new CosmosClient({
-      endpoint,
-      aadCredentials: credential
-    });
-    console.log("Cosmos DB Client initialized with Azure AD Credentials (RBAC Mode)");
+function getEndpoint() {
+  const endpoint = process.env.COSMOS_ENDPOINT;
+
+  if (!endpoint) {
+    throw new Error('Please define COSMOS_ENDPOINT in your environment variables.');
   }
-} catch (error) {
-  console.error("Failed to initialize Cosmos DB Client:", error);
+
+  return endpoint;
 }
 
-const databaseName = process.env.COSMOS_DB_NAME || "elevate-db";
-const postsContainerName = "posts";
-const assetsContainerName = "assets";
+function getDatabaseName() {
+  return process.env.COSMOS_DATABASE_NAME || process.env.COSMOS_DB_NAME || 'elevate';
+}
+
+function getClient() {
+  if (!client) {
+    const endpoint = getEndpoint();
+    const accountKey = process.env.COSMOS_KEY;
+
+    if (process.env.NODE_ENV !== 'production' && accountKey) {
+      client = new CosmosClient({ endpoint, key: accountKey });
+    } else {
+      client = new CosmosClient({
+        endpoint,
+        aadCredentials: new DefaultAzureCredential()
+      });
+    }
+  }
+
+  return client;
+}
+
+const postsContainerName = 'posts';
+const assetsContainerName = 'assets';
 
 function getDatabase() {
-  return client.database(databaseName);
+  return getClient().database(getDatabaseName());
 }
 
 function getPostsContainer() {
@@ -48,7 +51,7 @@ function getAssetsContainer() {
 }
 
 module.exports = {
-  client,
+  getClient,
   getDatabase,
   getPostsContainer,
   getAssetsContainer
