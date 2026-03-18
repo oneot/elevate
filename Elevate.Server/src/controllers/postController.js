@@ -3,8 +3,7 @@ const { parsePositiveInt, sendError } = require('../utils/http');
 
 function encodeCursor(post) {
   const payload = {
-    publishedAt: post.publishedAt || post.updatedAt,
-    id: post.id
+    publishedAt: post.publishedAt || post.updatedAt
   };
 
   return Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
@@ -15,7 +14,7 @@ function decodeCursor(cursor) {
     const decoded = Buffer.from(cursor, 'base64url').toString('utf8');
     const parsed = JSON.parse(decoded);
 
-    if (!parsed.publishedAt || !parsed.id) {
+    if (!parsed.publishedAt) {
       return null;
     }
 
@@ -68,16 +67,15 @@ function buildListQuery({ limit, cursor, category, tag, seriesSlug }) {
   }
 
   if (cursor) {
-    whereClauses.push('(p.publishedAt < @cursorPublishedAt OR (p.publishedAt = @cursorPublishedAt AND p.id < @cursorId))');
+    whereClauses.push('p.publishedAt < @cursorPublishedAt');
     parameters.push({ name: '@cursorPublishedAt', value: cursor.publishedAt });
-    parameters.push({ name: '@cursorId', value: cursor.id });
   }
 
   return {
     query: `SELECT TOP ${limit} p.id, p.slug, p.category, p.title, p.excerpt, p.tags, p.status, p.publishedAt, p.updatedAt
             FROM p
             WHERE ${whereClauses.join(' AND ')}
-            ORDER BY p.publishedAt DESC, p.id DESC`,
+            ORDER BY p.publishedAt DESC`,
     parameters
   };
 }
