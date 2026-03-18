@@ -11,3 +11,4 @@ createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </StrictMode>,
 )
+// SWA app settings fix - Wed Mar 18 16:38:11 KST 2026
