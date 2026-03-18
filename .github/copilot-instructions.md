@@ -2,7 +2,7 @@
 
 > **마지막 업데이트**: 2026년 3월 9일  
 > **버전**: 2.0  
-> **필수 참조 문서**: [documents/PLAN.md](../documents/PLAN.md)
+> **필수 참조 문서**: [documents/01-getting-started/PLAN.md](../documents/01-getting-started/PLAN.md)
 
 ---
 
@@ -14,7 +14,7 @@
 - 에러 메시지, 분석 결과, 설명은 모두 한국어 제공
 
 ### 2. 작업 시작 전 필수 절차
-- **세션의 첫 작업 이전에는 반드시 [documents/PLAN.md](../documents/PLAN.md)를 참조하여 전체 계획을 파악한다.**
+- **세션의 첫 작업 이전에는 반드시 [documents/01-getting-started/PLAN.md](../documents/01-getting-started/PLAN.md)를 참조하여 전체 계획을 파악한다.**
 - PLAN.md가 제시하는 문서 참조 우선순위를 따른다.
 - 작업 종류에 따라 필요한 문서를 선택적으로 읽는다:
   - 정책 검토: `POLICY.md`, `AZURE_POLICY_MAPPING.md`
@@ -28,7 +28,7 @@
 
 ### 4. 보안 및 인증 원칙 준수
 - **보안 및 인증 관련 정책을 엄격히 준수한다.**
-- `documents/POLICY.md`에 명시된 보안 요구사항과 인증 방식을 철저히 따른다.
+- `documents/02-governance/POLICY.md`에 명시된 보안 요구사항과 인증 방식을 철저히 따른다.
 - 민감한 정보는 절대 코드에 하드코딩하지 않는다.
 - Storage 계정 키 기반 인증 사용 금지 (Managed Identity + 사용자 위임 SAS 사용)
 - 비프로덕션 환경은 Western Europe 리전 사용 금지
@@ -65,7 +65,7 @@
 
 ## ✅ 정책 준수 체크리스트 (필수)
 
-작업 전 반드시 `documents/POLICY.md`와 `documents/AZURE_POLICY_MAPPING.md`를 확인하여 조직 정책을 준수한다:
+작업 전 반드시 `documents/02-governance/POLICY.md`와 `documents/02-governance/AZURE_POLICY_MAPPING.md`를 확인하여 조직 정책을 준수한다:
 - VM 시리즈 제한 준수
 - 리소스 인스턴스 수 제한 준수
 - 리전 선택 정책 준수
@@ -82,7 +82,7 @@
 - 버전은 반드시 명시적으로 고정
 
 ### 네이밍 규칙 준수
-- `documents/BICEP_IMPLEMENTATION_PLAN.md`에 정의된 네이밍 규칙 준수
+- `documents/05-infrastructure/BICEP_IMPLEMENTATION_PLAN.md`에 정의된 네이밍 규칙 준수
 - 프로젝트별 접두사 사용
 - 환경별 접미사 적용
 - 리소스 그룹 명명 규칙 준수
@@ -124,7 +124,7 @@ az bicep build --file infra/modules/*.bicep
 
 ## 🚀 일반 작업 플로우
 
-1. **계획 파악**: `documents/PLAN.md` 읽기
+1. **계획 파악**: `documents/01-getting-started/PLAN.md` 읽기
 2. **정책 검토**: 변경안이 `POLICY.md` 위반 여부 확인
 3. **아키텍처 정합성**: 관련 문서와 일치하는지 확인
 4. **구현**: 문서 기준에 맞춰 코드/IaC 작성
@@ -139,7 +139,7 @@ az bicep build --file infra/modules/*.bicep
 - GitHub 자동 commit/push
 - 계정 키 기반 인증 사용 (Managed Identity 사용 필수)
 - 하드코딩된 비밀값/토큰
-- `documents/POLICY.md`에 명시된 리소스/리전/인증 제약사항 위반
+- `documents/02-governance/POLICY.md`에 명시된 리소스/리전/인증 제약사항 위반
 - 문서와 불일치하는 고정 구성값 사용
 
 ---
