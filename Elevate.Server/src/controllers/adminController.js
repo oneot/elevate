@@ -6,14 +6,21 @@ const { parsePositiveInt, sendError } = require('../utils/http');
 const { toSlugBase } = require('../utils/slug');
 
 const allowedStatuses = new Set(['draft', 'published', 'archived']);
-const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const allowedMimeTypes = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/heic',
+  'image/heif',
+  'image/avif'
+]);
 const maxImageSizeBytes = 10 * 1024 * 1024;
 const assetCategoryPartition = '_asset';
 
 function encodeAdminCursor(post) {
   const payload = {
-    updatedAt: post.updatedAt,
-    id: post.id
+    updatedAt: post.updatedAt
   };
 
   return Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
@@ -24,7 +31,7 @@ function decodeAdminCursor(cursor) {
     const decoded = Buffer.from(cursor, 'base64url').toString('utf8');
     const parsed = JSON.parse(decoded);
 
-    if (!parsed.updatedAt || !parsed.id) {
+    if (!parsed.updatedAt) {
       return null;
     }
 
@@ -177,16 +184,15 @@ function buildAdminListQuery({ limit, cursor, category, tag, status }) {
   }
 
   if (cursor) {
-    whereClauses.push('(p.updatedAt < @cursorUpdatedAt OR (p.updatedAt = @cursorUpdatedAt AND p.id < @cursorId))');
+    whereClauses.push('p.updatedAt < @cursorUpdatedAt');
     parameters.push({ name: '@cursorUpdatedAt', value: cursor.updatedAt });
-    parameters.push({ name: '@cursorId', value: cursor.id });
   }
 
   return {
     query: `SELECT TOP ${limit} p.id, p.slug, p.category, p.title, p.excerpt, p.tags, p.status, p.publishedAt, p.updatedAt
             FROM p
             WHERE ${whereClauses.join(' AND ')}
-            ORDER BY p.updatedAt DESC, p.id DESC`,
+            ORDER BY p.updatedAt DESC`,
     parameters
   };
 }
