@@ -11,8 +11,10 @@ import {
 import Card from '../components/Card.jsx'
 import { getAnalyticsSummary } from '../lib/analyticsApi.js'
 import { isApiConfigured } from '../lib/apiClient.js'
+import { useAuth } from '../hooks/useAuth.js'
 
 function Dashboard() {
+  const { msalInstance } = useAuth()
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
@@ -22,7 +24,7 @@ function Dashboard() {
     const fetchData = async () => {
       setLoading(true)
       try {
-        const summary = await getAnalyticsSummary()
+        const summary = await getAnalyticsSummary({ msalInstance })
         if (isMounted) setData(summary)
       } catch (err) {
         if (isMounted) setError(err.message)
@@ -34,7 +36,7 @@ function Dashboard() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [msalInstance])
 
   if (loading) {
     return (

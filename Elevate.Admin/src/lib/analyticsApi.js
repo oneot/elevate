@@ -27,7 +27,7 @@ const MOCK_ANALYTICS_SUMMARY = {
 /**
  * 대시보드 통계 요약 데이터를 가져옵니다.
  */
-export async function getAnalyticsSummary() {
+export async function getAnalyticsSummary(options = {}) {
   if (!isApiConfigured) {
     // API 연결 전 Mock 응답 반환 (딜레이 추가)
     return new Promise((resolve) => {
@@ -35,5 +35,5 @@ export async function getAnalyticsSummary() {
     })
   }
 
-  return apiFetch('/analytics/summary')
+  return apiFetch('/analytics/summary', options)
 }

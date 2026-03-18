@@ -38,19 +38,25 @@ jobs:
             - name: Validate build env secrets
               env:
                   VITE_API_BASE_URL: ${{ secrets.ADMIN_VITE_API_BASE_URL }}
-                  VITE_AUTH_API_AUDIENCE: ${{ secrets.ADMIN_VITE_AUTH_API_AUDIENCE }}
-                  AUTH_API_AUDIENCE: ${{ secrets.ADMIN_AUTH_API_AUDIENCE }}
+                  VITE_AZURE_AD_CLIENT_ID: ${{ secrets.ADMIN_VITE_AZURE_AD_CLIENT_ID }}
+                  VITE_AZURE_AD_AUTHORITY: ${{ secrets.ADMIN_VITE_AZURE_AD_AUTHORITY }}
+                  VITE_AZURE_AD_REDIRECT_URI: ${{ secrets.ADMIN_VITE_AZURE_AD_REDIRECT_URI }}
+                  VITE_AZURE_AD_API_SCOPE: ${{ secrets.ADMIN_VITE_AZURE_AD_API_SCOPE }}
               run: |
                   test -n "$VITE_API_BASE_URL"
-                  test -n "$VITE_AUTH_API_AUDIENCE"
-                  test -n "$AUTH_API_AUDIENCE"
+                  test -n "$VITE_AZURE_AD_CLIENT_ID"
+                  test -n "$VITE_AZURE_AD_AUTHORITY"
+                  test -n "$VITE_AZURE_AD_REDIRECT_URI"
+                  test -n "$VITE_AZURE_AD_API_SCOPE"
 
             - name: Build
               working-directory: Elevate.Admin
               env:
                   VITE_API_BASE_URL: ${{ secrets.ADMIN_VITE_API_BASE_URL }}
-                  VITE_AUTH_API_AUDIENCE: ${{ secrets.ADMIN_VITE_AUTH_API_AUDIENCE }}
-                  AUTH_API_AUDIENCE: ${{ secrets.ADMIN_AUTH_API_AUDIENCE }}
+                  VITE_AZURE_AD_CLIENT_ID: ${{ secrets.ADMIN_VITE_AZURE_AD_CLIENT_ID }}
+                  VITE_AZURE_AD_AUTHORITY: ${{ secrets.ADMIN_VITE_AZURE_AD_AUTHORITY }}
+                  VITE_AZURE_AD_REDIRECT_URI: ${{ secrets.ADMIN_VITE_AZURE_AD_REDIRECT_URI }}
+                  VITE_AZURE_AD_API_SCOPE: ${{ secrets.ADMIN_VITE_AZURE_AD_API_SCOPE }}
               run: npm run build
 
             - name: Deploy to Azure Static Web Apps
