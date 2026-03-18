@@ -6,7 +6,15 @@ const { parsePositiveInt, sendError } = require('../utils/http');
 const { toSlugBase } = require('../utils/slug');
 
 const allowedStatuses = new Set(['draft', 'published', 'archived']);
-const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const allowedMimeTypes = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/heic',
+  'image/heif',
+  'image/avif'
+]);
 const maxImageSizeBytes = 10 * 1024 * 1024;
 const assetCategoryPartition = '_asset';
 
