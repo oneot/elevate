@@ -13,6 +13,7 @@ import {
   updatePost,
 } from '../lib/postsApi.js'
 import { slugify } from '../lib/formatters.js'
+import { useAuth } from '../hooks/useAuth.js'
 
 const emptyPost = {
   title: '',
@@ -59,6 +60,7 @@ const mockPosts = {
 }
 
 function PostEditor() {
+  const { msalInstance } = useAuth()
   const { postId } = useParams()
   const isNew = !postId
   const navigate = useNavigate()
@@ -91,7 +93,7 @@ function PostEditor() {
       setLoading(true)
       setError('')
       try {
-        const data = await getPost(postId)
+        const data = await getPost(postId, { msalInstance })
         if (isMounted) {
           setPost({ ...emptyPost, ...data })
           setTagsInput((data.tags || []).join(', '))
@@ -110,7 +112,7 @@ function PostEditor() {
     return () => {
       isMounted = false
     }
-  }, [postId, isNew])
+  }, [postId, isNew, msalInstance])
 
 
   const handleChange = (field) => (event) => {
@@ -138,14 +140,14 @@ function PostEditor() {
     setSaving(true)
     try {
       if (isNew) {
-        const created = await createPost(payload)
+        const created = await createPost(payload, { msalInstance })
         const newId = created?.id || created?.postId
         setMessage('저장되었습니다.')
         if (newId) {
           navigate(`/posts/${newId}`)
         }
       } else {
-        await updatePost(postId, payload)
+        await updatePost(postId, payload, { msalInstance })
         setMessage('업데이트되었습니다.')
       }
     } catch (err) {
@@ -173,7 +175,7 @@ function PostEditor() {
       const sas = await requestUploadSas({
         fileName: selectedFile.name,
         contentType: selectedFile.type,
-      })
+      }, { msalInstance })
 
       await fetch(sas.uploadUrl, {
         method: 'PUT',
@@ -190,7 +192,7 @@ function PostEditor() {
         contentType: selectedFile.type,
         sizeBytes: selectedFile.size,
         fileName: selectedFile.name,
-      })
+      }, { msalInstance })
 
       setPost((prev) => ({
         ...prev,
@@ -212,7 +214,7 @@ function PostEditor() {
     const sas = await requestUploadSas({
       fileName: selectedFile.name,
       contentType: selectedFile.type,
-    })
+    }, { msalInstance })
 
     await fetch(sas.uploadUrl, {
       method: 'PUT',
@@ -229,7 +231,7 @@ function PostEditor() {
       contentType: selectedFile.type,
       sizeBytes: selectedFile.size,
       fileName: selectedFile.name,
-    })
+    }, { msalInstance })
 
     return asset?.url || asset?.cdnUrl || asset?.blobUrl || sas.blobUrl
   }

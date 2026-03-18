@@ -7,6 +7,7 @@ import { isApiConfigured } from '../lib/apiClient.js'
 import { listPosts } from '../lib/postsApi.js'
 import { formatDate } from '../lib/formatters.js'
 import { useScrollAnimation } from '../hooks/useScrollAnimation.js'
+import { useAuth } from '../hooks/useAuth.js'
 
 const mockPosts = [
   {
@@ -94,6 +95,7 @@ function PostCard({ post, index }) {
 }
 
 function PostsList() {
+  const { msalInstance } = useAuth()
   const [posts, setPosts] = useState([])
   const [statusFilter, setStatusFilter] = useState('all')
   const [loading, setLoading] = useState(false)
@@ -111,7 +113,7 @@ function PostsList() {
       setLoading(true)
       setError('')
       try {
-        const data = await listPosts()
+        const data = await listPosts({ msalInstance })
         if (isMounted) {
           setPosts(Array.isArray(data) ? data : data.items || [])
         }
@@ -129,7 +131,7 @@ function PostsList() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [msalInstance])
 
   const filteredPosts = useMemo(() => {
     if (statusFilter === 'all') return posts
