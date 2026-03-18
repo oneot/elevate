@@ -1,4 +1,5 @@
 import { isApiConfigured } from './apiClient.js'
+import { apiFetch } from './apiClient.js'
 
 /**
  * 포스트/블로그 트래픽 통계 Mock 데이터 (isApiConfigured === false)
@@ -34,10 +35,5 @@ export async function getAnalyticsSummary() {
     })
   }
 
-  const endpoint = `${import.meta.env.VITE_API_BASE_URL}/analytics/summary`
-  const response = await fetch(endpoint)
-  if (!response.ok) {
-    throw new Error('통계 데이터를 불러오지 못했습니다.')
-  }
-  return response.json()
+  return apiFetch('/analytics/summary')
 }

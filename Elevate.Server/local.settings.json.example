@@ -5,8 +5,12 @@
     "FUNCTIONS_WORKER_RUNTIME": "node",
     "COSMOS_ENDPOINT": "https://<cosmos-account>.documents.azure.com:443/",
     "COSMOS_DATABASE_NAME": "elevate",
+    "COSMOS_CONTAINER_NAME": "posts",
+    "COSMOS_ASSETS_CONTAINER_NAME": "posts",
     "STORAGE_ACCOUNT_NAME": "<storage-account-name>",
     "STORAGE_CONTAINER_NAME": "images",
+    "AUTH_TENANT_ID": "62ae463a-9f12-4edf-8544-4f6ca3834524",
+    "AUTH_API_AUDIENCE": "api://c4ea0eaf-6aaa-42e0-85ff-eef864cd2728",
     "ENTRA_TENANT_ID": "62ae463a-9f12-4edf-8544-4f6ca3834524",
     "ENTRA_AUDIENCE": "api://c4ea0eaf-6aaa-42e0-85ff-eef864cd2728"
   }

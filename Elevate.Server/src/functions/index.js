@@ -7,6 +7,8 @@ const { functionDefinition: publicPostsList } = require('./publicPostsList');
 const { functionDefinition: publicPostDetail } = require('./publicPostDetail');
 const { functionDefinition: publicSeriesPosts } = require('./publicSeriesPosts');
 const { functionDefinition: publicTags } = require('./publicTags');
+const { functionDefinition: adminPostsList } = require('./adminPostsList');
+const { functionDefinition: adminPostDetail } = require('./adminPostDetail');
 const { functionDefinition: adminCreatePost } = require('./adminCreatePost');
 const { functionDefinition: adminUpdatePost } = require('./adminUpdatePost');
 const { functionDefinition: adminDeletePost } = require('./adminDeletePost');
@@ -21,6 +23,8 @@ const functionDefinitions = [
   publicPostDetail,
   publicSeriesPosts,
   publicTags,
+  adminPostsList,
+  adminPostDetail,
   adminCreatePost,
   adminUpdatePost,
   adminDeletePost,

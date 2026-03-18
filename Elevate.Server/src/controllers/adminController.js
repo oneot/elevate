@@ -2,12 +2,37 @@ const crypto = require('crypto');
 
 const { getAssetsContainer, getPostsContainer } = require('../services/cosmosClient');
 const { issueBlobUploadSas, deleteBlobByUrl } = require('../services/storageClient');
-const { sendError } = require('../utils/http');
+const { parsePositiveInt, sendError } = require('../utils/http');
 const { toSlugBase } = require('../utils/slug');
 
 const allowedStatuses = new Set(['draft', 'published', 'archived']);
 const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const maxImageSizeBytes = 10 * 1024 * 1024;
+const assetCategoryPartition = '_asset';
+
+function encodeAdminCursor(post) {
+  const payload = {
+    updatedAt: post.updatedAt,
+    id: post.id
+  };
+
+  return Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+}
+
+function decodeAdminCursor(cursor) {
+  try {
+    const decoded = Buffer.from(cursor, 'base64url').toString('utf8');
+    const parsed = JSON.parse(decoded);
+
+    if (!parsed.updatedAt || !parsed.id) {
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 function createUuid() {
   if (typeof crypto.randomUUID === 'function') {
@@ -67,7 +92,7 @@ function validatePostUpdatePayload(body) {
 
 async function findPostById(container, id) {
   const querySpec = {
-    query: 'SELECT TOP 1 * FROM p WHERE p.id = @id',
+    query: 'SELECT TOP 1 * FROM p WHERE p.id = @id AND (NOT IS_DEFINED(p.documentType) OR p.documentType = "post")',
     parameters: [{ name: '@id', value: id }]
   };
 
@@ -118,6 +143,115 @@ function toPostResponse(post) {
   };
 }
 
+function toPostSummary(post) {
+  return {
+    id: post.id,
+    slug: post.slug,
+    category: post.category,
+    title: post.title,
+    excerpt: post.excerpt || '',
+    tags: Array.isArray(post.tags) ? post.tags : [],
+    status: post.status,
+    publishedAt: post.publishedAt || null,
+    updatedAt: post.updatedAt
+  };
+}
+
+function buildAdminListQuery({ limit, cursor, category, tag, status }) {
+  const whereClauses = ['(NOT IS_DEFINED(p.documentType) OR p.documentType = "post")'];
+  const parameters = [];
+
+  if (status) {
+    whereClauses.push('p.status = @status');
+    parameters.push({ name: '@status', value: status });
+  }
+
+  if (category) {
+    whereClauses.push('p.category = @category');
+    parameters.push({ name: '@category', value: category });
+  }
+
+  if (tag) {
+    whereClauses.push('ARRAY_CONTAINS(p.tags, @tag)');
+    parameters.push({ name: '@tag', value: tag });
+  }
+
+  if (cursor) {
+    whereClauses.push('(p.updatedAt < @cursorUpdatedAt OR (p.updatedAt = @cursorUpdatedAt AND p.id < @cursorId))');
+    parameters.push({ name: '@cursorUpdatedAt', value: cursor.updatedAt });
+    parameters.push({ name: '@cursorId', value: cursor.id });
+  }
+
+  return {
+    query: `SELECT TOP ${limit} p.id, p.slug, p.category, p.title, p.excerpt, p.tags, p.status, p.publishedAt, p.updatedAt
+            FROM p
+            WHERE ${whereClauses.join(' AND ')}
+            ORDER BY p.updatedAt DESC, p.id DESC`,
+    parameters
+  };
+}
+
+exports.getAdminPostList = async (req, res) => {
+  const correlationId = req.correlationId;
+
+  try {
+    const limit = parsePositiveInt(req.query.limit, 20, 1, 100);
+    if (limit === null) {
+      return sendError(res, 400, 'BadRequest', 'Invalid limit value', correlationId);
+    }
+
+    if (req.query.status && !allowedStatuses.has(req.query.status)) {
+      return sendError(res, 400, 'BadRequest', 'Invalid status value', correlationId);
+    }
+
+    let cursor = null;
+    if (req.query.cursor) {
+      cursor = decodeAdminCursor(req.query.cursor);
+      if (!cursor) {
+        return sendError(res, 400, 'BadRequest', 'Invalid cursor value', correlationId);
+      }
+    }
+
+    const container = getPostsContainer();
+    const querySpec = buildAdminListQuery({
+      limit,
+      cursor,
+      category: req.query.category,
+      tag: req.query.tag,
+      status: req.query.status
+    });
+
+    const { resources } = await container.items.query(querySpec).fetchAll();
+    const items = resources.map(toPostSummary);
+
+    return res.json({
+      items,
+      nextCursor: items.length === limit ? encodeAdminCursor(items[items.length - 1]) : null
+    });
+  } catch (error) {
+    console.error('[getAdminPostList] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.getAdminPostDetail = async (req, res) => {
+  const correlationId = req.correlationId;
+
+  try {
+    const container = getPostsContainer();
+    const post = await findPostById(container, req.params.id);
+
+    if (!post) {
+      return sendError(res, 404, 'NotFound', 'Resource not found', correlationId);
+    }
+
+    return res.json(toPostResponse(post));
+  } catch (error) {
+    console.error('[getAdminPostDetail] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
 exports.createPost = async (req, res) => {
   const correlationId = req.correlationId;
   const validationError = validatePostCreatePayload(req.body);
@@ -143,6 +277,7 @@ exports.createPost = async (req, res) => {
     const post = {
       id: createUuid(),
       partitionKey: req.body.category,
+      documentType: 'post',
       slug,
       category: req.body.category,
       title: req.body.title,
@@ -266,6 +401,28 @@ exports.createAssetMetadata = async (req, res) => {
     return sendError(res, 400, 'BadRequest', 'Invalid request payload', correlationId);
   }
 
+  if (typeof blobUrl !== 'string') {
+    return sendError(res, 400, 'BadRequest', 'blobUrl must be a valid URL string', correlationId);
+  }
+
+  try {
+    new URL(blobUrl);
+  } catch {
+    return sendError(res, 400, 'BadRequest', 'blobUrl must be a valid URL string', correlationId);
+  }
+
+  if (!allowedMimeTypes.has(contentType)) {
+    return sendError(res, 400, 'BadRequest', 'Unsupported contentType', correlationId);
+  }
+
+  if (!Number.isInteger(sizeBytes) || sizeBytes < 1 || sizeBytes > maxImageSizeBytes) {
+    return sendError(res, 400, 'BadRequest', 'Invalid sizeBytes', correlationId);
+  }
+
+  if (typeof fileName !== 'string' || fileName.trim().length === 0) {
+    return sendError(res, 400, 'BadRequest', 'fileName is required', correlationId);
+  }
+
   try {
     const container = getAssetsContainer();
     const assetId = createUuid();
@@ -273,7 +430,9 @@ exports.createAssetMetadata = async (req, res) => {
 
     const assetDocument = {
       id: assetId,
-      partitionKey: postId || 'unassigned',
+      documentType: 'asset',
+      category: assetCategoryPartition,
+      partitionKey: assetCategoryPartition,
       postId: postId || null,
       blobUrl,
       contentType,
@@ -307,7 +466,7 @@ exports.deleteAsset = async (req, res) => {
   try {
     const container = getAssetsContainer();
     const querySpec = {
-      query: 'SELECT TOP 1 * FROM c WHERE c.id = @id',
+      query: 'SELECT TOP 1 * FROM c WHERE c.id = @id AND c.documentType = "asset"',
       parameters: [{ name: '@id', value: req.params.assetId }]
     };
 
@@ -318,7 +477,7 @@ exports.deleteAsset = async (req, res) => {
       return sendError(res, 404, 'NotFound', 'Resource not found', correlationId);
     }
 
-    await container.item(asset.id, asset.partitionKey).delete();
+    await container.item(asset.id, asset.category || asset.partitionKey || assetCategoryPartition).delete();
     await deleteBlobByUrl(asset.blobUrl);
 
     return res.status(204).send();

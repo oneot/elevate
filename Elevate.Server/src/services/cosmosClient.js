@@ -17,6 +17,14 @@ function getDatabaseName() {
   return process.env.COSMOS_DATABASE_NAME || process.env.COSMOS_DB_NAME || 'elevate';
 }
 
+function getPostsContainerName() {
+  return process.env.COSMOS_CONTAINER_NAME || 'posts';
+}
+
+function getAssetsContainerName() {
+  return process.env.COSMOS_ASSETS_CONTAINER_NAME || getPostsContainerName();
+}
+
 function getClient() {
   if (!client) {
     const endpoint = getEndpoint();
@@ -35,19 +43,16 @@ function getClient() {
   return client;
 }
 
-const postsContainerName = 'posts';
-const assetsContainerName = 'assets';
-
 function getDatabase() {
   return getClient().database(getDatabaseName());
 }
 
 function getPostsContainer() {
-  return getDatabase().container(postsContainerName);
+  return getDatabase().container(getPostsContainerName());
 }
 
 function getAssetsContainer() {
-  return getDatabase().container(assetsContainerName);
+  return getDatabase().container(getAssetsContainerName());
 }
 
 module.exports = {
