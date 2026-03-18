@@ -35,8 +35,22 @@ jobs:
               working-directory: Elevate.Admin
               run: npm install --legacy-peer-deps
 
+            - name: Validate build env secrets
+              env:
+                  VITE_API_BASE_URL: ${{ secrets.ADMIN_VITE_API_BASE_URL }}
+                  VITE_AUTH_API_AUDIENCE: ${{ secrets.ADMIN_VITE_AUTH_API_AUDIENCE }}
+                  AUTH_API_AUDIENCE: ${{ secrets.ADMIN_AUTH_API_AUDIENCE }}
+              run: |
+                  test -n "$VITE_API_BASE_URL"
+                  test -n "$VITE_AUTH_API_AUDIENCE"
+                  test -n "$AUTH_API_AUDIENCE"
+
             - name: Build
               working-directory: Elevate.Admin
+              env:
+                  VITE_API_BASE_URL: ${{ secrets.ADMIN_VITE_API_BASE_URL }}
+                  VITE_AUTH_API_AUDIENCE: ${{ secrets.ADMIN_VITE_AUTH_API_AUDIENCE }}
+                  AUTH_API_AUDIENCE: ${{ secrets.ADMIN_AUTH_API_AUDIENCE }}
               run: npm run build
 
             - name: Deploy to Azure Static Web Apps
