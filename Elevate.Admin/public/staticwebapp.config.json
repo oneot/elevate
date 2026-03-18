@@ -4,7 +4,8 @@
       "azureActiveDirectory": {
         "login": {
           "loginParameters": [
-            "scope=openid profile api://c4ea0eaf-6aaa-42e0-85ff-eef864cd2728/user_impersonation"
+            "scope=openid profile api://c4ea0eaf-6aaa-42e0-85ff-eef864cd2728/access_as_user",
+            "prompt=consent"
           ]
         },
         "registration": {
