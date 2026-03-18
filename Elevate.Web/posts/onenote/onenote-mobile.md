@@ -1,6 +1,8 @@
 title: 📘 모바일에서도 노트 바로 확인하기
 tags: [onenote, productivity]
 date: 2026-03-09
+series: "OneNote 입문 가이드"
+seriesOrder: 3
 ---
 # 1. 원노트 모바일 앱 활용하기
 

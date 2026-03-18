@@ -194,7 +194,7 @@ function PostEditor() {
 
       setPost((prev) => ({
         ...prev,
-        thumbnailUrl: asset?.cdnUrl || asset?.blobUrl || sas.blobUrl,
+        thumbnailUrl: asset?.url || asset?.cdnUrl || asset?.blobUrl || sas.blobUrl,
       }))
       setMessage('썸네일 이미지가 업로드되었습니다.')
     } catch (err) {
@@ -231,7 +231,7 @@ function PostEditor() {
       fileName: selectedFile.name,
     })
 
-    return asset?.cdnUrl || asset?.blobUrl || sas.blobUrl
+    return asset?.url || asset?.cdnUrl || asset?.blobUrl || sas.blobUrl
   }
 
   if (loading) {

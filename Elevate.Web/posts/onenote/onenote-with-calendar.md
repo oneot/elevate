@@ -1,6 +1,8 @@
 title: 📘 캘린더와 더 편리하게 사용하기
 tags: [onenote, productivity]
 date: 2026-03-09
+series: "OneNote 입문 가이드"
+seriesOrder: 5
 ---
 # 1. Onetastic
 

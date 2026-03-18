@@ -1,0 +1,106 @@
+title: Microsoft Teams Reading Progress로 학생 읽기능력 향상하기
+tags: [teams, productivity]
+date: 2026-03-11
+series: "Teams 입문 가이드"
+seriesOrder: 13
+---
+
+## 1. 읽기 진행(Reading Progress)
+
+읽기진행(Reading Progress)는 학생들의 읽기 유창성(fluency)을 향상시키고 추적할 수 있도록 설계되었습니다. 이 도구는 교사와 학생 모두에게 유용한 학습 보조 기능을 제공하며, 특히 읽기 능력 개발과 발음 정확성, 유창성 및 자신감을 키우는 데 중점을 둡니다.
+
+주요 기능
+
+- 읽기 과제 생성 : 교사는 텍스트를 업로드하거나 ReadWorks와 같은 샘플 라이브러리를 통해 읽기 자료를 선택하여 과제를 생성할 수 있습니다. 학생들은 이를 읽고 오디오 또는 비디오로 녹음하여 제출합니다.
+
+- AI 기반 분석 : AI가 학생들의 발음 오류, 삽입된 단어, 누락된 단어, 반복 등을 자동으로 감지하고 분석합니다. 교사는 이 데이터를 기반으로 학생의 정확도와 유창성을 평가할 수 있으며, 필요시 AI 감지를 수정할 수도 있습니다.
+
+- 개별화된 피드백 : Reading Coach 기능은 학생들이 어려움을 겪은 단어를 식별하고 추가 연습 기회를 제공합니다. 이를 통해 학생들은 자신만의 속도로 학습하며 발음과 읽기 능력을 개선할 수 있습니다.
+
+- 진행 상황 추적 : Insights 대시보드를 통해 학생 개개인 및 학급 전체의 읽기 속도, 정확도, 문제 단어 등 다양한 데이터를 시각적으로 확인할 수 있습니다. 이를 통해 교사는 데이터 기반으로 학습 계획을 세울 수 있습니다.
+
+### | 읽기 진행 과제 만들기 - 교사 관점
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/image.jpg)
+
+1) [과제] -[만들기] -[학습 가속화 도구]-[읽기 진행]을 선택합니다.
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/image3.jpg)
+
+2) 세가지의 지문 생성 옵션이 있습니다. 여기서는 [읽기 구절 생성]으로 생성해 보겠습니다.
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/image5.jpg)
+
+3) [사용자 지정 구절 생성]에서 필요한 설정을 맞추고 [읽기 구절 생성]을 선택합니다.
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/image7.jpg)
+
+4) 다음 장면의 [사용자 지정 구절 생성]에서 복잡성을 조절한 다음 [구절 사용]을 클릭 합니다.
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/image9.jpg)
+
+5) [이해력 확인 추가] 버튼을 예로 하면 [읽기 진행] 후에 지문의 내용을 묻는 퀴즈를 추가할 수 있습니다.
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/imageb.jpg)
+
+6) [질문 생성] 버튼을 클릭하면 지문의 내용과 관련된 질문을 AI 기능을 이용하여 자동으로 생성합니다.
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/imaged.jpg)
+
+7) [다음]을 클릭 합니다.
+
+8) 질문이 생성 되었습니다. 확인을 한 후 [다음]을 클릭 합니다.
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/imagef.jpg)
+
+### | 읽기 진행 과제 수행하기 - 학생 관점
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/image12.jpg)
+
+1) 학생은 과제에 들어가서 교사가 제출한 읽기 과제를 선택하여 엽니다.
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/image15.jpg)
+
+2) 카메라와 마이크를 허용하고 [시작]을 클릭하여 과제를 시작합니다.
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/image17.jpg)
+
+3) 과제를 수행한 후 [완료]를 선택합니다.
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/image19.jpg)
+
+4) 과제가 완료되었으면 [이 녹음/녹화 사용]을 클릭 합니다.
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/image1b.jpg)
+
+5) 과제가 업로드 됩니다.
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/image1d.jpg)
+
+6) 이어서 나오는 이해력 확인 문제를 풀고 다 풀면 [제출]을 클릭합니다.
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/image1f.jpg)
+
+7) 점수를 바로 확인 할 수 있습니다. [읽기 코치]를 클릭하여 다음으로 넘어갑니다.
+
+8) 단어를 하나씩 클릭하면서 단어 연습을 합니다.
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/image21.jpg)
+
+9) 읽기과제를 완전히 마무리 하고 난 뒤 [제출]을 클릭합니다.
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/image24.jpg)
+
+### | 읽기 진행 과제 결과 확인하기 - 교사 관점
+
+![로컬 이미지.png](/images/teams/teams-readingprogress/image28.jpg)
+
+1) 학생이 제출한 영상을 클릭하여 제출 과제를 직접 확인할 수 있습니다.
+
+2) 정확도를 확인할 수 있습니다.
+
+3) 체크된 단어를 클릭하면 어떤 부분이 잘못되었는지 확인할 수 있습니다.
+
+4) 표현력을 확인할 수 있고, 이해력 확인을 클릭하면 지문을 이해한 퀴즈에 대한 결과를 볼 수 있습니다.
+
+5) 확인을 완료하면 [반환]을 눌러 과제를 완전히 학생에게 되돌려 주면 과제가 마무리 됩니다.

@@ -1,4 +1,6 @@
 import { Helmet } from 'react-helmet-async';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 // Icons
 import copilotIcon from '../assets/NewMicrosoft365Icons/copilot-logo-500.png';
@@ -24,10 +26,28 @@ import { useMobileRevealAnimation } from '../hooks/useMobileRevealAnimation';
 import { useHeroAnimation } from '../hooks/useHeroAnimation';
 
 const Home = () => {
+    const location = useLocation();
+
     // 애니메이션 훅 적용
     useScrollAnimation();
     useMobileRevealAnimation();
     useHeroAnimation();
+
+    // ✅ /#mee 로 들어오면 MEE 섹션으로 스크롤
+    useEffect(() => {
+        if (location.hash === '#mee') {
+            // 레이아웃이 완전히 잡힌 다음 스크롤되도록 약간 딜레이
+            requestAnimationFrame(() => {
+                const el = document.getElementById('mee');
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                    // (선택) 상단 고정 네비가 있을 경우 살짝 위로 당기기
+                    // window.scrollBy({ top: -80, left: 0, behavior: 'smooth' });
+                }
+            });
+        }
+    }, [location.hash]);
 
     // 기능 카드 데이터
     const features = [
@@ -89,16 +109,6 @@ const Home = () => {
             colorScheme: 'violet',
             ariaLabel: 'OneNote 페이지로 이동'
         }
-        // {
-        //     title: 'Elevate Blog',
-        //     description: 'M365의 업데이트 소식들을 한 곳에서 확인하세요.',
-        //     icon: '📦',
-        //     iconType: 'emoji',
-        //     to: '/blog',
-        //     colorScheme: 'slate',
-        //     ctaLabel: '전체 보기 →',
-        //     ariaLabel: 'Elevate Blog 전체 페이지로 이동'
-        // }
     ];
 
     return (
@@ -139,10 +149,13 @@ const Home = () => {
                     ))}
                 </div>
             </section>
-        
-            <CopilotStudioSection />
 
-            <MEESection />
+            <CopilotStudioSection />
+            
+            <section id="mee">
+                <MEESection />
+            </section>
+
             <GlobalTrainingPartner />
 
             <Footer />

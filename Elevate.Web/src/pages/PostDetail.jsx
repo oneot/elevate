@@ -1,11 +1,12 @@
-import { useParams, Navigate, Link } from 'react-router-dom';
+import { useParams, Navigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSlug from 'rehype-slug';
 import TableOfContents from '../components/TableOfContents';
+import SeriesNavigator from '../components/SeriesNavigator';
 
 const VALID_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote'];
 
@@ -20,6 +21,8 @@ const CATEGORY_DISPLAY_NAMES = {
 
 const PostDetail = () => {
     const { category, postId } = useParams();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const seriesParam = (searchParams.get('series') || '').trim();
 
     // 카테고리를 소문자로 변환하여 검증
     const normalizedCategory = category?.toLowerCase();
@@ -27,6 +30,7 @@ const PostDetail = () => {
     const [post, setPost] = useState(null);
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
+    const [seriesByCategory, setSeriesByCategory] = useState({});
 
     useEffect(() => {
         if (!normalizedCategory || !postId) return;
@@ -35,13 +39,28 @@ const PostDetail = () => {
             setLoading(true);
             setNotFound(false);
             try {
-                const res = await fetch(`/api/posts/${normalizedCategory}--${postId}.json`, { signal: controller.signal });
-                if (!res.ok) {
+                const postRes = await fetch(`/api/posts/${normalizedCategory}--${postId}.json`, { signal: controller.signal });
+                if (!postRes.ok) {
                     setNotFound(true);
                     return;
                 }
-                const data = await res.json();
-                setPost(data);
+                const postData = await postRes.json();
+                setPost(postData);
+
+                try {
+                    const listRes = await fetch('/api/posts.json', { signal: controller.signal });
+                    if (listRes.ok) {
+                        const listData = await listRes.json();
+                        setSeriesByCategory(listData.seriesByCategory || {});
+                    } else {
+                        setSeriesByCategory({});
+                    }
+                } catch (seriesErr) {
+                    if (seriesErr.name !== 'AbortError') {
+                        console.warn('PostDetail series index fetch error:', seriesErr);
+                    }
+                    setSeriesByCategory({});
+                }
             } catch (err) {
                 if (err.name !== 'AbortError') {
                     console.error('PostDetail fetch error:', err);
@@ -54,6 +73,94 @@ const PostDetail = () => {
         load();
         return () => controller.abort();
     }, [normalizedCategory, postId]);
+
+    const availableSeriesOptions = useMemo(() => {
+        if (!normalizedCategory) return [];
+        const categorySeries = seriesByCategory[normalizedCategory];
+        if (!categorySeries) return [];
+
+        return Object.entries(categorySeries)
+            .map(([name, posts]) => ({
+                key: name,
+                title: name,
+                posts: Array.isArray(posts) ? posts : [],
+            }))
+            .filter((item) => item.posts.length >= 2)
+            .sort((a, b) => {
+                if (b.posts.length !== a.posts.length) return b.posts.length - a.posts.length;
+                return a.title.localeCompare(b.title);
+            });
+    }, [normalizedCategory, seriesByCategory]);
+
+    const selectedSeriesKey = useMemo(() => {
+        if (availableSeriesOptions.length === 0) return '';
+        if (seriesParam && availableSeriesOptions.some((item) => item.key === seriesParam)) {
+            return seriesParam;
+        }
+        if (post?.series && availableSeriesOptions.some((item) => item.key === post.series)) {
+            return post.series;
+        }
+        return availableSeriesOptions[0].key;
+    }, [availableSeriesOptions, seriesParam, post?.series]);
+
+    const selectedSeries = useMemo(() => {
+        if (!selectedSeriesKey) return null;
+        return availableSeriesOptions.find((item) => item.key === selectedSeriesKey) || null;
+    }, [availableSeriesOptions, selectedSeriesKey]);
+
+    const selectedSeriesPosts = useMemo(() => selectedSeries?.posts || [], [selectedSeries]);
+
+    const currentSeriesIndex = useMemo(() => {
+        if (!post || selectedSeriesPosts.length === 0) return -1;
+        const byIdIndex = selectedSeriesPosts.findIndex((item) => item.id === post.id);
+        if (byIdIndex > -1) return byIdIndex;
+        if (post.seriesOrder == null) return -1;
+        return selectedSeriesPosts.findIndex((item) => item.seriesOrder === post.seriesOrder);
+    }, [post, selectedSeriesPosts]);
+
+    const prevPost = currentSeriesIndex > 0 ? selectedSeriesPosts[currentSeriesIndex - 1] : null;
+    const nextPost = currentSeriesIndex > -1 && currentSeriesIndex < selectedSeriesPosts.length - 1
+        ? selectedSeriesPosts[currentSeriesIndex + 1]
+        : null;
+
+    const hasSeriesNavigator = Boolean(post?.series && selectedSeriesPosts.length > 0);
+    const backToListHref = `/${normalizedCategory}`;
+
+    const buildPostHref = (targetPost) => {
+        if (!targetPost) return '#';
+        const params = new URLSearchParams();
+        if (selectedSeriesKey) {
+            params.set('series', selectedSeriesKey);
+        }
+        const query = params.toString();
+        return `/${normalizedCategory}/${targetPost.slug}${query ? `?${query}` : ''}`;
+    };
+
+    const updateSeriesQuery = useCallback((seriesKey, options = {}) => {
+        const { replace = false } = options;
+        const newParams = new URLSearchParams(searchParams);
+        if (seriesKey) {
+            newParams.set('series', seriesKey);
+        } else {
+            newParams.delete('series');
+        }
+        setSearchParams(newParams, { replace });
+    }, [searchParams, setSearchParams]);
+
+    useEffect(() => {
+        if (!post) return;
+
+        if (availableSeriesOptions.length === 0) {
+            if (seriesParam) {
+                updateSeriesQuery('', { replace: true });
+            }
+            return;
+        }
+
+        if (selectedSeriesKey && seriesParam !== selectedSeriesKey) {
+            updateSeriesQuery(selectedSeriesKey, { replace: true });
+        }
+    }, [post, availableSeriesOptions, selectedSeriesKey, seriesParam, updateSeriesQuery]);
 
     // 유효하지 않은 카테고리인 경우 404로 리다이렉트
     if (!VALID_CATEGORIES.includes(normalizedCategory)) {
@@ -86,9 +193,18 @@ const PostDetail = () => {
             {/* Post Content */}
             <div className="relative z-10 min-h-screen flex flex-col items-center px-4 sm:px-6 py-12">
                 <div className="w-full max-w-7xl">
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_3.4fr_1fr] gap-6">
+                        {/* Table of Contents Sidebar (Left) */}
+                        <div className="hidden lg:block min-w-0">
+                            <div className="lg:sticky lg:top-4">
+                                {!loading && post && (
+                                    <TableOfContents content={post.content} postTitle={post.title} sticky={false} />
+                                )}
+                            </div>
+                        </div>
+
                         {/* Main Content */}
-                        <div className="lg:col-span-3">
+                        <div className="min-w-0">
                             <div className="clean-card no-hover rounded-[2.25rem] sm:rounded-[3rem] p-7 sm:p-10 lg:p-12 bg-white/80 backdrop-blur-xl shadow-2xl border border-white/50">
                                 {/* Breadcrumb */}
                                 <div className="text-sm text-slate-500 mb-6">
@@ -136,16 +252,63 @@ const PostDetail = () => {
                                                 {post.content}
                                             </ReactMarkdown>
                                         </article>
+
+                                        {(prevPost || nextPost) && (
+                                            <div className="mt-10 border-t border-white/60 pt-6">
+                                                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                                                    시리즈 이동
+                                                </div>
+                                                <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center justify-center rounded-xl border border-white/60 bg-white/70 backdrop-blur px-2.5 py-2">
+                                                    {prevPost && (
+                                                        <Link
+                                                            to={buildPostHref(prevPost)}
+                                                            className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
+                                                        >
+                                                            이전 글
+                                                        </Link>
+                                                    )}
+
+                                                    <Link
+                                                        to={backToListHref}
+                                                        className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
+                                                    >
+                                                        목록으로
+                                                    </Link>
+
+                                                    {nextPost && (
+                                                        <Link
+                                                            to={buildPostHref(nextPost)}
+                                                            className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
+                                                        >
+                                                            다음 글
+                                                        </Link>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
                                     </>
                                 )}
                             </div>
                         </div>
 
-                        {/* Table of Contents Sidebar */}
-                        <div className="hidden lg:block lg:col-span-1">
-                            {!loading && post && (
-                                <TableOfContents content={post.content} postTitle={post.title} />
-                            )}
+                        {/* Series Sidebar (Right) */}
+                        <div className="hidden lg:block min-w-0">
+                            <div className="lg:sticky lg:top-4">
+                                {!loading && post && hasSeriesNavigator && (
+                                    <SeriesNavigator
+                                        seriesOptions={availableSeriesOptions}
+                                        selectedSeries={selectedSeriesKey}
+                                        onSeriesChange={updateSeriesQuery}
+                                        category={normalizedCategory}
+                                        currentPostId={post.id}
+                                        buildPostHref={buildPostHref}
+                                        previousPost={prevPost}
+                                        nextPost={nextPost}
+                                        backToListHref={backToListHref}
+                                        sticky={false}
+                                    />
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

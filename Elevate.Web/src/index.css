@@ -431,9 +431,31 @@ body {
   border-color: #0078D4;
 }
 
+/* Post card glass tone aligned with Home cards */
+.post-card {
+  background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.58) 0%,
+      rgba(255, 255, 255, 0.38) 46%,
+      rgba(255, 255, 255, 0.3) 100%
+    ),
+    rgba(255, 255, 255, 0.32);
+  border-color: rgba(255, 255, 255, 0.72);
+}
+
+.post-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(0, 120, 212, 0.28);
+  box-shadow:
+    0 22px 42px -10px rgba(15, 23, 42, 0.28),
+    inset 0 1px 2px rgba(255, 255, 255, 0.95);
+}
+
 /* Prose / Markdown Styling */
 .prose {
   line-height: 1.75;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 .prose p {
   margin-top: 0.75rem;
@@ -451,17 +473,24 @@ body {
   color: #e2e8f0;
   padding: 1rem;
   border-radius: 0.5rem;
+  max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin: 1rem 0;
 }
 .prose pre code {
+  display: block;
   background: transparent;
   padding: 0;
   font-size: 0.875rem;
   color: inherit;
 }
 .prose table {
+  display: block;
   width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-collapse: collapse;
   margin: 1rem 0;
 }
@@ -470,6 +499,8 @@ body {
   border: 1px solid #e2e8f0;
   padding: 0.5rem 0.75rem;
   text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
 }
 .prose th {
   background-color: #f8fafc;
@@ -491,7 +522,20 @@ body {
   .prose h4 { font-size: 1.2rem; }
   .prose h5 { font-size: 1.1rem; }
   .prose h6 { font-size: 1rem; }
-  .prose pre { padding: 0.85rem; }
+  .prose pre {
+    padding: 0.85rem;
+    font-size: 0.8125rem;
+  }
+  .prose pre code {
+    font-size: 0.8125rem;
+  }
+  .prose table {
+    font-size: 0.8125rem;
+  }
+  .prose th,
+  .prose td {
+    padding: 0.4rem 0.5rem;
+  }
 }
 .prose h1 {
   font-size: 2.25rem;
@@ -578,6 +622,11 @@ body {
   border-radius: 0.25rem;
   font-size: 0.875em;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.prose pre code {
+  overflow-wrap: normal;
 }
 
 

@@ -10,6 +10,7 @@ English: This repository contains a static blog application for Microsoft Elevat
 - Markdown 기반 게시글을 정적 JSON으로 변환 (`scripts/generate-posts.js`).
 - React + Vite 기반 SPA, Tailwind CSS로 스타일링.
 - 카테고리별 포스트 목록, 태그 필터링, 페이지네이션, 포스트 상세 페이지 제공.
+- 카테고리 페이지에서 시리즈 드롭다운 선택 지원 (`?series=` 쿼리로 선택 상태 유지).
 
 ## 기술 스택 / Tech stack
 
@@ -28,6 +29,15 @@ npm run dev
 ```bash
 npm run build
 ```
+
+## 환경변수 / Environment variables
+
+Clarity 도입 이후 운영 배포 시 아래 변수를 사용합니다.
+
+- `VITE_CLARITY_ENABLED`: `true`면 Clarity 활성화, 그 외 값은 비활성
+- `VITE_CLARITY_PROJECT_ID`: Microsoft Clarity 프로젝트 ID
+
+로컬 개발에서는 기본적으로 비활성을 권장합니다.
 
 ## 프로젝트 구조 (요약) / Project structure (summary)
 
@@ -59,6 +69,10 @@ npm run build
 5. **배포 가이드** ([DEPLOYMENT.md](DEPLOYMENT.md))
    - 로컬 빌드 절차, 배포 전 체크리스트, 환경변수 설정
    - 프로덕션 배포나 CI/CD 파이프라인 구성 시 참고
+
+6. **Microsoft Clarity 적용 가이드** ([CLARITY_INTEGRATION_GUIDE.md](CLARITY_INTEGRATION_GUIDE.md))
+   - Clarity 설치 방식 비교, React/Vite 권장 구현 절차, Consent v2 연동, 검증/트러블슈팅
+   - 분석 도입 작업(신규/유지보수) 시 가장 먼저 참고
 
 ## 기여 / Contributing
 

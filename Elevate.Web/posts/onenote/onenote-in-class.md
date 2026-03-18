@@ -1,6 +1,8 @@
 title: 📘 Onenote 학교에서 바로 사용해보기 - 교무수첩, 공문서철, 상담록
 tags: [onenote, productivity]
 date: 2026-03-09
+series: "OneNote 입문 가이드"
+seriesOrder: 2
 ---
 # STEP 1. Onenote 구조 이해하기
 
