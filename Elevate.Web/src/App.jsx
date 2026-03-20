@@ -8,6 +8,7 @@ import NotFound from './pages/NotFound';
 import MEEPre from './pages/MEEPre';
 import MEEExplorerProcedure from './pages/MEEExplorerProcedure';
 import MIEEArchive from './pages/MIEEArchive';
+import AgenthonInterview from "./pages/AgenthonInterview";
 import { setClarityTag, trackClarityEvent } from './lib/clarity';
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
       <Route path="/:category" element={<PostList />} />
       <Route path="/:category/:postId" element={<PostDetail />} />
       <Route path="*" element={<NotFound />} />
+      <Route path="/agenthon/interview" element={<AgenthonInterview />} />
     </Routes>
   );
 }

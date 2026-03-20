@@ -33,22 +33,18 @@ const Home = () => {
     useMobileRevealAnimation();
     useHeroAnimation();
 
-    // ✅ /#mee 로 들어오면 MEE 섹션으로 스크롤
+    // /# 로 들어오면 해당 섹션으로 스크롤
     useEffect(() => {
-        if (location.hash === '#mee') {
-            // 레이아웃이 완전히 잡힌 다음 스크롤되도록 약간 딜레이
+        if (location.hash) {
             requestAnimationFrame(() => {
-                const el = document.getElementById('mee');
+                const id = location.hash.replace('#', '');
+                const el = document.getElementById(id);
                 if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-                    // (선택) 상단 고정 네비가 있을 경우 살짝 위로 당기기
-                    // window.scrollBy({ top: -80, left: 0, behavior: 'smooth' });
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
         }
     }, [location.hash]);
-
     // 기능 카드 데이터
     const features = [
         {
@@ -150,12 +146,14 @@ const Home = () => {
                 </div>
             </section>
 
+            <section id="agenthon">
             <CopilotStudioSection />
-            
+            </section>
+
             <section id="mee">
                 <MEESection />
             </section>
-
+            
             <GlobalTrainingPartner />
 
             <Footer />
