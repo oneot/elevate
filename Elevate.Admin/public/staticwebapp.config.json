@@ -2,6 +2,11 @@
   "auth": {
     "identityProviders": {
       "azureActiveDirectory": {
+        "login": {
+          "loginParameters": [
+            "scope=openid profile api://c4ea0eaf-6aaa-42e0-85ff-eef864cd2728/access_as_user"
+          ]
+        },
         "registration": {
           "openIdIssuer": "https://login.microsoftonline.com/62ae463a-9f12-4edf-8544-4f6ca3834524/v2.0",
           "clientIdSettingName": "AZURE_CLIENT_ID",

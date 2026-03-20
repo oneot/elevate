@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Card from '../components/Card.jsx'
 import Button from '../components/Button.jsx'
@@ -13,6 +13,7 @@ import {
   updatePost,
 } from '../lib/postsApi.js'
 import { slugify } from '../lib/formatters.js'
+import { useAuth } from '../hooks/useAuth.js'
 
 const emptyPost = {
   title: '',
@@ -23,6 +24,77 @@ const emptyPost = {
   excerpt: '',
   thumbnailUrl: '',
   htmlBody: '',
+}
+
+const mimeTypeAliases = {
+  'image/jpg': 'image/jpeg',
+  'image/pjpeg': 'image/jpeg',
+  'image/x-png': 'image/png',
+  'image/heic-sequence': 'image/heic',
+  'image/heif-sequence': 'image/heif',
+}
+
+const extensionMimeMap = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+  '.heic': 'image/heic',
+  '.heif': 'image/heif',
+  '.avif': 'image/avif',
+}
+
+const supportedImageMimeTypes = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/heic',
+  'image/heif',
+  'image/avif',
+])
+
+function normalizeImageMimeType(file) {
+  const rawType = String(file?.type || '').trim().toLowerCase()
+  const aliasedType = mimeTypeAliases[rawType] || rawType
+
+  if (aliasedType) {
+    return aliasedType
+  }
+
+  const fileName = String(file?.name || '')
+  const dotIndex = fileName.lastIndexOf('.')
+  if (dotIndex < 0) {
+    return ''
+  }
+
+  const extension = fileName.slice(dotIndex).toLowerCase()
+  return extensionMimeMap[extension] || ''
+}
+
+async function uploadBlobWithSas(uploadUrl, selectedFile, contentType) {
+  const uploadResponse = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: {
+      'x-ms-blob-type': 'BlockBlob',
+      'Content-Type': contentType,
+    },
+    body: selectedFile,
+  })
+
+  if (uploadResponse.ok) {
+    return
+  }
+
+  let errorDetail = ''
+  try {
+    errorDetail = (await uploadResponse.text()).trim()
+  } catch {
+    errorDetail = ''
+  }
+
+  throw new Error(errorDetail || `Blob upload failed (${uploadResponse.status})`)
 }
 
 const mockPosts = {
@@ -59,6 +131,7 @@ const mockPosts = {
 }
 
 function PostEditor() {
+  const { msalInstance } = useAuth()
   const { postId } = useParams()
   const isNew = !postId
   const navigate = useNavigate()
@@ -91,7 +164,7 @@ function PostEditor() {
       setLoading(true)
       setError('')
       try {
-        const data = await getPost(postId)
+        const data = await getPost(postId, { msalInstance })
         if (isMounted) {
           setPost({ ...emptyPost, ...data })
           setTagsInput((data.tags || []).join(', '))
@@ -110,7 +183,7 @@ function PostEditor() {
     return () => {
       isMounted = false
     }
-  }, [postId, isNew])
+  }, [postId, isNew, msalInstance])
 
 
   const handleChange = (field) => (event) => {
@@ -138,14 +211,14 @@ function PostEditor() {
     setSaving(true)
     try {
       if (isNew) {
-        const created = await createPost(payload)
+        const created = await createPost(payload, { msalInstance })
         const newId = created?.id || created?.postId
         setMessage('저장되었습니다.')
         if (newId) {
           navigate(`/posts/${newId}`)
         }
       } else {
-        await updatePost(postId, payload)
+        await updatePost(postId, payload, { msalInstance })
         setMessage('업데이트되었습니다.')
       }
     } catch (err) {
@@ -157,6 +230,11 @@ function PostEditor() {
 
   const uploadThumbnail = async (selectedFile) => {
     if (!selectedFile) return;
+
+    const contentType = normalizeImageMimeType(selectedFile)
+    if (!supportedImageMimeTypes.has(contentType)) {
+      throw new Error('지원하지 않는 이미지 형식입니다. JPG, PNG, WEBP, GIF, HEIC, HEIF, AVIF 파일만 업로드할 수 있습니다.')
+    }
 
     if (!isApiConfigured) {
       const previewUrl = URL.createObjectURL(selectedFile)
@@ -172,29 +250,23 @@ function PostEditor() {
     try {
       const sas = await requestUploadSas({
         fileName: selectedFile.name,
-        contentType: selectedFile.type,
-      })
+        contentType,
+        sizeBytes: selectedFile.size,
+      }, { msalInstance })
 
-      await fetch(sas.uploadUrl, {
-        method: 'PUT',
-        headers: {
-          'x-ms-blob-type': 'BlockBlob',
-          'Content-Type': selectedFile.type,
-        },
-        body: selectedFile,
-      })
+      await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType)
 
       const asset = await registerAsset({
         postId: postId || null,
         blobUrl: sas.blobUrl,
-        contentType: selectedFile.type,
+        contentType,
         sizeBytes: selectedFile.size,
         fileName: selectedFile.name,
-      })
+      }, { msalInstance })
 
       setPost((prev) => ({
         ...prev,
-        thumbnailUrl: asset?.cdnUrl || asset?.blobUrl || sas.blobUrl,
+        thumbnailUrl: asset?.url || asset?.cdnUrl || asset?.blobUrl || sas.blobUrl,
       }))
       setMessage('썸네일 이미지가 업로드되었습니다.')
     } catch (err) {
@@ -205,33 +277,32 @@ function PostEditor() {
   }
 
   const uploadHtmlImage = async (selectedFile) => {
+    const contentType = normalizeImageMimeType(selectedFile)
+    if (!supportedImageMimeTypes.has(contentType)) {
+      throw new Error('지원하지 않는 이미지 형식입니다. JPG, PNG, WEBP, GIF, HEIC, HEIF, AVIF 파일만 업로드할 수 있습니다.')
+    }
+
     if (!isApiConfigured) {
       return URL.createObjectURL(selectedFile)
     }
 
     const sas = await requestUploadSas({
       fileName: selectedFile.name,
-      contentType: selectedFile.type,
-    })
+      contentType,
+      sizeBytes: selectedFile.size,
+    }, { msalInstance })
 
-    await fetch(sas.uploadUrl, {
-      method: 'PUT',
-      headers: {
-        'x-ms-blob-type': 'BlockBlob',
-        'Content-Type': selectedFile.type,
-      },
-      body: selectedFile,
-    })
+    await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType)
 
     const asset = await registerAsset({
       postId: postId || null,
       blobUrl: sas.blobUrl,
-      contentType: selectedFile.type,
+      contentType,
       sizeBytes: selectedFile.size,
       fileName: selectedFile.name,
-    })
+    }, { msalInstance })
 
-    return asset?.cdnUrl || asset?.blobUrl || sas.blobUrl
+    return asset?.url || asset?.cdnUrl || asset?.blobUrl || sas.blobUrl
   }
 
   if (loading) {

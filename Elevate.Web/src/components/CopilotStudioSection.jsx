@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import copilotStudioIcon from '../assets/NewMicrosoft365Icons/copilotstudio.png';
 
 const CopilotStudioSection = () => {
@@ -5,15 +6,18 @@ const CopilotStudioSection = () => {
         <section id="studio-section" className="py-20 px-6 max-w-7xl mx-auto">
             <div className="bg-white/40 backdrop-blur-2xl rounded-[40px] p-10 lg:p-16 relative overflow-hidden text-center lg:text-left border border-white/60 border-b-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_1px_2px_rgba(255,255,255,0.9)] fade-in-section">
                 
-                {/* Background decoration (기존 동일) */}
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-purple-100 via-pink-50 to-transparent rounded-full translate-x-1/4 -translate-y-1/4 z-0"></div>
 
                 <div className="relative z-10 flex flex-col lg:flex-row items-center gap-16">
                     <div className="lg:w-2/3">
-                        <span className="inline-block py-1 px-3 rounded-md bg-purple-100 text-purple-600 font-bold text-xs uppercase mb-4 tracking-wider">AI Skilling</span>
+                        <span className="inline-block py-1 px-3 rounded-md bg-purple-100 text-purple-600 font-bold text-xs uppercase mb-4 tracking-wider">
+                            AI Skilling
+                        </span>
                         <h2 className="text-4xl lg:text-5xl font-bold mb-6 text-slate-900">
                             대한민국 AI Skilling,<br />
-                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-purple-900">Copilot Agent</span>로 <br className="md:hidden" />
+                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-purple-900">
+                                Copilot Agent
+                            </span>로 <br className="md:hidden" />
                             시작합니다!
                         </h2>
                         <p className="text-slate-600 text-base mb-10 leading-relaxed font-medium">
@@ -26,7 +30,6 @@ const CopilotStudioSection = () => {
                             User가 아닌 Creator, 즉 <span className="text-purple-600 font-bold">Agent Boss</span>로 성장할 수 있는 구조를 제공합니다.
                         </p>
                         
-                        {/* Liquid glass buttons */}
                         <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
                             <a
                                 href="https://forms.office.com/r/YvQz3WbhZt"
@@ -45,10 +48,8 @@ const CopilotStudioSection = () => {
                                 <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent group-hover:translate-x-full transition-transform duration-[1.2s] ease-in-out rounded-full" />
                             </a>
 
-                            <a
-                                href="https://github.com/oneot/copilotagenthon/blob/main/01_CopilotAgenthon_%EC%8B%9C%EC%9E%91%ED%95%98%EA%B8%B0.md"
-                                target="_blank"
-                                rel="noopener noreferrer"
+                            <Link
+                                to="/agenthon/interview"
                                 className="relative group overflow-hidden inline-flex items-center justify-center 
                                          px-8 py-3.5 rounded-full font-bold text-purple-800
                                          bg-purple-200/70 backdrop-blur-2xl 
@@ -60,7 +61,7 @@ const CopilotStudioSection = () => {
                             >
                                 <span className="relative z-10 drop-shadow-sm">에이전톤 우수사례</span>
                                 <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent group-hover:translate-x-full transition-transform duration-[1.2s] ease-in-out rounded-full" />
-                            </a>
+                            </Link>
                         </div>
                     </div>
 
@@ -74,21 +75,24 @@ const CopilotStudioSection = () => {
                             
                             <div className="absolute inset-0 bg-white/30 rounded-[3rem] blur-xl"></div>
                             
-                            <img src={copilotStudioIcon}
-                                 alt="CopilotStudio Logo"
-                                 className="w-[250px] h-[250px] object-contain
+                            <img
+                                src={copilotStudioIcon}
+                                alt="CopilotStudio Logo"
+                                className="w-[250px] h-[250px] object-contain
                                             filter drop-shadow-lg
                                             transition-transform duration-500
-                                            group-hover:scale-110" />
+                                            group-hover:scale-110"
+                            />
                             
-                            {/* Floating Badge */}
                             <div className="absolute -bottom-6 -right-6 lg:-right-10 bg-white p-4 rounded-2xl shadow-xl border border-slate-50 flex items-center gap-3 transform group-hover:-translate-y-2 transition-transform duration-500">
                                 <span className="relative flex h-3 w-3">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-75"></span>
-                                  <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-700"></span>
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-700"></span>
                                 </span>
                                 <div className="text-left">
-                                    <p className="text-xs font-bold text-slate-700 tracking-wider leading-none mb-1">Agentic AI</p>
+                                    <p className="text-xs font-bold text-slate-700 tracking-wider leading-none mb-1">
+                                        Agentic AI
+                                    </p>
                                 </div>
                             </div>
                         </div>

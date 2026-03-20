@@ -1,4 +1,5 @@
 import { isApiConfigured } from './apiClient.js'
+import { apiFetch } from './apiClient.js'
 
 /**
  * 포스트/블로그 트래픽 통계 Mock 데이터 (isApiConfigured === false)
@@ -26,7 +27,7 @@ const MOCK_ANALYTICS_SUMMARY = {
 /**
  * 대시보드 통계 요약 데이터를 가져옵니다.
  */
-export async function getAnalyticsSummary() {
+export async function getAnalyticsSummary(options = {}) {
   if (!isApiConfigured) {
     // API 연결 전 Mock 응답 반환 (딜레이 추가)
     return new Promise((resolve) => {
@@ -34,10 +35,5 @@ export async function getAnalyticsSummary() {
     })
   }
 
-  const endpoint = `${import.meta.env.VITE_API_BASE_URL}/analytics/summary`
-  const response = await fetch(endpoint)
-  if (!response.ok) {
-    throw new Error('통계 데이터를 불러오지 못했습니다.')
-  }
-  return response.json()
+  return apiFetch('/analytics/summary', options)
 }
