@@ -49,7 +49,7 @@ const CopilotStudioSection = () => {
                             </a>
 
                             <Link
-                                to="/agenthon/interview"
+                                to="/agenthon"
                                 className="relative group overflow-hidden inline-flex items-center justify-center 
                                          px-8 py-3.5 rounded-full font-bold text-purple-800
                                          bg-purple-200/70 backdrop-blur-2xl 
