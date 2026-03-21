@@ -37,7 +37,7 @@ function App() {
       <Route path="/:category" element={<PostList />} />
       <Route path="/:category/:postId" element={<PostDetail />} />
       <Route path="*" element={<NotFound />} />
-      <Route path="/agenthon/interview" element={<AgenthonInterview />} />
+      <Route path="/agenthon" element={<AgenthonInterview />} />
     </Routes>
   );
 }

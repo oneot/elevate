@@ -24,8 +24,6 @@ const AgenthonInterview = () => {
         { label: "Microsoft Elevate", to: "/" },
         { type: "sep" },
         { label: "Agenthon", to: "/agenthon" },
-        { type: "sep" },
-        { label: "인터뷰" },
       ]}
       rightAside={
         <TableOfContents
