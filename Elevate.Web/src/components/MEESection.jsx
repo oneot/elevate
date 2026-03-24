@@ -57,23 +57,20 @@ const MEESection = () => {
                         {/* Liquid glass buttons */}
                         <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
                             
-                            <a
-                                href="https://www.youtube.com/watch?v=SfK1hajr5qY&list=PLGh_JNxzXsX-eviPh2Y30PsLbIiEbP8Ai"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="relative group overflow-hidden inline-flex items-center justify-center 
-                                         px-8 py-3.5 rounded-full font-bold text-blue-900
-                                         bg-blue-400/40 backdrop-blur-2xl 
-                                         border border-white/60 border-b-white/20
-                                         shadow-[0_8px_24px_rgba(37,99,235,0.25),inset_0_1px_2px_rgba(255,255,255,0.8)]
-                                         transition-all duration-300 ease-out
-                                         hover:bg-blue-400/40 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(37,99,235,0.35),inset_0_1px_2px_rgba(255,255,255,0.9)]
-                                         active:scale-95"
-                            >
-                                <span className="relative z-10 drop-shadow-sm">활동 사례 알아보기</span>
-                                {/* Shine effect */}
-                                <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent group-hover:translate-x-full transition-transform duration-[1.2s] ease-in-out rounded-full" />
-                            </a>
+                            <Link
+  to="/activity"
+  className="relative group overflow-hidden inline-flex items-center justify-center 
+           px-8 py-3.5 rounded-full font-bold text-blue-900
+           bg-blue-400/40 backdrop-blur-2xl 
+           border border-white/60 border-b-white/20
+           shadow-[0_8px_24px_rgba(37,99,235,0.25),inset_0_1px_2px_rgba(255,255,255,0.8)]
+           transition-all duration-300 ease-out
+           hover:bg-blue-400/40 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(37,99,235,0.35),inset_0_1px_2px_rgba(255,255,255,0.9)]
+           active:scale-95"
+>
+  <span className="relative z-10 drop-shadow-sm">활동 사례 알아보기</span>
+  <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent group-hover:translate-x-full transition-transform duration-[1.2s] ease-in-out rounded-full" />
+</Link>
 
                             <Link
                                 to="/mee/pre"
