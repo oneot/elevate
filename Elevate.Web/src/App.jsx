@@ -10,6 +10,7 @@ import MEEExplorerProcedure from './pages/MEEExplorerProcedure';
 import MIEEArchive from './pages/MIEEArchive';
 import AgenthonInterview from "./pages/AgenthonInterview";
 import { setClarityTag, trackClarityEvent } from './lib/clarity';
+import ActivityShowcasePage from "./pages/ActivityShowcasePage";
 
 function App() {
   const location = useLocation();
@@ -38,6 +39,7 @@ function App() {
       <Route path="/:category/:postId" element={<PostDetail />} />
       <Route path="*" element={<NotFound />} />
       <Route path="/agenthon" element={<AgenthonInterview />} />
+      <Route path="/activity" element={<ActivityShowcasePage />} />
     </Routes>
   );
 }
