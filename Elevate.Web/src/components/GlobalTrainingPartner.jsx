@@ -40,7 +40,7 @@ const GlobalTrainingPartner = () => {
                                 <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent group-hover:translate-x-full transition-transform duration-[1.2s] ease-in-out rounded-full" />
                             </a>
                             <a
-                                href="https://learn.microsoft.com/ko-kr/training/educator-center/programs/global-training-partner/find-global-training-partner"
+                                href="https://learn.microsoft.com/en-us/training/educator-center/programs/global-training-partner/find-global-training-partner#korea"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="relative group overflow-hidden inline-flex items-center justify-center 
