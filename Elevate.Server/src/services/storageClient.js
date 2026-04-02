@@ -79,6 +79,42 @@ async function issueBlobUploadSas({ fileName }) {
   };
 }
 
+async function getBlobReadSasUrl(blobUrl, validHours) {
+  const hours = validHours || 1;
+  if (!blobUrl) return null;
+  try {
+    const serviceClient = getBlobServiceClient();
+    const url = new URL(blobUrl);
+    const pathSegments = url.pathname.split('/').filter(Boolean);
+    if (pathSegments.length < 2) return null;
+
+    const containerName = pathSegments[0];
+    const blobName = pathSegments.slice(1).join('/');
+
+    const startsOn = new Date(Date.now() - 5 * 60 * 1000);
+    const expiresOn = new Date(Date.now() + hours * 60 * 60 * 1000);
+
+    const userDelegationKey = await serviceClient.getUserDelegationKey(startsOn, expiresOn);
+    const sasToken = generateBlobSASQueryParameters(
+      {
+        containerName: containerName,
+        blobName: blobName,
+        permissions: BlobSASPermissions.parse('r'),
+        startsOn: startsOn,
+        expiresOn: expiresOn,
+        protocol: SASProtocol.Https,
+      },
+      userDelegationKey,
+      storageAccountName
+    ).toString();
+
+    return url.origin + url.pathname + '?' + sasToken;
+  } catch (error) {
+    console.error('[getBlobReadSasUrl] failed', error);
+    return null;
+  }
+}
+
 async function deleteBlobByUrl(blobUrl) {
   if (!blobUrl) {
     return;
@@ -105,5 +141,6 @@ async function deleteBlobByUrl(blobUrl) {
 
 module.exports = {
   issueBlobUploadSas,
+  getBlobReadSasUrl,
   deleteBlobByUrl
 };
