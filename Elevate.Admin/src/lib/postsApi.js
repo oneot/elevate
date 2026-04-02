@@ -10,7 +10,7 @@ function toEditorPost(apiPost) {
     tags: Array.isArray(apiPost.tags) ? apiPost.tags : [],
     excerpt: apiPost.excerpt || '',
     htmlBody: apiPost.contentMarkdown || '',
-    thumbnailUrl: apiPost.thumbnail?.url || '',
+    thumbnailUrl: apiPost.thumbnail?.signedUrl || apiPost.thumbnail?.url || '',
     updatedAt: apiPost.updatedAt || null,
     publishedAt: apiPost.publishedAt || null,
   }
