@@ -1,0 +1,21 @@
+{
+  "id": "update/26-01-07",
+  "slug": "26-01-07",
+  "title": "Microsoft Learning Zone 활용법 (교육자와 학생을 위한 AI 기반 앱)",
+  "excerpt": "영상 한눈에 보기\r",
+  "imageUrl": "https://img.youtube.com/vi/XVApURh8oFc/hqdefault.jpg",
+  "youtube": "XVApURh8oFc",
+  "author": {
+    "name": "Unknown"
+  },
+  "publishedAt": "2026-01-07",
+  "likes": 0,
+  "comments": 0,
+  "category": "update",
+  "tags": [
+    "teach"
+  ],
+  "series": null,
+  "seriesOrder": null,
+  "content": "## 영상 한눈에 보기\r\n- Microsoft Learning Zone은 Copilot+ PC용 AI 기반 앱으로, 교육자가 맞춤형 대화형 수업을 쉽고 빠르게 생성할 수 있도록 지원합니다.\r\n- 다양한 참고 자료와 파트너 콘텐츠를 활용해 수업을 설계하고, 학생 참여와 학습 효과를 극대화할 수 있습니다.\r\n- 수업 생성, 편집, 공유, 보고서 기능 등 교실 현장에 바로 적용 가능한 실질적 기능을 제공합니다.\r\n\r\n## 핵심 내용\r\n- Microsoft Learning Zone은 Windows 11 환경에서 Microsoft 365 교육자 계정으로 로그인하여 사용할 수 있습니다.\r\n- Copilot+ PC의 온보드 AI를 활용해 수업 생성 및 맞춤형 활동 설계가 가능하며, 학생들은 다양한 Windows 11 기기에서 수업에 참여할 수 있습니다.\r\n- 참고 자료(Word, PDF, OneDrive, OpenStax 등)를 추가하면 AI가 수업 개요를 자동 생성하고, 교사는 순서 변경 및 세부 편집이 가능합니다.\r\n- 다양한 유형의 연습 문제(객관식, 빈칸 채우기, 참/거짓, 짝 맞추기 등)와 오답 생성, 난이도 조절, 언어 단순화 기능을 제공합니다.\r\n- '재생 모드'를 통해 학생의 수업 경험을 미리 확인할 수 있으며, 학생들은 학습 후 보고서를 받아 자신의 학습 현황을 점검할 수 있습니다.\r\n- 수업 공유는 참가 코드, 링크, QR 코드, Teams 과제, Google Classroom 등 다양한 방식으로 가능하며, 교사는 보고서 탭에서 학생별 학습 진행 상황을 상세히 확인할 수 있습니다.\r\n- Minecraft, 예술, 이코노미스트 등 다양한 파트너 콘텐츠를 라이브러리에서 탐색할 수 있으며, 앱 런처를 통해 여러 교육 앱을 실행할 수 있습니다.\r\n- 다크 모드, 음향 효과, 앱 표시 언어 변경 등 사용자 맞춤 설정이 가능하며, 공식 웹사이트에서 추가 정보를 확인할 수 있습니다.\r\n\r\n## 이런 분께 추천\r\n- AI 기반 수업 설계와 학생 맞춤형 학습 활동에 관심 있는 초·중·고 선생님\r\n- 다양한 교육 앱과 파트너 콘텐츠를 활용하고 싶은 교육청 관계자\r\n- 학생 참여와 학습 효과를 높이고자 하는 교실 현장 담당자\r\n- Microsoft 365 및 Windows 11 환경에서 혁신적 수업 도구를 찾는 교육자"
+}

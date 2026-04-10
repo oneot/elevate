@@ -8,7 +8,7 @@ import rehypeSlug from 'rehype-slug';
 import TableOfContents from '../components/TableOfContents';
 import SeriesNavigator from '../components/SeriesNavigator';
 
-const VALID_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote'];
+const VALID_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote', 'm365update', 'update'];
 
 const CATEGORY_DISPLAY_NAMES = {
     'm365': 'M365 개요',
@@ -16,7 +16,9 @@ const CATEGORY_DISPLAY_NAMES = {
     'teams': 'Teams',
     'minecraft': 'Minecraft',
     'excel': 'Excel',
-    'onenote': 'OneNote'
+    'onenote': 'OneNote',
+    'm365update': 'Microsoft365 Update',
+    'update': '업데이트'
 };
 
 const PostDetail = () => {
@@ -217,6 +219,7 @@ const PostDetail = () => {
 
                                 {!loading && post && (
                                     <>
+
                                         {/* Post Title */}
                                         <h1 
                                             id="post-title"
@@ -243,6 +246,20 @@ const PostDetail = () => {
                                                         {tag}
                                                     </span>
                                                 ))}
+                                            </div>
+                                        )}
+
+                                        {/* 유튜브 임베드 카드 (frontmatter에 youtube 필드가 있을 때) */}
+                                        {post.youtube && (
+                                            <div className="mb-8 rounded-2xl overflow-hidden aspect-video bg-black flex items-center justify-center shadow-lg">
+                                                <iframe
+                                                    src={`https://www.youtube.com/embed/${post.youtube}`}
+                                                    title="YouTube video player"
+                                                    frameBorder="0"
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    allowFullScreen
+                                                    className="w-full h-full"
+                                                />
                                             </div>
                                         )}
 

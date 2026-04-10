@@ -1,10 +1,520 @@
 {
   "items": [
     {
+      "id": "update/26-04-01",
+      "slug": "26-04-01",
+      "title": "교사를 위한 Microsoft 365 Copilot의 6가지 새로운 기능 (2026)",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/ZKY4hSeQxOQ/hqdefault.jpg",
+      "youtube": "ZKY4hSeQxOQ",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-04-01",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "teach"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/26-03-30",
+      "slug": "26-03-30",
+      "title": "2026년 Microsoft Teams의 12가지 새로운 기능",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/Q211lqfBxQY/hqdefault.jpg",
+      "youtube": "Q211lqfBxQY",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-30",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "teams"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/26-03-23",
+      "slug": "26-03-23",
+      "title": "Microsoft 365 Copilot 노트북 | 2026년 최신 업데이트",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/Dcb7SFH5lnE/hqdefault.jpg",
+      "youtube": "Dcb7SFH5lnE",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-23",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "copilot"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/26-03-18",
+      "slug": "26-03-18",
+      "title": "Microsoft 365의 새로운 매칭 게임 (교사들이 좋아할 기능)",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/-NnUFYhn4gY/hqdefault.jpg",
+      "youtube": "-NnUFYhn4gY",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-18",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "teach"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/26-03-16",
+      "slug": "26-03-16",
+      "title": "2026년 Microsoft 365 Copilot에서 꼭 써봐야 할 7가지 신기능",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/fosVJ2QkhnE/hqdefault.jpg",
+      "youtube": "fosVJ2QkhnE",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-16",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "copilot"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "teams/teams-speakerprogress",
+      "slug": "teams-speakerprogress",
+      "title": "Microsoft Teams 발표자 진행(Speaker Progress)으로 학생들의 발표 능력 향상하기",
+      "excerpt": "1. 발표자 진행(Speaker Progress)\r",
+      "imageUrl": "/images/teams/teams-speakerprogress/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 12
+    },
+    {
+      "id": "teams/teams-searchcoach",
+      "slug": "teams-searchcoach",
+      "title": "Microsoft Teams 검색코치로 안정적으로 정보얻기",
+      "excerpt": "1. Search Coach\r",
+      "imageUrl": "/images/teams/teams-searchcoach/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 11
+    },
+    {
+      "id": "teams/teams-score",
+      "slug": "teams-score",
+      "title": "Microsoft Teams로 과제 및 성적 생성 관리하기",
+      "excerpt": "1. 팀즈 과제 및 성적\r",
+      "imageUrl": "/images/teams/teams-score/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 6
+    },
+    {
+      "id": "teams/teams-reflect",
+      "slug": "teams-reflect",
+      "title": "Microsoft Teams Reflect로 학생 정서적 상태 파악하기",
+      "excerpt": "1. Reflect\r",
+      "imageUrl": "/images/teams/teams-reflect/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 10
+    },
+    {
+      "id": "teams/teams-readingprogress",
+      "slug": "teams-readingprogress",
+      "title": "Microsoft Teams Reading Progress로 학생 읽기능력 향상하기",
+      "excerpt": "1. 읽기 진행(Reading Progress)\r",
+      "imageUrl": "/images/teams/teams-readingprogress/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 13
+    },
+    {
+      "id": "teams/teams-onlinemeet",
+      "slug": "teams-onlinemeet",
+      "title": "Microsoft Teams 화상회의하기",
+      "excerpt": "1. 팀즈 화상회의(모임) 예약 및 설정\r",
+      "imageUrl": "/images/teams/teams-onlinemeet/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 9
+    },
+    {
+      "id": "teams/teams-note",
+      "slug": "teams-note",
+      "title": "Microsoft Teams 수업용 전자필기장 생성하기",
+      "excerpt": "1. 팀즈 수업용 전자필기장 생성\r",
+      "imageUrl": "/images/teams/teams-note/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 7
+    },
+    {
+      "id": "teams/teams-maketeam",
+      "slug": "teams-maketeam",
+      "title": "Microsoft Teams 팀 생성하기",
+      "excerpt": "1. 팀즈 팀 생성\r",
+      "imageUrl": "/images/teams/teams-maketeam/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 3
+    },
+    {
+      "id": "teams/teams-introduce",
+      "slug": "teams-introduce",
+      "title": "Microsoft Teams란?",
+      "excerpt": "1. Microsoft Teams 소개\r",
+      "imageUrl": "/images/teams/teams-introduce/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 1
+    },
+    {
+      "id": "teams/teams-insights",
+      "slug": "teams-insights",
+      "title": "Microsoft Teams Insights로 학습관리 및 성과분석하기",
+      "excerpt": "1. Insights\r",
+      "imageUrl": "/images/teams/teams-insights/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 14
+    },
+    {
+      "id": "teams/teams-home",
+      "slug": "teams-home",
+      "title": "Microsoft Teams 홈페이지 생성하기",
+      "excerpt": "1. 팀즈 홈페이지\r",
+      "imageUrl": "/images/teams/teams-home/image2.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 2
+    },
+    {
+      "id": "teams/teams-filetap",
+      "slug": "teams-filetap",
+      "title": "Microsoft Teams 파일탭으로 문서관리하기",
+      "excerpt": "1. 팀즈 파일탭\r",
+      "imageUrl": "/images/teams/teams-filetap/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 5
+    },
+    {
+      "id": "teams/teams-class",
+      "slug": "teams-class",
+      "title": "Microsoft Teams 수업활동으로 수업 체계적으로 관리하기",
+      "excerpt": "1. 팀즈 수업활동\r",
+      "imageUrl": "/images/teams/teams-class/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 8
+    },
+    {
+      "id": "teams/teams-channel",
+      "slug": "teams-channel",
+      "title": "Microsoft Teams 채널 및 게시물 생성 관리하기",
+      "excerpt": "1. 팀즈 채널\r",
+      "imageUrl": "/images/teams/teams-channel/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "teams",
+      "tags": [
+        "teams",
+        "productivity"
+      ],
+      "series": "Teams 입문 가이드",
+      "seriesOrder": 4
+    },
+    {
+      "id": "onenote/onenote-classnote",
+      "slug": "onenote-classnote",
+      "title": "📘 Onenote 수업용 전자필기장 - 과제, 수학도우미",
+      "excerpt": "1. OneNote ClassNote (수업용 전자필기장)의 구조\r",
+      "imageUrl": "/images/onenote/onenote-classnote/image3.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "onenote",
+      "tags": [
+        "onenote",
+        "productivity"
+      ],
+      "series": "OneNote 입문 가이드",
+      "seriesOrder": 4
+    },
+    {
+      "id": "m365/forms-share",
+      "slug": "forms-share",
+      "title": "Microsoft Forms 설정 및 결과 확인하기",
+      "excerpt": "6. Forms 설정하기\r",
+      "imageUrl": "/images/m365/forms/forms-share/image3.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "cloud",
+        "forms"
+      ],
+      "series": "Forms 입문 가이드",
+      "seriesOrder": 5
+    },
+    {
+      "id": "m365/forms-quiz",
+      "slug": "forms-quiz",
+      "title": "Microsoft Forms 퀴즈 만들기",
+      "excerpt": "5. Forms 퀴즈 만들기 및 기능\r",
+      "imageUrl": "/images/m365/forms/forms-quiz/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "cloud",
+        "forms"
+      ],
+      "series": "Forms 입문 가이드",
+      "seriesOrder": 4
+    },
+    {
+      "id": "m365/forms-question",
+      "slug": "forms-question",
+      "title": "Microsoft Forms 질문 항목 양식 알아보기",
+      "excerpt": "2. 질문 양식 알아보기\r",
+      "imageUrl": "/images/m365/forms/forms-question/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "cloud",
+        "forms"
+      ],
+      "series": "Forms 입문 가이드",
+      "seriesOrder": 2
+    },
+    {
+      "id": "m365/forms-option",
+      "slug": "forms-option",
+      "title": "Microsoft Forms 섹션 나누기",
+      "excerpt": "3. Forms 섹션 나누기\r",
+      "imageUrl": "/images/m365/forms/forms-option/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "cloud",
+        "forms"
+      ],
+      "series": "Forms 입문 가이드",
+      "seriesOrder": 3
+    },
+    {
+      "id": "m365/forms-inschool",
+      "slug": "forms-inschool",
+      "title": "Microsoft Forms 시작하기",
+      "excerpt": "Microsoft Forms란?\r",
+      "imageUrl": "/images/m365/forms/forms-inschool/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "cloud",
+        "forms"
+      ],
+      "series": "Forms 입문 가이드",
+      "seriesOrder": 1
+    },
+    {
       "id": "m365/powershell",
       "slug": "powershell",
-      "title": "💡M365 이름 일괄변경 방법",
-      "excerpt": "Powershell_M365 이름변경 방법",
+      "title": "💡PowerShell로 M365 이름 일괄변경하기",
+      "excerpt": "Powershell_M365 이름변경 방법\r",
       "imageUrl": "/images/m365/powershellsetting/image1.png",
       "author": {
         "name": "Unknown"
@@ -16,6 +526,46 @@
       "tags": [
         "m365",
         "powershell"
+      ],
+      "series": "M365 Tips 톺아보기",
+      "seriesOrder": 2
+    },
+    {
+      "id": "m365/newversionoffice-download",
+      "slug": "newversionoffice-download",
+      "title": "🔽 M365 최신버전 오피스 설치하기",
+      "excerpt": "M365 최신버전 오피스 설치\r",
+      "imageUrl": "/images/m365/newversionofficedownload/imageb.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-10",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity"
+      ],
+      "series": "M365 Tips 톺아보기",
+      "seriesOrder": 3
+    },
+    {
+      "id": "update/26-03-09",
+      "slug": "26-03-09",
+      "title": "OneNote 팁과 트릭 - 시간을 절약하는 키보드 단축키",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/E6IQuofTLWU/hqdefault.jpg",
+      "youtube": "E6IQuofTLWU",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-03-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "onenote"
       ],
       "series": null,
       "seriesOrder": null
@@ -621,6 +1171,46 @@
       "seriesOrder": 1
     },
     {
+      "id": "update/26-02-23",
+      "slug": "26-02-23",
+      "title": "Excel에서 에이전트 모드 활용 방법 (단계별 튜토리얼)",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/mYOCyFrkGdQ/hqdefault.jpg",
+      "youtube": "mYOCyFrkGdQ",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-23",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "excel"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/26-02-16",
+      "slug": "26-02-16",
+      "title": "OneNote 생산성 극대화: Outlook, Loop, Teams와 함께 활용하기",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/eHFDZNp2edQ/hqdefault.jpg",
+      "youtube": "eHFDZNp2edQ",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-16",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "onenote"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
       "id": "minecraft/minecraft-tutorial",
       "slug": "minecraft-tutorial",
       "title": "⛏️ Minecraft와 함께 게임으로 학습하기",
@@ -686,6 +1276,26 @@
       "seriesOrder": 1
     },
     {
+      "id": "update/26-02-09",
+      "slug": "26-02-09",
+      "title": "Microsoft Copilot 2026의 9가지 새로운 기능",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/-V0Qv1xpnyg/hqdefault.jpg",
+      "youtube": "-V0Qv1xpnyg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-09",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "copilot"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
       "id": "onenote/onenote",
       "slug": "onenote",
       "title": "📘 Onenote로 자료 정리하기 기초 - 기본 기능부터 유용한 Tip까지",
@@ -704,6 +1314,26 @@
       ],
       "series": "OneNote 입문 가이드",
       "seriesOrder": 1
+    },
+    {
+      "id": "update/26-02-02",
+      "slug": "26-02-02",
+      "title": "마이크로소프트 팀즈 20가지 활용 팁과 트릭 (2026)",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/7LZxGPScrrg/hqdefault.jpg",
+      "youtube": "7LZxGPScrrg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-02",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "teams"
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "minecraft/minecraft-education-block-coding",
@@ -767,7 +1397,29 @@
         "cloud",
         "onedrive"
       ],
-      "series": "M365 활용 가이드",
+      "series": "Onedrive 입문 가이드",
+      "seriesOrder": 1
+    },
+    {
+      "id": "m365/onedrive-mobile",
+      "slug": "onedrive-mobile",
+      "title": "📖 OneDrive 모바일로 사용하기",
+      "excerpt": "1. 모바일 OneDrive\r",
+      "imageUrl": "/images/m365/onedrive-mobile/image.jpg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-02-02",
+      "likes": 0,
+      "comments": 0,
+      "category": "m365",
+      "tags": [
+        "m365",
+        "productivity",
+        "cloud",
+        "onedrive"
+      ],
+      "series": "Onedrive 입문 가이드",
       "seriesOrder": 2
     },
     {
@@ -834,6 +1486,26 @@
       ],
       "series": "Copilot 입문 가이드",
       "seriesOrder": 7
+    },
+    {
+      "id": "update/26-01-26",
+      "slug": "26-01-26",
+      "title": "Microsoft OneNote 2026년 7가지 신기능",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/VLq9nkPLKkM/hqdefault.jpg",
+      "youtube": "VLq9nkPLKkM",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-01-26",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "onenote"
+      ],
+      "series": null,
+      "seriesOrder": null
     },
     {
       "id": "copilot/research",
@@ -918,9 +1590,609 @@
       ],
       "series": "Copilot 입문 가이드",
       "seriesOrder": 9
+    },
+    {
+      "id": "update/26-01-23",
+      "slug": "26-01-23",
+      "title": "Microsoft Teams에서 메시지 예약하는 방법 - 채널 및 채팅",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/SC73i2SMulg/hqdefault.jpg",
+      "youtube": "SC73i2SMulg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-01-23",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "teams"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/26-01-20",
+      "slug": "26-01-20",
+      "title": "2026년 Microsoft Excel의 8가지 새로운 기능",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/a2_zMywcqbQ/hqdefault.jpg",
+      "youtube": "a2_zMywcqbQ",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-01-20",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "excel"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/26-01-14",
+      "slug": "26-01-14",
+      "title": "Microsoft Teams 교육용 4가지 신규 기능 (2026)",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/nSRhWeDDr7o/hqdefault.jpg",
+      "youtube": "nSRhWeDDr7o",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-01-14",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "teams"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/26-01-12",
+      "slug": "26-01-12",
+      "title": "Microsoft Copilot의 15가지 활용 팁과 트릭 (2026)",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/B2s1oB36iCQ/hqdefault.jpg",
+      "youtube": "B2s1oB36iCQ",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-01-12",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "copilot"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/26-01-08",
+      "slug": "26-01-08",
+      "title": "Microsoft 365에서 AI 기반 플래시카드 효과적으로 활용하기",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/zMmRrteuMJ8/hqdefault.jpg",
+      "youtube": "zMmRrteuMJ8",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-01-08",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "teach"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/26-01-07",
+      "slug": "26-01-07",
+      "title": "Microsoft Learning Zone 활용법 (교육자와 학생을 위한 AI 기반 앱)",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/XVApURh8oFc/hqdefault.jpg",
+      "youtube": "XVApURh8oFc",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-01-07",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "teach"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/26-01-05",
+      "slug": "26-01-05",
+      "title": "Microsoft OneNote 25가지 활용 팁과 트릭 (2026) - OneNote 효과적으로 사용하는 방법",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/rvkNNSXXkbg/hqdefault.jpg",
+      "youtube": "rvkNNSXXkbg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-01-05",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "onenote"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-12-30",
+      "slug": "25-12-30",
+      "title": "Microsoft Teams에서 Copilot Chat 활용하기 (팁 & 트릭)",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/qE8KQ0CTUgA/hqdefault.jpg",
+      "youtube": "qE8KQ0CTUgA",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-12-30",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "copilot"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-12-18",
+      "slug": "25-12-18",
+      "title": "Microsoft Reading Coach의 안내식 연습을 활용한 학생 읽기 유창성 향상 (교사용 튜토리얼)",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/mpi4uKr0-hE/hqdefault.jpg",
+      "youtube": "mpi4uKr0-hE",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-12-18",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "learning accelerators"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-12-15",
+      "slug": "25-12-15",
+      "title": "Microsoft Forms의 20가지 핵심 팁과 새로운 기능 – 숨겨진 활용법",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/PUhwt9misLg/hqdefault.jpg",
+      "youtube": "PUhwt9misLg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-12-15",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "forms"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-12-11",
+      "slug": "25-12-11",
+      "title": "Microsoft 365 Copilot: AI로 퀴즈 만들기 (전체 튜토리얼)",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/5jJ6m0XPl6g/hqdefault.jpg",
+      "youtube": "5jJ6m0XPl6g",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-12-11",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "teach"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-12-08",
+      "slug": "25-12-08",
+      "title": "마이크로소프트 팀즈의 12가지 새로운 기능 (2026년)",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/UL0Nm9EHuoM/hqdefault.jpg",
+      "youtube": "UL0Nm9EHuoM",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-12-08",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "teams"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-12-04",
+      "slug": "25-12-04",
+      "title": "Copilot의 새로운 에이전트: 앱 빌더, 워크플로, 설문조사 활용 방법",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/OPVGuU1djMU/hqdefault.jpg",
+      "youtube": "OPVGuU1djMU",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-12-04",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "copilot"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-12-01",
+      "slug": "25-12-01",
+      "title": "Microsoft 365 Copilot의 6가지 새로운 기능 (2025년 업데이트)",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/zEtKNf9avkY/hqdefault.jpg",
+      "youtube": "zEtKNf9avkY",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-12-01",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "copilot"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-11-24",
+      "slug": "25-11-24",
+      "title": "파워포인트 코파일럿 튜토리얼 (2025) – 새로운 AI 기능과 대규모 개선",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/mQDTJTGIvhg/hqdefault.jpg",
+      "youtube": "mQDTJTGIvhg",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-11-24",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "powerpoint"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-11-20",
+      "slug": "25-11-20",
+      "title": "OneNote와 Teams 회의 노트 활용법 튜토리얼 (2025) – 새로운 기능 및 사용 방법",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/hMIkjDEg_54/hqdefault.jpg",
+      "youtube": "hMIkjDEg_54",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-11-20",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "onenote"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-11-17",
+      "slug": "25-11-17",
+      "title": "Microsoft Excel 2025년 신기능 3가지 (Agent 모드 포함)",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/df3Zz0_asNQ/hqdefault.jpg",
+      "youtube": "df3Zz0_asNQ",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-11-17",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "excel"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-11-13",
+      "slug": "25-11-13",
+      "title": "Microsoft 365 Copilot의 AI 기반 Teach 모듈 – 교사용 전체 튜토리얼",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/WkXVukl62KU/hqdefault.jpg",
+      "youtube": "WkXVukl62KU",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-11-13",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "teach"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-11-06",
+      "slug": "25-11-06",
+      "title": "Microsoft Teams 회의 및 통화에서 음성 분리 기능 활용법",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/iMhKvFu5rA0/hqdefault.jpg",
+      "youtube": "iMhKvFu5rA0",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-11-06",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "teams"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-10-30",
+      "slug": "25-10-30",
+      "title": "Microsoft OneNote에서 표 셀 병합 기능이 드디어 출시되었습니다!",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/WIsFm_Lur9E/hqdefault.jpg",
+      "youtube": "WIsFm_Lur9E",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-10-30",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "onenote"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-10-27",
+      "slug": "25-10-27",
+      "title": "Microsoft Edge의 Copilot 모드와 12가지 신규 기능 튜토리얼",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/cJ8LTlZ0nR0/hqdefault.jpg",
+      "youtube": "cJ8LTlZ0nR0",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-10-27",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "copilot"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-10-23",
+      "slug": "25-10-23",
+      "title": "Microsoft Teams에서 채팅과 채널 결합 기능 활용 방법",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/8AkdYrYsy7w/hqdefault.jpg",
+      "youtube": "8AkdYrYsy7w",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-10-23",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "teams"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-10-20",
+      "slug": "25-10-20",
+      "title": "새로운 Microsoft Copilot Chat 활용법 – 시간 절약을 위한 팁과 트릭",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/X-d0vRoHVGE/hqdefault.jpg",
+      "youtube": "X-d0vRoHVGE",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-10-20",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "copilot"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-10-16",
+      "slug": "25-10-16",
+      "title": "새로운 Microsoft Teams 캘린더 활용법 📅 (아웃룩 기반)",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/dTrz1wTW93c/hqdefault.jpg",
+      "youtube": "dTrz1wTW93c",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-10-16",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "teams"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-10-06",
+      "slug": "25-10-06",
+      "title": "Microsoft 365 Copilot 튜토리얼 – 초보자 가이드 (2025)",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/JbOJliF-Cn4/hqdefault.jpg",
+      "youtube": "JbOJliF-Cn4",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-10-06",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "copilot"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-10-01",
+      "slug": "25-10-01",
+      "title": "엑셀 Copilot - AI 기반 수식 자동 완성",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/W5yFTr6WmVE/hqdefault.jpg",
+      "youtube": "W5yFTr6WmVE",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-10-01",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "excel"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-09-23",
+      "slug": "25-09-23",
+      "title": "학습 관리 시스템에서 새로운 Microsoft 365 LTI 앱 활용 방법",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/EEVQjOTFZYs/hqdefault.jpg",
+      "youtube": "EEVQjOTFZYs",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-09-23",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "lti"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-06-16",
+      "slug": "25-06-16",
+      "title": "Copilot Vision 활용 방법 | 마이크로소프트 Copilot",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/Xn7VpOl8Z3c/hqdefault.jpg",
+      "youtube": "Xn7VpOl8Z3c",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-06-16",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "copilot"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-01-14",
+      "slug": "25-01-14",
+      "title": "Microsoft Reading Coach - AI 기반 맞춤형 독서 연습",
+      "excerpt": "Microsoft Reading Coach  AI 기반 맞춤형 독서 연습\r",
+      "imageUrl": "https://img.youtube.com/vi/jiqKzjP-xqc/hqdefault.jpg",
+      "youtube": "jiqKzjP-xqc",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-01-14",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "learning accelerators"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
+      "id": "update/25-01-07",
+      "slug": "25-01-07",
+      "title": "Microsoft Teams에서 Math Progress 활용 방법",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/G-ch415AzzU/hqdefault.jpg",
+      "youtube": "G-ch415AzzU",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2025-01-07",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "learning accelerators"
+      ],
+      "series": null,
+      "seriesOrder": null
     }
   ],
-  "total": 67,
+  "total": 108,
   "allTags": [
     "account",
     "agent",
@@ -932,6 +2204,8 @@
     "excel",
     "forms",
     "gaming",
+    "learning accelerators",
+    "lti",
     "m365",
     "minecraft",
     "office",
@@ -941,6 +2215,7 @@
     "powershell",
     "productivity",
     "prompt",
+    "teach",
     "teams",
     "tutorial",
     "word"
@@ -1208,7 +2483,7 @@
           "id": "m365/onedrive-mobile",
           "slug": "onedrive-mobile",
           "title": "📖 OneDrive 모바일로 사용하기",
-          "seriesOrder": 5
+          "seriesOrder": 2
         }
       ]
     },

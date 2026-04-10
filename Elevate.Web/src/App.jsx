@@ -11,6 +11,8 @@ import MIEEArchive from './pages/MIEEArchive';
 import AgenthonInterview from "./pages/AgenthonInterview";
 import { setClarityTag, trackClarityEvent } from './lib/clarity';
 import ActivityShowcasePage from "./pages/ActivityShowcasePage";
+import Microsoft365Update from './components/Microsoft365Update';
+import ProgramNews from './pages/ProgramNews';
 
 function App() {
   const location = useLocation();
@@ -35,6 +37,8 @@ function App() {
       <Route path="/mee/pre" element={<MEEPre />} />
       <Route path="/mee/explorer-procedure" element={<MEEExplorerProcedure />} />
       <Route path="/mee/miee-archive" element={<MIEEArchive />} />
+      <Route path="/update" element={<Microsoft365Update />} />
+      <Route path="/program-news" element={<ProgramNews />} />
       <Route path="/:category" element={<PostList />} />
       <Route path="/:category/:postId" element={<PostDetail />} />
       <Route path="*" element={<NotFound />} />

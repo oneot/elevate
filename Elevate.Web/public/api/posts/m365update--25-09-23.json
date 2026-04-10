@@ -1,0 +1,19 @@
+{
+  "id": "m365update/25-09-23",
+  "slug": "25-09-23",
+  "title": "학습 관리 시스템에서 새로운 Microsoft 365 LTI 앱 활용 방법",
+  "excerpt": "영상 한눈에 보기\r",
+  "imageUrl": "https://img.youtube.com/vi/EEVQjOTFZYs/hqdefault.jpg",
+  "youtube": "EEVQjOTFZYs",
+  "author": {
+    "name": "Unknown"
+  },
+  "publishedAt": "2025-09-23",
+  "likes": 0,
+  "comments": 0,
+  "category": "m365update",
+  "tags": [],
+  "series": null,
+  "seriesOrder": null,
+  "content": "## 영상 한눈에 보기\r\n- Microsoft 365 LTI 앱을 통해 다양한 Microsoft 365 앱을 Canvas, Schoology, Moodle 등 주요 학습 관리 시스템(LMS)에 통합할 수 있습니다.\r\n- IT 관리자의 사전 설정 후, 교육자는 OneDrive, OneNote, 학습 가속기, Teams 회의 등 핵심 기능을 LMS 내에서 바로 사용할 수 있습니다.\r\n- Teams 없이도 학습 가속기 활용이 가능하며, Reflect, Reading Coach 등 최신 AI 기반 학습 도구도 통합되어 있습니다.\r\n\r\n## 핵심 내용\r\n- Microsoft 365 LTI 앱은 Canvas, Blackboard, Moodle, Open LMS, D2L Brightspace, Schoology 등 다양한 LMS와 호환됩니다.\r\n- IT 관리자가 LTI 도구를 설정하면, 교육자는 LMS 내에서 Microsoft Education 앱을 클릭해 로그인 및 다양한 기능을 사용할 수 있습니다.\r\n- OneDrive 파일 관리, OneNote 수업용 전자 필기장, 학습 가속기, Reflect, Reading Coach, Teams 회의 등 Microsoft 365의 주요 앱을 하나의 시작 페이지에서 접근할 수 있습니다.\r\n- Teams 없이도 학습 가속기 기능(읽기/말하기/수학/검색 진행률, Word/Excel/PowerPoint 템플릿, 퀴즈 생성 등)을 사용할 수 있으며, AI 기반 채점도 지원됩니다.\r\n- Reflect 앱과 Reading Coach 등 AI 기반 학습 도구가 LMS 내에서 바로 활용 가능하며, 학생들은 몰입형 리더 등 다양한 학습 지원 기능을 사용할 수 있습니다.\r\n- Teams 회의 기능이 LMS에 통합되어 회의 생성, 참석자 지정, 회의 목록 관리, 녹화본 확인 등 업무를 LMS 내에서 처리할 수 있습니다.\r\n\r\n## 이런 분께 추천\r\n- LMS에서 Microsoft 365 앱을 효율적으로 활용하고 싶은 초·중·고 교사\r\n- IT 관리자 및 교육청 관계자 중 LMS와 Microsoft 365 연동을 담당하는 분\r\n- AI 기반 학습 도구와 디지털 과제 관리에 관심 있는 교육자\r\n- Reflect, Reading Coach 등 최신 학습 지원 기능을 LMS에서 바로 사용하고 싶은 분"
+}

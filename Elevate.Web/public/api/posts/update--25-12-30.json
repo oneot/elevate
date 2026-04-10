@@ -1,0 +1,21 @@
+{
+  "id": "update/25-12-30",
+  "slug": "25-12-30",
+  "title": "Microsoft Teams에서 Copilot Chat 활용하기 (팁 & 트릭)",
+  "excerpt": "영상 한눈에 보기\r",
+  "imageUrl": "https://img.youtube.com/vi/qE8KQ0CTUgA/hqdefault.jpg",
+  "youtube": "qE8KQ0CTUgA",
+  "author": {
+    "name": "Unknown"
+  },
+  "publishedAt": "2025-12-30",
+  "likes": 0,
+  "comments": 0,
+  "category": "update",
+  "tags": [
+    "copilot"
+  ],
+  "series": null,
+  "seriesOrder": null,
+  "content": "## 영상 한눈에 보기\r\n- Microsoft Teams에 완전히 통합된 Copilot Chat의 주요 기능과 활용 방법을 소개합니다.\r\n- 데이터 보호와 최신 GPT-5 체험, 다양한 업무 자동화 및 개인화 기능을 설명합니다.\r\n- 교육 현장과 행정 업무에 적용할 수 있는 실질적인 사용 예시와 팁을 제공합니다.\r\n\r\n## 핵심 내용\r\n- Copilot Chat은 Microsoft Teams에 통합되어 모든 상업 및 교육 고객이 바로 사용할 수 있습니다.\r\n- 엔터프라이즈 데이터 보호를 보장하며, 사용자의 데이터는 안전하게 관리되고 프롬프트 훈련에 활용되지 않습니다.\r\n- 기본적으로 GPT-4o를 사용하지만, 'GPT-5 체험' 옵션을 통해 최신 AI 기능을 경험할 수 있습니다.\r\n- 간단한 이메일 초안 작성부터 복잡한 데이터 분석, 차트 생성, 보고서 작성 등 다양한 업무에 활용 가능합니다.\r\n- Loop 페이지, Word 내보내기, 페이지 링크 복사 등 결과물 공유 및 협업 기능이 강화되었습니다.\r\n- 이미지 생성, 프롬프트 갤러리, 메모리 기능, Copilot 지침 등 개인화 및 맞춤형 활용이 가능합니다.\r\n- 에이전트 기능을 통해 복잡한 작업을 자동화하고, 사용자 맞춤 에이전트를 직접 설계 및 공유할 수 있습니다.\r\n\r\n## 이런 분께 추천\r\n- Microsoft Teams를 활용해 수업 자료, 행정 업무, 협업을 효율적으로 관리하고 싶은 선생님\r\n- 최신 AI 기능을 교육 현장에 적용하고자 하는 교육청 관계자\r\n- 데이터 분석, 보고서 작성 등 반복 업무를 자동화하고 싶은 선생님 및 교육청 관계자\r\n- Copilot Chat의 다양한 기능을 실무에 적극적으로 활용하고 싶은 분"
+}

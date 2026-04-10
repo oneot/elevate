@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 
 const { getAssetsContainer, getPostsContainer } = require('../services/cosmosClient');
-const { issueBlobUploadSas, deleteBlobByUrl } = require('../services/storageClient');
+const { issueBlobUploadSas, getBlobReadSasUrl, deleteBlobByUrl } = require('../services/storageClient');
 const { parsePositiveInt, sendError } = require('../utils/http');
 const { toSlugBase } = require('../utils/slug');
 
@@ -17,6 +17,54 @@ const allowedMimeTypes = new Set([
 ]);
 const maxImageSizeBytes = 10 * 1024 * 1024;
 const assetCategoryPartition = '_asset';
+
+var BLOB_SAS_PATTERN = /(https?:\/\/[^"'\s]*\.blob\.core\.windows\.net\/[^"'\s?]*)\?[^"'\s]*/g;
+var BLOB_BARE_PATTERN = /https?:\/\/[^"'\s]*\.blob\.core\.windows\.net\/[^"'\s?]*/g;
+
+function isBlobUrl(url) {
+  return typeof url === 'string' && url.indexOf('.blob.core.windows.net/') !== -1;
+}
+
+function stripBlobSas(url) {
+  if (!isBlobUrl(url)) return url;
+  try {
+    var parsed = new URL(url);
+    return parsed.origin + parsed.pathname;
+  } catch (e) {
+    return url;
+  }
+}
+
+function stripBlobSasFromHtml(html) {
+  if (!html) return html;
+  BLOB_SAS_PATTERN.lastIndex = 0;
+  return html.replace(BLOB_SAS_PATTERN, '$1');
+}
+
+async function enrichHtmlWithSas(html) {
+  if (!html) return html;
+  BLOB_SAS_PATTERN.lastIndex = 0;
+  var normalized = html.replace(BLOB_SAS_PATTERN, '$1');
+  BLOB_BARE_PATTERN.lastIndex = 0;
+  var matches = normalized.match(BLOB_BARE_PATTERN);
+  if (!matches || matches.length === 0) return normalized;
+  var uniqueUrls = matches.filter(function(v, i, a) { return a.indexOf(v) === i; });
+  var signed = await Promise.all(uniqueUrls.map(function(u) { return getBlobReadSasUrl(u); }));
+  var result = normalized;
+  uniqueUrls.forEach(function(url, i) {
+    if (signed[i]) {
+      result = result.split(url).join(signed[i]);
+    }
+  });
+  return result;
+}
+
+async function enrichThumbnailWithSas(thumbnail) {
+  if (!thumbnail || !isBlobUrl(thumbnail.url)) return thumbnail;
+  var signedUrl = await getBlobReadSasUrl(thumbnail.url);
+  if (!signedUrl) return thumbnail;
+  return Object.assign({}, thumbnail, { signedUrl: signedUrl });
+}
 
 function encodeAdminCursor(post) {
   const payload = {
@@ -251,7 +299,14 @@ exports.getAdminPostDetail = async (req, res) => {
       return sendError(res, 404, 'NotFound', 'Resource not found', correlationId);
     }
 
-    return res.json(toPostResponse(post));
+    const baseResponse = toPostResponse(post);
+    if (baseResponse.thumbnail) {
+      baseResponse.thumbnail = await enrichThumbnailWithSas(baseResponse.thumbnail);
+    }
+    if (baseResponse.contentMarkdown) {
+      baseResponse.contentMarkdown = await enrichHtmlWithSas(baseResponse.contentMarkdown);
+    }
+    return res.json(baseResponse);
   } catch (error) {
     console.error('[getAdminPostDetail] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
@@ -288,10 +343,10 @@ exports.createPost = async (req, res) => {
       category: req.body.category,
       title: req.body.title,
       excerpt: req.body.excerpt || '',
-      contentMarkdown: req.body.contentMarkdown,
+      contentMarkdown: stripBlobSasFromHtml(req.body.contentMarkdown),
       tags: req.body.tags,
       series: req.body.series || null,
-      thumbnail: req.body.thumbnail || null,
+      thumbnail: req.body.thumbnail ? Object.assign({}, req.body.thumbnail, { url: stripBlobSas(req.body.thumbnail.url) }) : null,
       status: req.body.status,
       publishedAt: req.body.status === 'published' ? now : null,
       updatedAt: now,
@@ -299,7 +354,11 @@ exports.createPost = async (req, res) => {
     };
 
     const { resource } = await container.items.create(post);
-    return res.status(201).json(toPostResponse(resource));
+    const createResponse = toPostResponse(resource);
+    if (createResponse.thumbnail) {
+      createResponse.thumbnail = await enrichThumbnailWithSas(createResponse.thumbnail);
+    }
+    return res.status(201).json(createResponse);
   } catch (error) {
     console.error('[createPost] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
@@ -323,14 +382,19 @@ exports.updatePost = async (req, res) => {
     }
 
     const now = new Date().toISOString();
+    const incomingThumbnail = req.body.thumbnail !== undefined ? req.body.thumbnail : existing.thumbnail;
+    const normalizedThumbnail = incomingThumbnail
+      ? Object.assign({}, incomingThumbnail, { url: stripBlobSas(incomingThumbnail.url) })
+      : incomingThumbnail;
+    const incomingContent = req.body.contentMarkdown !== undefined ? req.body.contentMarkdown : existing.contentMarkdown;
     const updated = {
       ...existing,
       title: req.body.title !== undefined ? req.body.title : existing.title,
       excerpt: req.body.excerpt !== undefined ? req.body.excerpt : existing.excerpt,
-      contentMarkdown: req.body.contentMarkdown !== undefined ? req.body.contentMarkdown : existing.contentMarkdown,
+      contentMarkdown: stripBlobSasFromHtml(incomingContent),
       tags: req.body.tags !== undefined ? req.body.tags : existing.tags,
       series: req.body.series !== undefined ? req.body.series : existing.series,
-      thumbnail: req.body.thumbnail !== undefined ? req.body.thumbnail : existing.thumbnail,
+      thumbnail: normalizedThumbnail,
       status: req.body.status !== undefined ? req.body.status : existing.status,
       updatedAt: now
     };
@@ -344,7 +408,11 @@ exports.updatePost = async (req, res) => {
     }
 
     const { resource } = await container.item(existing.id, existing.partitionKey || existing.category).replace(updated);
-    return res.json(toPostResponse(resource));
+    const updateResponse = toPostResponse(resource);
+    if (updateResponse.thumbnail) {
+      updateResponse.thumbnail = await enrichThumbnailWithSas(updateResponse.thumbnail);
+    }
+    return res.json(updateResponse);
   } catch (error) {
     console.error('[updatePost] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
@@ -452,9 +520,11 @@ exports.createAssetMetadata = async (req, res) => {
 
     await container.items.create(assetDocument);
 
+    const signedUrl = await getBlobReadSasUrl(blobUrl);
     return res.status(201).json({
       assetId,
       url: blobUrl,
+      signedUrl: signedUrl || null,
       mimeType: contentType,
       sizeBytes,
       width: 0,
