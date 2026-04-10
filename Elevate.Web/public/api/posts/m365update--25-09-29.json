@@ -1,0 +1,19 @@
+{
+  "id": "m365update/25-09-29",
+  "slug": "25-09-29",
+  "title": "Microsoft OneNote의 6가지 새로운 기능 (2025년 10월)",
+  "excerpt": "영상 한눈에 보기\r",
+  "imageUrl": "https://img.youtube.com/vi/lQwuO2L_Ofk/hqdefault.jpg",
+  "youtube": "lQwuO2L_Ofk",
+  "author": {
+    "name": "Unknown"
+  },
+  "publishedAt": "2025-09-29",
+  "likes": 0,
+  "comments": 0,
+  "category": "m365update",
+  "tags": [],
+  "series": null,
+  "seriesOrder": null,
+  "content": "## 영상 한눈에 보기\r\n- OneNote에 오랫동안 요청된 주요 기능들이 새롭게 추가되었습니다.\r\n- 테이블 셀 병합, 서식 없는 붙여넣기, 모바일 페이지 여백 개선 등 실무에 바로 적용 가능한 업데이트가 포함되어 있습니다.\r\n- Copilot 통합과 수업용 전자 필기장 도구 모음 등 교육 현장에 도움이 되는 기능이 강화되었습니다.\r\n\r\n## 핵심 내용\r\n- **테이블 셀 병합 기능**: 여러 셀을 선택해 하나로 합칠 수 있으며, 셀 분할도 가능. 모든 Microsoft Insider에게 배포 중이며 곧 전 세계적으로 사용 가능.\r\n- **서식 없는 붙여넣기 단축키**: 'Ctrl + Shift + V'(Mac은 'Command + Shift + V')로 원본 서식 없이 텍스트 붙여넣기 가능. Word, Excel, PowerPoint와 동일한 방식.\r\n- **검색 상자 개선 및 모바일 페이지 여백**: 검색 상자가 돋보기 아이콘으로 축소되어 화면 공간 절약. 모바일에서 새 페이지 생성 시 보기 좋은 여백 자동 적용.\r\n- **Copilot 통합 및 설정 관리**: Copilot 라이선스 보유 시 홈 탭에 Copilot 아이콘 표시, 메모 작성·요약·작업 목록 등 다양한 기능 제공. Copilot 노트북 표시 여부 및 아이콘 표시 설정 가능.\r\n- **수업용 전자 필기장 도구 모음 내장**: Windows용 OneNote에서도 수업용 전자 필기장 도구 모음 사용 가능. 페이지 배포, 섹션 추가 등 모든 기능 내장, 추가 다운로드 불필요.\r\n\r\n## 이런 분께 추천\r\n- OneNote를 수업 자료 관리 및 배포에 활용하는 교사\r\n- Microsoft 365 Copilot을 활용하는 교육청 관계자 및 교직원\r\n- 모바일 기기에서 OneNote를 자주 사용하는 선생님\r\n- 테이블, 검색, 붙여넣기 등 실무 기능 개선에 관심 있는 교육 현장 담당자"
+}

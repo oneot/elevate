@@ -72,10 +72,11 @@ export default function PostList() {
 
         // Client-side filtering by category
         let filtered;
-        if (category === 'all') {
-          filtered = normalizedItems;
+        if ((category || '').toLowerCase() === 'all') {
+          // m365update 카테고리 글 제외 (대소문자 무관)
+          filtered = normalizedItems.filter((p) => (p.category || '').toLowerCase() !== 'm365update');
         } else {
-          filtered = normalizedItems.filter((p) => p.category === category);
+          filtered = normalizedItems.filter((p) => (p.category || '').toLowerCase() === (category || '').toLowerCase());
         }
         setAllPosts(filtered);
       } catch (err) {

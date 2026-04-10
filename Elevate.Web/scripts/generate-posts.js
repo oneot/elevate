@@ -162,10 +162,12 @@ async function walkPosts(dir) {
         excerpt = firstPara.length > 160 ? `${firstPara.slice(0, 157)}...` : firstPara;
       }
 
-      // image handling: prefer frontmatter.image, else first image in content
+      // image handling: prefer youtube thumbnail > frontmatter.image > first image in content
       let imageUrl = '';
       const mdFileDir = path.dirname(filePath);
-      if (data.image) {
+      if (data.youtube) {
+        imageUrl = `https://img.youtube.com/vi/${data.youtube}/hqdefault.jpg`;
+      } else if (data.image) {
         const copied = await copyImageIfLocal(mdFileDir, String(data.image), `${category}-${slug}`);
         imageUrl = copied || String(data.image);
       } else {
@@ -198,6 +200,7 @@ async function walkPosts(dir) {
         title,
         excerpt,
         imageUrl: imageUrl || '',
+        youtube: data.youtube || undefined,
         author: { name: (data.author && data.author.name) || data.author || 'Unknown' },
         publishedAt: publishedAt || formatDateToYMD(new Date()),
         likes: Number(data.likes || 0),

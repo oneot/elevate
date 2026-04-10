@@ -1,0 +1,21 @@
+{
+  "id": "update/25-12-04",
+  "slug": "25-12-04",
+  "title": "Copilot의 새로운 에이전트: 앱 빌더, 워크플로, 설문조사 활용 방법",
+  "excerpt": "영상 한눈에 보기\r",
+  "imageUrl": "https://img.youtube.com/vi/OPVGuU1djMU/hqdefault.jpg",
+  "youtube": "OPVGuU1djMU",
+  "author": {
+    "name": "Unknown"
+  },
+  "publishedAt": "2025-12-04",
+  "likes": 0,
+  "comments": 0,
+  "category": "update",
+  "tags": [
+    "copilot"
+  ],
+  "series": null,
+  "seriesOrder": null,
+  "content": "## 영상 한눈에 보기\r\n- Microsoft 365 Copilot에 앱 빌더, 워크플로 에이전트, 설문조사 에이전트가 새롭게 추가되었습니다.\r\n- 각 에이전트는 로우코드 앱 생성, 자연어 기반 워크플로 자동화, Forms 기술을 활용한 설문조사 제작을 지원합니다.\r\n- Frontier 단계로 초기 도입 고객이 우선 사용 가능하며, 곧 일반 출시 예정입니다.\r\n- 모든 데이터는 SharePoint와 Teams 등 Microsoft 365 환경과 연동되어 관리됩니다.\r\n\r\n## 핵심 내용\r\n- **앱 빌더 에이전트**: Copilot 채팅 내에서 로우코드 방식으로 앱을 생성할 수 있으며, 생성된 앱의 데이터는 SharePoint 목록에 저장되어 관리가 용이합니다. 예시로 회의 운영 앱을 프롬프트만으로 만들고, PDF/CSV로 내보낼 수 있습니다.\r\n- **워크플로 에이전트**: Power Automate 기반으로 복잡한 워크플로를 자연어로 쉽게 설계할 수 있습니다. 예를 들어, Planner 작업을 Teams 메시지로 요약하는 자동화 워크플로를 빠르게 구축할 수 있습니다.\r\n- **설문조사 에이전트**: Microsoft Forms 기술을 활용하여 Copilot 채팅 내에서 설문조사와 양식을 즉시 생성할 수 있습니다. 질문 추가, 레이아웃 변경, 응답자 설정 등 Forms의 모든 기능을 활용해 맞춤 설문을 제작할 수 있습니다.\r\n- 각 에이전트는 Copilot 내에서 생성, 관리, 수정이 가능하며, 실시간으로 데이터와 양식을 조정할 수 있어 업무 효율성이 크게 향상됩니다.\r\n- Frontier 단계의 기능으로, 초기 도입 기관은 우선적으로 활용할 수 있으며, 향후 일반 사용자에게도 확대될 예정입니다.\r\n\r\n## 이런 분께 추천\r\n- Microsoft 365 Copilot을 활용해 학교 업무 자동화와 효율화를 고민하는 선생님 및 교육청 관계자\r\n- 회의, 과제 관리, 설문조사 등 다양한 행정 업무를 디지털화하고자 하는 학교 관리자\r\n- 로우코드 앱 개발이나 워크플로 자동화에 관심 있는 IT 담당 선생님\r\n- 학생, 교직원 만족도 조사 등 설문조사 업무를 간편하게 처리하고 싶은 교육기관 담당자"
+}
