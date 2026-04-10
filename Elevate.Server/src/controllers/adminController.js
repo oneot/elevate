@@ -212,7 +212,8 @@ function toPostSummary(post) {
   };
 }
 
-function buildAdminListQuery({ limit, cursor, category, tag, status }) {
+function buildAdminListQuery({ limit, page, category, tag, status }) {
+  const offset = (page - 1) * limit;
   const whereClauses = ['(NOT IS_DEFINED(p.documentType) OR p.documentType = "post")'];
   const parameters = [];
 
@@ -231,17 +232,20 @@ function buildAdminListQuery({ limit, cursor, category, tag, status }) {
     parameters.push({ name: '@tag', value: tag });
   }
 
-  if (cursor) {
-    whereClauses.push('p.updatedAt < @cursorUpdatedAt');
-    parameters.push({ name: '@cursorUpdatedAt', value: cursor.updatedAt });
-  }
-
+  const whereClause = whereClauses.join(' AND ');
   return {
-    query: `SELECT TOP ${limit} p.id, p.slug, p.category, p.title, p.excerpt, p.tags, p.status, p.publishedAt, p.updatedAt
-            FROM p
-            WHERE ${whereClauses.join(' AND ')}
-            ORDER BY p.updatedAt DESC`,
-    parameters
+    dataQuery: {
+      query: `SELECT p.id, p.slug, p.category, p.title, p.excerpt, p.tags, p.status, p.publishedAt, p.updatedAt
+              FROM p
+              WHERE ${whereClause}
+              ORDER BY p.updatedAt DESC
+              OFFSET ${offset} LIMIT ${limit}`,
+      parameters
+    },
+    countQuery: {
+      query: `SELECT VALUE COUNT(1) FROM p WHERE ${whereClause}`,
+      parameters
+    }
   };
 }
 
@@ -254,33 +258,37 @@ exports.getAdminPostList = async (req, res) => {
       return sendError(res, 400, 'BadRequest', 'Invalid limit value', correlationId);
     }
 
+    const page = parsePositiveInt(req.query.page, 1, 1, 10000);
+    if (page === null) {
+      return sendError(res, 400, 'BadRequest', 'Invalid page value', correlationId);
+    }
+
     if (req.query.status && !allowedStatuses.has(req.query.status)) {
       return sendError(res, 400, 'BadRequest', 'Invalid status value', correlationId);
     }
 
-    let cursor = null;
-    if (req.query.cursor) {
-      cursor = decodeAdminCursor(req.query.cursor);
-      if (!cursor) {
-        return sendError(res, 400, 'BadRequest', 'Invalid cursor value', correlationId);
-      }
-    }
-
     const container = getPostsContainer();
-    const querySpec = buildAdminListQuery({
+    const { dataQuery, countQuery } = buildAdminListQuery({
       limit,
-      cursor,
+      page,
       category: req.query.category,
       tag: req.query.tag,
       status: req.query.status
     });
 
-    const { resources } = await container.items.query(querySpec).fetchAll();
+    const [{ resources }, { resources: countResult }] = await Promise.all([
+      container.items.query(dataQuery).fetchAll(),
+      container.items.query(countQuery).fetchAll()
+    ]);
+
+    const totalCount = countResult[0] ?? 0;
     const items = resources.map(toPostSummary);
 
     return res.json({
       items,
-      nextCursor: items.length === limit ? encodeAdminCursor(items[items.length - 1]) : null
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      page
     });
   } catch (error) {
     console.error('[getAdminPostList] failed', error);

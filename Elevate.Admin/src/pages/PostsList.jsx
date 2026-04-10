@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Edit, Calendar, Folder } from 'lucide-react'
+import { Edit, Calendar, Folder, ChevronLeft, ChevronRight } from 'lucide-react'
 import Card from '../components/Card.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import { isApiConfigured } from '../lib/apiClient.js'
@@ -8,6 +8,8 @@ import { listPosts } from '../lib/postsApi.js'
 import { formatDate } from '../lib/formatters.js'
 import { useScrollAnimation } from '../hooks/useScrollAnimation.js'
 import { useAuth } from '../hooks/useAuth.js'
+
+const PAGE_SIZE = 20
 
 const mockPosts = [
   {
@@ -36,6 +38,31 @@ const mockPosts = [
   },
 ]
 
+function AdminPagination({ page, totalPages, onPageChange }) {
+  if (!totalPages || totalPages <= 1) return null
+  return (
+    <div className="flex items-center justify-center gap-2 py-4">
+      <button
+        onClick={() => onPageChange(page - 1)}
+        disabled={page <= 1}
+        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-neutral-300 text-sm text-neutral-700 hover:bg-neutral-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+      >
+        <ChevronLeft className="w-4 h-4" /> 이전
+      </button>
+      <span className="text-sm text-neutral-600 px-2">
+        {page} / {totalPages}
+      </span>
+      <button
+        onClick={() => onPageChange(page + 1)}
+        disabled={page >= totalPages}
+        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-neutral-300 text-sm text-neutral-700 hover:bg-neutral-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+      >
+        다음 <ChevronRight className="w-4 h-4" />
+      </button>
+    </div>
+  )
+}
+
 // 카드 컴포넌트
 function PostCard({ post, index }) {
   const [ref, isVisible] = useScrollAnimation(0.1)
@@ -55,20 +82,15 @@ function PostCard({ post, index }) {
       <Link to={`/posts/${post.id}`}>
         <Card colorScheme={colorScheme} className="h-full">
           <div className="space-y-6">
-            {/* 헤더: 제목과 상태 */}
             <div className="flex items-start justify-between gap-3">
               <h3 className="text-lg font-semibold text-neutral-900 line-clamp-2 hover:text-ms-blue transition-colors">
                 {post.title}
               </h3>
               <StatusPill status={post.status} />
             </div>
-
-            {/* Slug */}
             <p className="text-sm text-neutral-500 font-mono">
               {post.slug}
             </p>
-
-            {/* 메타 정보 */}
             <div className="flex items-center gap-4 text-xs text-neutral-600">
               {post.category && (
                 <div className="flex items-center gap-1.5">
@@ -81,8 +103,6 @@ function PostCard({ post, index }) {
                 <span>{formatDate(post.updatedAt)}</span>
               </div>
             </div>
-
-            {/* 액션 버튼 */}
             <div className="flex items-center gap-2 pt-3 mt-2 border-t border-neutral-100">
               <Edit className="w-4 h-4 text-ms-blue" />
               <span className="text-sm font-semibold text-ms-blue">편집하기</span>
@@ -98,6 +118,10 @@ function PostsList() {
   const { msalInstance } = useAuth()
   const [posts, setPosts] = useState([])
   const [statusFilter, setStatusFilter] = useState('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -113,9 +137,17 @@ function PostsList() {
       setLoading(true)
       setError('')
       try {
-        const data = await listPosts({ msalInstance })
+        const data = await listPosts({
+          msalInstance,
+          page,
+          limit: PAGE_SIZE,
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+          category: categoryFilter !== 'all' ? categoryFilter : undefined,
+        })
         if (isMounted) {
-          setPosts(Array.isArray(data) ? data : data.items || [])
+          setPosts(Array.isArray(data?.items) ? data.items : [])
+          setTotalPages(data?.totalPages || 1)
+          setTotalCount(data?.totalCount || 0)
         }
       } catch (err) {
         if (isMounted) {
@@ -127,16 +159,15 @@ function PostsList() {
     }
 
     loadPosts()
+    return () => { isMounted = false }
+  }, [msalInstance, page, statusFilter, categoryFilter])
 
-    return () => {
-      isMounted = false
-    }
-  }, [msalInstance])
+  const handleFilterChange = (setter) => (value) => {
+    setter(value)
+    setPage(1)
+  }
 
-  const filteredPosts = useMemo(() => {
-    if (statusFilter === 'all') return posts
-    return posts.filter((post) => post.status === statusFilter)
-  }, [posts, statusFilter])
+  const categories = ['all', 'm365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote']
 
   return (
     <div className="space-y-10 animate-fadeIn">
@@ -159,21 +190,35 @@ function PostsList() {
         </Link>
       </div>
 
-      <div className="flex items-center gap-3">
-        <label className="text-sm font-semibold text-neutral-800">상태 필터</label>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="text-sm font-semibold text-neutral-800">상태</label>
         <select
           className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
           value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
+          onChange={(e) => handleFilterChange(setStatusFilter)(e.target.value)}
         >
           <option value="all">전체</option>
           <option value="draft">draft</option>
           <option value="published">published</option>
           <option value="archived">archived</option>
         </select>
-        <span className="text-sm text-neutral-500">
-          {filteredPosts.length}개의 포스트
-        </span>
+
+        <label className="text-sm font-semibold text-neutral-800">카테고리</label>
+        <select
+          className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+          value={categoryFilter}
+          onChange={(e) => handleFilterChange(setCategoryFilter)(e.target.value)}
+        >
+          {categories.map((c) => (
+            <option key={c} value={c}>{c === 'all' ? '전체' : c}</option>
+          ))}
+        </select>
+
+        {!loading && totalCount > 0 && (
+          <span className="text-sm text-neutral-500">
+            총 {totalCount}개 · {page}/{totalPages} 페이지
+          </span>
+        )}
       </div>
 
       {error ? (
@@ -194,7 +239,7 @@ function PostsList() {
             </div>
           ))}
         </div>
-      ) : filteredPosts.length === 0 ? (
+      ) : posts.length === 0 ? (
         <Card colorScheme="slate" className="text-center py-12">
           <div className="space-y-2">
             <p className="text-lg font-semibold text-neutral-900">표시할 포스트가 없습니다.</p>
@@ -202,11 +247,14 @@ function PostsList() {
           </div>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredPosts.map((post, index) => (
-            <PostCard key={post.id} post={post} index={index} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {posts.map((post, index) => (
+              <PostCard key={post.id} post={post} index={index} />
+            ))}
+          </div>
+          <AdminPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        </>
       )}
     </div>
   )
