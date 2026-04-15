@@ -1,6 +1,26 @@
 {
   "items": [
     {
+      "id": "update/26-04-06",
+      "slug": "26-04-06",
+      "title": "Microsoft 365에서 Copilot Co-work: 업무 자동화를 위한 5가지 강력한 활용 사례",
+      "excerpt": "영상 한눈에 보기\r",
+      "imageUrl": "https://img.youtube.com/vi/7himk_LjcgI/hqdefault.jpg",
+      "youtube": "7himk_LjcgI",
+      "author": {
+        "name": "Unknown"
+      },
+      "publishedAt": "2026-04-01",
+      "likes": 0,
+      "comments": 0,
+      "category": "update",
+      "tags": [
+        "cowork"
+      ],
+      "series": null,
+      "seriesOrder": null
+    },
+    {
       "id": "update/26-04-01",
       "slug": "26-04-01",
       "title": "교사를 위한 Microsoft 365 Copilot의 6가지 새로운 기능 (2026)",
@@ -2192,7 +2212,7 @@
       "seriesOrder": null
     }
   ],
-  "total": 108,
+  "total": 109,
   "allTags": [
     "account",
     "agent",
@@ -2200,6 +2220,7 @@
     "cloud",
     "coding",
     "copilot",
+    "cowork",
     "education",
     "excel",
     "forms",
