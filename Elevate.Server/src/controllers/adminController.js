@@ -212,7 +212,7 @@ function toPostSummary(post) {
   };
 }
 
-function buildAdminListQuery({ limit, page, category, tag, status }) {
+function buildAdminListQuery({ limit, page, category, tag, status, search }) {
   const offset = (page - 1) * limit;
   const whereClauses = ['(NOT IS_DEFINED(p.documentType) OR p.documentType = "post")'];
   const parameters = [];
@@ -230,6 +230,11 @@ function buildAdminListQuery({ limit, page, category, tag, status }) {
   if (tag) {
     whereClauses.push('ARRAY_CONTAINS(p.tags, @tag)');
     parameters.push({ name: '@tag', value: tag });
+  }
+
+  if (search) {
+    whereClauses.push('(CONTAINS(p.title, @search, true) OR CONTAINS(p.excerpt, @search, true) OR CONTAINS(p.slug, @search, true))');
+    parameters.push({ name: '@search', value: search });
   }
 
   const whereClause = whereClauses.join(' AND ');
@@ -268,12 +273,14 @@ exports.getAdminPostList = async (req, res) => {
     }
 
     const container = getPostsContainer();
+    const search = (req.query.search || '').trim();
     const { dataQuery, countQuery } = buildAdminListQuery({
       limit,
       page,
       category: req.query.category,
       tag: req.query.tag,
-      status: req.query.status
+      status: req.query.status,
+      search: search || undefined,
     });
 
     const [{ resources }, { resources: countResult }] = await Promise.all([

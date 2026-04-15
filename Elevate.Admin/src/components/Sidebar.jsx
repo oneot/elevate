@@ -1,9 +1,9 @@
 import { NavLink } from 'react-router-dom'
-import { FileText, LayoutDashboard } from 'lucide-react'
+import { FileText, Newspaper } from 'lucide-react'
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/posts', label: 'Posts', icon: FileText },
+  { to: '/agenthon', label: 'Agenthon', icon: Newspaper },
 ]
 
 function Sidebar() {

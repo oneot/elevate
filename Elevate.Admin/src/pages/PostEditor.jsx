@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Card from '../components/Card.jsx'
 import Button from '../components/Button.jsx'
 import FormField from '../components/FormField.jsx'
@@ -133,9 +133,13 @@ const mockPosts = {
 function PostEditor() {
   const { msalInstance } = useAuth()
   const { postId } = useParams()
+  const [searchParams] = useSearchParams()
   const isNew = !postId
   const navigate = useNavigate()
-  const [post, setPost] = useState(emptyPost)
+  const [post, setPost] = useState(() => ({
+    ...emptyPost,
+    category: isNew ? (searchParams.get('category') || '') : '',
+  }))
   const [tagsInput, setTagsInput] = useState('')
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)

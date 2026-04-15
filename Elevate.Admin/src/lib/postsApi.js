@@ -49,12 +49,13 @@ function toApiPayload(post) {
 }
 
 export function listPosts(options = {}) {
-  const { msalInstance, page = 1, limit = 20, status, category } = options;
+  const { msalInstance, page = 1, limit = 20, status, category, search } = options;
   const params = new URLSearchParams();
   if (page !== 1) params.set('page', String(page));
   if (limit !== 20) params.set('limit', String(limit));
   if (status && status !== 'all') params.set('status', status);
   if (category && category !== 'all') params.set('category', category);
+  if (search) params.set('search', search);
   const qs = params.toString();
   return apiFetch(`/posts${qs ? `?${qs}` : ''}`, { msalInstance })
 }

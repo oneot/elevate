@@ -37,6 +37,14 @@ export function listTags() {
   return apiFetch('/tags');
 }
 
+// Agenthon: 최신 published 게시글 1개 조회 (목록 → 상세 순차 조회)
+export async function getLatestAgenthonPost() {
+  const data = await listPosts({ category: 'agenthon', limit: 1, page: 1 });
+  const summary = data?.items?.[0];
+  if (!summary) return null;
+  return getPost('agenthon', summary.slug);
+}
+
 // 카테고리별 시리즈 목록 (GET /api/public/series?category=)
 export function listSeriesByCategory(category) {
   const params = new URLSearchParams();
