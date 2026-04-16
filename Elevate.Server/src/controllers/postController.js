@@ -51,7 +51,8 @@ function toPostSummary(post) {
 function toPostDetail(post) {
   return {
     ...toPostSummary(post),
-    contentMarkdown: post.contentMarkdown || ''
+    contentMarkdown: post.contentMarkdown || '',
+    youtube: post.youtube || null
   };
 }
 
