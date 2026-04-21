@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import TagFilter from '../components/TagFilter';
 import PostGrid from '../components/PostGrid';
 import Pagination from '../components/Pagination';
+import { listPosts } from '../lib/postsApi';
 
 const PAGE_SIZE = 20;
 const normalizeTag = (tag) => (tag ?? '').toString().trim().toLowerCase();
@@ -19,14 +20,10 @@ export default function UpdateList() {
     async function load() {
       setLoading(true);
       try {
-        // update 폴더 내 게시글만 가져오는 API 또는 posts.json이 필요하다면 경로 수정
-        const res = await fetch('/api/posts.json', { signal: controller.signal });
-        if (!res.ok) throw new Error('Server error');
-        const data = await res.json();
-        // update 카테고리만 필터링
-        const updatePosts = (data.items || []).filter((p) => (p.category || '').toLowerCase() === 'update');
-        setAllPosts(updatePosts.map((p) => ({ ...p, tags: normalizeTagList(p.tags || []) })));
-        // update 게시글에서만 태그 추출
+        const data = await listPosts({ category: 'update', limit: 100 });
+        const updatePosts = (data.items || []).map((p) => ({ ...p, tags: normalizeTagList(p.tags || []) }));
+        setAllPosts(updatePosts);
+        // update 게시글에서 태그 추출
         const tagSet = new Set();
         updatePosts.forEach((p) => (p.tags || []).forEach((t) => tagSet.add(normalizeTag(t))));
         setAllTags(Array.from(tagSet));
