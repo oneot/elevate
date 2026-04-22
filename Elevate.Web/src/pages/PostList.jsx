@@ -19,6 +19,8 @@ const DISPLAY_NAMES = {
   onenote: 'OneNote',
 };
 
+const BASE_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote'];
+
 const VALID_CATEGORIES = Object.keys(DISPLAY_NAMES);
 const PAGE_SIZE = 20;
 
@@ -69,6 +71,7 @@ export default function PostList() {
             limit: PAGE_SIZE,
             page: pageParam,
             category: category !== 'all' ? category : undefined,
+            categories: category === 'all' ? BASE_CATEGORIES : undefined,
             tag: tagParam || undefined,
           });
           if (!cancelled) {

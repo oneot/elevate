@@ -88,7 +88,7 @@ function toPostDetail(post) {
   };
 }
 
-function buildListQuery({ limit, page, category, tag }) {
+function buildListQuery({ limit, page, category, categories, tag }) {
   const offset = (page - 1) * limit;
   const whereClauses = ["p.status = 'published'"];
   const parameters = [];
@@ -96,6 +96,10 @@ function buildListQuery({ limit, page, category, tag }) {
   if (category) {
     whereClauses.push('p.category = @category');
     parameters.push({ name: '@category', value: category });
+  } else if (Array.isArray(categories) && categories.length > 0) {
+    const inParams = categories.map((_, i) => `@cat${i}`);
+    whereClauses.push(`p.category IN (${inParams.join(', ')})`);
+    categories.forEach((c, i) => parameters.push({ name: `@cat${i}`, value: c }));
   }
 
   if (tag) {
@@ -135,10 +139,14 @@ exports.getPostList = async (req, res) => {
     }
 
     const container = getPostsContainer();
+    const categoriesParam = req.query.categories
+      ? req.query.categories.split(',').map((s) => s.trim()).filter(Boolean)
+      : undefined;
     const { dataQuery, countQuery } = buildListQuery({
       limit,
       page,
       category: req.query.category,
+      categories: categoriesParam,
       tag: req.query.tag
     });
 

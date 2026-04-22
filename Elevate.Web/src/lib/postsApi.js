@@ -8,11 +8,12 @@ export function getThumbnailUrl(thumbnail) {
 }
 
 // 게시글 목록 (페이지 기반)
-export function listPosts({ limit = 20, page = 1, category, tag } = {}) {
+export function listPosts({ limit = 20, page = 1, category, categories, tag } = {}) {
   const params = new URLSearchParams();
   if (limit !== 20) params.set('limit', String(limit));
   if (page !== 1) params.set('page', String(page));
   if (category && category !== 'all') params.set('category', category);
+  if (categories && categories.length > 0) params.set('categories', categories.join(','));
   if (tag) params.set('tag', tag);
   const qs = params.toString();
   return apiFetch(`/posts${qs ? `?${qs}` : ''}`);

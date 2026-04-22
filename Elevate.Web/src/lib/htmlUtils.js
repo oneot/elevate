@@ -1,10 +1,5 @@
 import DOMPurify from 'dompurify';
 
-// 컨테이너 공개 접근 전환 후 blob URL 변환 불필요 — 원본 반환
-export function replaceBlobUrls(html) {
-  return html || '';
-}
-
 // 서버에서 반환된 HTML을 XSS 방지를 위해 sanitize
 export function sanitizeHtml(html) {
   if (!html) return '';

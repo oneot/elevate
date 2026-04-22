@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import TableOfContents from '../components/TableOfContents';
 import SeriesNavigator from '../components/SeriesNavigator';
 import { getPost, listSeriesByCategory } from '../lib/postsApi';
-import { sanitizeHtml, injectHeadingIds, replaceBlobUrls } from '../lib/htmlUtils';
+import { sanitizeHtml, injectHeadingIds } from '../lib/htmlUtils';
 
 const VALID_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote', 'm365update', 'update'];
 
@@ -262,7 +262,7 @@ const PostDetail = () => {
                                             <div
                                                 ref={contentRef}
                                                 className="prose prose-slate max-w-none post-content"
-                                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(replaceBlobUrls(post.contentMarkdown || '')) }}
+                                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.contentMarkdown || '') }}
                                             />
                                         </article>
 

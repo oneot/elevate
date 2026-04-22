@@ -9,7 +9,6 @@ import GlassDocLayout from "../components/GlassDocLayout";
 import getGlassMdComponents from "../components/getGlassMdComponents.jsx";
 import TableOfContents from "../components/TableOfContents";
 import { getLatestAgenthonPost } from "../lib/postsApi";
-import { replaceBlobUrls } from "../lib/htmlUtils";
 
 const AgenthonInterview = () => {
   useLayoutEffect(() => {
@@ -30,7 +29,7 @@ const AgenthonInterview = () => {
           setContent('');
           setError('게시글을 찾을 수 없습니다.');
         } else {
-          setContent(replaceBlobUrls(post.contentMarkdown || ''));
+          setContent(post.contentMarkdown || '');
         }
       })
       .catch((err) => {
