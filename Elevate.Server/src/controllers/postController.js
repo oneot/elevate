@@ -1,4 +1,5 @@
 const { getPostsContainer } = require('../services/cosmosClient');
+const { getBlobReadSasUrl } = require('../services/storageClient');
 const { parsePositiveInt, sendError } = require('../utils/http');
 
 function encodeCursor(post) {
@@ -29,6 +30,37 @@ function normalizeThumbnail(thumbnail) {
   if (typeof thumbnail === 'string') return { url: thumbnail };
   if (thumbnail && typeof thumbnail.url === 'string') return { url: thumbnail.url };
   return null;
+}
+
+var BLOB_SAS_PATTERN = /(https?:\/\/[^"'\s\)]*\.blob\.core\.windows\.net\/[^"'\s\)?]*)\?[^"'\s\)]*/g;
+var BLOB_BARE_PATTERN = /https?:\/\/[^"'\s\)]*\.blob\.core\.windows\.net\/[^"'\s\)?]*/g;
+
+function isBlobUrl(url) {
+  return typeof url === 'string' && url.indexOf('.blob.core.windows.net/') !== -1;
+}
+
+async function enrichThumbnailWithSas(thumbnail) {
+  if (!thumbnail || !isBlobUrl(thumbnail.url)) return thumbnail;
+  const signedUrl = await getBlobReadSasUrl(thumbnail.url);
+  if (!signedUrl) return thumbnail;
+  return Object.assign({}, thumbnail, { signedUrl });
+}
+
+async function enrichContentWithSas(content) {
+  if (!content) return content;
+  // strip existing SAS tokens first
+  BLOB_SAS_PATTERN.lastIndex = 0;
+  const normalized = content.replace(BLOB_SAS_PATTERN, '$1');
+  BLOB_BARE_PATTERN.lastIndex = 0;
+  const matches = normalized.match(BLOB_BARE_PATTERN);
+  if (!matches || matches.length === 0) return normalized;
+  const uniqueUrls = matches.filter((v, i, a) => a.indexOf(v) === i);
+  const signed = await Promise.all(uniqueUrls.map((u) => getBlobReadSasUrl(u)));
+  let result = normalized;
+  uniqueUrls.forEach((url, i) => {
+    if (signed[i]) result = result.split(url).join(signed[i]);
+  });
+  return result;
 }
 
 function toPostSummary(post) {
@@ -116,7 +148,11 @@ exports.getPostList = async (req, res) => {
     ]);
 
     const totalCount = countResult[0] ?? 0;
-    const items = resources.map(toPostSummary);
+    const summaries = resources.map(toPostSummary);
+    const items = await Promise.all(summaries.map(async (s) => ({
+      ...s,
+      thumbnail: await enrichThumbnailWithSas(s.thumbnail)
+    })));
 
     return res.json({
       items,
@@ -150,7 +186,13 @@ exports.getPostDetail = async (req, res) => {
       return sendError(res, 404, 'NotFound', 'Resource not found', correlationId);
     }
 
-    return res.json(toPostDetail(resources[0]));
+    const post = toPostDetail(resources[0]);
+    const [thumbnail, contentMarkdown] = await Promise.all([
+      enrichThumbnailWithSas(post.thumbnail),
+      enrichContentWithSas(post.contentMarkdown)
+    ]);
+
+    return res.json({ ...post, thumbnail, contentMarkdown });
   } catch (error) {
     console.error('[getPostDetail] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
@@ -176,7 +218,11 @@ exports.getSeriesPostList = async (req, res) => {
     };
 
     const { resources } = await container.items.query(querySpec).fetchAll();
-    const items = resources.map(toPostSummary);
+    const summaries = resources.map(toPostSummary);
+    const items = await Promise.all(summaries.map(async (s) => ({
+      ...s,
+      thumbnail: await enrichThumbnailWithSas(s.thumbnail)
+    })));
 
     return res.json({ items, nextCursor: null });
   } catch (error) {

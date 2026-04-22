@@ -7,7 +7,6 @@ const { functionDefinition: publicPostsList } = require('./publicPostsList');
 const { functionDefinition: publicPostDetail } = require('./publicPostDetail');
 const { functionDefinition: publicSeriesByCategory } = require('./publicSeriesByCategory');
 const { functionDefinition: publicSeriesPosts } = require('./publicSeriesPosts');
-const { functionDefinition: publicImageProxy } = require('./publicImageProxy');
 const { functionDefinition: publicTags } = require('./publicTags');
 const { functionDefinition: adminPostsList } = require('./adminPostsList');
 const { functionDefinition: adminPostDetail } = require('./adminPostDetail');
@@ -25,7 +24,6 @@ const functionDefinitions = [
   publicPostDetail,
   publicSeriesByCategory, // literal route (api/public/series) — must be before publicSeriesPosts
   publicSeriesPosts,
-  publicImageProxy,
   publicTags,
   adminPostsList,
   adminPostDetail,

@@ -1,14 +1,8 @@
 import DOMPurify from 'dompurify';
-import { API_BASE } from './apiClient';
 
-const BLOB_URL_PATTERN = /https:\/\/[a-z0-9]+\.blob\.core\.windows\.net\/[^/]+\/(uploads\/[^"'\s>]+)/g;
-
-// Azure Blob Storage URL을 이미지 프록시 URL로 교체 (공개 접근 불가 환경 대응)
+// 컨테이너 공개 접근 전환 후 blob URL 변환 불필요 — 원본 반환
 export function replaceBlobUrls(html) {
-  if (!html) return '';
-  return html.replace(BLOB_URL_PATTERN, (_, blobPath) =>
-    `${API_BASE}/image?path=${encodeURIComponent(blobPath)}`
-  );
+  return html || '';
 }
 
 // 서버에서 반환된 HTML을 XSS 방지를 위해 sanitize

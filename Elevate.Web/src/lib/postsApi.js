@@ -1,14 +1,10 @@
-import { apiFetch, API_BASE } from './apiClient';
+import { apiFetch } from './apiClient';
 
-const BLOB_URL_PATTERN = /https:\/\/[a-z0-9]+\.blob\.core\.windows\.net\/[^/]+\/(uploads\/.+)/;
-
-// thumbnail URL을 이미지 프록시 URL로 변환
+// thumbnail 객체 또는 URL 문자열에서 이미지 URL을 반환
+// (서버가 SAS 포함 signedUrl을 미리 주입하므로 프록시 불필요)
 export function getThumbnailUrl(thumbnail) {
-  const raw = typeof thumbnail === 'string' ? thumbnail : thumbnail?.url;
-  if (!raw) return null;
-  const match = raw.match(BLOB_URL_PATTERN);
-  if (match) return `${API_BASE}/image?path=${encodeURIComponent(match[1])}`;
-  return raw;
+  if (typeof thumbnail === 'string') return thumbnail || null;
+  return thumbnail?.signedUrl || thumbnail?.url || null;
 }
 
 // 게시글 목록 (페이지 기반)
