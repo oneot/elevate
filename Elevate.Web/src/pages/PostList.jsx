@@ -99,10 +99,11 @@ export default function PostList() {
   // 태그 목록 로드
   useEffect(() => {
     if (!isValidCategory) return;
-    listTags()
+    const categoriesForTags = category === 'all' ? BASE_CATEGORIES : [category];
+    listTags({ categories: categoriesForTags })
       .then((data) => setAllTags(data?.items || []))
       .catch(() => setAllTags([]));
-  }, [isValidCategory]);
+  }, [isValidCategory, category]);
 
   // 카테고리별 시리즈 목록 로드
   useEffect(() => {

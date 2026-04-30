@@ -30,8 +30,11 @@ export function getPost(category, slug) {
 }
 
 // 태그 목록
-export function listTags() {
-  return apiFetch('/tags');
+export function listTags({ categories } = {}) {
+  const params = new URLSearchParams();
+  if (categories && categories.length > 0) params.set('categories', categories.join(','));
+  const qs = params.toString();
+  return apiFetch(`/tags${qs ? `?${qs}` : ''}`);
 }
 
 // Agenthon: 최신 published 게시글 1개 조회 (목록 → 상세 순차 조회)

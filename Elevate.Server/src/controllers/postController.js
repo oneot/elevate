@@ -300,9 +300,23 @@ exports.getTagList = async (req, res) => {
   const correlationId = req.correlationId;
 
   try {
+    const categoriesParam = req.query.categories
+      ? req.query.categories.split(',').map((s) => s.trim()).filter(Boolean)
+      : undefined;
+
+    let whereClause = "p.status = 'published'";
+    const parameters = [];
+
+    if (Array.isArray(categoriesParam) && categoriesParam.length > 0) {
+      const inParams = categoriesParam.map((_, i) => `@cat${i}`);
+      whereClause += ` AND p.category IN (${inParams.join(', ')})`;
+      categoriesParam.forEach((c, i) => parameters.push({ name: `@cat${i}`, value: c }));
+    }
+
     const container = getPostsContainer();
     const querySpec = {
-      query: `SELECT DISTINCT VALUE t FROM p JOIN t IN p.tags WHERE p.status = 'published'`
+      query: `SELECT DISTINCT VALUE t FROM p JOIN t IN p.tags WHERE ${whereClause}`,
+      parameters
     };
 
     const { resources } = await container.items.query(querySpec).fetchAll();

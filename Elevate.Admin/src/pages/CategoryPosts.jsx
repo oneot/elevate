@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Edit, Calendar, Folder, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Edit, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import Card from '../components/Card.jsx'
 import StatusPill from '../components/StatusPill.jsx'
+import NotFound from './NotFound.jsx'
 import { isApiConfigured } from '../lib/apiClient.js'
 import { listPosts } from '../lib/postsApi.js'
 import { formatDate } from '../lib/formatters.js'
@@ -11,32 +12,16 @@ import { useAuth } from '../hooks/useAuth.js'
 
 const PAGE_SIZE = 20
 
-const mockPosts = [
-  {
-    id: 'mock-1',
-    title: 'Azure 기반 블로그 아키텍처',
-    slug: 'azure-architecture-handoff',
-    status: 'draft',
-    category: 'Architecture',
-    updatedAt: '2026-02-27T01:05:00Z',
-  },
-  {
-    id: 'mock-2',
-    title: 'Copilot Studio 연계 방향',
-    slug: 'copilot-studio-knowledge',
-    status: 'published',
-    category: 'Copilot',
-    updatedAt: '2026-02-25T08:20:00Z',
-  },
-  {
-    id: 'mock-3',
-    title: 'Admin 운영 가이드 초안',
-    slug: 'admin-operations-guide',
-    status: 'archived',
-    category: 'Operations',
-    updatedAt: '2026-02-20T12:00:00Z',
-  },
-]
+const CATEGORY_LABELS = {
+  m365: 'M365',
+  copilot: 'Copilot',
+  teams: 'Teams',
+  minecraft: 'Minecraft',
+  excel: 'Excel',
+  onenote: 'OneNote',
+  agenthon: 'Agenthon',
+  update: 'Update',
+}
 
 function AdminPagination({ page, totalPages, onPageChange }) {
   if (!totalPages || totalPages <= 1) return null
@@ -63,11 +48,10 @@ function AdminPagination({ page, totalPages, onPageChange }) {
   )
 }
 
-// 카드 컴포넌트
 function PostCard({ post, index }) {
   const [ref, isVisible] = useScrollAnimation(0.1)
-  
-  const colorScheme = 
+
+  const colorScheme =
     post.status === 'published' ? 'green' :
     post.status === 'archived' ? 'slate' : 'blue'
 
@@ -88,16 +72,8 @@ function PostCard({ post, index }) {
               </h3>
               <StatusPill status={post.status} />
             </div>
-            <p className="text-sm text-neutral-500 font-mono">
-              {post.slug}
-            </p>
+            <p className="text-sm text-neutral-500 font-mono">{post.slug}</p>
             <div className="flex items-center gap-4 text-xs text-neutral-600">
-              {post.category && (
-                <div className="flex items-center gap-1.5">
-                  <Folder className="w-3.5 h-3.5" />
-                  <span>{post.category}</span>
-                </div>
-              )}
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5" />
                 <span>{formatDate(post.updatedAt)}</span>
@@ -114,37 +90,30 @@ function PostCard({ post, index }) {
   )
 }
 
-function PostsList() {
+function CategoryPosts() {
+  const { categoryId } = useParams()
   const { msalInstance } = useAuth()
+  const navigate = useNavigate()
   const [posts, setPosts] = useState([])
   const [statusFilter, setStatusFilter] = useState('all')
-  const [categoryFilter, setCategoryFilter] = useState('all')
-  const [searchInput, setSearchInput] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // 검색 debounce (300ms)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput)
-      setPage(1)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [searchInput])
+  const label = CATEGORY_LABELS[categoryId]
 
   useEffect(() => {
-    if (!isApiConfigured) {
-      setPosts(mockPosts)
-      return
-    }
+    setStatusFilter('all')
+    setPage(1)
+  }, [categoryId])
+
+  useEffect(() => {
+    if (!isApiConfigured) return
 
     let isMounted = true
-
-    const loadPosts = async () => {
+    const load = async () => {
       setLoading(true)
       setError('')
       try {
@@ -152,9 +121,8 @@ function PostsList() {
           msalInstance,
           page,
           limit: PAGE_SIZE,
+          category: categoryId,
           status: statusFilter !== 'all' ? statusFilter : undefined,
-          category: categoryFilter !== 'all' ? categoryFilter : undefined,
-          search: debouncedSearch || undefined,
         })
         if (isMounted) {
           setPosts(Array.isArray(data?.items) ? data.items : [])
@@ -162,44 +130,35 @@ function PostsList() {
           setTotalCount(data?.totalCount || 0)
         }
       } catch (err) {
-        if (isMounted) {
-          setError(err.message || '목록을 불러오지 못했습니다.')
-        }
+        if (isMounted) setError(err.message || '목록을 불러오지 못했습니다.')
       } finally {
         if (isMounted) setLoading(false)
       }
     }
-
-    loadPosts()
+    load()
     return () => { isMounted = false }
-  }, [msalInstance, page, statusFilter, categoryFilter, debouncedSearch])
+  }, [msalInstance, page, statusFilter, categoryId])
 
-  const handleFilterChange = (setter) => (value) => {
-    setter(value)
+  const handleStatusChange = (value) => {
+    setStatusFilter(value)
     setPage(1)
   }
 
-  const categories = ['all', 'agenthon', 'm365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote']
+  if (!label) return <NotFound />
 
   return (
     <div className="space-y-10 animate-fadeIn">
-      {!isApiConfigured ? (
-        <div className="rounded-lg border border-amber-200/50 bg-amber-50/80 backdrop-blur-sm px-4 py-3 text-sm text-amber-700">
-          API가 아직 연결되지 않아 목업 데이터를 표시합니다.
-        </div>
-      ) : null}
-      
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-3xl font-bold text-gradient">Posts</h2>
-          <p className="text-sm text-neutral-500 mt-1">전체 포스트와 상태를 관리합니다.</p>
+          <h2 className="text-3xl font-bold text-gradient">{label}</h2>
+          <p className="text-sm text-neutral-500 mt-1">{label} 관련 게시글을 관리합니다.</p>
         </div>
-        <Link
-          to="/posts/new"
+        <button
+          onClick={() => navigate(`/posts/new?category=${categoryId}`)}
           className="rounded-md bg-ms-blue px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#005a9e] shadow-elevation-2 hover:shadow-elevation-4"
         >
-          새 포스트
-        </Link>
+          새 게시글
+        </button>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -207,7 +166,7 @@ function PostsList() {
         <select
           className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
           value={statusFilter}
-          onChange={(e) => handleFilterChange(setStatusFilter)(e.target.value)}
+          onChange={(e) => handleStatusChange(e.target.value)}
         >
           <option value="all">전체</option>
           <option value="draft">draft</option>
@@ -215,57 +174,22 @@ function PostsList() {
           <option value="archived">archived</option>
         </select>
 
-        <label className="text-sm font-semibold text-neutral-800">카테고리</label>
-        <select
-          className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-          value={categoryFilter}
-          onChange={(e) => handleFilterChange(setCategoryFilter)(e.target.value)}
-        >
-          {categories.map((c) => (
-            <option key={c} value={c}>{c === 'all' ? '전체' : c}</option>
-          ))}
-        </select>
-
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="제목, 슬러그, 요약 검색..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-8 pr-8 py-1.5 rounded-md border border-neutral-300 bg-white text-sm w-60 transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-          />
-          {searchInput && (
-            <button
-              onClick={() => setSearchInput('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 transition-colors"
-              aria-label="검색 초기화"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-
-        {!loading && (
+        {!loading && totalCount > 0 && (
           <span className="text-sm text-neutral-500">
-            {totalCount > 0
-              ? `총 ${totalCount}개 · ${page}/${totalPages} 페이지`
-              : debouncedSearch
-              ? `"${debouncedSearch}" 검색 결과 없음`
-              : ''}
+            총 {totalCount}개 · {page}/{totalPages} 페이지
           </span>
         )}
       </div>
 
-      {error ? (
+      {error && (
         <div className="rounded-lg border border-rose-200/50 bg-rose-50/80 backdrop-blur-sm px-4 py-3 text-sm text-rose-700">
           {error}
         </div>
-      ) : null}
+      )}
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+          {[1, 2, 3].map((i) => (
             <div key={i} className="animate-pulse">
               <div className="clean-card p-6 space-y-6 border-l-4 border-neutral-200">
                 <div className="h-6 bg-neutral-200 rounded w-3/4"></div>
@@ -278,8 +202,8 @@ function PostsList() {
       ) : posts.length === 0 ? (
         <Card colorScheme="slate" className="text-center py-12">
           <div className="space-y-2">
-            <p className="text-lg font-semibold text-neutral-900">표시할 포스트가 없습니다.</p>
-            <p className="text-sm text-neutral-500">새 포스트를 작성해보세요.</p>
+            <p className="text-lg font-semibold text-neutral-900">{label} 게시글이 없습니다.</p>
+            <p className="text-sm text-neutral-500">새 게시글을 작성해보세요.</p>
           </div>
         </Card>
       ) : (
@@ -296,4 +220,4 @@ function PostsList() {
   )
 }
 
-export default PostsList
+export default CategoryPosts
