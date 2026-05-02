@@ -4,6 +4,7 @@ import Card from '../components/Card.jsx'
 import Button from '../components/Button.jsx'
 import FormField from '../components/FormField.jsx'
 import HtmlEditor from '../components/HtmlEditor.jsx'
+import AttachUploader from '../components/AttachUploader.jsx'
 import { isApiConfigured } from '../lib/apiClient.js'
 import {
   createPost,
@@ -447,6 +448,14 @@ function PostEditor() {
               </div>
               {uploading && <p className="text-xs text-ms-blue mt-1">썸네일 업로드 중...</p>}
             </FormField>
+          </Card>
+
+          <Card colorScheme="blue" className="space-y-4">
+            <h3 className="text-base font-semibold text-neutral-700">첨부파일</h3>
+            <p className="text-xs text-neutral-400">
+              업로드 후 URL 복사 버튼으로 마크다운 콘텐츠에 붙여넣을 수 있습니다.
+            </p>
+            <AttachUploader postId={postId} />
           </Card>
 
         </aside>

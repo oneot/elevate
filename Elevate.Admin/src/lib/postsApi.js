@@ -102,3 +102,19 @@ export function registerAsset(payload, options = {}) {
     body: JSON.stringify(payload),
   })
 }
+
+export function requestAttachUploadSas(payload, options = {}) {
+  return apiFetch('/files/sas', {
+    ...options,
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function registerFile(payload, options = {}) {
+  return apiFetch('/files', {
+    ...options,
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
