@@ -1,10 +1,12 @@
 import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { getThumbnailUrl } from '../lib/postsApi';
 
 const PostCard = ({ post }) => {
-  const { id, slug, title, excerpt, imageUrl, author, publishedAt, likes = 0, comments = 0, category, tags = [] } = post;
+  const { slug, title, excerpt, thumbnail, publishedAt, category, tags = [] } = post;
   const safeCategory = category || 'all';
-  const to = `/${safeCategory}/${slug || id}`;
+  const to = `/${safeCategory}/${slug}`;
+  const imageUrl = getThumbnailUrl(thumbnail);
   const [showAllTags, setShowAllTags] = useState(false);
   const moreRef = useRef(null);
   const cardRef = useRef(null);

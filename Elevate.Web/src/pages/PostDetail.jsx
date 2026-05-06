@@ -1,12 +1,10 @@
 import { useParams, Navigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
-import rehypeSlug from 'rehype-slug';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import TableOfContents from '../components/TableOfContents';
 import SeriesNavigator from '../components/SeriesNavigator';
+import { getPost, listSeriesByCategory } from '../lib/postsApi';
+import { sanitizeHtml, injectHeadingIds } from '../lib/htmlUtils';
 
 const VALID_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote', 'm365update', 'update'];
 
@@ -32,7 +30,8 @@ const PostDetail = () => {
     const [post, setPost] = useState(null);
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
-    const [seriesByCategory, setSeriesByCategory] = useState({});
+    const [seriesOptions, setSeriesOptions] = useState([]);
+    const contentRef = useRef(null);
 
     useEffect(() => {
         if (!normalizedCategory || !postId) return;
@@ -41,30 +40,13 @@ const PostDetail = () => {
             setLoading(true);
             setNotFound(false);
             try {
-                const postRes = await fetch(`/api/posts/${normalizedCategory}--${postId}.json`, { signal: controller.signal });
-                if (!postRes.ok) {
-                    setNotFound(true);
-                    return;
-                }
-                const postData = await postRes.json();
+                const postData = await getPost(normalizedCategory, postId);
                 setPost(postData);
-
-                try {
-                    const listRes = await fetch('/api/posts.json', { signal: controller.signal });
-                    if (listRes.ok) {
-                        const listData = await listRes.json();
-                        setSeriesByCategory(listData.seriesByCategory || {});
-                    } else {
-                        setSeriesByCategory({});
-                    }
-                } catch (seriesErr) {
-                    if (seriesErr.name !== 'AbortError') {
-                        console.warn('PostDetail series index fetch error:', seriesErr);
-                    }
-                    setSeriesByCategory({});
-                }
             } catch (err) {
-                if (err.name !== 'AbortError') {
+                if (err.name === 'AbortError') return;
+                if (err.status === 404) {
+                    setNotFound(true);
+                } else {
                     console.error('PostDetail fetch error:', err);
                     setNotFound(true);
                 }
@@ -76,23 +58,35 @@ const PostDetail = () => {
         return () => controller.abort();
     }, [normalizedCategory, postId]);
 
+    // 카테고리별 시리즈 목록 로드
+    useEffect(() => {
+        if (!normalizedCategory) return;
+        listSeriesByCategory(normalizedCategory)
+            .then((data) => {
+                const options = (data?.items || []).map((s) => ({
+                    key: s.name,
+                    title: s.name,
+                    posts: s.posts || [],
+                }));
+                setSeriesOptions(options);
+            })
+            .catch((err) => {
+                console.warn('PostDetail series fetch error:', err);
+                setSeriesOptions([]);
+            });
+    }, [normalizedCategory]);
+
+    // HTML 콘텐츠 렌더링 후 heading ID 주입 (TableOfContents용)
+    useEffect(() => {
+        if (contentRef.current && post?.contentMarkdown) {
+            injectHeadingIds(contentRef.current);
+        }
+    }, [post?.contentMarkdown]);
+
     const availableSeriesOptions = useMemo(() => {
         if (!normalizedCategory) return [];
-        const categorySeries = seriesByCategory[normalizedCategory];
-        if (!categorySeries) return [];
-
-        return Object.entries(categorySeries)
-            .map(([name, posts]) => ({
-                key: name,
-                title: name,
-                posts: Array.isArray(posts) ? posts : [],
-            }))
-            .filter((item) => item.posts.length >= 2)
-            .sort((a, b) => {
-                if (b.posts.length !== a.posts.length) return b.posts.length - a.posts.length;
-                return a.title.localeCompare(b.title);
-            });
-    }, [normalizedCategory, seriesByCategory]);
+        return seriesOptions.filter((item) => item.posts.length >= 2);
+    }, [normalizedCategory, seriesOptions]);
 
     const selectedSeriesKey = useMemo(() => {
         if (availableSeriesOptions.length === 0) return '';
@@ -200,7 +194,7 @@ const PostDetail = () => {
                         <div className="hidden lg:block min-w-0">
                             <div className="lg:sticky lg:top-4">
                                 {!loading && post && (
-                                    <TableOfContents content={post.content} postTitle={post.title} sticky={false} />
+                                    <TableOfContents contentMarkdown={post.contentMarkdown} postTitle={post.title} sticky={false} />
                                 )}
                             </div>
                         </div>
@@ -264,10 +258,12 @@ const PostDetail = () => {
                                         )}
 
                                         {/* Post Body */}
-                                        <article className="prose prose-lg max-w-none text-slate-700">
-                                            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeSlug]}>
-                                                {post.content}
-                                            </ReactMarkdown>
+                                        <article>
+                                            <div
+                                                ref={contentRef}
+                                                className="prose prose-slate max-w-none post-content"
+                                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.contentMarkdown || '') }}
+                                            />
                                         </article>
 
                                         {(prevPost || nextPost) && (

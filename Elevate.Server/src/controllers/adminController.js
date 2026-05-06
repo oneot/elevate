@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 
 const { getAssetsContainer, getPostsContainer } = require('../services/cosmosClient');
-const { issueBlobUploadSas, getBlobReadSasUrl, deleteBlobByUrl } = require('../services/storageClient');
+const { issueBlobUploadSas, issueBlobAttachSas, getBlobReadSasUrl, deleteBlobByUrl } = require('../services/storageClient');
 const { parsePositiveInt, sendError } = require('../utils/http');
 const { toSlugBase } = require('../utils/slug');
 
@@ -17,6 +17,19 @@ const allowedMimeTypes = new Set([
 ]);
 const maxImageSizeBytes = 10 * 1024 * 1024;
 const assetCategoryPartition = '_asset';
+
+const allowedAttachMimeTypes = new Set([
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'application/pdf',
+  'text/csv',
+  'application/zip',
+  'application/vnd.ms-excel',
+  'application/msword'
+]);
+const maxAttachSizeBytes = 50 * 1024 * 1024;
+const attachCategoryPartition = '_attach';
 
 var BLOB_SAS_PATTERN = /(https?:\/\/[^"'\s]*\.blob\.core\.windows\.net\/[^"'\s?]*)\?[^"'\s]*/g;
 var BLOB_BARE_PATTERN = /https?:\/\/[^"'\s]*\.blob\.core\.windows\.net\/[^"'\s?]*/g;
@@ -212,7 +225,8 @@ function toPostSummary(post) {
   };
 }
 
-function buildAdminListQuery({ limit, cursor, category, tag, status }) {
+function buildAdminListQuery({ limit, page, category, tag, status, search }) {
+  const offset = (page - 1) * limit;
   const whereClauses = ['(NOT IS_DEFINED(p.documentType) OR p.documentType = "post")'];
   const parameters = [];
 
@@ -231,17 +245,25 @@ function buildAdminListQuery({ limit, cursor, category, tag, status }) {
     parameters.push({ name: '@tag', value: tag });
   }
 
-  if (cursor) {
-    whereClauses.push('p.updatedAt < @cursorUpdatedAt');
-    parameters.push({ name: '@cursorUpdatedAt', value: cursor.updatedAt });
+  if (search) {
+    whereClauses.push('(CONTAINS(p.title, @search, true) OR CONTAINS(p.excerpt, @search, true) OR CONTAINS(p.slug, @search, true))');
+    parameters.push({ name: '@search', value: search });
   }
 
+  const whereClause = whereClauses.join(' AND ');
   return {
-    query: `SELECT TOP ${limit} p.id, p.slug, p.category, p.title, p.excerpt, p.tags, p.status, p.publishedAt, p.updatedAt
-            FROM p
-            WHERE ${whereClauses.join(' AND ')}
-            ORDER BY p.updatedAt DESC`,
-    parameters
+    dataQuery: {
+      query: `SELECT p.id, p.slug, p.category, p.title, p.excerpt, p.tags, p.status, p.publishedAt, p.updatedAt
+              FROM p
+              WHERE ${whereClause}
+              ORDER BY p.updatedAt DESC
+              OFFSET ${offset} LIMIT ${limit}`,
+      parameters
+    },
+    countQuery: {
+      query: `SELECT VALUE COUNT(1) FROM p WHERE ${whereClause}`,
+      parameters
+    }
   };
 }
 
@@ -254,33 +276,39 @@ exports.getAdminPostList = async (req, res) => {
       return sendError(res, 400, 'BadRequest', 'Invalid limit value', correlationId);
     }
 
+    const page = parsePositiveInt(req.query.page, 1, 1, 10000);
+    if (page === null) {
+      return sendError(res, 400, 'BadRequest', 'Invalid page value', correlationId);
+    }
+
     if (req.query.status && !allowedStatuses.has(req.query.status)) {
       return sendError(res, 400, 'BadRequest', 'Invalid status value', correlationId);
     }
 
-    let cursor = null;
-    if (req.query.cursor) {
-      cursor = decodeAdminCursor(req.query.cursor);
-      if (!cursor) {
-        return sendError(res, 400, 'BadRequest', 'Invalid cursor value', correlationId);
-      }
-    }
-
     const container = getPostsContainer();
-    const querySpec = buildAdminListQuery({
+    const search = (req.query.search || '').trim();
+    const { dataQuery, countQuery } = buildAdminListQuery({
       limit,
-      cursor,
+      page,
       category: req.query.category,
       tag: req.query.tag,
-      status: req.query.status
+      status: req.query.status,
+      search: search || undefined,
     });
 
-    const { resources } = await container.items.query(querySpec).fetchAll();
+    const [{ resources }, { resources: countResult }] = await Promise.all([
+      container.items.query(dataQuery).fetchAll(),
+      container.items.query(countQuery).fetchAll()
+    ]);
+
+    const totalCount = countResult[0] ?? 0;
     const items = resources.map(toPostSummary);
 
     return res.json({
       items,
-      nextCursor: items.length === limit ? encodeAdminCursor(items[items.length - 1]) : null
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      page
     });
   } catch (error) {
     console.error('[getAdminPostList] failed', error);
@@ -559,6 +587,124 @@ exports.deleteAsset = async (req, res) => {
     return res.status(204).send();
   } catch (error) {
     console.error('[deleteAsset] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.issueAttachUploadSas = async (req, res) => {
+  const correlationId = req.correlationId;
+  const { fileName, contentType, sizeBytes } = req.body || {};
+
+  if (!fileName || !contentType) {
+    return sendError(res, 400, 'BadRequest', 'fileName and contentType are required', correlationId);
+  }
+
+  if (!allowedAttachMimeTypes.has(contentType)) {
+    return sendError(res, 400, 'BadRequest', 'Unsupported contentType', correlationId);
+  }
+
+  if (sizeBytes !== undefined && (typeof sizeBytes !== 'number' || sizeBytes <= 0 || sizeBytes > maxAttachSizeBytes)) {
+    return sendError(res, 400, 'BadRequest', 'Invalid sizeBytes', correlationId);
+  }
+
+  try {
+    const payload = await issueBlobAttachSas({ fileName });
+    return res.json(payload);
+  } catch (error) {
+    console.error('[issueAttachUploadSas] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.createFileMetadata = async (req, res) => {
+  const correlationId = req.correlationId;
+  const { postId, blobUrl, contentType, sizeBytes, fileName } = req.body || {};
+
+  if (!blobUrl || !contentType || !sizeBytes || !fileName) {
+    return sendError(res, 400, 'BadRequest', 'Invalid request payload', correlationId);
+  }
+
+  if (typeof blobUrl !== 'string') {
+    return sendError(res, 400, 'BadRequest', 'blobUrl must be a valid URL string', correlationId);
+  }
+
+  try {
+    new URL(blobUrl);
+  } catch {
+    return sendError(res, 400, 'BadRequest', 'blobUrl must be a valid URL string', correlationId);
+  }
+
+  if (!allowedAttachMimeTypes.has(contentType)) {
+    return sendError(res, 400, 'BadRequest', 'Unsupported contentType', correlationId);
+  }
+
+  if (!Number.isInteger(sizeBytes) || sizeBytes < 1 || sizeBytes > maxAttachSizeBytes) {
+    return sendError(res, 400, 'BadRequest', 'Invalid sizeBytes', correlationId);
+  }
+
+  if (typeof fileName !== 'string' || fileName.trim().length === 0) {
+    return sendError(res, 400, 'BadRequest', 'fileName is required', correlationId);
+  }
+
+  try {
+    const container = getAssetsContainer();
+    const fileId = createUuid();
+    const now = new Date().toISOString();
+
+    const fileDocument = {
+      id: fileId,
+      documentType: 'attach',
+      category: attachCategoryPartition,
+      partitionKey: attachCategoryPartition,
+      postId: postId || null,
+      blobUrl,
+      contentType,
+      sizeBytes,
+      fileName,
+      createdAt: now,
+      updatedAt: now
+    };
+
+    await container.items.create(fileDocument);
+
+    const signedUrl = await getBlobReadSasUrl(blobUrl);
+    return res.status(201).json({
+      fileId,
+      url: blobUrl,
+      signedUrl: signedUrl || null,
+      fileName,
+      contentType,
+      sizeBytes
+    });
+  } catch (error) {
+    console.error('[createFileMetadata] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.deleteFile = async (req, res) => {
+  const correlationId = req.correlationId;
+
+  try {
+    const container = getAssetsContainer();
+    const querySpec = {
+      query: 'SELECT TOP 1 * FROM c WHERE c.id = @id AND c.documentType = "attach"',
+      parameters: [{ name: '@id', value: req.params.fileId }]
+    };
+
+    const { resources } = await container.items.query(querySpec).fetchAll();
+    const file = resources[0];
+
+    if (!file) {
+      return sendError(res, 404, 'NotFound', 'Resource not found', correlationId);
+    }
+
+    await container.item(file.id, file.category || file.partitionKey || attachCategoryPartition).delete();
+    await deleteBlobByUrl(file.blobUrl);
+
+    return res.status(204).send();
+  } catch (error) {
+    console.error('[deleteFile] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
   }
 };
