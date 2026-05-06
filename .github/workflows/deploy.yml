@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Build for GitHub Pages
 
 on:
   push:
@@ -7,8 +7,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -34,9 +32,6 @@ jobs:
       - name: Install dependencies (ignore peer conflicts)
         run: npm ci --legacy-peer-deps
 
-      - name: Build posts
-        run: npm run generate-posts
-
       - name: Build
         run: npm run build
         env:
@@ -50,25 +45,8 @@ jobs:
       - name: Add SPA fallback
         run: cp dist/index.html dist/404.html
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
+          name: dist
           path: Elevate.Web/dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
