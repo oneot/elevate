@@ -36,6 +36,22 @@ const emptyPost = {
   excerpt: '',
   thumbnailUrl: '',
   htmlBody: '',
+  youtube: '',
+}
+
+function extractYoutubeId(url) {
+  if (!url) return null
+  const patterns = [
+    /[?&]v=([a-zA-Z0-9_-]{11})/,
+    /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+    /\/shorts\/([a-zA-Z0-9_-]{11})/,
+    /\/embed\/([a-zA-Z0-9_-]{11})/,
+  ]
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match) return match[1]
+  }
+  return null
 }
 
 const mimeTypeAliases = {
@@ -153,6 +169,8 @@ function PostEditor() {
     category: isNew ? (searchParams.get('category') || '') : '',
   }))
   const [tagsInput, setTagsInput] = useState('')
+  const [youtubeInput, setYoutubeInput] = useState('')
+  const [youtubeError, setYoutubeError] = useState('')
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -166,6 +184,7 @@ function PostEditor() {
         if (data) {
           setPost({ ...emptyPost, ...data })
           setTagsInput((data.tags || []).join(', '))
+          setYoutubeInput(data.youtube || '')
         }
       }
       setLoading(false)
@@ -184,6 +203,7 @@ function PostEditor() {
         if (isMounted) {
           setPost({ ...emptyPost, ...data })
           setTagsInput((data.tags || []).join(', '))
+          setYoutubeInput(data.youtube || '')
         }
       } catch (err) {
         if (isMounted) {
@@ -204,6 +224,40 @@ function PostEditor() {
 
   const handleChange = (field) => (event) => {
     setPost((prev) => ({ ...prev, [field]: event.target.value }))
+  }
+
+  const handleYoutubeChange = (event) => {
+    const url = event.target.value
+    setYoutubeInput(url)
+
+    if (!url) {
+      setYoutubeError('')
+      const wasAutoThumb = post.thumbnailUrl?.includes('img.youtube.com')
+      setPost((prev) => ({
+        ...prev,
+        youtube: '',
+        ...(wasAutoThumb ? { thumbnailUrl: '', thumbnail: null } : {}),
+      }))
+      return
+    }
+
+    const id = extractYoutubeId(url)
+    if (!id) {
+      setYoutubeError('유효하지 않은 YouTube URL입니다.')
+      setPost((prev) => ({ ...prev, youtube: '' }))
+      return
+    }
+
+    setYoutubeError('')
+    const autoThumbUrl = `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+    setPost((prev) => ({
+      ...prev,
+      youtube: id,
+      ...(!prev.thumbnailUrl ? {
+        thumbnailUrl: autoThumbUrl,
+        thumbnail: { url: autoThumbUrl, alt: '', width: 480, height: 360, mimeType: 'image/jpeg', sizeBytes: 0 },
+      } : {}),
+    }))
   }
 
   const handleSave = async () => {
@@ -449,6 +503,18 @@ function PostEditor() {
                 onChange={(event) => setTagsInput(event.target.value)}
                 placeholder="Azure, CosmosDB"
               />
+            </FormField>
+            <FormField label="YouTube">
+              <input
+                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+                value={youtubeInput}
+                onChange={handleYoutubeChange}
+                placeholder="https://www.youtube.com/watch?v=..."
+              />
+              {youtubeError && <p className="text-xs text-red-500 mt-1">{youtubeError}</p>}
+              {post.youtube && !youtubeError && (
+                <p className="text-xs text-neutral-400 mt-1">ID: {post.youtube}</p>
+              )}
             </FormField>
             <FormField label="썸네일">
               {post.thumbnailUrl && (
