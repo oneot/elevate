@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Card from '../components/Card.jsx'
 import Button from '../components/Button.jsx'
 import FormField from '../components/FormField.jsx'
 import HtmlEditor from '../components/HtmlEditor.jsx'
+import AttachUploader from '../components/AttachUploader.jsx'
 import { isApiConfigured } from '../lib/apiClient.js'
 import {
   createPost,
@@ -14,6 +15,17 @@ import {
 } from '../lib/postsApi.js'
 import { slugify } from '../lib/formatters.js'
 import { useAuth } from '../hooks/useAuth.js'
+
+const CATEGORY_OPTIONS = [
+  { value: 'm365',      label: 'M365' },
+  { value: 'copilot',   label: 'Copilot' },
+  { value: 'teams',     label: 'Teams' },
+  { value: 'minecraft', label: 'Minecraft' },
+  { value: 'excel',     label: 'Excel' },
+  { value: 'onenote',   label: 'OneNote' },
+  { value: 'agenthon',  label: 'Agenthon' },
+  { value: 'update',    label: 'Update' },
+]
 
 const emptyPost = {
   title: '',
@@ -133,9 +145,13 @@ const mockPosts = {
 function PostEditor() {
   const { msalInstance } = useAuth()
   const { postId } = useParams()
+  const [searchParams] = useSearchParams()
   const isNew = !postId
   const navigate = useNavigate()
-  const [post, setPost] = useState(emptyPost)
+  const [post, setPost] = useState(() => ({
+    ...emptyPost,
+    category: isNew ? (searchParams.get('category') || '') : '',
+  }))
   const [tagsInput, setTagsInput] = useState('')
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
@@ -196,6 +212,11 @@ function PostEditor() {
 
     if (!isApiConfigured) {
       setMessage('API가 없어 로컬 상태로만 저장됩니다.')
+      return
+    }
+
+    if (!post.category) {
+      setError('카테고리를 선택해주세요.')
       return
     }
 
@@ -407,12 +428,19 @@ function PostEditor() {
               </select>
             </FormField>
             <FormField label="카테고리">
-              <input
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+              <select
+                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed"
                 value={post.category}
                 onChange={handleChange('category')}
-                placeholder="예: Architecture"
-              />
+                disabled={!isNew}
+              >
+                {isNew && (
+                  <option value="" disabled>카테고리 선택</option>
+                )}
+                {CATEGORY_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
             </FormField>
             <FormField label="태그" hint="쉼표로 구분합니다.">
               <input
@@ -443,6 +471,14 @@ function PostEditor() {
               </div>
               {uploading && <p className="text-xs text-ms-blue mt-1">썸네일 업로드 중...</p>}
             </FormField>
+          </Card>
+
+          <Card colorScheme="blue" className="space-y-4">
+            <h3 className="text-base font-semibold text-neutral-700">첨부파일</h3>
+            <p className="text-xs text-neutral-400">
+              업로드 후 URL 복사 버튼으로 마크다운 콘텐츠에 붙여넣을 수 있습니다.
+            </p>
+            <AttachUploader postId={postId} />
           </Card>
 
         </aside>

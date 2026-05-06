@@ -125,7 +125,7 @@ const TableOfContentsItem = ({ heading, activeId, onLinkClick }) => {
   );
 };
 
-const TableOfContents = ({ content, postTitle, sticky = true }) => {
+const TableOfContents = ({ contentMarkdown, postTitle, sticky = true }) => {
   const [activeId, setActiveId] = useState('');
   const [headings, setHeadings] = useState([]);
   const observerRef = useRef(null);
@@ -192,7 +192,7 @@ const TableOfContents = ({ content, postTitle, sticky = true }) => {
       clearTimeout(initialTimer);
       observer.disconnect();
     };
-  }, [content, postTitle]);
+  }, [contentMarkdown, postTitle]);
 
   // Intersection Observer로 현재 섹션 추적
   useEffect(() => {

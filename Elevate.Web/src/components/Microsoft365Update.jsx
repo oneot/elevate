@@ -7,6 +7,7 @@ import Logo from './Logo';
 import SeriesNavigator from './SeriesNavigator';
 import TagFilter from './TagFilter';
 import Footer from './Footer';
+import { listPosts } from '../lib/postsApi';
 
 const CATEGORY = 'update';
 const DISPLAY_NAME = '업데이트 소식';
@@ -37,19 +38,13 @@ export default function Microsoft365Update() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('/api/posts.json', { signal: controller.signal });
-        if (!res.ok) throw new Error(`Server error ${res.status} ${res.statusText}`);
-        const data = await res.json();
-        const allItems = data.items || [];
-        const normalizedItems = allItems.map((p) => ({ ...p, tags: normalizeTagList(p.tags || []) }));
-        // update 카테고리만 필터링
-        const updatePosts = normalizedItems.filter((p) => p.category === CATEGORY);
-        setAllPosts(updatePosts);
-        // update 게시글에서만 태그 추출
+        const data = await listPosts({ category: CATEGORY, limit: 100 });
+        const allItems = (data.items || []).map((p) => ({ ...p, tags: normalizeTagList(p.tags || []) }));
+        setAllPosts(allItems);
+        // update 게시글에서 태그 추출
         const tagSet = new Set();
-        updatePosts.forEach((p) => (p.tags || []).forEach((t) => tagSet.add(normalizeTag(t))));
+        allItems.forEach((p) => (p.tags || []).forEach((t) => tagSet.add(normalizeTag(t))));
         setAllTags(Array.from(tagSet));
-        setSeriesByCategory(data.seriesByCategory || {});
       } catch (err) {
         if (err.name === 'AbortError') return;
         setError(err.message || 'Failed to load posts');

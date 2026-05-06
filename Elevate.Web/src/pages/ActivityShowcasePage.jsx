@@ -1,7 +1,7 @@
 import React from "react";
 import ShowcaseLayout from "../components/ShowcaseLayout";
 import ActivityShowcaseCarousel from "../components/ActivityShowcaseCarousel";
-import { activityVideos } from "../data/activityVideos";
+import activityVideos from "../data/activityVideos.json";
 
 export default function ActivityShowcasePage() {
   return (

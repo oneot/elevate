@@ -11,6 +11,7 @@ const {
 
 const storageAccountName = process.env.STORAGE_ACCOUNT_NAME;
 const storageContainerName = process.env.STORAGE_CONTAINER_NAME || 'images';
+const storageAttachContainerName = process.env.STORAGE_ATTACH_CONTAINER_NAME || 'attachments';
 let blobServiceClient = null;
 
 function getBlobServiceClient() {
@@ -49,6 +50,14 @@ function generateBlobPath(fileName) {
   return `uploads/${yyyy}/${mm}/${sanitizeFileName(fileName)}`;
 }
 
+function generateAttachPath(fileName) {
+  const now = new Date();
+  const yyyy = now.getUTCFullYear();
+  const mm = String(now.getUTCMonth() + 1).padStart(2, '0');
+
+  return `attach/${yyyy}/${mm}/${sanitizeFileName(fileName)}`;
+}
+
 async function issueBlobUploadSas({ fileName }) {
   const serviceClient = getBlobServiceClient();
   const blobPath = generateBlobPath(fileName);
@@ -62,6 +71,36 @@ async function issueBlobUploadSas({ fileName }) {
   const sasToken = generateBlobSASQueryParameters(
     {
       containerName: storageContainerName,
+      blobName: blobPath,
+      permissions: BlobSASPermissions.parse('cw'),
+      startsOn,
+      expiresOn,
+      protocol: SASProtocol.Https
+    },
+    userDelegationKey,
+    storageAccountName
+  ).toString();
+
+  return {
+    uploadUrl: `${blobClient.url}?${sasToken}`,
+    blobUrl: blobClient.url,
+    expiresAt: expiresOn.toISOString()
+  };
+}
+
+async function issueBlobAttachSas({ fileName }) {
+  const serviceClient = getBlobServiceClient();
+  const blobPath = generateAttachPath(fileName);
+  const containerClient = serviceClient.getContainerClient(storageAttachContainerName);
+  const blobClient = containerClient.getBlockBlobClient(blobPath);
+
+  const startsOn = new Date(Date.now() - 5 * 60 * 1000);
+  const expiresOn = new Date(Date.now() + 15 * 60 * 1000);
+
+  const userDelegationKey = await serviceClient.getUserDelegationKey(startsOn, expiresOn);
+  const sasToken = generateBlobSASQueryParameters(
+    {
+      containerName: storageAttachContainerName,
       blobName: blobPath,
       permissions: BlobSASPermissions.parse('cw'),
       startsOn,
@@ -141,6 +180,7 @@ async function deleteBlobByUrl(blobUrl) {
 
 module.exports = {
   issueBlobUploadSas,
+  issueBlobAttachSas,
   getBlobReadSasUrl,
   deleteBlobByUrl
 };
