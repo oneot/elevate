@@ -10,5 +10,12 @@ export default defineConfig({
   ],
   server: {
     historyApiFallback: true,
+    proxy: {
+      // 로컬 개발 시 Azure Functions 에뮬레이터로 프록시
+      '/api': {
+        target: 'http://localhost:7071',
+        changeOrigin: true,
+      },
+    },
   },
 })

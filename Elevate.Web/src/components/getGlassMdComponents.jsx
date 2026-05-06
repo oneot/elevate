@@ -24,11 +24,11 @@ export default function getGlassMdComponents(options = {}) {
   const getTone = (t) => tone[t] ?? tone.blue;
 
   const isDownloadableFile = (href) => {
-    return (
-      typeof href === "string" &&
-      (href.startsWith("/attach/") || href.startsWith("/downloads/")) &&
-      /\.(docx|pdf|pptx|xlsx|zip)$/i.test(href)
-    );
+    if (typeof href !== 'string') return false;
+    const hasDownloadExt = /\.(docx|pdf|pptx|xlsx|xls|doc|csv|zip)(\?[^#]*)?$/i.test(href);
+    const isStaticPath = href.startsWith('/attach/') || href.startsWith('/downloads/');
+    const isBlobUrl = href.includes('.blob.core.windows.net/');
+    return hasDownloadExt && (isStaticPath || isBlobUrl);
   };
 
   const filenameFromHref = (href) => {
