@@ -13,7 +13,7 @@ export default function ProgramNews() {
       </header>
       <main className="flex flex-col items-center justify-center py-16">
         <div className="clean-card rounded-2xl bg-white/90 shadow-lg p-8 sm:p-12 text-center max-w-xl">
-          <p className="text-lg text-slate-700 mb-2">4월 셋째주부터</p>
+          <p className="text-lg text-slate-700 mb-2">5월부터</p>
           <p className="text-lg text-slate-700 font-semibold">Microsoft Elevate 행사소식이 찾아올 예정입니다.💡</p>
         </div>
       </main>
