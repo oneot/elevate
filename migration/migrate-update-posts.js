@@ -1,9 +1,9 @@
 /**
  * migrate-update-posts.js
- * Elevate.Web/posts/update/*.md → Cosmos DB 마이그레이션 (완료)
+ * Elevate.Web/posts/update/*.md → Cosmos DB 마이그레이션
  *
- * 이 스크립트는 마이그레이션 완료 후 보관용으로 유지됩니다.
- * posts/update/ 폴더의 41개 마크다운 파일은 Cosmos DB로 이관되었습니다.
+ * 이전 이력: 41개 마크다운 파일 이관 완료
+ * 현재: 신규 3개 (26-04-06, 26-04-13, 26-04-20) 추가 마이그레이션용
  *
  * 실행:
  *   node migrate-update-posts.js            # dry-run
@@ -49,7 +49,7 @@ const ALLOW_UPDATE = process.argv.includes('--allow-update');
 
 const REPO_ROOT    = path.join(__dirname, '..');
 const SOURCE_DIR   = path.join(REPO_ROOT, 'Elevate.Web', 'posts', 'update');
-const EXPECTED_COUNT = 41;
+const EXPECTED_COUNT = 3;
 
 const COSMOS_ENDPOINT       = (process.env.COSMOS_ENDPOINT || '').replace(/\/$/, '');
 const COSMOS_DATABASE_NAME  = process.env.COSMOS_DATABASE_NAME || 'elevate';

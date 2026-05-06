@@ -16,6 +16,17 @@ import {
 import { slugify } from '../lib/formatters.js'
 import { useAuth } from '../hooks/useAuth.js'
 
+const CATEGORY_OPTIONS = [
+  { value: 'm365',      label: 'M365' },
+  { value: 'copilot',   label: 'Copilot' },
+  { value: 'teams',     label: 'Teams' },
+  { value: 'minecraft', label: 'Minecraft' },
+  { value: 'excel',     label: 'Excel' },
+  { value: 'onenote',   label: 'OneNote' },
+  { value: 'agenthon',  label: 'Agenthon' },
+  { value: 'update',    label: 'Update' },
+]
+
 const emptyPost = {
   title: '',
   slug: '',
@@ -201,6 +212,11 @@ function PostEditor() {
 
     if (!isApiConfigured) {
       setMessage('API가 없어 로컬 상태로만 저장됩니다.')
+      return
+    }
+
+    if (!post.category) {
+      setError('카테고리를 선택해주세요.')
       return
     }
 
@@ -412,12 +428,19 @@ function PostEditor() {
               </select>
             </FormField>
             <FormField label="카테고리">
-              <input
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+              <select
+                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed"
                 value={post.category}
                 onChange={handleChange('category')}
-                placeholder="예: Architecture"
-              />
+                disabled={!isNew}
+              >
+                {isNew && (
+                  <option value="" disabled>카테고리 선택</option>
+                )}
+                {CATEGORY_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
             </FormField>
             <FormField label="태그" hint="쉼표로 구분합니다.">
               <input
