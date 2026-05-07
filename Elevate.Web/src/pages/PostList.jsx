@@ -20,7 +20,7 @@ const DISPLAY_NAMES = {
   mee: 'MEE',
 };
 
-const BASE_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote'];
+const BASE_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote', 'mee'];
 
 const VALID_CATEGORIES = Object.keys(DISPLAY_NAMES);
 const PAGE_SIZE = 20;

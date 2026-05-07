@@ -1,16 +1,17 @@
-import React, { useLayoutEffect, useState, useEffect } from "react";
+import React, { useLayoutEffect, useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 import GlassDocLayout from "../components/GlassDocLayout";
 import TableOfContents from "../components/TableOfContents";
 
 import { getPost } from "../lib/postsApi";
-import { sanitizeHtml } from "../lib/htmlUtils";
+import { sanitizeHtml, injectHeadingIds } from "../lib/htmlUtils";
 
 const MEEPre = () => {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const contentRef = useRef(null);
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -22,6 +23,12 @@ const MEEPre = () => {
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (contentRef.current && content) {
+      injectHeadingIds(contentRef.current);
+    }
+  }, [content]);
 
   return (
     <GlassDocLayout
@@ -58,7 +65,7 @@ const MEEPre = () => {
         ) : error ? (
           <p className="text-red-500">게시글을 불러오는 데 실패했습니다. 잠시 후 다시 시도해 주세요.</p>
         ) : (
-          <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />
+          <div ref={contentRef} dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />
         )}
       </article>
     </GlassDocLayout>
