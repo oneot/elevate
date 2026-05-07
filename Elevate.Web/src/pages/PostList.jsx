@@ -17,6 +17,7 @@ const DISPLAY_NAMES = {
   minecraft: 'Minecraft',
   excel: 'Excel',
   onenote: 'OneNote',
+  mee: 'MEE',
 };
 
 const BASE_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote'];

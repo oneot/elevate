@@ -1,15 +1,11 @@
-import React, { useLayoutEffect, useMemo, useState, useEffect } from "react";
+import React, { useLayoutEffect, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
-import rehypeSlug from "rehype-slug";
 
 import GlassDocLayout from "../components/GlassDocLayout";
-import getGlassMdComponents from "../components/getGlassMdComponents.jsx";
 import TableOfContents from "../components/TableOfContents";
 
 import { getPost } from "../lib/postsApi";
+import { sanitizeHtml } from "../lib/htmlUtils";
 
 const MEEExplorerProcedure = () => {
   const [content, setContent] = useState("");
@@ -27,7 +23,6 @@ const MEEExplorerProcedure = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const mdComponents = useMemo(() => getGlassMdComponents(), []);
 
   return (
     <GlassDocLayout
@@ -40,7 +35,7 @@ const MEEExplorerProcedure = () => {
       ]}
       rightAside={
         <TableOfContents
-          content={content}
+          contentMarkdown={content}
           postTitle="MEE(Explorer) 지원 절차"
         />
       }
@@ -66,13 +61,7 @@ const MEEExplorerProcedure = () => {
         ) : error ? (
           <p className="text-red-500">게시글을 불러오는 데 실패했습니다. 잠시 후 다시 시도해 주세요.</p>
         ) : (
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw, rehypeSlug]}
-            components={mdComponents}
-          >
-            {content}
-          </ReactMarkdown>
+          <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />
         )}
       </article>
     </GlassDocLayout>
