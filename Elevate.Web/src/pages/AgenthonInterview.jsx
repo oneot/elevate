@@ -1,13 +1,9 @@
-import React, { useEffect, useLayoutEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
-import rehypeSlug from "rehype-slug";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 import GlassDocLayout from "../components/GlassDocLayout";
-import getGlassMdComponents from "../components/getGlassMdComponents.jsx";
 import TableOfContents from "../components/TableOfContents";
+import { sanitizeHtml, injectHeadingIds, injectLinkHandlers } from "../lib/htmlUtils";
 import { getLatestAgenthonPost } from "../lib/postsApi";
 
 const AgenthonInterview = () => {
@@ -18,6 +14,8 @@ const AgenthonInterview = () => {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const contentRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
@@ -41,7 +39,13 @@ const AgenthonInterview = () => {
     return () => { cancelled = true; };
   }, []);
 
-  const mdComponents = useMemo(() => getGlassMdComponents(), []);
+  useEffect(() => {
+    if (contentRef.current && content) {
+      injectHeadingIds(contentRef.current);
+      const cleanup = injectLinkHandlers(contentRef.current, navigate);
+      return cleanup;
+    }
+  }, [content, navigate]);
 
   const footer = (
     <div className="flex items-center justify-start">
@@ -64,24 +68,26 @@ const AgenthonInterview = () => {
       ]}
       rightAside={
         content ? (
-          <TableOfContents content={content} postTitle="에이전톤 우수사례" />
+          <TableOfContents contentMarkdown={content} postTitle="에이전톤 우수사례" />
         ) : null
       }
       footer={footer}
     >
       {loading ? (
-        <div className="text-center py-16 text-slate-400">로딩 중...</div>
+        <div className="animate-pulse space-y-3">
+          <div className="h-4 rounded bg-white/10 w-3/4" />
+          <div className="h-4 rounded bg-white/10 w-full" />
+          <div className="h-4 rounded bg-white/10 w-5/6" />
+        </div>
       ) : error ? (
         <div className="text-center py-16 text-slate-500">{error}</div>
       ) : (
         <article>
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw, rehypeSlug]}
-            components={mdComponents}
-          >
-            {content}
-          </ReactMarkdown>
+          <div
+            ref={contentRef}
+            className="prose prose-slate max-w-none post-content"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
+          />
         </article>
       )}
     </GlassDocLayout>
