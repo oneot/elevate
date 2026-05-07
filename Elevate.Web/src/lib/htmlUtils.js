@@ -46,8 +46,15 @@ export function injectLinkHandlers(containerEl, navigate) {
   });
 
   const handleClick = (e) => {
+    if (!(e.target instanceof Element)) return;
     const anchor = e.target.closest('a[href]');
     if (!anchor) return;
+
+    // Ctrl/Cmd/Shift/Alt+클릭, 중간 버튼, download 속성, target="_blank" 링크는 브라우저 기본 동작 유지
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    if (anchor.hasAttribute('download')) return;
+    if (anchor.getAttribute('target') === '_blank') return;
+
     const href = anchor.getAttribute('href');
     if (!href) return;
 
