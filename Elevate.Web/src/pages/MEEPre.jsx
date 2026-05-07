@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useMemo } from "react";
+import React, { useLayoutEffect, useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -9,11 +9,20 @@ import GlassDocLayout from "../components/GlassDocLayout";
 import getGlassMdComponents from "../components/getGlassMdComponents.jsx";
 import TableOfContents from "../components/TableOfContents";
 
-import preMeeMd from "../content/mee/pre-mee.md?raw";
+import { getPost } from "../lib/postsApi";
 
 const MEEPre = () => {
+  const [content, setContent] = useState("");
+  const [loading, setLoading] = useState(true);
+
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
+
+  useEffect(() => {
+    getPost("mee", "pre-mee")
+      .then((post) => setContent(post.contentMarkdown || ""))
+      .finally(() => setLoading(false));
   }, []);
 
   const mdComponents = useMemo(
@@ -46,7 +55,7 @@ const MEEPre = () => {
       ]}
       rightAside={
         <TableOfContents
-          content={preMeeMd}
+          content={content}
           postTitle="Pre-MEE E(Explorer) 지원 매뉴얼"
         />
       }
@@ -63,13 +72,21 @@ const MEEPre = () => {
       }
     >
       <article>
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeRaw, rehypeSlug]}
-          components={mdComponents}
-        >
-          {preMeeMd}
-        </ReactMarkdown>
+        {loading ? (
+          <div className="animate-pulse space-y-3">
+            <div className="h-4 rounded bg-white/10 w-3/4" />
+            <div className="h-4 rounded bg-white/10 w-full" />
+            <div className="h-4 rounded bg-white/10 w-5/6" />
+          </div>
+        ) : (
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw, rehypeSlug]}
+            components={mdComponents}
+          >
+            {content}
+          </ReactMarkdown>
+        )}
       </article>
     </GlassDocLayout>
   );

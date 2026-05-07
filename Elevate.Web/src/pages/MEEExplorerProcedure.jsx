@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useMemo } from "react";
+import React, { useLayoutEffect, useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -9,11 +9,20 @@ import GlassDocLayout from "../components/GlassDocLayout";
 import getGlassMdComponents from "../components/getGlassMdComponents.jsx";
 import TableOfContents from "../components/TableOfContents";
 
-import explorerProcedureMd from "../content/mee/explorer-procedure.md?raw";
+import { getPost } from "../lib/postsApi";
 
 const MEEExplorerProcedure = () => {
+  const [content, setContent] = useState("");
+  const [loading, setLoading] = useState(true);
+
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
+
+  useEffect(() => {
+    getPost("mee", "explorer-procedure")
+      .then((post) => setContent(post.contentMarkdown || ""))
+      .finally(() => setLoading(false));
   }, []);
 
   const mdComponents = useMemo(() => getGlassMdComponents(), []);
@@ -29,7 +38,7 @@ const MEEExplorerProcedure = () => {
       ]}
       rightAside={
         <TableOfContents
-          content={explorerProcedureMd}
+          content={content}
           postTitle="MEE(Explorer) 지원 절차"
         />
       }
@@ -46,13 +55,21 @@ const MEEExplorerProcedure = () => {
       }
     >
       <article>
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeRaw, rehypeSlug]}
-          components={mdComponents}
-        >
-          {explorerProcedureMd}
-        </ReactMarkdown>
+        {loading ? (
+          <div className="animate-pulse space-y-3">
+            <div className="h-4 rounded bg-white/10 w-3/4" />
+            <div className="h-4 rounded bg-white/10 w-full" />
+            <div className="h-4 rounded bg-white/10 w-5/6" />
+          </div>
+        ) : (
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw, rehypeSlug]}
+            components={mdComponents}
+          >
+            {content}
+          </ReactMarkdown>
+        )}
       </article>
     </GlassDocLayout>
   );

@@ -25,6 +25,7 @@ const CATEGORY_OPTIONS = [
   { value: 'onenote',   label: 'OneNote' },
   { value: 'agenthon',  label: 'Agenthon' },
   { value: 'update',    label: 'Update' },
+  { value: 'mee',       label: 'MEE' },
 ]
 
 const emptyPost = {

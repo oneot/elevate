@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useMemo } from "react";
+import React, { useLayoutEffect, useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -9,11 +9,20 @@ import GlassDocLayout from "../components/GlassDocLayout";
 import getGlassMdComponents from "../components/getGlassMdComponents.jsx";
 import TableOfContents from "../components/TableOfContents";
 
-import mieeArchiveMd from "../content/mee/miee-archive.md?raw";
+import { getPost } from "../lib/postsApi";
 
 const MIEEArchive = () => {
+  const [content, setContent] = useState("");
+  const [loading, setLoading] = useState(true);
+
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
+
+  useEffect(() => {
+    getPost("mee", "miee-archive")
+      .then((post) => setContent(post.contentMarkdown || ""))
+      .finally(() => setLoading(false));
   }, []);
 
   const mdComponents = useMemo(() => getGlassMdComponents(), []);
@@ -29,7 +38,7 @@ const MIEEArchive = () => {
       ]}
       rightAside={
         <TableOfContents
-          content={mieeArchiveMd}
+          content={content}
           postTitle="MEE 지원 아카이브(~2025-2026)"
         />
       }
@@ -46,13 +55,21 @@ const MIEEArchive = () => {
       }
     >
       <article>
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeRaw, rehypeSlug]}
-          components={mdComponents}
-        >
-          {mieeArchiveMd}
-        </ReactMarkdown>
+        {loading ? (
+          <div className="animate-pulse space-y-3">
+            <div className="h-4 rounded bg-white/10 w-3/4" />
+            <div className="h-4 rounded bg-white/10 w-full" />
+            <div className="h-4 rounded bg-white/10 w-5/6" />
+          </div>
+        ) : (
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw, rehypeSlug]}
+            components={mdComponents}
+          >
+            {content}
+          </ReactMarkdown>
+        )}
       </article>
     </GlassDocLayout>
   );
