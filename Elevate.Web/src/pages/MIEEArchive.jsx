@@ -1,36 +1,18 @@
-import React, { useLayoutEffect, useRef, useState, useEffect } from "react";
+import React, { useLayoutEffect } from "react";
 import { Link } from "react-router-dom";
 
 import GlassDocLayout from "../components/GlassDocLayout";
 import TableOfContents from "../components/TableOfContents";
 
-import { getPost } from "../lib/postsApi";
-import { sanitizeHtml, injectHeadingIds } from "../lib/htmlUtils";
+import { sanitizeHtml } from "../lib/htmlUtils";
+import { usePostContent } from "../hooks/usePostContent";
 
 const MIEEArchive = () => {
-  const [content, setContent] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const contentRef = useRef(null);
+  const { content, loading, error, contentRef } = usePostContent("mee", "miee-archive");
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    getPost("mee", "miee-archive")
-      .then((post) => { if (!cancelled) setContent(post.contentMarkdown || ""); })
-      .catch(() => { if (!cancelled) setError(true); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
-    if (contentRef.current && content) {
-      injectHeadingIds(contentRef.current);
-    }
-  }, [content]);
 
   return (
     <GlassDocLayout
@@ -69,7 +51,11 @@ const MIEEArchive = () => {
         ) : error ? (
           <p className="text-red-500">게시글을 불러오는 데 실패했습니다. 잠시 후 다시 시도해 주세요.</p>
         ) : (
-          <div ref={contentRef} dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />
+          <div
+            ref={contentRef}
+            className="prose prose-slate max-w-none post-content"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
+          />
         )}
       </article>
     </GlassDocLayout>
