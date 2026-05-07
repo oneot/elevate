@@ -18,10 +18,12 @@ const MIEEArchive = () => {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     getPost("mee", "miee-archive")
-      .then((post) => setContent(post.contentMarkdown || ""))
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
+      .then((post) => { if (!cancelled) setContent(post.contentMarkdown || ""); })
+      .catch(() => { if (!cancelled) setError(true); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
