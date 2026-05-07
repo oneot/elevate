@@ -16,7 +16,8 @@ const CATEGORY_DISPLAY_NAMES = {
     'excel': 'Excel',
     'onenote': 'OneNote',
     'm365update': 'Microsoft365 Update',
-    'update': '업데이트'
+    'update': '업데이트',
+    'mee': 'MEE'
 };
 
 const PostDetail = () => {

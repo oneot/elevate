@@ -14,6 +14,7 @@ import { getPost } from "../lib/postsApi";
 const MEEPre = () => {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -22,6 +23,7 @@ const MEEPre = () => {
   useEffect(() => {
     getPost("mee", "pre-mee")
       .then((post) => setContent(post.contentMarkdown || ""))
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
 
@@ -78,6 +80,8 @@ const MEEPre = () => {
             <div className="h-4 rounded bg-white/10 w-full" />
             <div className="h-4 rounded bg-white/10 w-5/6" />
           </div>
+        ) : error ? (
+          <p className="text-red-500">게시글을 불러오는 데 실패했습니다. 잠시 후 다시 시도해 주세요.</p>
         ) : (
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
