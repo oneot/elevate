@@ -1,6 +1,5 @@
 import DOMPurify from 'dompurify';
 
-// 서버에서 반환된 HTML을 XSS 방지를 위해 sanitize
 export function sanitizeHtml(html) {
   if (!html) return '';
   return DOMPurify.sanitize(html, {
@@ -9,15 +8,13 @@ export function sanitizeHtml(html) {
   });
 }
 
-// <article> 내 heading 요소에 ID 자동 주입 (TableOfContents TOC용)
-// rehype-slug가 빌드 타임에 하던 역할을 클라이언트에서 대체
 export function injectHeadingIds(containerEl) {
   if (!containerEl) return;
   const headings = containerEl.querySelectorAll('h1, h2, h3, h4, h5, h6');
   const usedIds = new Set();
 
   headings.forEach((el) => {
-    if (el.id) return; // 이미 ID가 있으면 skip
+    if (el.id) return;
     const base = el.textContent
       .trim()
       .toLowerCase()
@@ -31,4 +28,49 @@ export function injectHeadingIds(containerEl) {
     usedIds.add(id);
     el.id = id;
   });
+}
+
+// 렌더링된 HTML 내 <a> 링크 동작을 복원한다.
+// - 외부 링크: target="_blank" + rel="noopener noreferrer" 주입
+// - hash anchor (#id): scrollIntoView smooth 처리
+// - 내부 링크 (/path): SPA navigate() 호출
+// 이벤트 위임 방식으로 listener 중복 방지, cleanup 함수를 반환한다.
+export function injectLinkHandlers(containerEl, navigate) {
+  if (!containerEl) return () => {};
+
+  containerEl.querySelectorAll('a[href]').forEach((anchor) => {
+    const href = anchor.getAttribute('href');
+    if (!href || href.startsWith('/') || href.startsWith('#')) return;
+    anchor.setAttribute('target', '_blank');
+    anchor.setAttribute('rel', 'noopener noreferrer');
+  });
+
+  const handleClick = (e) => {
+    if (!(e.target instanceof Element)) return;
+    const anchor = e.target.closest('a[href]');
+    if (!anchor) return;
+
+    // Ctrl/Cmd/Shift/Alt+클릭, 중간 버튼, download 속성, target="_blank" 링크는 브라우저 기본 동작 유지
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    if (anchor.hasAttribute('download')) return;
+    if (anchor.getAttribute('target') === '_blank') return;
+
+    const href = anchor.getAttribute('href');
+    if (!href) return;
+
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      const target = document.getElementById(href.slice(1));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
+    if (href.startsWith('/')) {
+      e.preventDefault();
+      navigate(href);
+    }
+  };
+
+  containerEl.addEventListener('click', handleClick);
+  return () => containerEl.removeEventListener('click', handleClick);
 }
