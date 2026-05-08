@@ -6,7 +6,7 @@ import SeriesNavigator from '../components/SeriesNavigator';
 import { getPost, listSeriesByCategory } from '../lib/postsApi';
 import { sanitizeHtml, injectHeadingIds } from '../lib/htmlUtils';
 
-const VALID_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote', 'm365update', 'update'];
+const VALID_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote', 'm365update', 'update', 'mee'];
 
 const CATEGORY_DISPLAY_NAMES = {
     'm365': 'M365 개요',
@@ -16,7 +16,8 @@ const CATEGORY_DISPLAY_NAMES = {
     'excel': 'Excel',
     'onenote': 'OneNote',
     'm365update': 'Microsoft365 Update',
-    'update': '업데이트'
+    'update': '업데이트',
+    'mee': 'MEE'
 };
 
 const PostDetail = () => {

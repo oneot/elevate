@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutGrid, Bot, Users, Box, Table2, NotebookPen,
-  Trophy, RefreshCw,
+  Trophy, RefreshCw, GraduationCap,
 } from 'lucide-react'
 
 const navGroups = [
@@ -21,6 +21,7 @@ const navGroups = [
     items: [
       { to: '/category/agenthon',  label: 'Agenthon',  icon: Trophy },
       { to: '/category/update',    label: 'Update',    icon: RefreshCw },
+      { to: '/category/mee',       label: 'MEE',       icon: GraduationCap },
     ],
   },
 ]

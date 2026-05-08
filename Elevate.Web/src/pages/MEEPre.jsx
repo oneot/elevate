@@ -1,41 +1,18 @@
-import React, { useLayoutEffect, useMemo } from "react";
+import React, { useLayoutEffect } from "react";
 import { Link } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
-import rehypeSlug from "rehype-slug";
 
 import GlassDocLayout from "../components/GlassDocLayout";
-import getGlassMdComponents from "../components/getGlassMdComponents.jsx";
 import TableOfContents from "../components/TableOfContents";
 
-import preMeeMd from "../content/mee/pre-mee.md?raw";
+import { sanitizeHtml } from "../lib/htmlUtils";
+import { usePostContent } from "../hooks/usePostContent";
 
 const MEEPre = () => {
+  const { content, loading, error, contentRef } = usePostContent("mee", "pre-mee");
+
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
-
-  const mdComponents = useMemo(
-    () =>
-      getGlassMdComponents({
-        linkCards: [
-          {
-            href: "/mee/explorer-procedure",
-            title: "MEE(Explorer) 지원 절차",
-            desc: "Explorer 지원을 위한 전체 절차를 단계별로 확인합니다.",
-            tone: "blue",
-          },
-          {
-            href: "/mee/miee-archive",
-            title: "MEE 지원 아카이브(~2025-2026)",
-            desc: "연도별 지원서/모집 링크/문항 요약 자료를 모아둔 페이지입니다.",
-            tone: "mint",
-          },
-        ],
-      }),
-    []
-  );
 
   return (
     <GlassDocLayout
@@ -46,7 +23,7 @@ const MEEPre = () => {
       ]}
       rightAside={
         <TableOfContents
-          content={preMeeMd}
+          contentMarkdown={content}
           postTitle="Pre-MEE E(Explorer) 지원 매뉴얼"
         />
       }
@@ -63,13 +40,21 @@ const MEEPre = () => {
       }
     >
       <article>
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeRaw, rehypeSlug]}
-          components={mdComponents}
-        >
-          {preMeeMd}
-        </ReactMarkdown>
+        {loading ? (
+          <div className="animate-pulse space-y-3">
+            <div className="h-4 rounded bg-white/10 w-3/4" />
+            <div className="h-4 rounded bg-white/10 w-full" />
+            <div className="h-4 rounded bg-white/10 w-5/6" />
+          </div>
+        ) : error ? (
+          <p className="text-red-500">게시글을 불러오는 데 실패했습니다. 잠시 후 다시 시도해 주세요.</p>
+        ) : (
+          <div
+            ref={contentRef}
+            className="prose prose-slate max-w-none post-content"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
+          />
+        )}
       </article>
     </GlassDocLayout>
   );

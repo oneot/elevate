@@ -21,6 +21,7 @@ const CATEGORY_LABELS = {
   onenote: 'OneNote',
   agenthon: 'Agenthon',
   update: 'Update',
+  mee: 'MEE',
 }
 
 function AdminPagination({ page, totalPages, onPageChange }) {

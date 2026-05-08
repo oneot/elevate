@@ -11,6 +11,7 @@ function toEditorPost(apiPost) {
     excerpt: apiPost.excerpt || '',
     htmlBody: apiPost.contentMarkdown || '',
     thumbnailUrl: apiPost.thumbnail?.signedUrl || apiPost.thumbnail?.url || '',
+    youtube: apiPost.youtube || '',
     updatedAt: apiPost.updatedAt || null,
     publishedAt: apiPost.publishedAt || null,
   }
@@ -43,6 +44,10 @@ function toApiPayload(post) {
       mimeType: 'image/webp',
       sizeBytes: 0,
     }
+  }
+
+  if (post.youtube !== undefined) {
+    payload.youtube = post.youtube || null
   }
 
   return payload

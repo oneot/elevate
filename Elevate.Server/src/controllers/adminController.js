@@ -155,6 +155,10 @@ function validatePostUpdatePayload(body) {
     return 'status must be one of draft, published, archived';
   }
 
+  if (body.youtube !== undefined && body.youtube !== null && typeof body.youtube !== 'string') {
+    return 'youtube must be a string or null';
+  }
+
   return null;
 }
 
@@ -207,7 +211,8 @@ function toPostResponse(post) {
     publishedAt: post.publishedAt || null,
     updatedAt: post.updatedAt,
     series: post.series || null,
-    thumbnail: post.thumbnail || null
+    thumbnail: post.thumbnail || null,
+    youtube: post.youtube || null
   };
 }
 
@@ -375,6 +380,7 @@ exports.createPost = async (req, res) => {
       tags: req.body.tags,
       series: req.body.series || null,
       thumbnail: req.body.thumbnail ? Object.assign({}, req.body.thumbnail, { url: stripBlobSas(req.body.thumbnail.url) }) : null,
+      youtube: req.body.youtube || null,
       status: req.body.status,
       publishedAt: req.body.status === 'published' ? now : null,
       updatedAt: now,
@@ -423,6 +429,7 @@ exports.updatePost = async (req, res) => {
       tags: req.body.tags !== undefined ? req.body.tags : existing.tags,
       series: req.body.series !== undefined ? req.body.series : existing.series,
       thumbnail: normalizedThumbnail,
+      youtube: req.body.youtube !== undefined ? (req.body.youtube || null) : (existing.youtube || null),
       status: req.body.status !== undefined ? req.body.status : existing.status,
       updatedAt: now
     };
