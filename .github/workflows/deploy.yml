@@ -34,9 +34,6 @@ jobs:
       - name: Install dependencies (ignore peer conflicts)
         run: npm ci --legacy-peer-deps
 
-      - name: Build posts
-        run: npm run generate-posts
-
       - name: Build
         run: npm run build
         env:
