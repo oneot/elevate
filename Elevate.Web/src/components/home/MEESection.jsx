@@ -80,7 +80,7 @@ const MEESection = () => {
 </Link>
 
                             <Link
-                                to="/mee/pre"
+                                to="/mee/pre-mee"
                                 className="relative group overflow-hidden inline-flex items-center justify-center 
                                          px-8 py-3.5 rounded-full font-bold text-sky-900
                                          bg-sky-200/60 backdrop-blur-2xl 

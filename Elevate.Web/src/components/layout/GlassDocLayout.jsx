@@ -4,7 +4,12 @@
  *
  * 그라디언트 배경 + 노이즈 텍스처 + blur 장식 원을 배경으로 렌더링하며,
  * 본문 영역은 반투명 glass 패널로 처리된다.
- * `rightAside`가 전달된 경우 2컬럼 grid로 전환되어 우측 사이드바를 표시한다.
+ *
+ * 사이드바 prop 조합에 따라 컬럼 레이아웃이 달라진다:
+ * - leftAside + rightAside → 3컬럼 [280px | 1fr | 280px]
+ * - rightAside만            → 2컬럼 [1fr | 280px]
+ * - leftAside만             → 2컬럼 [280px | 1fr]
+ * - 없음                    → 1컬럼
  *
  * `crumbs` 배열 형식: `{ label, to }` 링크 | `{ type: 'sep' }` 구분자
  */
@@ -18,15 +23,28 @@ import { Link } from "react-router-dom";
  * @param {Array<{label: string, to?: string, type?: 'sep'}>} [props.crumbs] - 브레드크럼 항목 배열
  * @param {React.ReactNode} props.children - glass 패널 내 본문 콘텐츠
  * @param {React.ReactNode} [props.footer] - 본문 하단 구분선 아래 표시할 콘텐츠
- * @param {React.ReactNode} [props.rightAside] - 우측 사이드바 콘텐츠 (지정 시 2컬럼 레이아웃)
+ * @param {React.ReactNode} [props.leftAside] - 좌측 사이드바 콘텐츠 (지정 시 좌측 컬럼 추가)
+ * @param {React.ReactNode} [props.rightAside] - 우측 사이드바 콘텐츠 (지정 시 우측 컬럼 추가)
  * @returns {JSX.Element}
  */
 export default function GlassDocLayout({
   crumbs,
   children,
   footer,
+  leftAside,
   rightAside,
 }) {
+  // 사이드바 유무에 따라 그리드 컬럼 구성을 결정한다.
+  // leftAside/rightAside 둘 다 없는 경우 단순 1컬럼으로 유지한다.
+  let gridClass = "grid grid-cols-1";
+  if (leftAside && rightAside) {
+    gridClass = "grid grid-cols-1 items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)_280px]";
+  } else if (rightAside) {
+    gridClass = "grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]";
+  } else if (leftAside) {
+    gridClass = "grid grid-cols-1 items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)]";
+  }
+
   return (
     <div className="min-h-screen bg-[radial-gradient(1200px_circle_at_20%_0%,rgba(59,130,246,0.14),transparent_60%),radial-gradient(900px_circle_at_90%_10%,rgba(99,102,241,0.12),transparent_55%),radial-gradient(900px_circle_at_50%_100%,rgba(14,165,233,0.10),transparent_60%)]">
       {/* ultra subtle noise */}
@@ -73,13 +91,14 @@ export default function GlassDocLayout({
           })}
         </nav>
 
-        <div
-          className={
-            rightAside
-              ? "grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]"
-              : "grid grid-cols-1"
-          }
-        >
+        <div className={gridClass}>
+          {/* 좌측 사이드바 (목차 등) — lg 이상에서만 표시 */}
+          {leftAside && (
+            <aside className="hidden min-w-0 self-start lg:sticky lg:top-6 lg:block">
+              {leftAside}
+            </aside>
+          )}
+
           {/* main glass panel */}
           <div className="relative min-w-0 overflow-hidden rounded-[30px] border border-white/22 bg-white/[0.04] shadow-[0_22px_90px_rgba(15,23,42,0.18)] backdrop-blur-[34px]">
             {/* glass edge + reflection */}
@@ -97,11 +116,12 @@ export default function GlassDocLayout({
             </div>
           </div>
 
-          {rightAside ? (
+          {/* 우측 사이드바 (시리즈 내비게이터, TOC 등) — lg 이상에서만 표시 */}
+          {rightAside && (
             <aside className="hidden min-w-0 self-start lg:sticky lg:top-6 lg:block">
               {rightAside}
             </aside>
-          ) : null}
+          )}
         </div>
 
         <div className="h-12" />
