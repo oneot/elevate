@@ -194,9 +194,12 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
             {/* Helmet은 GlassDocLayout 외부에 위치해도 React Portal로 <head>에 주입된다. */}
             <Helmet>
                 <title>{`${postTitle ?? ''} | ${categoryDisplayName} | Microsoft Elevate`}</title>
-                <meta name="description" content={`${postTitle ?? ''} - ${categoryDisplayName} 블로그 포스트입니다.`} />
+                <meta name="description" content={post?.excerpt || `${postTitle ?? ''} - ${categoryDisplayName} 블로그 포스트입니다.`} />
                 <meta property="og:title" content={`${postTitle ?? ''} | ${categoryDisplayName} | Microsoft Elevate`} />
-                <meta property="og:description" content={`${postTitle ?? ''} - ${categoryDisplayName} 블로그 포스트입니다.`} />
+                <meta property="og:description" content={post?.excerpt || `${postTitle ?? ''} - ${categoryDisplayName} 블로그 포스트입니다.`} />
+                {(post?.thumbnail?.signedUrl || post?.thumbnail?.url || (typeof post?.thumbnail === 'string' && post?.thumbnail)) && (
+                    <meta property="og:image" content={post.thumbnail?.signedUrl || post.thumbnail?.url || post.thumbnail} />
+                )}
             </Helmet>
 
             <GlassDocLayout
