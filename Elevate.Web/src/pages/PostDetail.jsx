@@ -16,7 +16,7 @@ import { useEffect, useRef, useState } from 'react';
 import GlassDocLayout from '../components/layout/GlassDocLayout';
 import TableOfContents from '../components/posts/TableOfContents';
 import SeriesNavigator from '../components/posts/SeriesNavigator';
-import { getPost, listPosts } from '../api/posts';
+import { getPost, getLatestAgenthonPost } from '../api/posts';
 import { sanitizeHtml, injectHeadingIds } from '../utils/html';
 import { formatDateKo } from '../utils/url';
 import { POST_DETAIL_VALID_CATEGORIES, CATEGORY_DISPLAY_NAMES } from '../constants/categories';
@@ -35,17 +35,17 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
     // categoryProp이 있으면 URL 파라미터보다 우선한다 (고정 URL 라우트용)
     const normalizedCategory = (categoryProp || categoryParam)?.toLowerCase();
 
-    // useLatest 모드일 때 최신 게시글 slug를 동적으로 조회하여 설정한다
+    // useLatest 모드일 때 getLatestAgenthonPost()로 최신 게시글을 직접 로드한다.
+    // 목록 API + 상세 API 2단계 호출이 이미 캡슐화되어 있으므로 중복 구현 없이 재사용한다.
     const [resolvedPostId, setResolvedPostId] = useState(postIdParam ?? null);
     const [loadingLatest, setLoadingLatest] = useState(useLatest);
 
     useEffect(() => {
         if (!useLatest || !normalizedCategory) return;
         setLoadingLatest(true);
-        listPosts({ category: normalizedCategory, limit: 1, page: 1 })
-            .then((data) => {
-                const slug = data?.items?.[0]?.slug ?? null;
-                setResolvedPostId(slug);
+        getLatestAgenthonPost()
+            .then((post) => {
+                setResolvedPostId(post?.slug ?? null);
             })
             .catch(() => setResolvedPostId(null))
             .finally(() => setLoadingLatest(false));
