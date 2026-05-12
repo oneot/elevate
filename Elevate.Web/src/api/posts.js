@@ -25,8 +25,8 @@ export function listSeriesPosts(seriesName) {
 }
 
 // 게시글 상세
-export function getPost(category, slug) {
-  return apiFetch(`/posts/${encodeURIComponent(category)}/${encodeURIComponent(slug)}`);
+export function getPost(category, slug, options = {}) {
+  return apiFetch(`/posts/${encodeURIComponent(category)}/${encodeURIComponent(slug)}`, options);
 }
 
 // 태그 목록

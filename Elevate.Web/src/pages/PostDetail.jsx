@@ -41,7 +41,7 @@ const PostDetail = () => {
             setLoading(true);
             setNotFound(false);
             try {
-                const postData = await getPost(normalizedCategory, postId);
+                const postData = await getPost(normalizedCategory, postId, { signal: controller.signal });
                 setPost(postData);
             } catch (err) {
                 if (err.name === 'AbortError') return;
