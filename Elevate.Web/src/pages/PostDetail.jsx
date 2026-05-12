@@ -1,18 +1,17 @@
 import { useParams, Navigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import TableOfContents from '../components/posts/TableOfContents';
 import SeriesNavigator from '../components/posts/SeriesNavigator';
-import { getPost, listSeriesByCategory } from '../api/posts';
+import { getPost } from '../api/posts';
 import { sanitizeHtml, injectHeadingIds } from '../utils/html';
 import { POST_DETAIL_VALID_CATEGORIES, CATEGORY_DISPLAY_NAMES } from '../constants/categories';
+import { useSeriesNavigation } from '../hooks/useSeriesNavigation';
 
 const VALID_CATEGORIES = POST_DETAIL_VALID_CATEGORIES;
 
 const PostDetail = () => {
     const { category, postId } = useParams();
-    const [searchParams, setSearchParams] = useSearchParams();
-    const seriesParam = (searchParams.get('series') || '').trim();
 
     // 카테고리를 소문자로 변환하여 검증
     const normalizedCategory = category?.toLowerCase();
@@ -20,7 +19,6 @@ const PostDetail = () => {
     const [post, setPost] = useState(null);
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
-    const [seriesOptions, setSeriesOptions] = useState([]);
     const contentRef = useRef(null);
 
     useEffect(() => {
@@ -48,24 +46,6 @@ const PostDetail = () => {
         return () => controller.abort();
     }, [normalizedCategory, postId]);
 
-    // 카테고리별 시리즈 목록 로드
-    useEffect(() => {
-        if (!normalizedCategory) return;
-        listSeriesByCategory(normalizedCategory)
-            .then((data) => {
-                const options = (data?.items || []).map((s) => ({
-                    key: s.name,
-                    title: s.name,
-                    posts: s.posts || [],
-                }));
-                setSeriesOptions(options);
-            })
-            .catch((err) => {
-                console.warn('PostDetail series fetch error:', err);
-                setSeriesOptions([]);
-            });
-    }, [normalizedCategory]);
-
     // HTML 콘텐츠 렌더링 후 heading ID 주입 (TableOfContents용)
     useEffect(() => {
         if (contentRef.current && post?.contentMarkdown) {
@@ -73,80 +53,16 @@ const PostDetail = () => {
         }
     }, [post?.contentMarkdown]);
 
-    const availableSeriesOptions = useMemo(() => {
-        if (!normalizedCategory) return [];
-        return seriesOptions.filter((item) => item.posts.length >= 2);
-    }, [normalizedCategory, seriesOptions]);
-
-    const selectedSeriesKey = useMemo(() => {
-        if (availableSeriesOptions.length === 0) return '';
-        if (seriesParam && availableSeriesOptions.some((item) => item.key === seriesParam)) {
-            return seriesParam;
-        }
-        if (post?.series && availableSeriesOptions.some((item) => item.key === post.series)) {
-            return post.series;
-        }
-        return availableSeriesOptions[0].key;
-    }, [availableSeriesOptions, seriesParam, post?.series]);
-
-    const selectedSeries = useMemo(() => {
-        if (!selectedSeriesKey) return null;
-        return availableSeriesOptions.find((item) => item.key === selectedSeriesKey) || null;
-    }, [availableSeriesOptions, selectedSeriesKey]);
-
-    const selectedSeriesPosts = useMemo(() => selectedSeries?.posts || [], [selectedSeries]);
-
-    const currentSeriesIndex = useMemo(() => {
-        if (!post || selectedSeriesPosts.length === 0) return -1;
-        const byIdIndex = selectedSeriesPosts.findIndex((item) => item.id === post.id);
-        if (byIdIndex > -1) return byIdIndex;
-        if (post.seriesOrder == null) return -1;
-        return selectedSeriesPosts.findIndex((item) => item.seriesOrder === post.seriesOrder);
-    }, [post, selectedSeriesPosts]);
-
-    const prevPost = currentSeriesIndex > 0 ? selectedSeriesPosts[currentSeriesIndex - 1] : null;
-    const nextPost = currentSeriesIndex > -1 && currentSeriesIndex < selectedSeriesPosts.length - 1
-        ? selectedSeriesPosts[currentSeriesIndex + 1]
-        : null;
-
-    const hasSeriesNavigator = Boolean(post?.series && selectedSeriesPosts.length > 0);
-    const backToListHref = `/${normalizedCategory}`;
-
-    const buildPostHref = (targetPost) => {
-        if (!targetPost) return '#';
-        const params = new URLSearchParams();
-        if (selectedSeriesKey) {
-            params.set('series', selectedSeriesKey);
-        }
-        const query = params.toString();
-        return `/${normalizedCategory}/${targetPost.slug}${query ? `?${query}` : ''}`;
-    };
-
-    const updateSeriesQuery = useCallback((seriesKey, options = {}) => {
-        const { replace = false } = options;
-        const newParams = new URLSearchParams(searchParams);
-        if (seriesKey) {
-            newParams.set('series', seriesKey);
-        } else {
-            newParams.delete('series');
-        }
-        setSearchParams(newParams, { replace });
-    }, [searchParams, setSearchParams]);
-
-    useEffect(() => {
-        if (!post) return;
-
-        if (availableSeriesOptions.length === 0) {
-            if (seriesParam) {
-                updateSeriesQuery('', { replace: true });
-            }
-            return;
-        }
-
-        if (selectedSeriesKey && seriesParam !== selectedSeriesKey) {
-            updateSeriesQuery(selectedSeriesKey, { replace: true });
-        }
-    }, [post, availableSeriesOptions, selectedSeriesKey, seriesParam, updateSeriesQuery]);
+    const {
+        availableSeriesOptions,
+        selectedSeriesKey,
+        prevPost,
+        nextPost,
+        hasSeriesNavigator,
+        updateSeriesQuery,
+        buildPostHref,
+        backToListHref,
+    } = useSeriesNavigation(normalizedCategory, post);
 
     // 유효하지 않은 카테고리인 경우 404로 리다이렉트
     if (!VALID_CATEGORIES.includes(normalizedCategory)) {
