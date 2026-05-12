@@ -37,7 +37,11 @@ function App() {
   }, [location.pathname, location.search]);
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-4 border-ms-blue/20 border-t-ms-blue animate-spin" />
+      </div>
+    }>
       <Routes>
         <Route path="/update" element={<Microsoft365Update />} />
         <Route path="/program-news" element={<ProgramNews />} />

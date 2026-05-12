@@ -18,6 +18,7 @@ import TableOfContents from '../components/posts/TableOfContents';
 import SeriesNavigator from '../components/posts/SeriesNavigator';
 import { getPost, listPosts } from '../api/posts';
 import { sanitizeHtml, injectHeadingIds } from '../utils/html';
+import { formatDateKo } from '../utils/url';
 import { POST_DETAIL_VALID_CATEGORIES, CATEGORY_DISPLAY_NAMES } from '../constants/categories';
 import { useSeriesNavigation } from '../hooks/useSeriesNavigation';
 
@@ -225,7 +226,7 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
                             <span className="inline-block px-4 py-2 bg-ms-blue/10 text-ms-blue rounded-full font-medium">
                                 {categoryDisplayName}
                             </span>
-                            <span>{post.publishedAt}</span>
+                            <span>{formatDateKo(post.publishedAt)}</span>
                         </div>
 
                         {/* Tags */}
