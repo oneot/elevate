@@ -37,7 +37,7 @@ export default function Microsoft365Update() {
   const [allPosts, setAllPosts] = useState([]);
   const [allTags, setAllTags] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [_error, setError] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -53,7 +53,7 @@ export default function Microsoft365Update() {
         setAllTags(Array.from(tagSet));
       } catch (err) {
         if (err.name === 'AbortError') return;
-        setError(err.message || 'Failed to load posts');
+        setError(err.message || '게시글을 불러오지 못했습니다.');
         setAllPosts([]);
         setAllTags([]);
       } finally {
@@ -148,6 +148,7 @@ export default function Microsoft365Update() {
         }}
         posts={posts}
         loading={loading}
+        error={error}
         countLabel={!loading && selectedTags.length > 0 ? `${filteredPosts.length}개의 게시글이 일치합니다.` : undefined}
         currentPage={currentPage}
         totalPages={totalPages}

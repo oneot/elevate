@@ -32,6 +32,7 @@ export default function PostList() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [allTags, setAllTags] = useState([]);
   const [seriesOptions, setSeriesOptions] = useState([]);
 
@@ -54,6 +55,7 @@ export default function PostList() {
 
     async function load() {
       setLoading(true);
+      setError(null);
       try {
         if (seriesParam) {
           // 시리즈 선택: 서버에서 해당 시리즈 전체 게시글 조회
@@ -81,6 +83,7 @@ export default function PostList() {
       } catch (err) {
         if (!cancelled) {
           console.warn('PostList fetch error:', err.message || err);
+          setError(err.message || '게시글을 불러오지 못했습니다.');
           setPosts([]);
           setTotalPages(1);
           setTotalCount(0);
@@ -186,6 +189,7 @@ export default function PostList() {
       }}
       posts={posts}
       loading={loading}
+      error={error}
       countLabel={countLabel}
       currentPage={seriesParam ? 1 : pageParam}
       totalPages={seriesParam ? 1 : totalPages}

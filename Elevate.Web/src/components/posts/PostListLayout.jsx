@@ -11,6 +11,7 @@ const PostListLayout = ({
   tagFilterProps,
   posts,
   loading,
+  error,
   countLabel,
   currentPage,
   totalPages,
@@ -45,6 +46,13 @@ const PostListLayout = ({
 
           <section className={`w-full ${hasSeriesSidebar ? 'lg:col-span-7 xl:col-span-8' : 'lg:col-span-8'}`}>
             {loading && <div className="text-center py-8">로딩 중...</div>}
+            {!loading && error && (
+              <div className="flex flex-col items-center gap-3 py-12 text-center">
+                <span className="text-4xl">⚠️</span>
+                <p className="text-slate-600 text-sm">게시글을 불러오지 못했습니다.</p>
+                <p className="text-slate-400 text-xs">{error}</p>
+              </div>
+            )}
             <div className="mb-4 text-sm text-slate-600 min-h-6 flex items-center">
               {!loading && countLabel && <span>{countLabel}</span>}
             </div>
