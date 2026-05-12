@@ -8,6 +8,7 @@
 import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getThumbnailUrl } from '../../api/posts';
+import { formatDateKo } from '../../utils/url';
 
 const PostCard = ({ post }) => {
   const { slug, title, excerpt, thumbnail, publishedAt, category, tags = [] } = post;
@@ -53,6 +54,10 @@ const PostCard = ({ post }) => {
             <div className="text-sm text-slate-600 mt-2 overflow-hidden" style={{ maxHeight: 60 }}>
               <p className="m-0" style={{ whiteSpace: 'normal' }}>{excerpt}</p>
             </div>
+
+            {publishedAt && (
+              <p className="text-xs text-slate-400 mt-2">{formatDateKo(publishedAt)}</p>
+            )}
 
             {tags.length > 0 && (
               <div
