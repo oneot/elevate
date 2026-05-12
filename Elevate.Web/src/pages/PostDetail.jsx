@@ -5,20 +5,9 @@ import TableOfContents from '../components/posts/TableOfContents';
 import SeriesNavigator from '../components/posts/SeriesNavigator';
 import { getPost, listSeriesByCategory } from '../api/posts';
 import { sanitizeHtml, injectHeadingIds } from '../utils/html';
+import { POST_DETAIL_VALID_CATEGORIES, CATEGORY_DISPLAY_NAMES } from '../constants/categories';
 
-const VALID_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote', 'm365update', 'update', 'mee'];
-
-const CATEGORY_DISPLAY_NAMES = {
-    'm365': 'M365 개요',
-    'copilot': 'Copilot',
-    'teams': 'Teams',
-    'minecraft': 'Minecraft',
-    'excel': 'Excel',
-    'onenote': 'OneNote',
-    'm365update': 'Microsoft365 Update',
-    'update': '업데이트',
-    'mee': 'MEE'
-};
+const VALID_CATEGORIES = POST_DETAIL_VALID_CATEGORIES;
 
 const PostDetail = () => {
     const { category, postId } = useParams();

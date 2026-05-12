@@ -8,21 +8,9 @@ import TagFilter from '../components/posts/TagFilter';
 import SeriesNavigator from '../components/posts/SeriesNavigator';
 import Pagination from '../components/posts/Pagination';
 import { listPosts, listTags, listSeriesByCategory, listSeriesPosts } from '../api/posts';
+import { POST_LIST_CATEGORIES, BASE_CATEGORIES, CATEGORY_DISPLAY_NAMES } from '../constants/categories';
 
-const DISPLAY_NAMES = {
-  all: 'ALL',
-  m365: 'M365',
-  copilot: 'Copilot',
-  teams: 'Teams',
-  minecraft: 'Minecraft',
-  excel: 'Excel',
-  onenote: 'OneNote',
-  mee: 'MEE',
-};
-
-const BASE_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote', 'mee'];
-
-const VALID_CATEGORIES = Object.keys(DISPLAY_NAMES);
+const VALID_CATEGORIES = POST_LIST_CATEGORIES;
 const PAGE_SIZE = 20;
 
 export default function PostList() {
@@ -40,7 +28,7 @@ export default function PostList() {
   const [seriesOptions, setSeriesOptions] = useState([]);
 
   const isValidCategory = category && VALID_CATEGORIES.includes(category);
-  const displayName = isValidCategory ? (DISPLAY_NAMES[category] || category) : '';
+  const displayName = isValidCategory ? (CATEGORY_DISPLAY_NAMES[category] || category) : '';
 
   const updateUrlParams = useCallback((params) => {
     const newParams = new URLSearchParams(searchParams);
@@ -177,7 +165,7 @@ export default function PostList() {
                         : 'bg-white/85 backdrop-blur border-white/70 text-slate-700 hover:border-ms-blue/35 hover:text-ms-blue'
                     }`}
                   >
-                    {DISPLAY_NAMES[c]}
+                    {CATEGORY_DISPLAY_NAMES[c]}
                   </Link>
                 </li>
               ))}
