@@ -2,8 +2,9 @@
  * @file SearchBar.jsx
  * @description 게시글 목록 페이지의 검색 입력 폼 컴포넌트.
  *
- * 내부 state `q`로 입력값을 관리하며, 폼 제출 시 `onSubmit(q)`를 호출한다.
- * 초기 `value` prop은 초기값으로만 사용되며, 이후 변경은 추적하지 않는다.
+ * 내부 state `q`로 입력값을 관리하며, 폼 제출(Enter 또는 버튼 클릭) 시 `onSubmit(q)`를 호출한다.
+ * 외부 `value` prop이 변경되면 입력창을 동기화한다.
+ * 입력을 지울 때(빈 문자열)는 즉시 `onSubmit('')`를 호출하여 검색을 초기화한다.
  */
 import React from 'react';
 
@@ -30,17 +31,32 @@ const SearchBar = ({ value = '', onChange = () => {}, onSubmit = () => {}, place
     onSubmit(q);
   };
 
+  const handleChange = (e) => {
+    const newVal = e.target.value;
+    setQ(newVal);
+    onChange(newVal);
+    // 입력을 모두 지웠을 때 즉시 검색 초기화 (브라우저 × 버튼 포함)
+    if (newVal === '') onSubmit('');
+  };
+
   return (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="relative">
+      <div className="relative flex items-center gap-2">
         <input
-          type="search"
+          type="text"
           value={q}
-          onChange={(e) => { setQ(e.target.value); onChange(e.target.value); }}
+          onChange={handleChange}
           placeholder={placeholder}
-          className="w-full rounded-full border border-white/70 bg-white/85 backdrop-blur px-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-ms-blue/30 focus:border-ms-blue/30"
+          className="flex-1 rounded-full border border-white/70 bg-white/85 backdrop-blur px-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-ms-blue/30 focus:border-ms-blue/30"
           aria-label={placeholder}
         />
+        <button
+          type="submit"
+          className="shrink-0 rounded-full bg-ms-blue px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-ms-blue/90 focus:outline-none focus:ring-2 focus:ring-ms-blue/50 transition-colors"
+          aria-label="검색"
+        >
+          검색
+        </button>
       </div>
     </form>
   );
