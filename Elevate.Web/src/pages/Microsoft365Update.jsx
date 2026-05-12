@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import NotFound from '../pages/NotFound';
-import PostGrid from './PostGrid';
-import Pagination from './Pagination';
-import SearchBar from './SearchBar';
-import Logo from './Logo';
-import SeriesNavigator from './SeriesNavigator';
-import TagFilter from './TagFilter';
-import Footer from './Footer';
-import { listPosts } from '../lib/postsApi';
+import NotFound from './NotFound';
+import PostGrid from '../components/posts/PostGrid';
+import Pagination from '../components/posts/Pagination';
+import SearchBar from '../components/posts/SearchBar';
+import Logo from '../components/common/Logo';
+import SeriesNavigator from '../components/posts/SeriesNavigator';
+import TagFilter from '../components/posts/TagFilter';
+import Footer from '../components/layout/Footer';
+import { listPosts } from '../api/posts';
 
 const CATEGORY = 'update';
 const DISPLAY_NAME = '업데이트 소식';

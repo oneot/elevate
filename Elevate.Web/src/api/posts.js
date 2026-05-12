@@ -1,4 +1,4 @@
-import { apiFetch } from './apiClient';
+import { apiFetch } from './client';
 
 // thumbnail 객체 또는 URL 문자열에서 이미지 URL을 반환
 // (서버가 SAS 포함 signedUrl을 미리 주입하므로 프록시 불필요)

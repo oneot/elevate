@@ -1,10 +1,10 @@
 import React, { useLayoutEffect } from "react";
 import { Link } from "react-router-dom";
 
-import GlassDocLayout from "../components/GlassDocLayout";
-import TableOfContents from "../components/TableOfContents";
+import GlassDocLayout from "../components/layout/GlassDocLayout";
+import TableOfContents from "../components/posts/TableOfContents";
 
-import { sanitizeHtml } from "../lib/htmlUtils";
+import { sanitizeHtml } from "../utils/html";
 import { usePostContent } from "../hooks/usePostContent";
 
 const MIEEArchive = () => {

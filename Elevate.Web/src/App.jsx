@@ -8,9 +8,9 @@ import MEEPre from './pages/MEEPre';
 import MEEExplorerProcedure from './pages/MEEExplorerProcedure';
 import MIEEArchive from './pages/MIEEArchive';
 import AgenthonInterview from "./pages/AgenthonInterview";
-import { setClarityTag, trackClarityEvent } from './lib/clarity';
+import { setClarityTag, trackClarityEvent } from './services/clarity';
 import ActivityShowcasePage from "./pages/ActivityShowcasePage";
-import Microsoft365Update from './components/Microsoft365Update';
+import Microsoft365Update from './pages/Microsoft365Update';
 import ProgramNews from './pages/ProgramNews';
 
 function App() {

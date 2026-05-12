@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import copilotStudioIcon from '../assets/NewMicrosoft365Icons/copilotstudio.png';
+import copilotStudioIcon from '../../assets/NewMicrosoft365Icons/copilotstudio.png';
 
 const CopilotStudioSection = () => {
     return (

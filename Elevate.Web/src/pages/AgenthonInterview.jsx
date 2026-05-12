@@ -1,10 +1,10 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import GlassDocLayout from "../components/GlassDocLayout";
-import TableOfContents from "../components/TableOfContents";
-import { sanitizeHtml, injectHeadingIds, injectLinkHandlers } from "../lib/htmlUtils";
-import { getLatestAgenthonPost } from "../lib/postsApi";
+import GlassDocLayout from "../components/layout/GlassDocLayout";
+import TableOfContents from "../components/posts/TableOfContents";
+import { sanitizeHtml, injectHeadingIds, injectLinkHandlers } from "../utils/html";
+import { getLatestAgenthonPost } from "../api/posts";
 
 const AgenthonInterview = () => {
   useLayoutEffect(() => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import gtpImage from '../assets/GTP2.png'; 
+import gtpImage from '../../assets/GTP2.png'; 
 
 const GlobalTrainingPartner = () => {
     return (

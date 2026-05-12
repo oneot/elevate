@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPost } from '../lib/postsApi';
-import { injectHeadingIds, injectLinkHandlers } from '../lib/htmlUtils';
+import { getPost } from '../api/posts';
+import { injectHeadingIds, injectLinkHandlers } from '../utils/html';
 
 export function usePostContent(category, slug) {
   const [content, setContent] = useState('');

@@ -1,9 +1,9 @@
 import { useState, useRef } from 'react';
 import KoreaMap from './KoreaMap';
 import MapTooltip from './MapTooltip';
-import { offices, officeNames } from '../constants/offices';
-import { normalizeUrl } from '../utils/url';
-import feelingsMonster from '../assets/FeelingsMonster.png';
+import { offices, officeNames } from '../../constants/offices';
+import { normalizeUrl } from '../../utils/url';
+import feelingsMonster from '../../assets/FeelingsMonster.png';
 
 const MapSection = () => {
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: '' });

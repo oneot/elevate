@@ -1,10 +1,10 @@
 import { useParams, Navigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import TableOfContents from '../components/TableOfContents';
-import SeriesNavigator from '../components/SeriesNavigator';
-import { getPost, listSeriesByCategory } from '../lib/postsApi';
-import { sanitizeHtml, injectHeadingIds } from '../lib/htmlUtils';
+import TableOfContents from '../components/posts/TableOfContents';
+import SeriesNavigator from '../components/posts/SeriesNavigator';
+import { getPost, listSeriesByCategory } from '../api/posts';
+import { sanitizeHtml, injectHeadingIds } from '../utils/html';
 
 const VALID_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote', 'm365update', 'update', 'mee'];
 

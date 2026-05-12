@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getThumbnailUrl } from '../lib/postsApi';
+import { getThumbnailUrl } from '../../api/posts';
 
 const PostCard = ({ post }) => {
   const { slug, title, excerpt, thumbnail, publishedAt, category, tags = [] } = post;

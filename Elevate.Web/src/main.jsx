@@ -3,7 +3,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import './index.css'
 import App from './App.jsx'
-import { startClarity } from './lib/clarity'
+import { startClarity } from './services/clarity'
 
 startClarity()
 

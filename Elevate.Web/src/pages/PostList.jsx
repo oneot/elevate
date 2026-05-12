@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import NotFound from './NotFound';
-import PostGrid from '../components/PostGrid';
-import SearchBar from '../components/SearchBar';
-import Logo from '../components/Logo';
-import TagFilter from '../components/TagFilter';
-import SeriesNavigator from '../components/SeriesNavigator';
-import Pagination from '../components/Pagination';
-import { listPosts, listTags, listSeriesByCategory, listSeriesPosts } from '../lib/postsApi';
+import PostGrid from '../components/posts/PostGrid';
+import SearchBar from '../components/posts/SearchBar';
+import Logo from '../components/common/Logo';
+import TagFilter from '../components/posts/TagFilter';
+import SeriesNavigator from '../components/posts/SeriesNavigator';
+import Pagination from '../components/posts/Pagination';
+import { listPosts, listTags, listSeriesByCategory, listSeriesPosts } from '../api/posts';
 
 const DISPLAY_NAMES = {
   all: 'ALL',

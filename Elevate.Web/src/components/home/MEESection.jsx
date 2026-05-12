@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import meeImage from '../assets/mee-image.png'; 
+import meeImage from '../../assets/mee-image.png'; 
 
 const MEESection = () => {
     return (

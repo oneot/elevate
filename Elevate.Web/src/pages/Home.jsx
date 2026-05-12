@@ -11,14 +11,14 @@ import excelIcon from '../assets/NewMicrosoft365Icons/Excel_512.png';
 import onenoteIcon from '../assets/NewMicrosoft365Icons/OneNote_512.png';
 
 // Components
-import Navigation from '../components/Navigation';
-import MapSection from '../components/MapSection';
-import CopilotStudioSection from '../components/CopilotStudioSection';
-import Footer from '../components/Footer';
-import ChatWidget from '../components/ChatWidget';
-import FeatureCard from '../components/FeatureCard';
-import MEESection from '../components/MEESection';
-import GlobalTrainingPartner from '../components/GlobalTrainingPartner';
+import Navigation from '../components/layout/Navigation';
+import MapSection from '../components/home/MapSection';
+import CopilotStudioSection from '../components/home/CopilotStudioSection';
+import Footer from '../components/layout/Footer';
+import ChatWidget from '../components/common/ChatWidget';
+import FeatureCard from '../components/home/FeatureCard';
+import MEESection from '../components/home/MEESection';
+import GlobalTrainingPartner from '../components/home/GlobalTrainingPartner';
 
 // Hooks
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
