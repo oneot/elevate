@@ -1,3 +1,10 @@
+/**
+ * @file useScrollAnimation.js
+ * @description 스크롤 시 `.fade-in-section` 요소가 뷰포트에 10% 이상 들어오면
+ * `is-visible` 클래스를 추가하는 IntersectionObserver 기반 훅.
+ *
+ * 한 번 진입하면 클래스를 유지한다(제거하지 않음).
+ */
 import { useEffect } from 'react';
 
 /**

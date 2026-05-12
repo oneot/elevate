@@ -1,6 +1,24 @@
+/**
+ * @file ShowcaseLayout.jsx
+ * @description 쇼케이스·정적 콘텐츠 페이지용 공통 레이아웃 컴포넌트.
+ *
+ * 그라디언트 배경 + 노이즈 텍스처 + blur 장식 원을 렌더링하고,
+ * 선택적으로 브레드크럼 내비게이션, 제목, 부제목, 자식 콘텐츠를 배치한다.
+ * `crumbs` 배열의 각 항목은 `{ label, to }` 링크 또는 `{ type: 'sep' }` 구분자 형태를 사용한다.
+ */
 import React from "react";
 import { Link } from "react-router-dom";
 
+/**
+ * 쇼케이스·정적 페이지용 레이아웃.
+ *
+ * @param {Object} props
+ * @param {Array<{label: string, to?: string, type?: 'sep'}>} [props.crumbs] - 브레드크럼 항목 배열
+ * @param {string} [props.title] - 페이지 제목
+ * @param {string} [props.subtitle] - 페이지 부제목
+ * @param {React.ReactNode} props.children - 본문 콘텐츠
+ * @returns {JSX.Element}
+ */
 export default function ShowcaseLayout({
   crumbs,
   title,

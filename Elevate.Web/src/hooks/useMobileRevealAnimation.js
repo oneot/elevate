@@ -1,3 +1,11 @@
+/**
+ * @file useMobileRevealAnimation.js
+ * @description 터치 디바이스에서 `.reveal-card` 요소가 뷰포트 중앙 영역에 진입할 때
+ * `in-view` 클래스를 토글하는 IntersectionObserver 기반 훅.
+ *
+ * `hover: none` 미디어 쿼리로 터치 디바이스만 대상으로 하며,
+ * 마우스 지원 디바이스에서는 early return하여 옵저버를 생성하지 않는다.
+ */
 import { useEffect } from 'react';
 
 /**

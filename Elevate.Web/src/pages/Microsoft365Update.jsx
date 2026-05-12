@@ -1,3 +1,14 @@
+/**
+ * @file Microsoft365Update.jsx
+ * @description Microsoft 365 업데이트 소식 목록 페이지.
+ *
+ * `update` 카테고리의 게시글을 최대 100개 한 번에 불러온 뒤,
+ * 클라이언트 사이드에서 태그 필터링과 페이지네이션을 수행한다.
+ * (서버 측 태그 AND 필터링이 지원되지 않아 클라이언트에서 처리)
+ *
+ * 태그 필터는 URL의 `?tags=tag1,tag2` 형식으로 복수 선택이 가능하며
+ * AND 조건으로 동작한다 (선택된 모든 태그를 포함하는 게시글만 표시).
+ */
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PostListLayout from '../components/posts/PostListLayout';
@@ -52,7 +63,7 @@ export default function Microsoft365Update() {
     return () => controller.abort();
   }, []);
 
-  // 태그 필터 적용 (AND 조건)
+  // 태그 필터 적용: 선택된 태그를 모두 포함하는 게시글만 표시 (AND 조건)
   const filteredPosts = useMemo(() => {
     if (selectedTags.length === 0) return allPosts;
     return allPosts.filter((p) => {
@@ -94,7 +105,7 @@ export default function Microsoft365Update() {
     updateUrlParams({ tags: '', page: '1' });
   };
 
-  // 페이지네이션
+  // 클라이언트 사이드 페이지네이션: 필터링된 결과를 PAGE_SIZE 단위로 slice한다.
   const total = filteredPosts.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const currentPage = Math.min(Math.max(pageParam, 1), totalPages);

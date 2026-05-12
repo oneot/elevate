@@ -1,3 +1,11 @@
+/**
+ * @file MapSection.jsx
+ * @description 홈페이지 히어로 섹션 — 한국 지도 인터랙션과 교육청 링크를 포함한다.
+ *
+ * 사용자가 지도의 교육청 핀 위에 마우스를 올리면 툴팁이 표시되고,
+ * 클릭 시 해당 교육청의 Microsoft 365 포털로 이동한다.
+ * 모바일(coarse pointer)에서는 confirm 다이얼로그로 이동 의사를 확인한다.
+ */
 import { useState, useRef } from 'react';
 import KoreaMap from './KoreaMap';
 import MapTooltip from './MapTooltip';
@@ -18,9 +26,11 @@ const MapSection = () => {
         const circleCenterX = circleRect.left + circleRect.width / 2;
         const circleCenterY = circleRect.top + circleRect.height / 2;
         
+        // 핀 반지름만큼 위로 오프셋하여 툴팁이 핀 위에 떠 보이게 한다.
         const pinRadius = parseFloat(e.target.getAttribute('r')) || 8;
         const tooltipOffset = pinRadius + 35;
         
+        // 좌표는 mapContainer 기준 상대 위치로 변환한다.
         setTooltip({
             visible: true,
             x: circleCenterX - mapRect.left,
@@ -58,6 +68,8 @@ const MapSection = () => {
         const url = normalizeUrl(offices[key]);
         if (!url) return;
 
+        // 모바일(coarse pointer): 새 탭 이동 전 confirm으로 사용자 의사를 확인한다.
+        // 데스크톱: hover로 이미 인지한 상태이므로 즉시 새 탭으로 이동한다.
         const isMobile = window.matchMedia("(pointer: coarse)").matches;
         if (isMobile) {
             if (window.confirm(`${name} 페이지로 이동하시겠습니까?`)) {

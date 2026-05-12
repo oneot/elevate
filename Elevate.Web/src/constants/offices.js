@@ -1,3 +1,13 @@
+/**
+ * @file offices.js
+ * @description 전국 17개 시·도 교육청의 Microsoft 365 포털 URL과 한글 이름 상수.
+ *
+ * `offices`: 교육청 키 → M365 포털 URL 매핑
+ * `officeNames`: 교육청 키 → 한글 이름 매핑
+ *
+ * MapSection 컴포넌트에서 지도 핀 렌더링 및 툴팁 표시에 사용한다.
+ */
+
 // 전국 교육청 Microsoft 365 포털 URL
 export const offices = {
     Seoul: "https://o365.sen.go.kr",

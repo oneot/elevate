@@ -1,6 +1,20 @@
+/**
+ * @file TableOfContents.jsx
+ * @description 게시글 상세 페이지의 우측 목차 컴포넌트.
+ *
+ * 두 가지 Observer를 조합하여 동적 목차를 구현한다:
+ * - `MutationObserver`: `dangerouslySetInnerHTML` 렌더링 후 DOM이 변경될 때 heading 목록을 재추출
+ * - `IntersectionObserver`: 뷰포트 진입 heading을 추적하여 현재 활성 항목 강조
+ *
+ * `buildNestedHeadings`: 평탄한 `[h1, h2, h3, ...]` 배열을 부모-자식 트리로 변환 (스택 기반)
+ * `post-title` id: 게시글 제목을 목차 최상단에 별도 스타일로 추가하기 위한 가상 항목
+ */
 import { useEffect, useState, useRef } from 'react';
 
-// DOM의 제목 요소에서 실제 ID를 읽기 (rehype-slug로 생성된 ID)
+/**
+ * 게시글 본문(`article`) 내 h1~h3 요소에서 heading 목록을 추출한다.
+ * @returns {{ id: string, text: string, level: number }[]}
+ */
 const extractHeadingsFromDOM = () => {
   const headings = [];
   const headingElements = document.querySelectorAll('article h1, article h2, article h3');
@@ -18,7 +32,12 @@ const extractHeadingsFromDOM = () => {
   return headings;
 };
 
-// 평탄한 배열을 중첩 구조로 변환
+/**
+ * 평탄한 heading 배열을 부모-자식 중첩 트리로 변환한다.
+ * 스택을 이용해 현재 heading보다 레벨이 높거나 같은 항목을 제거하며 트리를 구성한다.
+ * @param {{ id: string, text: string, level: number }[]} flatHeadings
+ * @returns {{ id: string, text: string, level: number, children: Array }[]}
+ */
 const buildNestedHeadings = (flatHeadings) => {
   const nested = [];
   const stack = [];
@@ -48,7 +67,10 @@ const buildNestedHeadings = (flatHeadings) => {
   return nested;
 };
 
-// 목차 아이템 렌더링 (재귀)
+/**
+ * 목차 항목 하나를 렌더링하는 재귀 컴포넌트.
+ * `post-title` id는 게시글 제목을 가리키는 가상 heading으로, 클릭 시 페이지 최상단으로 이동한다.
+ */
 const TableOfContentsItem = ({ heading, activeId, onLinkClick }) => {
   const isActive = activeId === heading.id;
   const isPostTitle = heading.id === 'post-title';
@@ -115,12 +137,23 @@ const TableOfContentsItem = ({ heading, activeId, onLinkClick }) => {
   );
 };
 
+/**
+ * 게시글 목차 컴포넌트.
+ * heading이 없으면 null을 반환한다.
+ *
+ * @param {Object} props
+ * @param {string} [props.contentMarkdown] - 콘텐츠 변경 감지용 의존성 (실제로는 HTML 문자열)
+ * @param {string} [props.postTitle] - 목차 최상단에 추가할 게시글 제목
+ * @param {boolean} [props.sticky=true] - true이면 `sticky top-4` 포지션 적용
+ * @returns {JSX.Element|null}
+ */
 const TableOfContents = ({ contentMarkdown, postTitle, sticky = true }) => {
   const [activeId, setActiveId] = useState('');
   const [headings, setHeadings] = useState([]);
   const observerRef = useRef(null);
 
-  // DOM 마크다운 렌더링 후 제목 추출
+  // MutationObserver로 article DOM 변경을 감지하고 heading을 재추출한다.
+  // dangerouslySetInnerHTML 반영 후 DOM이 업데이트될 때까지 150ms 딜레이를 둔다.
   useEffect(() => {
     // article 요소 찾기
     const article = document.querySelector('article');
@@ -177,7 +210,9 @@ const TableOfContents = ({ contentMarkdown, postTitle, sticky = true }) => {
     };
   }, [contentMarkdown, postTitle]);
 
-  // Intersection Observer로 현재 섹션 추적
+  // IntersectionObserver로 뷰포트 진입 heading을 추적한다.
+  // 동시에 여러 heading이 보일 때는 top 좌표가 가장 위인 항목을 active로 선택한다.
+  // 페이지 최하단에 도달하면 scroll 이벤트로 마지막 heading을 active로 강제 설정한다.
   useEffect(() => {
     if (headings.length === 0) return;
 

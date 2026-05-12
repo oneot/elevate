@@ -1,5 +1,19 @@
+/**
+ * @file Logo.jsx
+ * @description Microsoft Elevate 로고 컴포넌트.
+ *
+ * Microsoft 사각형 로고 SVG와 브랜드명을 표시하며, 클릭 시 홈(`/`)으로 이동한다.
+ * `isBlog`가 true이면 브랜드명 뒤에 'Blog'가 추가된다.
+ */
 import { Link } from 'react-router-dom';
 
+/**
+ * 홈 링크가 포함된 Microsoft Elevate 로고.
+ *
+ * @param {Object} props
+ * @param {boolean} [props.isBlog=false] - true이면 'Blog' 텍스트를 브랜드명 뒤에 표시
+ * @returns {JSX.Element}
+ */
 const Logo = ({isBlog}) => {
     return (
         <Link to="/" className="flex items-center gap-3">

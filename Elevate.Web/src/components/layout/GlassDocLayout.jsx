@@ -1,6 +1,26 @@
+/**
+ * @file GlassDocLayout.jsx
+ * @description glassmorphism 스타일의 문서/게시글 페이지용 레이아웃 컴포넌트.
+ *
+ * 그라디언트 배경 + 노이즈 텍스처 + blur 장식 원을 배경으로 렌더링하며,
+ * 본문 영역은 반투명 glass 패널로 처리된다.
+ * `rightAside`가 전달된 경우 2컬럼 grid로 전환되어 우측 사이드바를 표시한다.
+ *
+ * `crumbs` 배열 형식: `{ label, to }` 링크 | `{ type: 'sep' }` 구분자
+ */
 import React from "react";
 import { Link } from "react-router-dom";
 
+/**
+ * glassmorphism 문서 레이아웃.
+ *
+ * @param {Object} props
+ * @param {Array<{label: string, to?: string, type?: 'sep'}>} [props.crumbs] - 브레드크럼 항목 배열
+ * @param {React.ReactNode} props.children - glass 패널 내 본문 콘텐츠
+ * @param {React.ReactNode} [props.footer] - 본문 하단 구분선 아래 표시할 콘텐츠
+ * @param {React.ReactNode} [props.rightAside] - 우측 사이드바 콘텐츠 (지정 시 2컬럼 레이아웃)
+ * @returns {JSX.Element}
+ */
 export default function GlassDocLayout({
   crumbs,
   children,

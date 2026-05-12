@@ -1,3 +1,12 @@
+/**
+ * @file FeatureCard.jsx
+ * @description 홈페이지 기능 소개 섹션에 사용되는 재사용 가능한 카드 컴포넌트.
+ *
+ * `colorScheme` prop으로 그라디언트/그림자/텍스트 색상 테마를 선택한다.
+ * Tailwind JIT를 위해 `colorSchemes` 객체에 전체 클래스명이 하드코딩되어 있다.
+ * `iconType`에 따라 이미지 또는 emoji 아이콘을 렌더링하며,
+ * `description`은 HTML을 허용하여 `dangerouslySetInnerHTML`로 렌더링된다.
+ */
 import { Link } from 'react-router-dom';
 
 /**

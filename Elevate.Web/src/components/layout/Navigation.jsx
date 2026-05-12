@@ -1,5 +1,17 @@
+/**
+ * @file Navigation.jsx
+ * @description 모든 페이지 최상단에 고정되는 내비게이션 바.
+ *
+ * 로고 + 섹션 앵커 링크 3개(시작하기/블로그/새로운 소식) + 문의하기 외부 링크로 구성된다.
+ * 배경은 반투명 blur 처리되어 스크롤 시에도 콘텐츠 위에 오버레이된다.
+ */
 import Logo from '../common/Logo';
 
+/**
+ * 상단 고정 내비게이션 바 컴포넌트.
+ *
+ * @returns {JSX.Element}
+ */
 const Navigation = () => {
     return (
         <nav className="fixed w-full z-50 top-0 left-0 bg-white/85 backdrop-blur-md border-b border-gray-100">

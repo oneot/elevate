@@ -1,3 +1,11 @@
+/**
+ * @file Home.jsx
+ * @description Microsoft Elevate 홈페이지 컴포넌트.
+ *
+ * MapSection → 기능 카드 그리드 → 업데이트/행사 카드 → CopilotStudioSection →
+ * MEESection → GlobalTrainingPartner 순으로 섹션을 구성한다.
+ * URL hash(`#section-id`)로 진입하면 해당 섹션으로 자동 스크롤한다.
+ */
 import { Helmet } from 'react-helmet-async';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';

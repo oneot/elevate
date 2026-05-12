@@ -1,3 +1,10 @@
+/**
+ * @file MEESection.jsx
+ * @description 홈페이지 Microsoft Elevate for Educators(MEE) 커뮤니티 소개 섹션.
+ *
+ * 이미지 카드, 커뮤니티 설명 텍스트, '활동 사례 알아보기'/'커뮤니티 가입하기' 버튼으로 구성된다.
+ * 모바일에서는 이미지를 하단에, 데스크톱에서는 좌측에 배치하는 반응형 레이아웃을 사용한다.
+ */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import meeImage from '../../assets/mee-image.png'; 

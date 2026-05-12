@@ -1,3 +1,10 @@
+/**
+ * @file ChatWidget.jsx
+ * @description Bot Framework WebChat 기반의 우측 하단 플로팅 채팅 위젯 컴포넌트.
+ *
+ * `VITE_BOT_TOKEN_ENDPOINT` 환경변수가 없으면 렌더링하지 않는다.
+ * 채팅창이 열릴 때 토큰 엔드포인트에서 DirectLine 토큰을 가져와 연결한다.
+ */
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import ReactWebChat, { createDirectLine, createStore } from 'botframework-webchat';
 

@@ -1,3 +1,13 @@
+/**
+ * @file PostDetail.jsx
+ * @description 개별 게시글 상세 페이지.
+ *
+ * URL 파라미터(`/:category/:postId`)로 게시글을 API에서 가져와 렌더링한다.
+ * - `AbortController`로 라우트 전환 시 진행 중인 fetch를 취소한다.
+ * - HTML 콘텐츠는 `sanitizeHtml`(DOMPurify)로 소독 후 `dangerouslySetInnerHTML`로 렌더링한다.
+ * - 렌더링 후 `injectHeadingIds`로 heading id를 주입하여 좌측 TableOfContents와 연동한다.
+ * - 게시글이 시리즈에 속하면 우측에 SeriesNavigator를 표시한다.
+ */
 import { useParams, Navigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useEffect, useRef, useState } from 'react';
@@ -23,6 +33,8 @@ const PostDetail = () => {
 
     useEffect(() => {
         if (!normalizedCategory || !postId) return;
+        // AbortController: 라우트 전환 시 이전 fetch를 취소하여 응답이 뒤늦게 도착해도
+        // 현재 페이지의 상태를 덮어쓰지 않도록 한다.
         const controller = new AbortController();
         async function load() {
             setLoading(true);

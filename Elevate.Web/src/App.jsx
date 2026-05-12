@@ -1,3 +1,11 @@
+/**
+ * @file App.jsx
+ * @description SPA 최상위 라우팅 컴포넌트.
+ *
+ * React Router의 Routes/Route로 전체 페이지 라우팅을 정의하고,
+ * 라우트 변경 시 Microsoft Clarity에 페이지뷰 이벤트를 전송한다.
+ * 모든 페이지 컴포넌트는 lazy import로 코드 스플리팅 처리되어 있다.
+ */
 import { lazy, Suspense, useEffect, useRef } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { setClarityTag, trackClarityEvent } from './services/clarity';
@@ -16,6 +24,8 @@ const ProgramNews = lazy(() => import('./pages/ProgramNews'));
 
 function App() {
   const location = useLocation();
+  // 직전 라우트를 ref로 추적하여, pathname/search가 바뀌지 않은 경우
+  // (예: hash만 변경) Clarity page_view가 중복 발생하는 것을 막는다.
   const previousRouteRef = useRef('');
 
   useEffect(() => {

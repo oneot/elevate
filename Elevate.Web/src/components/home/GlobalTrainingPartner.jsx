@@ -1,3 +1,9 @@
+/**
+ * @file GlobalTrainingPartner.jsx
+ * @description 홈페이지 Microsoft Global Training Partner(GTP) 프로그램 소개 섹션.
+ *
+ * '파트너 신청하기' 및 '파트너 찾아보기' 외부 링크와 GTP 이미지 카드로 구성된다.
+ */
 import React from 'react';
 import gtpImage from '../../assets/GTP2.png'; 
 

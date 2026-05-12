@@ -1,13 +1,45 @@
+/**
+ * @file ActivityShowcaseCarousel.jsx
+ * @description 활동 사례 영상을 3D orbit 방식으로 전환하는 캐러셀 컴포넌트.
+ *
+ * 카테고리 필터, 5장 카드 3D orbit 배치, YouTube iframe 재생 전환, 우측 활동 목록 사이드바로 구성된다.
+ * `items` 배열의 각 항목은 `{ id, videoId, title, description, category, year, channel }` 형식이다.
+ *
+ * 주요 설계 포인트:
+ * - `getWrappedIndex`: 음수를 포함한 원형 인덱스를 `(index + length) % length`로 처리
+ * - `orbitMotionMap`: offset -2~2에 대한 rotateY + translateX/Y + scale로 입체 배치 정의
+ * - `orderedCards`: z-index 충돌 없이 DOM 렌더 순서를 결정하기 위해 |offset| 내림차순 정렬
+ * - 카테고리 변경 시 `activeIndex`를 0으로 리셋하여 범위 초과를 방지
+ */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+/**
+ * YouTube 영상 ID로 hqdefault 썸네일 URL을 반환한다.
+ * @param {string} videoId
+ * @returns {string}
+ */
 function getYouTubeThumbnail(videoId) {
   return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 }
 
+/**
+ * 양수·음수를 모두 처리하는 원형 인덱스를 반환한다.
+ * 예) getWrappedIndex(-1, 5) → 4
+ * @param {number} index
+ * @param {number} length
+ * @returns {number}
+ */
 function getWrappedIndex(index, length) {
   return (index + length) % length;
 }
 
+/**
+ * 활동 사례 3D 캐러셀 컴포넌트.
+ *
+ * @param {Object} props
+ * @param {Array<{id: string, videoId: string, title: string, description: string, category: string, year: string|number, channel: string}>} [props.items=[]] - 표시할 활동 사례 배열
+ * @returns {JSX.Element}
+ */
 export default function ActivityShowcaseCarousel({ items = [] }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [playingId, setPlayingId] = useState(null);
@@ -32,6 +64,7 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
 
   const activeItem = filteredItems[safeActiveIndex] ?? null;
 
+  // 카드 전환 애니메이션(700ms) 중 연속 클릭을 막아 state 꼬임을 방지한다.
   const moveToIndex = (index) => {
     if (filteredItems.length === 0 || isAnimating) return;
     setIsAnimating(true);
@@ -88,6 +121,9 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
     return [...visibleCards].sort((a, b) => Math.abs(b.offset) - Math.abs(a.offset));
   }, [visibleCards]);
 
+  // offset -2~2 각 위치에 대한 3D 변환 스타일 맵.
+  // rotateY로 좌우 기울기, translateX로 수평 거리, scale로 원근감을 표현한다.
+  // offset 0(중앙)만 pointerEvents: auto이며 나머지는 클릭 이벤트를 다르게 처리한다.
   const orbitMotionMap = {
     [-2]: {
       transform:
@@ -185,6 +221,7 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
                         zIndex: motion.zIndex,
                         pointerEvents: motion.pointerEvents,
                       }}
+                      // active 카드 클릭 시 YouTube iframe으로 전환하고, 비활성 카드 클릭 시 해당 방향으로 이동
                       onClick={() => {
                         if (offset === -1) goPrev();
                         if (offset === 1) goNext();

@@ -1,5 +1,22 @@
+/**
+ * @file TagFilter.jsx
+ * @description 게시글 목록 페이지의 태그 필터 사이드바 컴포넌트.
+ *
+ * 전체 태그 목록을 버튼으로 표시하며, 선택된 태그는 파란색으로 강조된다.
+ * 태그가 없으면 null을 반환한다.
+ */
 import React from 'react';
 
+/**
+ * 태그 필터 버튼 목록 컴포넌트.
+ *
+ * @param {Object} props
+ * @param {string[]} [props.allTags=[]] - 표시할 전체 태그 목록
+ * @param {string[]} [props.selectedTags=[]] - 현재 선택된 태그 목록
+ * @param {Function} props.onTagToggle - 태그 버튼 클릭 시 호출되는 콜백 `(tag: string) => void`
+ * @param {Function} props.onClearAll - '전체 해제' 버튼 클릭 시 호출되는 콜백
+ * @returns {JSX.Element|null} 태그가 없으면 null
+ */
 export default function TagFilter({ allTags = [], selectedTags = [], onTagToggle, onClearAll }) {
   if (!allTags.length) return null;
 

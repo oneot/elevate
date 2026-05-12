@@ -1,3 +1,13 @@
+/**
+ * @file PostList.jsx
+ * @description 카테고리별 게시글 목록 페이지.
+ *
+ * URL 파라미터(`/:category`)와 쿼리 파라미터(`?tag`, `?series`, `?page`)를 기반으로
+ * 게시글 목록, 태그 목록, 시리즈 목록을 API에서 가져와 렌더링한다.
+ *
+ * 시리즈가 선택된 경우: `listSeriesPosts`로 해당 시리즈 전체 게시글 조회 (페이지네이션 없음)
+ * 시리즈가 없는 경우: `listPosts`로 페이지 기반 목록 조회
+ */
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import NotFound from './NotFound';

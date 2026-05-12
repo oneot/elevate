@@ -1,3 +1,11 @@
+/**
+ * @file SeriesNavigator.jsx
+ * @description 게시글 목록/상세 페이지 우측 사이드바 — 시리즈 선택 드롭다운과 시리즈 내 게시글 목록을 표시한다.
+ *
+ * - 목록 페이지: 시리즈를 드롭다운으로 선택하면 URL의 `?series=` 쿼리가 갱신된다.
+ * - 상세 페이지: 현재 게시글을 하이라이트하고, 이전/다음/목록 링크를 제공한다.
+ * - 드롭다운은 외부 클릭(mousedown) 또는 Escape 키로 닫힌다.
+ */
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -30,6 +38,7 @@ export default function SeriesNavigator({
   const dropdownRef = useRef(null);
 
   useEffect(() => {
+    // 드롭다운 외부 클릭 감지: dropdownRef 바깥을 클릭하면 닫는다.
     function handleDocumentClick(event) {
       if (!dropdownRef.current) return;
       if (!dropdownRef.current.contains(event.target)) {
@@ -56,7 +65,8 @@ export default function SeriesNavigator({
     return null;
   }
 
-  // showAllOption이 자동으로 전체보기 sentinel 항목을 상단에 삽입
+  // showAllOption이 true면 "전체보기" sentinel 항목을 배열 앞에 삽입하여
+  // 사용자가 시리즈 필터를 해제할 수 있게 한다 (key='' 로 식별).
   const effectiveOptions = showAllOption
     ? [{ key: '', title: '전체보기', posts: [] }, ...seriesOptions]
     : seriesOptions;

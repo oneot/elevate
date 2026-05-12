@@ -1,3 +1,10 @@
+/**
+ * @file PostCard.jsx
+ * @description 게시글 목록에서 각 게시글을 나타내는 카드 컴포넌트.
+ *
+ * 썸네일 이미지, 제목(2줄 clamp), 요약문, 태그를 표시한다.
+ * 태그는 최대 2개만 보이고, 나머지는 `+N` 버튼 hover/focus 시 tooltip으로 펼쳐진다.
+ */
 import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getThumbnailUrl } from '../../api/posts';

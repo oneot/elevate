@@ -1,3 +1,15 @@
+/**
+ * @file Footer.jsx
+ * @description 모든 페이지 하단에 표시되는 공통 푸터 컴포넌트.
+ *
+ * 브랜드명, 개인정보처리방침/이용약관 외부 링크, 저작권 문구를 포함한다.
+ */
+
+/**
+ * 공통 사이트 푸터 컴포넌트.
+ *
+ * @returns {JSX.Element}
+ */
 const Footer = () => {
     return (
         <footer className="bg-white border-t border-slate-100 mt-20">

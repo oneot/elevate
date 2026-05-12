@@ -1,3 +1,9 @@
+/**
+ * @file CopilotStudioSection.jsx
+ * @description 홈페이지 AI Skilling(Copilot Agent/에이전톤) 소개 섹션.
+ *
+ * '에이전톤 문의하기' 외부 링크, '에이전톤 우수사례' 내부 링크, Copilot Studio 아이콘 이미지로 구성된다.
+ */
 import { Link } from 'react-router-dom';
 import copilotStudioIcon from '../../assets/NewMicrosoft365Icons/copilotstudio.png';
 
