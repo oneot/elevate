@@ -45,7 +45,7 @@ export default function Microsoft365Update() {
       setLoading(true);
       setError(null);
       try {
-        const data = await listPosts({ category: CATEGORY, limit: 100 });
+        const data = await listPosts({ category: CATEGORY, limit: 100, signal: controller.signal });
         const allItems = (data.items || []).map((p) => ({ ...p, tags: normalizeTagList(p.tags || []) }));
         setAllPosts(allItems);
         const tagSet = new Set();

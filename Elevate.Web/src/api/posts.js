@@ -34,9 +34,10 @@ export function getThumbnailUrl(thumbnail) {
  * @param {string[]} [options.categories] - 복수 카테고리 필터
  * @param {string} [options.tag] - 태그 필터
  * @param {string} [options.q] - 제목/요약/슬러그 검색어
+ * @param {AbortSignal} [options.signal] - fetch 취소용 AbortSignal
  * @returns {Promise<{items: Array, totalPages: number, totalCount: number}>}
  */
-export function listPosts({ limit = 20, page = 1, category, categories, tag, q } = {}) {
+export function listPosts({ limit = 20, page = 1, category, categories, tag, q, signal } = {}) {
   const params = new URLSearchParams();
   if (limit !== 20) params.set('limit', String(limit));
   if (page !== 1) params.set('page', String(page));
@@ -45,7 +46,7 @@ export function listPosts({ limit = 20, page = 1, category, categories, tag, q }
   if (tag) params.set('tag', tag);
   if (q) params.set('q', q);
   const qs = params.toString();
-  return apiFetch(`/posts${qs ? `?${qs}` : ''}`);
+  return apiFetch(`/posts${qs ? `?${qs}` : ''}`, signal ? { signal } : undefined);
 }
 
 /**
