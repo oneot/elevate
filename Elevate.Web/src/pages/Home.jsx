@@ -179,9 +179,9 @@ const Home = () => {
                             <span className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mr-3 shadow-lg shadow-blue-100 border border-white text-3xl transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:bg-slate-50 group-hover:shadow-blue-200/80">
                                 📢
                             </span>
-                            <h3 className="text-xl font-bold text-sky-600 group-hover:text-sky-700 transition-colors">행사 소식</h3>
+                            <h3 className="text-xl font-bold text-sky-600 group-hover:text-sky-700 transition-colors">프로그램 & 행사 소식</h3>
                         </div>
-                        <p className="text-slate-700/80 font-medium mb-4 text-[15px]">Microsoft Elevate와 함께하는 행사 소식을 알아보세요.</p>
+                        <p className="text-slate-700/80 font-medium mb-4 text-[15px]">Microsoft Elevate와 함께하는 프로그램 & 행사 소식을 알아보세요.</p>
                         <span className="text-sky-600 font-bold text-xs opacity-100 translate-x-0 sm:opacity-0 sm:translate-x-[-10px] sm:group-hover:opacity-100 sm:group-hover:translate-x-0 transition-all duration-300 flex items-center gap-1">더 알아보기 <span aria-hidden>→</span></span>
                     </a>
                 </div>
