@@ -1,11 +1,8 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import NotFound from './NotFound';
-import PostGrid from '../components/posts/PostGrid';
-import Pagination from '../components/posts/Pagination';
+import PostListLayout from '../components/posts/PostListLayout';
 import SearchBar from '../components/posts/SearchBar';
 import Logo from '../components/common/Logo';
-import TagFilter from '../components/posts/TagFilter';
 import Footer from '../components/layout/Footer';
 import { listPosts } from '../api/posts';
 
@@ -110,43 +107,32 @@ export default function Microsoft365Update() {
   };
 
   return (
-    <div className="relative min-h-screen">
-      <div className="pastel-bg">
-        <div className="blob blob-1"></div>
-        <div className="blob blob-2"></div>
-        <div className="blob blob-3"></div>
-      </div>
-      <main className="w-full px-4 sm:px-6 lg:px-12 py-8">
-        <header className="mb-10 flex flex-col gap-5">
-          <div className="flex items-center gap-4">
-            <Logo isBlog={true}/>
+    <>
+      <PostListLayout
+        title={
+          <>
+            <Logo isBlog={true} />
             <p className="text-slate-400">|</p>
             <h1 className="text-2xl sm:text-3xl font-bold text-black">{DISPLAY_NAME}</h1>
-          </div>
-          <div className="w-full sm:w-80 mt-2"><SearchBar placeholder={`Search ${DISPLAY_NAME}`} onSubmit={(q) => { updateUrlParams({ page: '1', q }); }} /></div>
-        </header>
-        <div className="flex flex-col lg:grid lg:grid-cols-10 gap-6 items-stretch">
-          <aside className="w-full lg:col-span-2 lg:sticky lg:top-4 self-stretch flex flex-col">
-            <TagFilter
-              allTags={allTags}
-              selectedTags={selectedTags}
-              onTagToggle={handleTagToggle}
-              onClearAll={handleClearAllTags}
-            />
-          </aside>
-          <section className="w-full lg:col-span-8">
-            {loading && <div className="text-center py-8">로딩 중...</div>}
-            <div className="mb-4 text-sm text-slate-600 min-h-6 flex items-center">
-              {!loading && selectedTags.length > 0 && (
-                <span>{filteredPosts.length}개의 게시글이 일치합니다.</span>
-              )}
-            </div>
-            <PostGrid posts={posts} />
-            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
-          </section>
-        </div>
-      </main>
+          </>
+        }
+        searchBar={
+          <SearchBar placeholder={`Search ${DISPLAY_NAME}`} onSubmit={(q) => { updateUrlParams({ page: '1', q }); }} />
+        }
+        tagFilterProps={{
+          allTags,
+          selectedTags,
+          onTagToggle: handleTagToggle,
+          onClearAll: handleClearAllTags,
+        }}
+        posts={posts}
+        loading={loading}
+        countLabel={!loading && selectedTags.length > 0 ? `${filteredPosts.length}개의 게시글이 일치합니다.` : undefined}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
       <Footer />
-    </div>
+    </>
   );
 }

@@ -1,12 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import NotFound from './NotFound';
-import PostGrid from '../components/posts/PostGrid';
+import PostListLayout from '../components/posts/PostListLayout';
 import SearchBar from '../components/posts/SearchBar';
 import Logo from '../components/common/Logo';
-import TagFilter from '../components/posts/TagFilter';
-import SeriesNavigator from '../components/posts/SeriesNavigator';
-import Pagination from '../components/posts/Pagination';
 import { listPosts, listTags, listSeriesByCategory, listSeriesPosts } from '../api/posts';
 import { POST_LIST_CATEGORIES, BASE_CATEGORIES, CATEGORY_DISPLAY_NAMES } from '../constants/categories';
 
@@ -133,92 +130,63 @@ export default function PostList() {
 
   if (!isValidCategory) return <NotFound />;
 
+  const countLabel = !loading && totalCount > 0
+    ? (seriesParam
+        ? `${totalCount}개의 게시글`
+        : `총 ${totalCount}개 · ${pageParam} / ${totalPages} 페이지`)
+    : undefined;
+
   return (
-    <div className="relative min-h-screen">
-      <div className="pastel-bg">
-        <div className="blob blob-1"></div>
-        <div className="blob blob-2"></div>
-        <div className="blob blob-3"></div>
-      </div>
-
-      <main className="w-full px-4 sm:px-6 lg:px-12 py-8">
-        <header className="mb-10 flex flex-col gap-5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <Logo isBlog={true}/>
-              <p className="text-slate-400">|</p>
-              <h1 className="text-2xl sm:text-3xl font-bold">{displayName} Posts</h1>
-            </div>
-            <div className="w-full sm:w-80">
-              <SearchBar placeholder={`Search ${displayName}`} onSubmit={(q) => { updateUrlParams({ q }); }} />
-            </div>
-          </div>
-          <nav>
-            <ul className="flex flex-wrap gap-2">
-              {VALID_CATEGORIES.map((c) => (
-                <li key={c}>
-                  <Link
-                    to={`/${c}`}
-                    className={`inline-block px-3.5 py-2 rounded-full border text-sm sm:text-base transition-all duration-200 ${
-                      c === category
-                        ? 'bg-ms-blue text-white border-ms-blue shadow-[0_10px_24px_-12px_rgba(0,120,212,0.95)]'
-                        : 'bg-white/85 backdrop-blur border-white/70 text-slate-700 hover:border-ms-blue/35 hover:text-ms-blue'
-                    }`}
-                  >
-                    {CATEGORY_DISPLAY_NAMES[c]}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </header>
-
-        <div className={`flex flex-col lg:grid gap-6 ${hasSeriesSidebar ? 'lg:grid-cols-12' : 'lg:grid-cols-10'}`}>
-          <aside className="w-full lg:col-span-2 lg:sticky lg:top-4 lg:self-start">
-            <TagFilter
-              allTags={allTags}
-              selectedTags={tagParam ? [tagParam] : []}
-              onTagToggle={handleTagToggle}
-              onClearAll={handleClearAllTags}
-            />
-          </aside>
-
-          <section className={`w-full ${hasSeriesSidebar ? 'lg:col-span-7 xl:col-span-8' : 'lg:col-span-8'}`}>
-            {loading && <div className="text-center py-8">로딩 중...</div>}
-            <div className="mb-4 text-sm text-slate-600 min-h-6 flex items-center">
-              {!loading && totalCount > 0 && (
-                <span>
-                  {seriesParam
-                    ? `${totalCount}개의 게시글`
-                    : `총 ${totalCount}개 · ${pageParam} / ${totalPages} 페이지`}
-                </span>
-              )}
-            </div>
-            <PostGrid posts={posts} />
-            {!seriesParam && (
-              <Pagination
-                currentPage={pageParam}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-            )}
-          </section>
-
-          {hasSeriesSidebar && (
-            <aside className="w-full lg:col-span-3 xl:col-span-2 hidden lg:block lg:sticky lg:top-4 lg:self-start">
-              <SeriesNavigator
-                seriesOptions={seriesOptions}
-                selectedSeries={selectedSeriesKey}
-                onSeriesChange={handleSeriesChange}
-                category={category}
-                currentPostId={null}
-                showAllOption={true}
-                sticky={false}
-              />
-            </aside>
-          )}
-        </div>
-      </main>
-    </div>
+    <PostListLayout
+      title={
+        <>
+          <Logo isBlog={true} />
+          <p className="text-slate-400">|</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">{displayName} Posts</h1>
+        </>
+      }
+      searchBar={
+        <SearchBar placeholder={`Search ${displayName}`} onSubmit={(q) => { updateUrlParams({ q }); }} />
+      }
+      navTabs={
+        <ul className="flex flex-wrap gap-2">
+          {VALID_CATEGORIES.map((c) => (
+            <li key={c}>
+              <Link
+                to={`/${c}`}
+                className={`inline-block px-3.5 py-2 rounded-full border text-sm sm:text-base transition-all duration-200 ${
+                  c === category
+                    ? 'bg-ms-blue text-white border-ms-blue shadow-[0_10px_24px_-12px_rgba(0,120,212,0.95)]'
+                    : 'bg-white/85 backdrop-blur border-white/70 text-slate-700 hover:border-ms-blue/35 hover:text-ms-blue'
+                }`}
+              >
+                {CATEGORY_DISPLAY_NAMES[c]}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      }
+      tagFilterProps={{
+        allTags,
+        selectedTags: tagParam ? [tagParam] : [],
+        onTagToggle: handleTagToggle,
+        onClearAll: handleClearAllTags,
+      }}
+      posts={posts}
+      loading={loading}
+      countLabel={countLabel}
+      currentPage={seriesParam ? 1 : pageParam}
+      totalPages={seriesParam ? 1 : totalPages}
+      onPageChange={seriesParam ? undefined : handlePageChange}
+      seriesNavigatorProps={hasSeriesSidebar ? {
+        seriesOptions,
+        selectedSeries: selectedSeriesKey,
+        onSeriesChange: handleSeriesChange,
+        category,
+        currentPostId: null,
+        showAllOption: true,
+        sticky: false,
+      } : undefined}
+    />
   );
 }
