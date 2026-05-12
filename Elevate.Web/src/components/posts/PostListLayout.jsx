@@ -17,6 +17,7 @@ const PostListLayout = ({
   totalPages,
   onPageChange,
   seriesNavigatorProps,
+  activeQuery,
 }) => {
   const hasSeriesSidebar = Boolean(seriesNavigatorProps);
 
@@ -56,7 +57,7 @@ const PostListLayout = ({
             <div className="mb-4 text-sm text-slate-600 min-h-6 flex items-center">
               {!loading && countLabel && <span>{countLabel}</span>}
             </div>
-            <PostGrid posts={posts} />
+            <PostGrid posts={posts} activeQuery={activeQuery} />
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}

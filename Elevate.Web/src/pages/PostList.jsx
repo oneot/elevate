@@ -191,6 +191,7 @@ export default function PostList() {
       loading={loading}
       error={error}
       countLabel={countLabel}
+      activeQuery={qParam}
       currentPage={seriesParam ? 1 : pageParam}
       totalPages={seriesParam ? 1 : totalPages}
       onPageChange={seriesParam ? undefined : handlePageChange}
