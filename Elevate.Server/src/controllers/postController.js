@@ -109,7 +109,13 @@ function buildListQuery({ limit, page, category, categories, tag, q }) {
 
   if (q) {
     const qLower = q.toLowerCase();
-    whereClauses.push('(CONTAINS(LOWER(p.title), @q) OR CONTAINS(LOWER(p.excerpt), @q) OR CONTAINS(LOWER(p.slug), @q))');
+    // IS_DEFINED + IS_STRING + IIF로 필드가 없거나 null인 경우 빈 문자열로 치환하여
+    // LOWER/CONTAINS가 타입 오류 없이 동작하도록 방어한다.
+    whereClauses.push(
+      '(CONTAINS(LOWER(IIF(IS_DEFINED(p.title) AND IS_STRING(p.title), p.title, "")), @q)' +
+      ' OR CONTAINS(LOWER(IIF(IS_DEFINED(p.excerpt) AND IS_STRING(p.excerpt), p.excerpt, "")), @q)' +
+      ' OR CONTAINS(LOWER(IIF(IS_DEFINED(p.slug) AND IS_STRING(p.slug), p.slug, "")), @q))'
+    );
     parameters.push({ name: '@q', value: qLower });
   }
 

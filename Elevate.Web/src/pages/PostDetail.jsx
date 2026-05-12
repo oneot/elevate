@@ -10,17 +10,18 @@
  * - 렌더링 후 `injectHeadingIds`로 heading id를 주입하여 좌측 TableOfContents와 연동한다.
  * - 게시글이 시리즈에 속하면 우측에 SeriesNavigator를, 하단 footer에 이전/다음 버튼을 표시한다.
  */
-import { useParams, Navigate, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useEffect, useRef, useState } from 'react';
 import GlassDocLayout from '../components/layout/GlassDocLayout';
 import TableOfContents from '../components/posts/TableOfContents';
 import SeriesNavigator from '../components/posts/SeriesNavigator';
 import { getPost, getLatestAgenthonPost } from '../api/posts';
-import { sanitizeHtml, injectHeadingIds } from '../utils/html';
+import { sanitizeHtml, injectHeadingIds, injectLinkHandlers } from '../utils/html';
 import { formatDateKo } from '../utils/url';
 import { POST_DETAIL_VALID_CATEGORIES, CATEGORY_DISPLAY_NAMES } from '../constants/categories';
 import { useSeriesNavigation } from '../hooks/useSeriesNavigation';
+import NotFound from './NotFound';
 
 const VALID_CATEGORIES = POST_DETAIL_VALID_CATEGORIES;
 
@@ -31,6 +32,7 @@ const VALID_CATEGORIES = POST_DETAIL_VALID_CATEGORIES;
  */
 const PostDetail = ({ categoryProp, useLatest = false }) => {
     const { category: categoryParam, postId: postIdParam } = useParams();
+    const navigate = useNavigate();
 
     // categoryProp이 있으면 URL 파라미터보다 우선한다 (고정 URL 라우트용)
     const normalizedCategory = (categoryProp || categoryParam)?.toLowerCase();
@@ -41,7 +43,10 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
     const [loadingLatest, setLoadingLatest] = useState(useLatest);
 
     useEffect(() => {
+        // useLatest 모드는 현재 agenthon 카테고리에서만 지원한다.
+        // 다른 카테고리에서 useLatest=true로 재사용할 경우 잘못된 게시글을 로드하지 않도록 가드한다.
         if (!useLatest || !normalizedCategory) return;
+        if (normalizedCategory !== 'agenthon') return;
         setLoadingLatest(true);
         getLatestAgenthonPost()
             .then((post) => {
@@ -90,12 +95,13 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
         return () => controller.abort();
     }, [normalizedCategory, postId]);
 
-    // HTML 콘텐츠 렌더링 후 heading ID 주입 (TableOfContents용)
+    // HTML 콘텐츠 렌더링 후 heading ID 주입(TableOfContents용) + 링크 핸들러 주입(SPA 이동/외부 링크)
     useEffect(() => {
-        if (contentRef.current && post?.contentMarkdown) {
-            injectHeadingIds(contentRef.current);
-        }
-    }, [post?.contentMarkdown]);
+        if (!contentRef.current || !post?.contentMarkdown) return;
+        injectHeadingIds(contentRef.current);
+        const cleanup = injectLinkHandlers(contentRef.current, navigate);
+        return cleanup;
+    }, [post?.contentMarkdown, navigate]);
 
     const {
         availableSeriesOptions,
@@ -108,13 +114,13 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
         backToListHref,
     } = useSeriesNavigation(normalizedCategory, post);
 
-    // 유효하지 않은 카테고리인 경우 404로 리다이렉트
+    // 유효하지 않은 카테고리인 경우 404 페이지를 직접 렌더링 (<Navigate to="*">는 잘못된 상대 경로로 이동)
     if (!VALID_CATEGORIES.includes(normalizedCategory)) {
-        return <Navigate to="*" replace />;
+        return <NotFound />;
     }
 
     if (notFound) {
-        return <Navigate to="*" replace />;
+        return <NotFound />;
     }
 
     const categoryDisplayName = CATEGORY_DISPLAY_NAMES[normalizedCategory];

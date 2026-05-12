@@ -10,8 +10,11 @@ export function useSeriesNavigation(normalizedCategory, post) {
 
   useEffect(() => {
     if (!normalizedCategory) return;
+    const controller = new AbortController();
+    let cancelled = false;
     listSeriesByCategory(normalizedCategory)
       .then((data) => {
+        if (cancelled) return;
         const options = (data?.items || []).map((s) => ({
           key: s.name,
           title: s.name,
@@ -20,8 +23,12 @@ export function useSeriesNavigation(normalizedCategory, post) {
         setSeriesOptions(options);
       })
       .catch(() => {
-        setSeriesOptions([]);
+        if (!cancelled) setSeriesOptions([]);
       });
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [normalizedCategory]);
 
   const availableSeriesOptions = useMemo(() => {

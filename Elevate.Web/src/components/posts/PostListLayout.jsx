@@ -57,7 +57,9 @@ const PostListLayout = ({
             <div className="mb-4 text-sm text-slate-600 min-h-6 flex items-center">
               {!loading && countLabel && <span>{countLabel}</span>}
             </div>
-            <PostGrid posts={posts} activeQuery={activeQuery} />
+            {!loading && !error && (
+              <PostGrid posts={posts} activeQuery={activeQuery} />
+            )}
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
