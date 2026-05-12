@@ -5,10 +5,7 @@ const extractHeadingsFromDOM = () => {
   const headings = [];
   const headingElements = document.querySelectorAll('article h1, article h2, article h3');
 
-  console.log('🔍 extractHeadingsFromDOM - found elements:', headingElements.length);
-
   headingElements.forEach((element) => {
-    console.log(`  - ${element.tagName}: id="${element.id}", text="${element.textContent}"`);
     if (element.id) {
       headings.push({
         id: element.id,
@@ -18,7 +15,6 @@ const extractHeadingsFromDOM = () => {
     }
   });
 
-  console.log('✅ extracted headings:', headings);
   return headings;
 };
 
@@ -66,7 +62,6 @@ const TableOfContentsItem = ({ heading, activeId, onLinkClick }) => {
           className="block px-3 py-2 text-sm font-semibold text-ms-blue bg-ms-blue/10 border-l-4 border-ms-blue rounded-r transition-all line-clamp-2 hover:bg-ms-blue/15"
           onClick={(e) => {
             e.preventDefault();
-            console.log('🔗 Clicked on post title');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             onLinkClick();
           }}
@@ -95,15 +90,10 @@ const TableOfContentsItem = ({ heading, activeId, onLinkClick }) => {
         }`}
         onClick={(e) => {
           e.preventDefault();
-          console.log('🔗 Clicked on heading:', heading.id);
           const element = document.getElementById(heading.id);
-          console.log('📍 Found element:', element);
           if (element) {
-            console.log('📜 Scrolling to:', heading.id);
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
             onLinkClick();
-          } else {
-            console.warn('⚠️ Element not found:', heading.id);
           }
         }}
       >
@@ -134,16 +124,10 @@ const TableOfContents = ({ contentMarkdown, postTitle, sticky = true }) => {
   useEffect(() => {
     // article 요소 찾기
     const article = document.querySelector('article');
-    if (!article) {
-      console.warn('⚠️ article element not found');
-      return;
-    }
-
-    console.log('🎯 TableOfContents mounted, content prop changed');
+    if (!article) return;
 
     // 초기 추출 (약간의 딜레이 포함)
     const initialTimer = setTimeout(() => {
-      console.log('⏱️ Running initial heading extraction');
       const flatHeadings = extractHeadingsFromDOM();
       
       // 게시글 제목을 첫 번째 항목으로 추가
@@ -163,7 +147,6 @@ const TableOfContents = ({ contentMarkdown, postTitle, sticky = true }) => {
 
     // MutationObserver 설정 - article 내용 변경 감지
     const handleMutation = () => {
-      console.log('🔄 Mutation detected, extracting headings');
       const flatHeadings = extractHeadingsFromDOM();
       
       // 게시글 제목을 첫 번째 항목으로 추가
@@ -208,12 +191,8 @@ const TableOfContents = ({ contentMarkdown, postTitle, sticky = true }) => {
 
     if (headingElements.length === 0) return;
 
-    console.log('🔍 Setting up IntersectionObserver for', headingElements.length, 'headings');
-
-    // Intersection Observer 생성
     const observer = new IntersectionObserver(
       (entries) => {
-        // 모든 heading 요소들 중 현재 viewpoint에서 가장 상단에 보이는 것 찾기
         let visibleHeadings = [];
 
         entries.forEach((entry) => {
@@ -225,29 +204,24 @@ const TableOfContents = ({ contentMarkdown, postTitle, sticky = true }) => {
           }
         });
 
-        // 화면의 가장 상단에 있는 제목 선택
         if (visibleHeadings.length > 0) {
           visibleHeadings.sort((a, b) => a.top - b.top);
-          console.log('📌 Setting activeId to:', visibleHeadings[0].id);
           setActiveId(visibleHeadings[0].id);
         }
       },
       {
-        rootMargin: '0px 0px -60% 0px' // 페이지의 상단 40%에서 감지
+        rootMargin: '0px 0px -60% 0px'
       }
     );
 
-    // 모든 제목 요소 관찰
     headingElements.forEach((element) => {
       if (element.id) {
-        console.log('👀 Observing:', element.id);
         observer.observe(element);
       }
     });
 
     observerRef.current = observer;
 
-    // 추가: 스크롤 이벤트로 마지막 heading 감지
     const handleScroll = () => {
       const headingElements = document.querySelectorAll('article h1, article h2, article h3');
       if (headingElements.length === 0) return;
@@ -255,11 +229,9 @@ const TableOfContents = ({ contentMarkdown, postTitle, sticky = true }) => {
       const scrollPosition = window.scrollY + window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
 
-      // 페이지 하단에 가까우면 마지막 heading 활성화
       if (scrollPosition >= documentHeight - 100) {
         const lastHeading = headingElements[headingElements.length - 1];
         if (lastHeading && lastHeading.id) {
-          console.log('📍 Bottom reached, setting activeId to:', lastHeading.id);
           setActiveId(lastHeading.id);
         }
       }
