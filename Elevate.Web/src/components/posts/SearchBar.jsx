@@ -5,20 +5,25 @@
  * 내부 state `q`로 입력값을 관리하며, 폼 제출 시 `onSubmit(q)`를 호출한다.
  * 초기 `value` prop은 초기값으로만 사용되며, 이후 변경은 추적하지 않는다.
  */
-import React, { useState } from 'react';
+import React from 'react';
 
 /**
  * 검색 입력 폼 컴포넌트.
  *
  * @param {Object} props
- * @param {string} [props.value=''] - 검색어 초기값
+ * @param {string} [props.value=''] - 검색어 초기값 (URL 쿼리 파라미터 등 외부 값과 동기화)
  * @param {Function} [props.onChange] - 입력값 변경 시 호출되는 콜백 `(value: string) => void`
  * @param {Function} [props.onSubmit] - 폼 제출 시 호출되는 콜백 `(query: string) => void`
  * @param {string} [props.placeholder='검색하기'] - input placeholder 텍스트
  * @returns {JSX.Element}
  */
 const SearchBar = ({ value = '', onChange = () => {}, onSubmit = () => {}, placeholder = '검색하기' }) => {
-  const [q, setQ] = useState(value);
+  const [q, setQ] = React.useState(value);
+
+  // 외부에서 value prop이 변경될 때 입력창을 동기화한다 (예: URL 파라미터 직접 조작 시).
+  React.useEffect(() => {
+    setQ(value);
+  }, [value]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

@@ -26,6 +26,7 @@ export default function PostList() {
   const tagParam = (searchParams.get('tag') || '').trim().toLowerCase();
   const seriesParam = (searchParams.get('series') || '').trim();
   const pageParam = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+  const qParam = (searchParams.get('q') || '').trim();
 
   const [posts, setPosts] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -69,6 +70,7 @@ export default function PostList() {
             category: category !== 'all' ? category : undefined,
             categories: category === 'all' ? BASE_CATEGORIES : undefined,
             tag: tagParam || undefined,
+            q: qParam || undefined,
           });
           if (!cancelled) {
             setPosts(data.items || []);
@@ -90,7 +92,7 @@ export default function PostList() {
 
     load();
     return () => { cancelled = true; };
-  }, [category, tagParam, seriesParam, pageParam, isValidCategory]);
+  }, [category, tagParam, seriesParam, pageParam, qParam, isValidCategory]);
 
   // 태그 목록 로드
   useEffect(() => {
@@ -156,7 +158,7 @@ export default function PostList() {
         </>
       }
       searchBar={
-        <SearchBar placeholder={`Search ${displayName}`} onSubmit={(q) => { updateUrlParams({ q }); }} />
+        <SearchBar placeholder={`Search ${displayName}`} value={qParam} onSubmit={(q) => { updateUrlParams({ q, page: '' }); }} />
       }
       navTabs={
         <ul className="flex flex-wrap gap-2">

@@ -28,6 +28,7 @@ export default function Microsoft365Update() {
   const [searchParams, setSearchParams] = useSearchParams();
   const pageParam = parseInt(searchParams.get('page') || '1', 10);
   const tagsParam = searchParams.get('tags') || '';
+  const qParam = (searchParams.get('q') || '').trim().toLowerCase();
   const selectedTags = useMemo(() => {
     if (!tagsParam) return [];
     return normalizeTagList(tagsParam.split(','));
@@ -63,14 +64,23 @@ export default function Microsoft365Update() {
     return () => controller.abort();
   }, []);
 
-  // 태그 필터 적용: 선택된 태그를 모두 포함하는 게시글만 표시 (AND 조건)
+  // 태그 + 검색어 필터 적용: 선택된 태그를 모두 포함하고 검색어가 제목/요약에 포함된 게시글만 표시
   const filteredPosts = useMemo(() => {
-    if (selectedTags.length === 0) return allPosts;
-    return allPosts.filter((p) => {
-      const postTags = p.tags || [];
-      return selectedTags.every((t) => postTags.includes(t));
-    });
-  }, [allPosts, selectedTags]);
+    let result = allPosts;
+    if (selectedTags.length > 0) {
+      result = result.filter((p) => {
+        const postTags = p.tags || [];
+        return selectedTags.every((t) => postTags.includes(t));
+      });
+    }
+    if (qParam) {
+      result = result.filter((p) =>
+        (p.title || '').toLowerCase().includes(qParam) ||
+        (p.excerpt || '').toLowerCase().includes(qParam)
+      );
+    }
+    return result;
+  }, [allPosts, selectedTags, qParam]);
 
   // URL 파라미터 업데이트
   const updateUrlParams = useCallback((params) => {
@@ -128,7 +138,7 @@ export default function Microsoft365Update() {
           </>
         }
         searchBar={
-          <SearchBar placeholder={`Search ${DISPLAY_NAME}`} onSubmit={(q) => { updateUrlParams({ page: '1', q }); }} />
+          <SearchBar placeholder={`Search ${DISPLAY_NAME}`} value={qParam} onSubmit={(q) => { updateUrlParams({ page: '1', q }); }} />
         }
         tagFilterProps={{
           allTags,

@@ -33,15 +33,17 @@ export function getThumbnailUrl(thumbnail) {
  * @param {string} [options.category] - 단일 카테고리 필터 ('all' 은 무시됨)
  * @param {string[]} [options.categories] - 복수 카테고리 필터
  * @param {string} [options.tag] - 태그 필터
+ * @param {string} [options.q] - 제목/요약/슬러그 검색어
  * @returns {Promise<{items: Array, totalPages: number, totalCount: number}>}
  */
-export function listPosts({ limit = 20, page = 1, category, categories, tag } = {}) {
+export function listPosts({ limit = 20, page = 1, category, categories, tag, q } = {}) {
   const params = new URLSearchParams();
   if (limit !== 20) params.set('limit', String(limit));
   if (page !== 1) params.set('page', String(page));
   if (category && category !== 'all') params.set('category', category);
   if (categories && categories.length > 0) params.set('categories', categories.join(','));
   if (tag) params.set('tag', tag);
+  if (q) params.set('q', q);
   const qs = params.toString();
   return apiFetch(`/posts${qs ? `?${qs}` : ''}`);
 }
