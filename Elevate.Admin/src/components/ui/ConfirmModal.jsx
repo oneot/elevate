@@ -14,6 +14,8 @@ function ConfirmModal({
 }) {
   useEffect(() => {
     if (!open) return
+    // 모달이 열려 있는 동안 ESC 키로 취소할 수 있도록 이벤트를 등록한다.
+    // 클린업 함수에서 리스너를 제거해 메모리 누수를 방지한다.
     const onKeyDown = (e) => {
       if (e.key === 'Escape') onCancel()
     }

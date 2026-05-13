@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { CATEGORIES } from '../../constants/categories.js'
 
+/** 카테고리 value → Lucide 아이콘 컴포넌트 맵. 아이콘이 없는 카테고리는 LayoutGrid 로 폴백한다. */
 const iconMap = {
   m365: LayoutGrid,
   copilot: Bot,
@@ -21,6 +22,10 @@ const iconMap = {
 const mainCategories = CATEGORIES.filter((c) => c.group === 'main')
 const subCategories = CATEGORIES.filter((c) => c.group === 'sub')
 
+/**
+ * 카테고리 목록을 섹션별로 묶어 사이드바 내비게이션에 렌더링하기 위한 구조.
+ * CATEGORIES 를 group 별로 분리해 두 섹션(Main/Sub)으로 표시한다.
+ */
 const navGroups = [
   { title: 'Main Category', items: mainCategories },
   { title: 'Sub Category',  items: subCategories },
