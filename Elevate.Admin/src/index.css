@@ -1,12 +1,36 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme {
   --font-sans: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+
+  /* Fluent Design 브랜드 색상 */
   --color-ms-blue: #0f6cbd;
   --color-ms-green: #107c10;
   --color-ms-orange: #d83b01;
   --color-ms-yellow: #ffaa44;
   --color-ms-slate: #f3f2f1;
+
+  /* Fluent Design 그림자 (elevation 단계별) */
+  --shadow-elevation-2: 0 1px 2px rgba(0, 0, 0, 0.04), 0 0 2px rgba(0, 0, 0, 0.06);
+  --shadow-elevation-4: 0 2px 4px rgba(0, 0, 0, 0.04), 0 0 2px rgba(0, 0, 0, 0.06);
+  --shadow-elevation-8: 0 4px 8px rgba(0, 0, 0, 0.04), 0 0 2px rgba(0, 0, 0, 0.06);
+  --shadow-elevation-16: 0 8px 16px rgba(0, 0, 0, 0.04), 0 0 2px rgba(0, 0, 0, 0.06);
+
+  /* 진입 애니메이션 */
+  --animate-fadeIn: fadeIn 0.2s ease-out;
+  --animate-slideUp: slideUp 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+/* fadeIn/slideUp keyframes (--animate-* 변수와 쌍으로 사용) */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(10px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
 /* 전역 타이포그래피 */
