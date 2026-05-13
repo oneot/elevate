@@ -260,7 +260,14 @@ function PostEditor() {
             />
           </FormField>
 
-
+          <FormField label="Slug" hint="비워두면 제목에서 자동 생성됩니다.">
+            <input
+              className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-mono transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+              value={post.slug}
+              onChange={handleChange('slug')}
+              placeholder="my-post-slug"
+            />
+          </FormField>
 
           <FormField label="요약">
             <textarea
