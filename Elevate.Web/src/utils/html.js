@@ -1,0 +1,125 @@
+/**
+ * @file html.js
+ * @description 게시글 HTML 콘텐츠 후처리 유틸리티 모음.
+ *
+ * API에서 받은 HTML을 DOMPurify로 소독(sanitize)하고,
+ * 렌더링된 DOM에 heading id를 주입하거나 링크 동작을 복원하는 함수를 제공한다.
+ */
+import DOMPurify from 'dompurify';
+
+/**
+ * XSS를 방지하기 위해 HTML 문자열을 DOMPurify로 소독한다.
+ *
+ * `ADD_ATTR`에 target/rel을 허용하는 이유: 서버가 외부 링크에 미리 주입한
+ * `target="_blank"` 및 `rel="noopener noreferrer"` 속성을 유지해야 하기 때문이다.
+ *
+ * @param {string} html - 소독할 HTML 문자열
+ * @returns {string} 소독된 HTML 문자열 (입력이 falsy면 빈 문자열 반환)
+ */
+export function sanitizeHtml(html) {
+  if (!html) return '';
+  return DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true },
+    ADD_ATTR: ['target', 'rel'],
+  });
+}
+
+/**
+ * 컨테이너 내 모든 heading(h1~h6)에 id를 주입한다.
+ *
+ * 이미 id가 있는 heading은 건너뛰고, 텍스트 내용을 소문자 kebab-case로 변환해 id를 생성한다.
+ * 같은 텍스트를 가진 heading이 여러 개일 경우 `-1`, `-2` 접미사로 중복을 방지한다.
+ * TableOfContents 컴포넌트가 이 id를 앵커 링크로 참조하므로, 콘텐츠 렌더 직후 호출해야 한다.
+ *
+ * @param {Element} containerEl - heading을 탐색할 DOM 컨테이너 요소
+ */
+export function injectHeadingIds(containerEl) {
+  if (!containerEl) return;
+  const headings = containerEl.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  // 문서 내 이미 사용 중인 모든 id를 미리 수집하여 새로 생성하는 id와 충돌하지 않도록 한다.
+  const usedIds = new Set(
+    Array.from(containerEl.querySelectorAll('[id]')).map((el) => el.id).filter(Boolean)
+  );
+
+  headings.forEach((el) => {
+    if (el.id) return;
+    const base = el.textContent
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-가-힣]/g, '');
+    // base가 빈 문자열이면 'heading'을 fallback으로 사용한다.
+    const baseId = base || 'heading';
+    let id = baseId;
+    let suffix = 1;
+    // 동일한 id가 이미 존재하면 숫자 접미사를 붙여 고유하게 만든다.
+    while (usedIds.has(id)) {
+      id = `${baseId}-${suffix++}`;
+    }
+    usedIds.add(id);
+    el.id = id;
+  });
+}
+
+/**
+ * 렌더링된 HTML 내 `<a>` 링크 동작을 복원한다.
+ *
+ * dangerouslySetInnerHTML로 삽입된 콘텐츠는 React의 이벤트 시스템 밖에 있으므로
+ * 직접 이벤트 위임으로 처리해야 한다. 처리 규칙:
+ * - 외부 링크: `target="_blank"` + `rel="noopener noreferrer"` 주입
+ * - hash 앵커(`#id`): 해당 요소로 smooth scroll
+ * - 내부 링크(`/path`): React Router의 `navigate()` 호출 (전체 페이지 새로고침 방지)
+ *
+ * 이벤트 위임 방식으로 개별 anchor마다 listener를 붙이는 것을 방지하고,
+ * 반환된 cleanup 함수로 컴포넌트 unmount 시 listener를 해제한다.
+ *
+ * @param {Element} containerEl - 링크를 탐색할 DOM 컨테이너 요소
+ * @param {Function} navigate - React Router의 navigate 함수
+ * @returns {Function} 이벤트 리스너를 제거하는 cleanup 함수
+ */
+export function injectLinkHandlers(containerEl, navigate) {
+  if (!containerEl) return () => {};
+
+  // 렌더 시점에 외부 링크에 target/rel을 일괄 주입한다.
+  // (클릭 이벤트 전에 속성을 확정해야 이후 분기 처리가 정확하다)
+  // protocol-relative URL(//...)도 외부 링크로 간주한다.
+  containerEl.querySelectorAll('a[href]').forEach((anchor) => {
+    const href = anchor.getAttribute('href');
+    if (!href || (href.startsWith('/') && !href.startsWith('//'))) return;
+    if (href.startsWith('#')) return;
+    anchor.setAttribute('target', '_blank');
+    anchor.setAttribute('rel', 'noopener noreferrer');
+  });
+
+  const handleClick = (e) => {
+    if (!(e.target instanceof Element)) return;
+    const anchor = e.target.closest('a[href]');
+    if (!anchor) return;
+
+    // Ctrl/Cmd/Shift/Alt+클릭, 중간 버튼, download 속성, target="_blank" 링크는
+    // 브라우저 기본 동작(새 탭, 다운로드 등)을 유지한다.
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    if (anchor.hasAttribute('download')) return;
+    if (anchor.getAttribute('target') === '_blank') return;
+
+    const href = anchor.getAttribute('href');
+    if (!href) return;
+
+    if (href.startsWith('#')) {
+      // hash 앵커: 해당 id 요소로 smooth scroll
+      e.preventDefault();
+      const target = document.getElementById(href.slice(1));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
+    if (href.startsWith('/') && !href.startsWith('//')) {
+      // 내부 링크: React Router로 SPA 이동 (전체 페이지 reload 방지)
+      e.preventDefault();
+      navigate(href);
+    }
+  };
+
+  containerEl.addEventListener('click', handleClick);
+  return () => containerEl.removeEventListener('click', handleClick);
+}

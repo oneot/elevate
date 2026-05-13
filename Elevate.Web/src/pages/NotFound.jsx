@@ -1,3 +1,9 @@
+/**
+ * @file NotFound.jsx
+ * @description 존재하지 않는 경로에 접근했을 때 표시되는 404 에러 페이지.
+ *
+ * '홈으로 돌아가기'와 '이전 페이지로 돌아가기' 버튼을 제공한다.
+ */
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import microsoftLogo from '../assets/Microsoft.png';
