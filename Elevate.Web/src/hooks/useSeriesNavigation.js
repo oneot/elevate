@@ -12,7 +12,7 @@ export function useSeriesNavigation(normalizedCategory, post) {
     if (!normalizedCategory) return;
     const controller = new AbortController();
     let cancelled = false;
-    listSeriesByCategory(normalizedCategory)
+    listSeriesByCategory(normalizedCategory, controller.signal)
       .then((data) => {
         if (cancelled) return;
         const options = (data?.items || []).map((s) => ({
@@ -22,8 +22,9 @@ export function useSeriesNavigation(normalizedCategory, post) {
         }));
         setSeriesOptions(options);
       })
-      .catch(() => {
-        if (!cancelled) setSeriesOptions([]);
+      .catch((err) => {
+        if (cancelled || err?.name === 'AbortError') return;
+        setSeriesOptions([]);
       });
     return () => {
       cancelled = true;

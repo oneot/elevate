@@ -154,7 +154,7 @@ exports.getPostList = async (req, res) => {
     const categoriesParam = req.query.categories
       ? req.query.categories.split(',').map((s) => s.trim()).filter(Boolean)
       : undefined;
-    const qRaw = (req.query.q || '').trim();
+    const qRaw = (typeof req.query.q === 'string' ? req.query.q : Array.isArray(req.query.q) ? req.query.q[0] ?? '' : '').trim();
     const { dataQuery, countQuery } = buildListQuery({
       limit,
       page,

@@ -26,7 +26,8 @@ const normalizeTagList = (list = []) => Array.from(new Set(list.map(normalizeTag
 
 export default function Microsoft365Update() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const pageParam = parseInt(searchParams.get('page') || '1', 10);
+  const _rawPage = parseInt(searchParams.get('page') || '1', 10);
+  const pageParam = Number.isFinite(_rawPage) && _rawPage > 0 ? _rawPage : 1;
   const tagsParam = searchParams.get('tags') || '';
   const qParam = (searchParams.get('q') || '').trim().toLowerCase();
   const selectedTags = useMemo(() => {

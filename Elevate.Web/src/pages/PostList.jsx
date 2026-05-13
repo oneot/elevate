@@ -25,7 +25,8 @@ export default function PostList() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tagParam = (searchParams.get('tag') || '').trim().toLowerCase();
   const seriesParam = (searchParams.get('series') || '').trim();
-  const pageParam = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+  const _rawPage = parseInt(searchParams.get('page') || '1', 10);
+  const pageParam = Number.isFinite(_rawPage) && _rawPage > 0 ? _rawPage : 1;
   const qParam = (searchParams.get('q') || '').trim();
 
   const [posts, setPosts] = useState([]);

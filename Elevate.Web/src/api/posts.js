@@ -106,10 +106,11 @@ export async function getLatestAgenthonPost() {
  * 특정 카테고리의 시리즈 목록을 조회한다.
  *
  * @param {string} [category] - 카테고리 이름 (미지정 시 전체 시리즈)
+ * @param {AbortSignal} [signal] - fetch 취소용 AbortSignal
  * @returns {Promise<{items: Array}>}
  */
-export function listSeriesByCategory(category) {
+export function listSeriesByCategory(category, signal) {
   const params = new URLSearchParams();
   if (category) params.set('category', category);
-  return apiFetch(`/series?${params.toString()}`);
+  return apiFetch(`/series?${params.toString()}`, signal ? { signal } : undefined);
 }

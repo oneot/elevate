@@ -50,9 +50,20 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
         setLoadingLatest(true);
         getLatestAgenthonPost()
             .then((post) => {
-                setResolvedPostId(post?.slug ?? null);
+                if (post?.slug) {
+                    setResolvedPostId(post.slug);
+                } else {
+                    // 최신 게시글이 없으면 notFound 처리하여 무한 로딩 방지
+                    setResolvedPostId(null);
+                    setNotFound(true);
+                    setLoading(false);
+                }
             })
-            .catch(() => setResolvedPostId(null))
+            .catch(() => {
+                setResolvedPostId(null);
+                setNotFound(true);
+                setLoading(false);
+            })
             .finally(() => setLoadingLatest(false));
     }, [normalizedCategory, useLatest]);
 
