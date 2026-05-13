@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { AlertTriangle } from 'lucide-react'
 
 function ConfirmModal({
@@ -23,6 +23,15 @@ function ConfirmModal({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [open, onCancel])
 
+  // 모달이 열릴 때 취소 버튼으로 포커스를 이동해 스크린 리더와 키보드 접근성을 보장한다.
+  const cancelRef = useRef(null)
+  useEffect(() => {
+    if (open) cancelRef.current?.focus()
+  }, [open])
+
+  const titleId = useId()
+  const descId = useId()
+
   if (!open) return null
 
   const iconWrapClass =
@@ -45,6 +54,8 @@ function ConfirmModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       aria-modal="true"
       role="dialog"
+      aria-labelledby={titleId}
+      aria-describedby={description ? descId : undefined}
     >
       {/* 배경 오버레이 */}
       <div
@@ -59,15 +70,16 @@ function ConfirmModal({
             <AlertTriangle className={`w-5 h-5 ${iconClass}`} />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-semibold text-neutral-900">{title}</h3>
+            <h3 id={titleId} className="text-base font-semibold text-neutral-900">{title}</h3>
             {description && (
-              <p className="text-sm text-neutral-500">{description}</p>
+              <p id={descId} className="text-sm text-neutral-500">{description}</p>
             )}
           </div>
         </div>
 
         <div className="flex justify-end gap-2 pt-1">
           <button
+            ref={cancelRef}
             type="button"
             onClick={onCancel}
             disabled={loading}

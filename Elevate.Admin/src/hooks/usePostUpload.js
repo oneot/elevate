@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { isApiConfigured } from '../lib/apiClient.js'
 import { requestUploadSas, registerAsset } from '../services/assetsApi.js'
 import { normalizeImageMimeType, uploadBlobWithSas, supportedImageMimeTypes } from '../utils/imageUpload.js'
@@ -13,6 +13,16 @@ import { normalizeImageMimeType, uploadBlobWithSas, supportedImageMimeTypes } fr
  */
 export function usePostUpload({ msalInstance, postId, setPost, setError, setMessage }) {
   const [uploading, setUploading] = useState(false)
+  const previewUrlRef = useRef(null)
+
+  // 컴포넌트 언마운트 시 마지막으로 생성된 ObjectURL을 해제해 메모리 누수를 방지한다.
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current)
+      }
+    }
+  }, [])
 
   /**
    * 썸네일 이미지를 업로드하고 postId에 연결한다.
@@ -29,7 +39,12 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
 
     if (!isApiConfigured) {
       // API 서버가 없는 개발 환경에서는 로컬 ObjectURL로 미리보기만 제공한다.
+      // 기존 ObjectURL이 있으면 먼저 해제해 메모리 누수를 방지한다.
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current)
+      }
       const previewUrl = URL.createObjectURL(selectedFile)
+      previewUrlRef.current = previewUrl
       setPost((prev) => ({ ...prev, thumbnailUrl: previewUrl }))
       setMessage('API 없이 썸네일 미리보기 이미지를 적용했습니다.')
       return

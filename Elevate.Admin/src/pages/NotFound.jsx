@@ -15,7 +15,7 @@ function NotFound() {
           <h2 className="text-2xl font-bold text-slate-900">페이지를 찾을 수 없습니다</h2>
           <p className="text-sm text-slate-500">요청하신 페이지가 존재하지 않습니다.</p>
           <Link
-            to="/posts"
+            to="/"
             className="inline-block rounded-lg bg-ms-blue px-6 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-ms-blue/90 hover:shadow-elevation-4 hover:-translate-y-0.5"
           >
             포스트 목록으로

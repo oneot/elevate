@@ -313,7 +313,7 @@ function PostEditor() {
       <ConfirmModal
         open={showDeleteModal}
         title="게시글을 삭제하시겠습니까?"
-        description={`"${post.title || '(제목 없음'}" 게시글이 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
+        description={`"${post.title || '(제목 없음)'}" 게시글이 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
         confirmLabel="삭제"
         onConfirm={handleDelete}
         onCancel={() => setShowDeleteModal(false)}

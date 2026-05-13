@@ -104,8 +104,12 @@ function PostMetaSidebar({
               accept="image/*"
               onChange={async (event) => {
                 const fileObj = event.target.files?.[0]
-                if (fileObj) {
+                if (!fileObj) return
+                try {
                   await onThumbnailUpload(fileObj)
+                } catch {
+                  // 업로드 실패 시 파일 선택을 초기화해 재시도할 수 있도록 한다.
+                  event.target.value = ''
                 }
               }}
               className="w-full text-sm text-neutral-600 file:mr-4 file:py-1.5 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200 file:transition-colors file:cursor-pointer"
