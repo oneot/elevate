@@ -39,31 +39,37 @@ export function useCategoryPostList(category) {
   const [error, setError] = useState(null);
 
   // 카테고리 게시글을 최대 100개 fetch한다.
-  // AbortController로 컴포넌트 unmount 시 진행 중인 fetch를 취소한다.
+  // AbortController로 fetch를 취소하고, isActive 가드로 unmount 후 setState를 방지한다.
+  // (finally는 AbortError 이후에도 실행되므로 isActive 체크가 필요)
   useEffect(() => {
     const controller = new AbortController();
+    let isActive = true;
     async function load() {
       setLoading(true);
       setError(null);
       try {
         const data = await listPosts({ category, limit: 100, signal: controller.signal });
         const allItems = (data.items || []).map((p) => ({ ...p, tags: normalizeTagList(p.tags || []) }));
+        if (!isActive) return;
         setAllPosts(allItems);
         // 전체 게시글에서 고유 태그 목록을 수집한다.
         const tagSet = new Set();
         allItems.forEach((p) => (p.tags || []).forEach((t) => tagSet.add(normalizeTag(t))));
         setAllTags(Array.from(tagSet));
       } catch (err) {
-        if (err.name === 'AbortError') return;
+        if (err.name === 'AbortError' || !isActive) return;
         setError(err.message || '게시글을 불러오지 못했습니다.');
         setAllPosts([]);
         setAllTags([]);
       } finally {
-        setLoading(false);
+        if (isActive) setLoading(false);
       }
     }
     load();
-    return () => controller.abort();
+    return () => {
+      isActive = false;
+      controller.abort();
+    };
   }, [category]);
 
   // 태그 + 검색어 필터 적용: 선택된 태그를 모두 포함하고 검색어가 제목/요약에 포함된 게시글만 표시
