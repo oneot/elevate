@@ -2,141 +2,39 @@
  * @file ProgramNews.jsx
  * @description Microsoft Elevate 행사 소식 목록 페이지.
  *
- * `program-news` 카테고리의 게시글을 최대 100개 한 번에 불러온 뒤,
- * 클라이언트 사이드에서 태그 필터링과 페이지네이션을 수행한다.
- * (서버 측 태그 AND 필터링이 지원되지 않아 클라이언트에서 처리)
- *
- * 태그 필터는 URL의 `?tags=tag1,tag2` 형식으로 복수 선택이 가능하며
- * AND 조건으로 동작한다 (선택된 모든 태그를 포함하는 게시글만 표시).
+ * `program-news` 카테고리의 게시글을 최대 100개 불러온 뒤 클라이언트 사이드에서
+ * 태그 필터링과 페이지네이션을 수행한다. 공통 로직은 useCategoryPostList 훅에서 처리한다.
  *
  * /all 페이지에는 program-news 게시글이 노출되지 않는다.
  * (BASE_CATEGORIES / POST_LIST_CATEGORIES에 포함되지 않음)
  */
-import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React from 'react';
 import PostListLayout from '../components/posts/PostListLayout';
 import SearchBar from '../components/posts/SearchBar';
 import Logo from '../components/common/Logo';
 import Footer from '../components/layout/Footer';
-import { listPosts } from '../api/posts';
+import { useCategoryPostList } from '../hooks/useCategoryPostList';
 
 const CATEGORY = 'program-news';
 const DISPLAY_NAME = '행사 소식';
-const PAGE_SIZE = 20;
-
-// 태그를 소문자 trim하고 중복 제거한다.
-const normalizeTag = (tag) => (tag ?? '').toString().trim().toLowerCase();
-const normalizeTagList = (list = []) => Array.from(new Set(list.map(normalizeTag).filter(Boolean)));
 
 export default function ProgramNews() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const _rawPage = parseInt(searchParams.get('page') || '1', 10);
-  const pageParam = Number.isFinite(_rawPage) && _rawPage > 0 ? _rawPage : 1;
-  const tagsParam = searchParams.get('tags') || '';
-  // qParam: URL에 저장되는 원본 검색어 (SearchBar value에 전달)
-  // qParamLower: 대소문자 무관 필터링에 사용하는 소문자 변환값
-  const qParam = (searchParams.get('q') || '').trim();
-  const qParamLower = qParam.toLowerCase();
-  const selectedTags = useMemo(() => {
-    if (!tagsParam) return [];
-    return normalizeTagList(tagsParam.split(','));
-  }, [tagsParam]);
-
-  const [allPosts, setAllPosts] = useState([]);
-  const [allTags, setAllTags] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  // program-news 카테고리 게시글을 최대 100개 fetch한다.
-  // AbortController로 컴포넌트 unmount 시 진행 중인 fetch를 취소한다.
-  useEffect(() => {
-    const controller = new AbortController();
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await listPosts({ category: CATEGORY, limit: 100, signal: controller.signal });
-        const allItems = (data.items || []).map((p) => ({ ...p, tags: normalizeTagList(p.tags || []) }));
-        setAllPosts(allItems);
-        // 전체 게시글에서 고유 태그 목록을 수집한다.
-        const tagSet = new Set();
-        allItems.forEach((p) => (p.tags || []).forEach((t) => tagSet.add(normalizeTag(t))));
-        setAllTags(Array.from(tagSet));
-      } catch (err) {
-        if (err.name === 'AbortError') return;
-        setError(err.message || '게시글을 불러오지 못했습니다.');
-        setAllPosts([]);
-        setAllTags([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-    return () => controller.abort();
-  }, []);
-
-  // 태그 + 검색어 필터 적용: 선택된 태그를 모두 포함하고 검색어가 제목/요약에 포함된 게시글만 표시
-  const filteredPosts = useMemo(() => {
-    let result = allPosts;
-    if (selectedTags.length > 0) {
-      result = result.filter((p) => {
-        const postTags = p.tags || [];
-        return selectedTags.every((t) => postTags.includes(t));
-      });
-    }
-    if (qParamLower) {
-      result = result.filter((p) =>
-        (p.title || '').toLowerCase().includes(qParamLower) ||
-        (p.excerpt || '').toLowerCase().includes(qParamLower)
-      );
-    }
-    return result;
-  }, [allPosts, selectedTags, qParamLower]);
-
-  // URL 파라미터를 일괄 업데이트한다 (빈 값은 파라미터 삭제).
-  const updateUrlParams = useCallback((params) => {
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      Object.entries(params).forEach(([key, value]) => {
-        if (value) {
-          newParams.set(key, value);
-        } else {
-          newParams.delete(key);
-        }
-      });
-      return newParams;
-    }, { replace: true });
-  }, [setSearchParams]);
-
-  const handleTagToggle = (tag) => {
-    const normalizedTag = normalizeTag(tag);
-    let newTags;
-    if (selectedTags.includes(normalizedTag)) {
-      newTags = selectedTags.filter((t) => t !== normalizedTag);
-    } else {
-      newTags = [...selectedTags, normalizedTag];
-    }
-    updateUrlParams({
-      tags: newTags.length > 0 ? newTags.join(',') : '',
-      page: '1',
-    });
-  };
-
-  const handleClearAllTags = () => {
-    updateUrlParams({ tags: '', page: '1' });
-  };
-
-  // 클라이언트 사이드 페이지네이션: 필터링된 결과를 PAGE_SIZE 단위로 slice한다.
-  const total = filteredPosts.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const currentPage = Math.min(Math.max(pageParam, 1), totalPages);
-  const start = (currentPage - 1) * PAGE_SIZE;
-  const posts = filteredPosts.slice(start, start + PAGE_SIZE);
-
-  const handlePageChange = (p) => {
-    updateUrlParams({ page: String(p) });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const {
+    qParam,
+    qParamLower,
+    allTags,
+    selectedTags,
+    loading,
+    error,
+    filteredPosts,
+    paginatedPosts,
+    currentPage,
+    totalPages,
+    handleTagToggle,
+    handleClearAllTags,
+    handlePageChange,
+    handleSearchSubmit,
+  } = useCategoryPostList(CATEGORY);
 
   return (
     <>
@@ -149,7 +47,7 @@ export default function ProgramNews() {
           </>
         }
         searchBar={
-          <SearchBar placeholder={`Search ${DISPLAY_NAME}`} value={qParam} onSubmit={(q) => { updateUrlParams({ page: '1', q }); }} />
+          <SearchBar placeholder={`Search ${DISPLAY_NAME}`} value={qParam} onSubmit={handleSearchSubmit} />
         }
         tagFilterProps={{
           allTags,
@@ -157,7 +55,7 @@ export default function ProgramNews() {
           onTagToggle: handleTagToggle,
           onClearAll: handleClearAllTags,
         }}
-        posts={posts}
+        posts={paginatedPosts}
         loading={loading}
         error={error}
         countLabel={!loading && selectedTags.length > 0 ? `${filteredPosts.length}개의 게시글이 일치합니다.` : undefined}
