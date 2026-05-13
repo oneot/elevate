@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Card, Button, ConfirmModal, FormField } from '../components/ui/index.js'
-import { HtmlEditor, AttachUploader } from '../components/editor/index.js'
+import { HtmlEditor, PostMetaSidebar } from '../components/editor/index.js'
 import { isApiConfigured } from '../lib/apiClient.js'
 import {
   createPost,
@@ -293,86 +293,20 @@ function PostEditor() {
         </Card>
 
         <aside className="space-y-8">
-          <Card colorScheme="slate" className="space-y-6">
-            <h3 className="text-sm font-semibold text-neutral-800">메타데이터</h3>
-            <FormField label="상태">
-              <select
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-                value={post.status}
-                onChange={handleChange('status')}
-              >
-                <option value="draft">draft</option>
-                <option value="published">published</option>
-                <option value="archived">archived</option>
-              </select>
-            </FormField>
-            <FormField label="카테고리">
-              <select
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed"
-                value={post.category}
-                onChange={handleChange('category')}
-                disabled={!isNew}
-              >
-                {/* 신규 게시글에서만 카테고리를 선택할 수 있다. 기존 게시글은 카테고리 변경이 불가하다. */}
-                {isNew && (
-                  <option value="" disabled>카테고리 선택</option>
-                )}
-                {CATEGORIES.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </FormField>
-            <FormField label="태그" hint="쉼표로 구분합니다.">
-              <input
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-                value={tagsInput}
-                onChange={(event) => setTagsInput(event.target.value)}
-                placeholder="Azure, CosmosDB"
-              />
-            </FormField>
-            <FormField label="YouTube">
-              <input
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-                value={youtubeInput}
-                onChange={handleYoutubeChange}
-                placeholder="https://www.youtube.com/watch?v=..."
-              />
-              {youtubeError && <p className="text-xs text-red-500 mt-1">{youtubeError}</p>}
-              {post.youtube && !youtubeError && (
-                <p className="text-xs text-neutral-400 mt-1">ID: {post.youtube}</p>
-              )}
-            </FormField>
-            <FormField label="썸네일">
-              {post.thumbnailUrl && (
-                <div className="mb-2 w-full rounded-md border border-neutral-200 overflow-hidden bg-neutral-50 flex items-center justify-center">
-                  <img src={post.thumbnailUrl} alt="Thumbnail preview" className="max-h-40 w-auto object-contain" />
-                </div>
-              )}
-              <div className="flex gap-2 items-center">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={async (event) => {
-                    const fileObj = event.target.files?.[0];
-                    if (fileObj) {
-                      await uploadThumbnail(fileObj);
-                    }
-                  }}
-                  className="w-full text-sm text-neutral-600 file:mr-4 file:py-1.5 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200 file:transition-colors file:cursor-pointer"
-                />
-              </div>
-              {isUploading && <p className="text-xs text-ms-blue mt-1">썸네일 업로드 중...</p>}
-            </FormField>
-          </Card>
-
-          <Card colorScheme="blue" className="space-y-4">
-            <h3 className="text-base font-semibold text-neutral-700">첨부파일</h3>
-            <p className="text-xs text-neutral-400">
-              업로드 후 URL 복사 버튼으로 마크다운 콘텐츠에 붙여넣을 수 있습니다.
-            </p>
-            <AttachUploader postId={postId} />
-          </Card>
-
+          <PostMetaSidebar
+            post={post}
+            tagsInput={tagsInput}
+            youtubeInput={youtubeInput}
+            youtubeError={youtubeError}
+            isUploading={isUploading}
+            isNew={isNew}
+            onChange={handleChange}
+            onTagsChange={setTagsInput}
+            onYoutubeChange={handleYoutubeChange}
+            onThumbnailUpload={uploadThumbnail}
+            postId={postId}
+            categories={CATEGORIES}
+          />
         </aside>
       </div>
 
