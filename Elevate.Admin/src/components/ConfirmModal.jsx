@@ -23,6 +23,16 @@ function ConfirmModal({
 
   if (!open) return null
 
+  const iconWrapClass =
+    variant === 'danger'
+      ? 'bg-red-50'
+      : 'bg-blue-50'
+
+  const iconClass =
+    variant === 'danger'
+      ? 'text-red-600'
+      : 'text-ms-blue'
+
   const confirmClass =
     variant === 'danger'
       ? 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500'
@@ -43,8 +53,8 @@ function ConfirmModal({
       {/* 모달 패널 */}
       <div className="relative w-full max-w-md rounded-xl bg-white shadow-elevation-4 p-6 space-y-5 animate-slideUp">
         <div className="flex items-start gap-4">
-          <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-red-50">
-            <AlertTriangle className="w-5 h-5 text-red-600" />
+          <div className={`flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full ${iconWrapClass}`}>
+            <AlertTriangle className={`w-5 h-5 ${iconClass}`} />
           </div>
           <div className="space-y-1">
             <h3 className="text-base font-semibold text-neutral-900">{title}</h3>

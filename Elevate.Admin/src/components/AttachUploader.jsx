@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { requestAttachUploadSas, registerFile } from '../lib/postsApi.js'
+import { uploadBlobWithSas } from '../lib/imageUpload.js'
 import { useAuth } from '../hooks/useAuth.js'
 
 const ATTACH_MIME_MAP = {
@@ -53,14 +54,7 @@ export default function AttachUploader({ postId }) {
         { msalInstance }
       )
 
-      await fetch(sas.uploadUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': contentType,
-          'x-ms-blob-type': 'BlockBlob',
-        },
-        body: file,
-      })
+      await uploadBlobWithSas(sas.uploadUrl, file, contentType)
 
       const result = await registerFile(
         {
