@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutGrid, Bot, Users, Box, Table2, NotebookPen,
-  Trophy, RefreshCw, GraduationCap,
+  Trophy, RefreshCw, GraduationCap, Newspaper,
 } from 'lucide-react'
 
 const navGroups = [
@@ -19,9 +19,11 @@ const navGroups = [
   {
     title: 'Sub Category',
     items: [
-      { to: '/category/agenthon',  label: 'Agenthon',  icon: Trophy },
-      { to: '/category/update',    label: 'Update',    icon: RefreshCw },
-      { to: '/category/mee',       label: 'MEE',       icon: GraduationCap },
+      { to: '/category/agenthon',      label: 'Agenthon', icon: Trophy },
+      { to: '/category/update',        label: 'Update',   icon: RefreshCw },
+      { to: '/category/mee',           label: 'MEE',      icon: GraduationCap },
+      // program-news: 행사 소식 게시글 관리 (/program-news 페이지와 연동)
+      { to: '/category/program-news',  label: '행사 소식', icon: Newspaper },
     ],
   },
 ]
