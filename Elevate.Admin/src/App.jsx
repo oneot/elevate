@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import Layout from './components/Layout.jsx'
+import { Layout } from './components/layout/index.js'
 import NotFound from './pages/NotFound.jsx'
 import PostEditor from './pages/PostEditor.jsx'
 import CategoryPosts from './pages/CategoryPosts.jsx'

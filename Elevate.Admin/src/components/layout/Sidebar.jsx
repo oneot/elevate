@@ -3,7 +3,7 @@ import {
   LayoutGrid, Bot, Users, Box, Table2, NotebookPen,
   Trophy, RefreshCw, GraduationCap, Newspaper,
 } from 'lucide-react'
-import { CATEGORIES } from '../lib/categories.js'
+import { CATEGORIES } from '../../lib/categories.js'
 
 const iconMap = {
   m365: LayoutGrid,

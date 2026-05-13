@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { AlertCircle } from 'lucide-react'
-import Card from '../components/Card.jsx'
+import { Card } from '../components/ui/index.js'
 
 function NotFound() {
   return (

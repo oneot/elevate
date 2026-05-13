@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import Card from '../components/Card.jsx'
-import Button from '../components/Button.jsx'
-import ConfirmModal from '../components/ConfirmModal.jsx'
-import FormField from '../components/FormField.jsx'
-import HtmlEditor from '../components/HtmlEditor.jsx'
-import AttachUploader from '../components/AttachUploader.jsx'
+import { Card } from '../components/ui/index.js'
+import { Button } from '../components/ui/index.js'
+import { ConfirmModal } from '../components/ui/index.js'
+import { FormField } from '../components/ui/index.js'
+import { HtmlEditor } from '../components/editor/index.js'
+import { AttachUploader } from '../components/editor/index.js'
 import { isApiConfigured } from '../lib/apiClient.js'
 import {
   createPost,
