@@ -56,7 +56,7 @@ export default function Microsoft365Update() {
         loading={loading}
         error={error}
         countLabel={!loading && selectedTags.length > 0 ? `${filteredPosts.length}개의 게시글이 일치합니다.` : undefined}
-        activeQuery={qParamLower}
+        activeQuery={qParam}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}

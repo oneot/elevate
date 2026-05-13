@@ -4,6 +4,15 @@
  *
  * 지정된 카테고리의 게시글을 최대 100개 불러온 뒤,
  * 태그 필터·검색어 필터·클라이언트 사이드 페이지네이션·URL 파라미터 동기화를 제공한다.
+ *
+ * ## URL 파라미터 형식
+ * - `?q=검색어`       : 제목·요약 포함 검색. URL 저장 시 trim 적용.
+ * - `?tags=a,b,c`    : 콤마 구분 복수 태그 선택 (AND 조건, 소문자 정규화).
+ * - `?page=N`        : 현재 페이지 번호. 1페이지는 파라미터 생략.
+ *
+ * ## 태그 매칭 규칙
+ * - 태그는 소문자 trim 후 중복 제거한다 (normalizeTag).
+ * - 선택된 모든 태그를 포함하는 게시글만 표시한다 (AND 조건).
  */
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
