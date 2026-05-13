@@ -37,6 +37,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           VITE_DIRECT_LINE_SECRET: ${{ secrets.DIRECT_LINE_SECRET }}
           VITE_CLARITY_ENABLED: ${{ vars.VITE_CLARITY_ENABLED || 'true' }}
           VITE_CLARITY_PROJECT_ID: ${{ secrets.VITE_CLARITY_PROJECT_ID }}
