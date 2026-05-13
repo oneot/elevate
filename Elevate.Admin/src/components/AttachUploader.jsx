@@ -84,17 +84,7 @@ export default function AttachUploader({ postId }) {
   }
 
   async function copyToClipboard(text) {
-    try {
-      await navigator.clipboard.writeText(text)
-    } catch {
-      // fallback
-      const el = document.createElement('textarea')
-      el.value = text
-      document.body.appendChild(el)
-      el.select()
-      document.execCommand('copy')
-      document.body.removeChild(el)
-    }
+    await navigator.clipboard.writeText(text)
   }
 
   return (

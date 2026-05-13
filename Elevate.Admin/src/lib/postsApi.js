@@ -41,8 +41,8 @@ function toApiPayload(post) {
       alt: '',
       width: 0,
       height: 0,
-      mimeType: 'image/webp',
-      sizeBytes: 0,
+      mimeType: post.thumbnail?.mimeType || 'image/jpeg',
+      sizeBytes: post.thumbnail?.sizeBytes || 0,
     }
   }
 
