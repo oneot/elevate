@@ -31,6 +31,9 @@ import {
   RemoveFormatting,
 } from 'lucide-react'
 
+// lowlight 인스턴스에 지원할 언어를 등록한다.
+// 같은 언어에 여러 별칭(js/javascript, ts/typescript 등)을 등록해
+// 코드 블록의 언어 표기 방식에 유연하게 대응한다.
 const lowlight = createLowlight()
 lowlight.register('javascript', javascript)
 lowlight.register('js', javascript)
@@ -122,6 +125,7 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
 
   const addImage = () => {
     if (!onUploadImage) {
+      // onUploadImage 핸들러가 없으면 URL 직접 입력 방식으로 폴백한다.
       const url = window.prompt('이미지 URL을 입력하세요')
       if (url) {
         editor.chain().focus().setImage({ src: url }).run()
@@ -129,6 +133,8 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
       return
     }
 
+    // 파일 선택 input을 동적으로 생성해 파일 피커를 열고,
+    // 선택된 파일 각각을 onUploadImage로 업로드한 뒤 에디터에 삽입한다.
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = 'image/*'
@@ -142,8 +148,7 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
             if (url) {
               editor.chain().focus().setImage({ src: url }).run()
             }
-          } catch (error) {
-            console.error(error)
+          } catch {
             alert(`${file.name} 이미지 업로드에 실패했습니다.`)
           }
         }
