@@ -4,7 +4,14 @@ import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import { common, createLowlight } from 'lowlight'
+import { createLowlight } from 'lowlight'
+import javascript from 'highlight.js/lib/languages/javascript'
+import typescript from 'highlight.js/lib/languages/typescript'
+import python from 'highlight.js/lib/languages/python'
+import bash from 'highlight.js/lib/languages/bash'
+import html from 'highlight.js/lib/languages/xml'
+import css from 'highlight.js/lib/languages/css'
+import json from 'highlight.js/lib/languages/json'
 import {
   Bold,
   Italic,
@@ -24,10 +31,19 @@ import {
   RemoveFormatting,
 } from 'lucide-react'
 
-const lowlight = createLowlight(common)
+const lowlight = createLowlight()
+lowlight.register('javascript', javascript)
+lowlight.register('js', javascript)
+lowlight.register('typescript', typescript)
+lowlight.register('ts', typescript)
+lowlight.register('python', python)
+lowlight.register('bash', bash)
+lowlight.register('sh', bash)
+lowlight.register('html', html)
+lowlight.register('xml', html)
+lowlight.register('css', css)
+lowlight.register('json', json)
 
-// ToolbarButton 컴포넌트를 외부로 이동
-// eslint-disable-next-line no-unused-vars
 const ToolbarButton = ({ icon: IconComponent, onClick, isActive, title, disabled = false }) => (
   <button
     type="button"
@@ -44,7 +60,6 @@ const ToolbarButton = ({ icon: IconComponent, onClick, isActive, title, disabled
   </button>
 )
 
-// Divider 컴포넌트를 외부로 이동
 const Divider = () => <div className="w-px h-5 bg-neutral-300 mx-1" />
 
 function HtmlEditor({ value, onChange, onUploadImage }) {

@@ -1,8 +1,7 @@
 @import "tailwindcss";
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 
 @theme {
-  --font-sans: 'Segoe UI', 'Inter', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  --font-sans: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
   --color-ms-blue: #0f6cbd;
   --color-ms-green: #107c10;
   --color-ms-orange: #d83b01;
