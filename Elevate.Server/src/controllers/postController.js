@@ -88,7 +88,7 @@ function toPostDetail(post) {
   };
 }
 
-function buildListQuery({ limit, page, category, categories, tag }) {
+function buildListQuery({ limit, page, category, categories, tag, q }) {
   const offset = (page - 1) * limit;
   const whereClauses = ["p.status = 'published'"];
   const parameters = [];
@@ -105,6 +105,18 @@ function buildListQuery({ limit, page, category, categories, tag }) {
   if (tag) {
     whereClauses.push('ARRAY_CONTAINS(p.tags, @tag)');
     parameters.push({ name: '@tag', value: tag });
+  }
+
+  if (q) {
+    const qLower = q.toLowerCase();
+    // IS_DEFINED + IS_STRING + IIF로 필드가 없거나 null인 경우 빈 문자열로 치환하여
+    // LOWER/CONTAINS가 타입 오류 없이 동작하도록 방어한다.
+    whereClauses.push(
+      '(CONTAINS(LOWER(IIF(IS_DEFINED(p.title) AND IS_STRING(p.title), p.title, "")), @q)' +
+      ' OR CONTAINS(LOWER(IIF(IS_DEFINED(p.excerpt) AND IS_STRING(p.excerpt), p.excerpt, "")), @q)' +
+      ' OR CONTAINS(LOWER(IIF(IS_DEFINED(p.slug) AND IS_STRING(p.slug), p.slug, "")), @q))'
+    );
+    parameters.push({ name: '@q', value: qLower });
   }
 
   const whereClause = whereClauses.join(' AND ');
@@ -142,12 +154,14 @@ exports.getPostList = async (req, res) => {
     const categoriesParam = req.query.categories
       ? req.query.categories.split(',').map((s) => s.trim()).filter(Boolean)
       : undefined;
+    const qRaw = (typeof req.query.q === 'string' ? req.query.q : Array.isArray(req.query.q) ? req.query.q[0] ?? '' : '').trim();
     const { dataQuery, countQuery } = buildListQuery({
       limit,
       page,
       category: req.query.category,
       categories: categoriesParam,
-      tag: req.query.tag
+      tag: req.query.tag,
+      q: qRaw || undefined,
     });
 
     const [{ resources }, { resources: countResult }] = await Promise.all([

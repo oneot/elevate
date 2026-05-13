@@ -1,47 +1,98 @@
-import { useParams, Navigate, Link, useSearchParams } from 'react-router-dom';
+/**
+ * @file PostDetail.jsx
+ * @description 개별 게시글 상세 페이지.
+ *
+ * URL 파라미터(`/:category/:postId`)로 게시글을 API에서 가져와 렌더링한다.
+ * GlassDocLayout을 기반으로 하며, 좌측(TOC)·우측(SeriesNavigator) 사이드바를 지원한다.
+ *
+ * - `AbortController`로 라우트 전환 시 진행 중인 fetch를 취소한다.
+ * - HTML 콘텐츠는 `sanitizeHtml`(DOMPurify)로 소독 후 `dangerouslySetInnerHTML`로 렌더링한다.
+ * - 렌더링 후 `injectHeadingIds`로 heading id를 주입하여 좌측 TableOfContents와 연동한다.
+ * - 게시글이 시리즈에 속하면 우측에 SeriesNavigator를, 하단 footer에 이전/다음 버튼을 표시한다.
+ */
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import TableOfContents from '../components/TableOfContents';
-import SeriesNavigator from '../components/SeriesNavigator';
-import { getPost, listSeriesByCategory } from '../lib/postsApi';
-import { sanitizeHtml, injectHeadingIds } from '../lib/htmlUtils';
+import { useEffect, useRef, useState } from 'react';
+import GlassDocLayout from '../components/layout/GlassDocLayout';
+import TableOfContents from '../components/posts/TableOfContents';
+import SeriesNavigator from '../components/posts/SeriesNavigator';
+import { getPost, getLatestAgenthonPost } from '../api/posts';
+import { sanitizeHtml, injectHeadingIds, injectLinkHandlers } from '../utils/html';
+import { formatDateKo } from '../utils/url';
+import { POST_DETAIL_VALID_CATEGORIES, CATEGORY_DISPLAY_NAMES, getCategoryListRoute } from '../constants/categories';
+import { useSeriesNavigation } from '../hooks/useSeriesNavigation';
+import NotFound from './NotFound';
 
-const VALID_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote', 'm365update', 'update', 'mee'];
+const VALID_CATEGORIES = POST_DETAIL_VALID_CATEGORIES;
 
-const CATEGORY_DISPLAY_NAMES = {
-    'm365': 'M365 개요',
-    'copilot': 'Copilot',
-    'teams': 'Teams',
-    'minecraft': 'Minecraft',
-    'excel': 'Excel',
-    'onenote': 'OneNote',
-    'm365update': 'Microsoft365 Update',
-    'update': '업데이트',
-    'mee': 'MEE'
-};
+/**
+ * @param {object}  props
+ * @param {string}  [props.categoryProp]  URL 파라미터 대신 사용할 카테고리 (예: "agenthon")
+ * @param {boolean} [props.useLatest]     true면 해당 카테고리의 최신 게시글을 자동 조회한다.
+ */
+const PostDetail = ({ categoryProp, useLatest = false }) => {
+    const { category: categoryParam, postId: postIdParam } = useParams();
+    const navigate = useNavigate();
 
-const PostDetail = () => {
-    const { category, postId } = useParams();
-    const [searchParams, setSearchParams] = useSearchParams();
-    const seriesParam = (searchParams.get('series') || '').trim();
+    // categoryProp이 있으면 URL 파라미터보다 우선한다 (고정 URL 라우트용)
+    const normalizedCategory = (categoryProp || categoryParam)?.toLowerCase();
 
-    // 카테고리를 소문자로 변환하여 검증
-    const normalizedCategory = category?.toLowerCase();
+    // useLatest 모드일 때 getLatestAgenthonPost()로 최신 게시글을 직접 로드한다.
+    // 목록 API + 상세 API 2단계 호출이 이미 캡슐화되어 있으므로 중복 구현 없이 재사용한다.
+    const [resolvedPostId, setResolvedPostId] = useState(postIdParam ?? null);
+    const [loadingLatest, setLoadingLatest] = useState(useLatest);
+
+    useEffect(() => {
+        // useLatest 모드는 현재 agenthon 카테고리에서만 지원한다.
+        // 다른 카테고리에서 useLatest=true로 재사용할 경우 잘못된 게시글을 로드하지 않도록 가드한다.
+        if (!useLatest || !normalizedCategory) return;
+        if (normalizedCategory !== 'agenthon') return;
+        let cancelled = false;
+        setLoadingLatest(true);
+        getLatestAgenthonPost()
+            .then((post) => {
+                if (cancelled) return;
+                if (post?.slug) {
+                    setResolvedPostId(post.slug);
+                } else {
+                    // 최신 게시글이 없으면 notFound 처리하여 무한 로딩 방지
+                    setResolvedPostId(null);
+                    setNotFound(true);
+                    setLoading(false);
+                }
+            })
+            .catch(() => {
+                if (cancelled) return;
+                setResolvedPostId(null);
+                setNotFound(true);
+                setLoading(false);
+            })
+            .finally(() => { if (!cancelled) setLoadingLatest(false); });
+        return () => { cancelled = true; };
+    }, [normalizedCategory, useLatest]);
+
+    // URL 파라미터가 변경될 때 resolvedPostId를 동기화한다 (일반 /:category/:postId 라우트용)
+    useEffect(() => {
+        if (!useLatest) setResolvedPostId(postIdParam ?? null);
+    }, [postIdParam, useLatest]);
+
+    const postId = resolvedPostId;
 
     const [post, setPost] = useState(null);
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
-    const [seriesOptions, setSeriesOptions] = useState([]);
     const contentRef = useRef(null);
 
     useEffect(() => {
         if (!normalizedCategory || !postId) return;
+        // AbortController: 라우트 전환 시 이전 fetch를 취소하여 응답이 뒤늦게 도착해도
+        // 현재 페이지의 상태를 덮어쓰지 않도록 한다.
         const controller = new AbortController();
         async function load() {
             setLoading(true);
             setNotFound(false);
             try {
-                const postData = await getPost(normalizedCategory, postId);
+                const postData = await getPost(normalizedCategory, postId, { signal: controller.signal });
                 setPost(postData);
             } catch (err) {
                 if (err.name === 'AbortError') return;
@@ -59,275 +110,187 @@ const PostDetail = () => {
         return () => controller.abort();
     }, [normalizedCategory, postId]);
 
-    // 카테고리별 시리즈 목록 로드
+    // HTML 콘텐츠 렌더링 후 heading ID 주입(TableOfContents용) + 링크 핸들러 주입(SPA 이동/외부 링크)
     useEffect(() => {
-        if (!normalizedCategory) return;
-        listSeriesByCategory(normalizedCategory)
-            .then((data) => {
-                const options = (data?.items || []).map((s) => ({
-                    key: s.name,
-                    title: s.name,
-                    posts: s.posts || [],
-                }));
-                setSeriesOptions(options);
-            })
-            .catch((err) => {
-                console.warn('PostDetail series fetch error:', err);
-                setSeriesOptions([]);
-            });
-    }, [normalizedCategory]);
+        if (!contentRef.current || !post?.contentMarkdown) return;
+        injectHeadingIds(contentRef.current);
+        const cleanup = injectLinkHandlers(contentRef.current, navigate);
+        return cleanup;
+    }, [post?.contentMarkdown, navigate]);
 
-    // HTML 콘텐츠 렌더링 후 heading ID 주입 (TableOfContents용)
-    useEffect(() => {
-        if (contentRef.current && post?.contentMarkdown) {
-            injectHeadingIds(contentRef.current);
-        }
-    }, [post?.contentMarkdown]);
+    const {
+        availableSeriesOptions,
+        selectedSeriesKey,
+        prevPost,
+        nextPost,
+        hasSeriesNavigator,
+        updateSeriesQuery,
+        buildPostHref,
+        backToListHref,
+    } = useSeriesNavigation(normalizedCategory, post);
 
-    const availableSeriesOptions = useMemo(() => {
-        if (!normalizedCategory) return [];
-        return seriesOptions.filter((item) => item.posts.length >= 2);
-    }, [normalizedCategory, seriesOptions]);
-
-    const selectedSeriesKey = useMemo(() => {
-        if (availableSeriesOptions.length === 0) return '';
-        if (seriesParam && availableSeriesOptions.some((item) => item.key === seriesParam)) {
-            return seriesParam;
-        }
-        if (post?.series && availableSeriesOptions.some((item) => item.key === post.series)) {
-            return post.series;
-        }
-        return availableSeriesOptions[0].key;
-    }, [availableSeriesOptions, seriesParam, post?.series]);
-
-    const selectedSeries = useMemo(() => {
-        if (!selectedSeriesKey) return null;
-        return availableSeriesOptions.find((item) => item.key === selectedSeriesKey) || null;
-    }, [availableSeriesOptions, selectedSeriesKey]);
-
-    const selectedSeriesPosts = useMemo(() => selectedSeries?.posts || [], [selectedSeries]);
-
-    const currentSeriesIndex = useMemo(() => {
-        if (!post || selectedSeriesPosts.length === 0) return -1;
-        const byIdIndex = selectedSeriesPosts.findIndex((item) => item.id === post.id);
-        if (byIdIndex > -1) return byIdIndex;
-        if (post.seriesOrder == null) return -1;
-        return selectedSeriesPosts.findIndex((item) => item.seriesOrder === post.seriesOrder);
-    }, [post, selectedSeriesPosts]);
-
-    const prevPost = currentSeriesIndex > 0 ? selectedSeriesPosts[currentSeriesIndex - 1] : null;
-    const nextPost = currentSeriesIndex > -1 && currentSeriesIndex < selectedSeriesPosts.length - 1
-        ? selectedSeriesPosts[currentSeriesIndex + 1]
-        : null;
-
-    const hasSeriesNavigator = Boolean(post?.series && selectedSeriesPosts.length > 0);
-    const backToListHref = `/${normalizedCategory}`;
-
-    const buildPostHref = (targetPost) => {
-        if (!targetPost) return '#';
-        const params = new URLSearchParams();
-        if (selectedSeriesKey) {
-            params.set('series', selectedSeriesKey);
-        }
-        const query = params.toString();
-        return `/${normalizedCategory}/${targetPost.slug}${query ? `?${query}` : ''}`;
-    };
-
-    const updateSeriesQuery = useCallback((seriesKey, options = {}) => {
-        const { replace = false } = options;
-        const newParams = new URLSearchParams(searchParams);
-        if (seriesKey) {
-            newParams.set('series', seriesKey);
-        } else {
-            newParams.delete('series');
-        }
-        setSearchParams(newParams, { replace });
-    }, [searchParams, setSearchParams]);
-
-    useEffect(() => {
-        if (!post) return;
-
-        if (availableSeriesOptions.length === 0) {
-            if (seriesParam) {
-                updateSeriesQuery('', { replace: true });
-            }
-            return;
-        }
-
-        if (selectedSeriesKey && seriesParam !== selectedSeriesKey) {
-            updateSeriesQuery(selectedSeriesKey, { replace: true });
-        }
-    }, [post, availableSeriesOptions, selectedSeriesKey, seriesParam, updateSeriesQuery]);
-
-    // 유효하지 않은 카테고리인 경우 404로 리다이렉트
+    // 유효하지 않은 카테고리인 경우 404 페이지를 직접 렌더링 (<Navigate to="*">는 잘못된 상대 경로로 이동)
     if (!VALID_CATEGORIES.includes(normalizedCategory)) {
-        return <Navigate to="*" replace />;
+        return <NotFound />;
     }
 
     if (notFound) {
-        return <Navigate to="*" replace />;
+        return <NotFound />;
     }
 
     const categoryDisplayName = CATEGORY_DISPLAY_NAMES[normalizedCategory];
+    // 로딩 중에는 URL의 postId를 임시 제목으로 사용한다.
     const postTitle = post?.title || postId;
 
-    return (
-        <div className="relative min-h-screen font-sans selection:bg-ms-blue/20 selection:text-ms-blue">
-            <Helmet>
-                <title>{postTitle} | {categoryDisplayName} | Microsoft Elevate</title>
-                <meta name="description" content={`${postTitle} - ${categoryDisplayName} 블로그 포스트입니다.`} />
-                <meta property="og:title" content={`${postTitle} | ${categoryDisplayName} | Microsoft Elevate`} />
-                <meta property="og:description" content={`${postTitle} - ${categoryDisplayName} 블로그 포스트입니다.`} />
-            </Helmet>
+    // GlassDocLayout에 전달할 breadcrumb 목록.
+    // 로딩이 완료되기 전에는 마지막 항목이 postId(슬러그)로 표시된다.
+    // getCategoryListRoute로 카테고리별 실제 목록 경로를 사용하여 존재하지 않는 링크를 방지한다.
+    const crumbs = [
+        { label: 'Home', to: '/' },
+        { type: 'sep' },
+        { label: categoryDisplayName, to: getCategoryListRoute(normalizedCategory) },
+        { type: 'sep' },
+        { label: postTitle },
+    ];
 
-            {/* Background Blobs */}
-            <div className="pastel-bg">
-                <div className="blob blob-1"></div>
-                <div className="blob blob-2"></div>
-                <div className="blob blob-3"></div>
-            </div>
+    // 게시글 로드 완료 시 좌측 TOC를 표시한다.
+    const leftAside = !loading && !loadingLatest && post
+        ? <TableOfContents contentMarkdown={post.contentMarkdown} postTitle={post.title} sticky={false} />
+        : null;
 
-            {/* Post Content */}
-            <div className="relative z-10 min-h-screen flex flex-col items-center px-4 sm:px-6 py-12">
-                <div className="w-full max-w-7xl">
-                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_3.4fr_1fr] gap-6">
-                        {/* Table of Contents Sidebar (Left) */}
-                        <div className="hidden lg:block min-w-0">
-                            <div className="lg:sticky lg:top-4">
-                                {!loading && post && (
-                                    <TableOfContents contentMarkdown={post.contentMarkdown} postTitle={post.title} sticky={false} />
-                                )}
-                            </div>
-                        </div>
+    // 시리즈가 있을 때만 우측 SeriesNavigator를 표시한다.
+    const rightAside = !loading && !loadingLatest && post && hasSeriesNavigator
+        ? (
+            <SeriesNavigator
+                seriesOptions={availableSeriesOptions}
+                selectedSeries={selectedSeriesKey}
+                onSeriesChange={updateSeriesQuery}
+                category={normalizedCategory}
+                currentPostId={post.id}
+                buildPostHref={buildPostHref}
+                previousPost={prevPost}
+                nextPost={nextPost}
+                backToListHref={backToListHref}
+                sticky={false}
+            />
+        )
+        : null;
 
-                        {/* Main Content */}
-                        <div className="min-w-0">
-                            <div className="clean-card no-hover rounded-[2.25rem] sm:rounded-[3rem] p-7 sm:p-10 lg:p-12 bg-white/80 backdrop-blur-xl shadow-2xl border border-white/50">
-                                {/* Breadcrumb */}
-                                <div className="text-sm text-slate-500 mb-6">
-                                    <Link to="/" className="hover:text-ms-blue transition-colors">Home</Link>
-                                    <span className="mx-2">/</span>
-                                    <Link to={`/${normalizedCategory}`} className="hover:text-ms-blue transition-colors">{categoryDisplayName}</Link>
-                                </div>
-
-                                {loading && <div className="text-center py-8 text-slate-500">로딩 중...</div>}
-
-                                {!loading && post && (
-                                    <>
-
-                                        {/* Post Title */}
-                                        <h1 
-                                            id="post-title"
-                                            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gradient mb-4 tracking-tight leading-tight">
-                                            {post.title}
-                                        </h1>
-
-                                        {/* Meta */}
-                                        <div className="mb-6 flex items-center gap-4 text-sm text-slate-500">
-                                            <span className="inline-block px-4 py-2 bg-ms-blue/10 text-ms-blue rounded-full font-medium">
-                                                {categoryDisplayName}
-                                            </span>
-                                            <span>{post.publishedAt}</span>
-                                        </div>
-
-                                        {/* Tags */}
-                                        {Array.isArray(post.tags) && post.tags.length > 0 && (
-                                            <div className="mb-8 flex flex-wrap gap-2 text-sm">
-                                                {post.tags.map((tag) => (
-                                                    <span
-                                                        key={tag}
-                                                        className="px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-600"
-                                                    >
-                                                        {tag}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {/* 유튜브 임베드 카드 (frontmatter에 youtube 필드가 있을 때) */}
-                                        {post.youtube && (
-                                            <div className="mb-8 rounded-2xl overflow-hidden aspect-video bg-black flex items-center justify-center shadow-lg">
-                                                <iframe
-                                                    src={`https://www.youtube.com/embed/${post.youtube}`}
-                                                    title="YouTube video player"
-                                                    frameBorder="0"
-                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                    allowFullScreen
-                                                    className="w-full h-full"
-                                                />
-                                            </div>
-                                        )}
-
-                                        {/* Post Body */}
-                                        <article>
-                                            <div
-                                                ref={contentRef}
-                                                className="prose prose-slate max-w-none post-content"
-                                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.contentMarkdown || '') }}
-                                            />
-                                        </article>
-
-                                        {(prevPost || nextPost) && (
-                                            <div className="mt-10 border-t border-white/60 pt-6">
-                                                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                                                    시리즈 이동
-                                                </div>
-                                                <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center justify-center rounded-xl border border-white/60 bg-white/70 backdrop-blur px-2.5 py-2">
-                                                    {prevPost && (
-                                                        <Link
-                                                            to={buildPostHref(prevPost)}
-                                                            className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
-                                                        >
-                                                            이전 글
-                                                        </Link>
-                                                    )}
-
-                                                    <Link
-                                                        to={backToListHref}
-                                                        className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
-                                                    >
-                                                        목록으로
-                                                    </Link>
-
-                                                    {nextPost && (
-                                                        <Link
-                                                            to={buildPostHref(nextPost)}
-                                                            className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
-                                                        >
-                                                            다음 글
-                                                        </Link>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Series Sidebar (Right) */}
-                        <div className="hidden lg:block min-w-0">
-                            <div className="lg:sticky lg:top-4">
-                                {!loading && post && hasSeriesNavigator && (
-                                    <SeriesNavigator
-                                        seriesOptions={availableSeriesOptions}
-                                        selectedSeries={selectedSeriesKey}
-                                        onSeriesChange={updateSeriesQuery}
-                                        category={normalizedCategory}
-                                        currentPostId={post.id}
-                                        buildPostHref={buildPostHref}
-                                        previousPost={prevPost}
-                                        nextPost={nextPost}
-                                        backToListHref={backToListHref}
-                                        sticky={false}
-                                    />
-                                )}
-                            </div>
-                        </div>
-                    </div>
+    // 시리즈가 있을 때 footer에 이전/다음/목록 버튼을 표시한다.
+    // 모바일에서 rightAside(SeriesNavigator)가 숨겨지므로 footer로 대체 내비게이션을 제공한다.
+    const footer = (prevPost || nextPost)
+        ? (
+            <div>
+                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                    시리즈 이동
+                </div>
+                <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center justify-center rounded-xl border border-white/60 bg-white/70 backdrop-blur px-2.5 py-2">
+                    {prevPost && (
+                        <Link
+                            to={buildPostHref(prevPost)}
+                            className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
+                        >
+                            이전 글
+                        </Link>
+                    )}
+                    <Link
+                        to={backToListHref}
+                        className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
+                    >
+                        목록으로
+                    </Link>
+                    {nextPost && (
+                        <Link
+                            to={buildPostHref(nextPost)}
+                            className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
+                        >
+                            다음 글
+                        </Link>
+                    )}
                 </div>
             </div>
-        </div>
+        )
+        : null;
+
+    return (
+        <>
+            {/* Helmet은 GlassDocLayout 외부에 위치해도 React Portal로 <head>에 주입된다. */}
+            <Helmet>
+                <title>{`${postTitle ?? ''} | ${categoryDisplayName} | Microsoft Elevate`}</title>
+                <meta name="description" content={post?.excerpt || `${postTitle ?? ''} - ${categoryDisplayName} 블로그 포스트입니다.`} />
+                <meta property="og:title" content={`${postTitle ?? ''} | ${categoryDisplayName} | Microsoft Elevate`} />
+                <meta property="og:description" content={post?.excerpt || `${postTitle ?? ''} - ${categoryDisplayName} 블로그 포스트입니다.`} />
+                {(post?.thumbnail?.signedUrl || post?.thumbnail?.url || (typeof post?.thumbnail === 'string' && post?.thumbnail)) && (
+                    <meta property="og:image" content={post.thumbnail?.signedUrl || post.thumbnail?.url || post.thumbnail} />
+                )}
+            </Helmet>
+
+            <GlassDocLayout
+                crumbs={crumbs}
+                leftAside={leftAside}
+                rightAside={rightAside}
+                footer={footer}
+            >
+                {(loading || loadingLatest) && <div className="text-center py-8 text-slate-500">로딩 중...</div>}
+
+                {!loading && !loadingLatest && post && (
+                    <>
+                        {/* Post Title */}
+                        <h1
+                            id="post-title"
+                            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gradient mb-4 tracking-tight leading-tight"
+                        >
+                            {post.title}
+                        </h1>
+
+                        {/* Meta */}
+                        <div className="mb-6 flex items-center gap-4 text-sm text-slate-500">
+                            <span className="inline-block px-4 py-2 bg-ms-blue/10 text-ms-blue rounded-full font-medium">
+                                {categoryDisplayName}
+                            </span>
+                            <span>{formatDateKo(post.publishedAt)}</span>
+                        </div>
+
+                        {/* Tags */}
+                        {Array.isArray(post.tags) && post.tags.length > 0 && (
+                            <div className="mb-8 flex flex-wrap gap-2 text-sm">
+                                {post.tags.map((tag) => (
+                                    <span
+                                        key={tag}
+                                        className="px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-600"
+                                    >
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* 유튜브 임베드 카드 (frontmatter에 youtube 필드가 있을 때) */}
+                        {post.youtube && (
+                            <div className="mb-8 rounded-2xl overflow-hidden aspect-video bg-black flex items-center justify-center shadow-lg">
+                                <iframe
+                                    src={`https://www.youtube.com/embed/${post.youtube}`}
+                                    title="YouTube video player"
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                    className="w-full h-full"
+                                />
+                            </div>
+                        )}
+
+                        {/* Post Body */}
+                        <article>
+                            <div
+                                ref={contentRef}
+                                className="prose prose-slate max-w-none post-content"
+                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.contentMarkdown || '') }}
+                            />
+                        </article>
+                    </>
+                )}
+            </GlassDocLayout>
+        </>
     );
 };
 
