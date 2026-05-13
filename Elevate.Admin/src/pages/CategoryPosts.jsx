@@ -9,22 +9,9 @@ import { listPosts } from '../lib/postsApi.js'
 import { formatDate } from '../lib/formatters.js'
 import { useScrollAnimation } from '../hooks/useScrollAnimation.js'
 import { useAuth } from '../hooks/useAuth.js'
+import { CATEGORY_MAP } from '../lib/categories.js'
 
 const PAGE_SIZE = 20
-
-const CATEGORY_LABELS = {
-  m365: 'M365',
-  copilot: 'Copilot',
-  teams: 'Teams',
-  minecraft: 'Minecraft',
-  excel: 'Excel',
-  onenote: 'OneNote',
-  agenthon: 'Agenthon',
-  update: 'Update',
-  mee: 'MEE',
-  // program-news: 행사 소식 (/program-news 페이지와 연동)
-  'program-news': '행사 소식',
-}
 
 function AdminPagination({ page, totalPages, onPageChange }) {
   if (!totalPages || totalPages <= 1) return null
@@ -105,7 +92,7 @@ function CategoryPosts() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const label = CATEGORY_LABELS[categoryId]
+  const label = CATEGORY_MAP[categoryId]
 
   useEffect(() => {
     setStatusFilter('all')

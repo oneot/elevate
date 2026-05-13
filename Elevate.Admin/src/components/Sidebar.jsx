@@ -3,29 +3,27 @@ import {
   LayoutGrid, Bot, Users, Box, Table2, NotebookPen,
   Trophy, RefreshCw, GraduationCap, Newspaper,
 } from 'lucide-react'
+import { CATEGORIES } from '../lib/categories.js'
+
+const iconMap = {
+  m365: LayoutGrid,
+  copilot: Bot,
+  teams: Users,
+  minecraft: Box,
+  excel: Table2,
+  onenote: NotebookPen,
+  agenthon: Trophy,
+  update: RefreshCw,
+  mee: GraduationCap,
+  'program-news': Newspaper,
+}
+
+const mainCategories = CATEGORIES.filter((c) => c.group === 'main')
+const subCategories = CATEGORIES.filter((c) => c.group === 'sub')
 
 const navGroups = [
-  {
-    title: 'Main Category',
-    items: [
-      { to: '/category/m365',      label: 'M365',      icon: LayoutGrid },
-      { to: '/category/copilot',   label: 'Copilot',   icon: Bot },
-      { to: '/category/teams',     label: 'Teams',     icon: Users },
-      { to: '/category/minecraft', label: 'Minecraft', icon: Box },
-      { to: '/category/excel',     label: 'Excel',     icon: Table2 },
-      { to: '/category/onenote',   label: 'OneNote',   icon: NotebookPen },
-    ],
-  },
-  {
-    title: 'Sub Category',
-    items: [
-      { to: '/category/agenthon',      label: 'Agenthon', icon: Trophy },
-      { to: '/category/update',        label: 'Update',   icon: RefreshCw },
-      { to: '/category/mee',           label: 'MEE',      icon: GraduationCap },
-      // program-news: 행사 소식 게시글 관리 (/program-news 페이지와 연동)
-      { to: '/category/program-news',  label: '행사 소식', icon: Newspaper },
-    ],
-  },
+  { title: 'Main Category', items: mainCategories },
+  { title: 'Sub Category',  items: subCategories },
 ]
 
 function Sidebar() {
@@ -44,22 +42,25 @@ function Sidebar() {
               {group.title}
             </p>
             <div className="space-y-1">
-              {group.items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
-                      isActive
-                        ? 'bg-black/5 text-neutral-900 font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:bg-ms-blue before:rounded-r-md'
-                        : 'text-neutral-600 hover:bg-black/5 hover:text-neutral-900'
-                    }`
-                  }
-                >
-                  <item.icon className="w-5 h-5" />
-                  {item.label}
-                </NavLink>
-              ))}
+              {group.items.map((item) => {
+                const Icon = iconMap[item.value] || LayoutGrid
+                return (
+                  <NavLink
+                    key={item.value}
+                    to={`/category/${item.value}`}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
+                        isActive
+                          ? 'bg-black/5 text-neutral-900 font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:bg-ms-blue before:rounded-r-md'
+                          : 'text-neutral-600 hover:bg-black/5 hover:text-neutral-900'
+                      }`
+                    }
+                  >
+                    <Icon className="w-5 h-5" />
+                    {item.label}
+                  </NavLink>
+                )
+              })}
             </div>
           </div>
         ))}
