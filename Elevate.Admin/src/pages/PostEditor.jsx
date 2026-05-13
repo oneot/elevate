@@ -11,13 +11,15 @@ import {
   createPost,
   deletePost,
   getPost,
-  registerAsset,
-  requestUploadSas,
   updatePost,
-} from '../lib/postsApi.js'
-import { slugify, extractYoutubeId } from '../lib/formatters.js'
-import { normalizeImageMimeType, uploadBlobWithSas, supportedImageMimeTypes } from '../lib/imageUpload.js'
-import { CATEGORIES } from '../lib/categories.js'
+} from '../services/postsApi.js'
+import {
+  requestUploadSas,
+  registerAsset,
+} from '../services/assetsApi.js'
+import { slugify, extractYoutubeId } from '../utils/formatters.js'
+import { normalizeImageMimeType, uploadBlobWithSas, supportedImageMimeTypes } from '../utils/imageUpload.js'
+import { CATEGORIES } from '../constants/categories.js'
 import { useAuth } from '../hooks/useAuth.js'
 
 const emptyPost = {

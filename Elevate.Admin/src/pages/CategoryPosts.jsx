@@ -5,11 +5,11 @@ import { Card } from '../components/ui/index.js'
 import { StatusPill } from '../components/ui/index.js'
 import NotFound from './NotFound.jsx'
 import { isApiConfigured } from '../lib/apiClient.js'
-import { listPosts } from '../lib/postsApi.js'
-import { formatDate } from '../lib/formatters.js'
+import { listPosts } from '../services/postsApi.js'
+import { formatDate } from '../utils/formatters.js'
 import { useScrollAnimation } from '../hooks/useScrollAnimation.js'
 import { useAuth } from '../hooks/useAuth.js'
-import { CATEGORY_MAP } from '../lib/categories.js'
+import { CATEGORY_MAP } from '../constants/categories.js'
 
 const PAGE_SIZE = 20
 

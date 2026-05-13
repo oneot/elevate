@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
-import { requestAttachUploadSas, registerFile } from '../../lib/postsApi.js'
-import { uploadBlobWithSas } from '../../lib/imageUpload.js'
+import { requestAttachUploadSas, registerFile } from '../../services/assetsApi.js'
+import { uploadBlobWithSas } from '../../utils/imageUpload.js'
 import { useAuth } from '../../hooks/useAuth.js'
 
 const ATTACH_MIME_MAP = {
