@@ -29,7 +29,8 @@ export default function Microsoft365Update() {
   const _rawPage = parseInt(searchParams.get('page') || '1', 10);
   const pageParam = Number.isFinite(_rawPage) && _rawPage > 0 ? _rawPage : 1;
   const tagsParam = searchParams.get('tags') || '';
-  const qParam = (searchParams.get('q') || '').trim().toLowerCase();
+  const qParam = (searchParams.get('q') || '').trim();
+  const qParamLower = qParam.toLowerCase();
   const selectedTags = useMemo(() => {
     if (!tagsParam) return [];
     return normalizeTagList(tagsParam.split(','));
@@ -74,14 +75,14 @@ export default function Microsoft365Update() {
         return selectedTags.every((t) => postTags.includes(t));
       });
     }
-    if (qParam) {
+    if (qParamLower) {
       result = result.filter((p) =>
-        (p.title || '').toLowerCase().includes(qParam) ||
-        (p.excerpt || '').toLowerCase().includes(qParam)
+        (p.title || '').toLowerCase().includes(qParamLower) ||
+        (p.excerpt || '').toLowerCase().includes(qParamLower)
       );
     }
     return result;
-  }, [allPosts, selectedTags, qParam]);
+  }, [allPosts, selectedTags, qParamLower]);
 
   // URL 파라미터 업데이트
   const updateUrlParams = useCallback((params) => {
@@ -151,7 +152,7 @@ export default function Microsoft365Update() {
         loading={loading}
         error={error}
         countLabel={!loading && selectedTags.length > 0 ? `${filteredPosts.length}개의 게시글이 일치합니다.` : undefined}
-        activeQuery={qParam}
+        activeQuery={qParamLower}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}

@@ -47,9 +47,11 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
         // 다른 카테고리에서 useLatest=true로 재사용할 경우 잘못된 게시글을 로드하지 않도록 가드한다.
         if (!useLatest || !normalizedCategory) return;
         if (normalizedCategory !== 'agenthon') return;
+        let cancelled = false;
         setLoadingLatest(true);
         getLatestAgenthonPost()
             .then((post) => {
+                if (cancelled) return;
                 if (post?.slug) {
                     setResolvedPostId(post.slug);
                 } else {
@@ -60,11 +62,13 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
                 }
             })
             .catch(() => {
+                if (cancelled) return;
                 setResolvedPostId(null);
                 setNotFound(true);
                 setLoading(false);
             })
-            .finally(() => setLoadingLatest(false));
+            .finally(() => { if (!cancelled) setLoadingLatest(false); });
+        return () => { cancelled = true; };
     }, [normalizedCategory, useLatest]);
 
     // URL 파라미터가 변경될 때 resolvedPostId를 동기화한다 (일반 /:category/:postId 라우트용)

@@ -3,14 +3,18 @@
  * @description Azure Functions REST API와 통신하는 공통 fetch 래퍼.
  *
  * 모든 API 요청은 이 모듈의 `apiFetch`를 통해 호출된다.
- * 베이스 URL은 `VITE_API_BASE_URL` 환경변수로 지정하며,
- * 미설정 시 개발 환경 기본값(func-elv-server-ep-dev)을 사용한다.
+ * 베이스 URL은 `VITE_API_BASE_URL` 환경변수로 지정한다.
+ * 프로덕션에서 미설정 시 명시적으로 오류를 throw하며, 개발 환경에서는 기본값(func-elv-server-ep-dev)으로 fallback한다.
  */
 
-/** 개발/프로덕션 환경의 API 베이스 URL */
-export const API_BASE =
+const _rawBase =
   import.meta.env.VITE_API_BASE_URL ||
-  'https://func-elv-server-ep-dev.azurewebsites.net/api/public';
+  (import.meta.env.PROD
+    ? (() => { throw new Error('[api/client] VITE_API_BASE_URL is not set in production.'); })()
+    : 'https://func-elv-server-ep-dev.azurewebsites.net/api/public');
+
+/** 개발/프로덕션 환경의 API 베이스 URL (trailing slash 제거) */
+export const API_BASE = _rawBase.replace(/\/$/, '');
 
 /**
  * API 엔드포인트에 fetch 요청을 보내고 JSON을 반환한다.
