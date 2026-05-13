@@ -22,6 +22,8 @@ const CATEGORY_LABELS = {
   agenthon: 'Agenthon',
   update: 'Update',
   mee: 'MEE',
+  // program-news: 행사 소식 (/program-news 페이지와 연동)
+  'program-news': '행사 소식',
 }
 
 function AdminPagination({ page, totalPages, onPageChange }) {
