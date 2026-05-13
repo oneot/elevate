@@ -19,7 +19,7 @@ import SeriesNavigator from '../components/posts/SeriesNavigator';
 import { getPost, getLatestAgenthonPost } from '../api/posts';
 import { sanitizeHtml, injectHeadingIds, injectLinkHandlers } from '../utils/html';
 import { formatDateKo } from '../utils/url';
-import { POST_DETAIL_VALID_CATEGORIES, CATEGORY_DISPLAY_NAMES } from '../constants/categories';
+import { POST_DETAIL_VALID_CATEGORIES, CATEGORY_DISPLAY_NAMES, getCategoryListRoute } from '../constants/categories';
 import { useSeriesNavigation } from '../hooks/useSeriesNavigation';
 import NotFound from './NotFound';
 
@@ -144,10 +144,11 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
 
     // GlassDocLayout에 전달할 breadcrumb 목록.
     // 로딩이 완료되기 전에는 마지막 항목이 postId(슬러그)로 표시된다.
+    // getCategoryListRoute로 카테고리별 실제 목록 경로를 사용하여 존재하지 않는 링크를 방지한다.
     const crumbs = [
         { label: 'Home', to: '/' },
         { type: 'sep' },
-        { label: categoryDisplayName, to: `/${normalizedCategory}` },
+        { label: categoryDisplayName, to: getCategoryListRoute(normalizedCategory) },
         { type: 'sep' },
         { label: postTitle },
     ];

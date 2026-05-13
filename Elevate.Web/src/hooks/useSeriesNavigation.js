@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { listSeriesByCategory } from '../api/posts';
+import { getCategoryListRoute } from '../constants/categories';
 
 export function useSeriesNavigation(normalizedCategory, post) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -71,7 +72,7 @@ export function useSeriesNavigation(normalizedCategory, post) {
 
   const hasSeriesNavigator = Boolean(post?.series && selectedSeriesPosts.length > 0);
 
-  const backToListHref = `/${normalizedCategory}`;
+  const backToListHref = getCategoryListRoute(normalizedCategory);
 
   const buildPostHref = useCallback(
     (targetPost) => {

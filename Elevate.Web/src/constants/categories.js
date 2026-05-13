@@ -19,3 +19,28 @@ export const CATEGORY_DISPLAY_NAMES = {
   m365update: 'Microsoft365 Update',
   update: '업데이트',
 };
+
+/**
+ * 카테고리별 실제 목록/랜딩 페이지 경로.
+ * PostDetail의 breadcrumb과 useSeriesNavigation의 backToListHref에 사용한다.
+ * - POST_LIST_CATEGORIES에 속하는 카테고리는 /:category (PostList)
+ * - update → /update (Microsoft365Update 전용 라우트)
+ * - agenthon → /agenthon (최신 게시글 전용 라우트)
+ * - mee, m365update 등 전용 라우트가 없는 카테고리는 홈(/)으로 fallback
+ */
+export const CATEGORY_LIST_ROUTES = {
+  update: '/update',
+  agenthon: '/agenthon',
+};
+
+/**
+ * 카테고리의 실제 목록/랜딩 경로를 반환한다.
+ * @param {string} category
+ * @returns {string}
+ */
+export function getCategoryListRoute(category) {
+  if (!category) return '/';
+  if (CATEGORY_LIST_ROUTES[category]) return CATEGORY_LIST_ROUTES[category];
+  if (POST_LIST_CATEGORIES.includes(category)) return `/${category}`;
+  return '/';
+}

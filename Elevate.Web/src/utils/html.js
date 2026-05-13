@@ -36,7 +36,10 @@ export function sanitizeHtml(html) {
 export function injectHeadingIds(containerEl) {
   if (!containerEl) return;
   const headings = containerEl.querySelectorAll('h1, h2, h3, h4, h5, h6');
-  const usedIds = new Set();
+  // 문서 내 이미 사용 중인 모든 id를 미리 수집하여 새로 생성하는 id와 충돌하지 않도록 한다.
+  const usedIds = new Set(
+    Array.from(containerEl.querySelectorAll('[id]')).map((el) => el.id).filter(Boolean)
+  );
 
   headings.forEach((el) => {
     if (el.id) return;
@@ -45,11 +48,13 @@ export function injectHeadingIds(containerEl) {
       .toLowerCase()
       .replace(/\s+/g, '-')
       .replace(/[^\w\-가-힣]/g, '');
-    let id = base || 'heading';
+    // base가 빈 문자열이면 'heading'을 fallback으로 사용한다.
+    const baseId = base || 'heading';
+    let id = baseId;
     let suffix = 1;
     // 동일한 id가 이미 존재하면 숫자 접미사를 붙여 고유하게 만든다.
     while (usedIds.has(id)) {
-      id = `${base}-${suffix++}`;
+      id = `${baseId}-${suffix++}`;
     }
     usedIds.add(id);
     el.id = id;
@@ -77,9 +82,11 @@ export function injectLinkHandlers(containerEl, navigate) {
 
   // 렌더 시점에 외부 링크에 target/rel을 일괄 주입한다.
   // (클릭 이벤트 전에 속성을 확정해야 이후 분기 처리가 정확하다)
+  // protocol-relative URL(//...)도 외부 링크로 간주한다.
   containerEl.querySelectorAll('a[href]').forEach((anchor) => {
     const href = anchor.getAttribute('href');
-    if (!href || href.startsWith('/') || href.startsWith('#')) return;
+    if (!href || (href.startsWith('/') && !href.startsWith('//'))) return;
+    if (href.startsWith('#')) return;
     anchor.setAttribute('target', '_blank');
     anchor.setAttribute('rel', 'noopener noreferrer');
   });
@@ -106,7 +113,7 @@ export function injectLinkHandlers(containerEl, navigate) {
       return;
     }
 
-    if (href.startsWith('/')) {
+    if (href.startsWith('/') && !href.startsWith('//')) {
       // 내부 링크: React Router로 SPA 이동 (전체 페이지 reload 방지)
       e.preventDefault();
       navigate(href);
