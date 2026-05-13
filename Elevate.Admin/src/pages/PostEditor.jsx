@@ -14,6 +14,7 @@ import { CATEGORIES } from '../constants/categories.js'
 import { useAuth } from '../hooks/useAuth.js'
 import { usePostUpload } from '../hooks/usePostUpload.js'
 
+/** 신규 게시글 작성 시 초기 상태 기본값. */
 const emptyPost = {
   title: '',
   slug: '',
@@ -101,6 +102,8 @@ function PostEditor() {
 
     if (!url) {
       setYoutubeError('')
+      // YouTube URL이 지워졌을 때 자동으로 설정된 썸네일(img.youtube.com)도 함께 초기화한다.
+      // 사용자가 직접 업로드한 썸네일은 유지한다.
       const wasAutoThumb = post.thumbnailUrl?.includes('img.youtube.com')
       setPost((prev) => ({
         ...prev,
@@ -119,6 +122,8 @@ function PostEditor() {
 
     setYoutubeError('')
     const autoThumbUrl = `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+    // 썸네일이 비어 있을 때만 YouTube 썸네일을 자동 설정한다.
+    // 이미 썸네일이 있으면 사용자가 의도적으로 선택한 것으로 간주해 변경하지 않는다.
     setPost((prev) => ({
       ...prev,
       youtube: id,
@@ -145,6 +150,8 @@ function PostEditor() {
 
     const payload = {
       ...post,
+      // slug 가 비어 있으면 제목에서 자동 생성한다. 서버도 생성할 수 있지만
+      // 클라이언트에서 미리 생성하면 저장 후 즉시 URL을 알 수 있다.
       slug: post.slug || slugify(post.title),
       tags: tagsInput
         .split(',')
@@ -299,6 +306,7 @@ function PostEditor() {
                 onChange={handleChange('category')}
                 disabled={!isNew}
               >
+                {/* 신규 게시글에서만 카테고리를 선택할 수 있다. 기존 게시글은 카테고리 변경이 불가하다. */}
                 {isNew && (
                   <option value="" disabled>카테고리 선택</option>
                 )}

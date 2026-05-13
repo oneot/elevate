@@ -69,6 +69,8 @@ function CategoryPosts() {
   const label = CATEGORY_MAP[categoryId]
 
   useEffect(() => {
+    // 카테고리가 변경되면 필터와 페이지를 초기 상태로 리셋한다.
+    // 이전 카테고리의 statusFilter 와 page 가 그대로 유지되면 의도하지 않은 쿼리가 발생한다.
     setStatusFilter('all')
     setPage(1)
   }, [categoryId])
@@ -76,6 +78,7 @@ function CategoryPosts() {
   useEffect(() => {
     if (!isApiConfigured) return
 
+    // isMounted 플래그로 비동기 응답이 컴포넌트 언마운트 후에 도착해도 상태 업데이트를 방지한다.
     let isMounted = true
     const load = async () => {
       setLoading(true)
@@ -105,6 +108,7 @@ function CategoryPosts() {
 
   const handleStatusChange = (value) => {
     setStatusFilter(value)
+    // 필터 변경 시 page 를 1로 리셋해 범위 밖 페이지 요청을 방지한다.
     setPage(1)
   }
 
