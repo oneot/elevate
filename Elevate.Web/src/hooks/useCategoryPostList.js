@@ -84,15 +84,16 @@ export function useCategoryPostList(category) {
     return result;
   }, [allPosts, selectedTags, qParamLower]);
 
-  // URL 파라미터를 일괄 업데이트한다 (빈 값은 파라미터 삭제).
+  // URL 파라미터를 일괄 업데이트한다 (빈 값 또는 page=1은 파라미터 삭제).
+  // PostList.jsx와 동일하게 page=1일 때 파라미터를 제거해 URL을 간결하게 유지한다.
   const updateUrlParams = useCallback((params) => {
     setSearchParams((prev) => {
       const newParams = new URLSearchParams(prev);
       Object.entries(params).forEach(([key, value]) => {
-        if (value) {
-          newParams.set(key, value);
-        } else {
+        if (!value || (key === 'page' && value === '1')) {
           newParams.delete(key);
+        } else {
+          newParams.set(key, value);
         }
       });
       return newParams;
