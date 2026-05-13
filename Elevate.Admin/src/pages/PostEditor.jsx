@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Card from '../components/Card.jsx'
 import Button from '../components/Button.jsx'
+import ConfirmModal from '../components/ConfirmModal.jsx'
 import FormField from '../components/FormField.jsx'
 import HtmlEditor from '../components/HtmlEditor.jsx'
 import AttachUploader from '../components/AttachUploader.jsx'
 import { isApiConfigured } from '../lib/apiClient.js'
 import {
   createPost,
+  deletePost,
   getPost,
   registerAsset,
   requestUploadSas,
@@ -45,6 +47,8 @@ function PostEditor() {
   const [youtubeError, setYoutubeError] = useState('')
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -167,6 +171,20 @@ function PostEditor() {
     }
   }
 
+  const handleDelete = async () => {
+    setDeleting(true)
+    setError('')
+    try {
+      await deletePost(postId, { msalInstance })
+      navigate(post.category ? `/category/${post.category}` : '/')
+    } catch (err) {
+      setError(err.message || '삭제에 실패했습니다.')
+      setShowDeleteModal(false)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const uploadThumbnail = async (selectedFile) => {
     if (!selectedFile) return;
 
@@ -277,6 +295,11 @@ function PostEditor() {
           <Button variant="secondary" onClick={() => navigate(post.category ? `/category/${post.category}` : '/')}>
             목록으로
           </Button>
+          {!isNew && (
+            <Button variant="danger" onClick={() => setShowDeleteModal(true)} disabled={deleting}>
+              삭제
+            </Button>
+          )}
           <Button onClick={handleSave} disabled={saving}>
             {saving ? '저장 중...' : '저장'}
           </Button>
@@ -413,6 +436,16 @@ function PostEditor() {
 
         </aside>
       </div>
+
+      <ConfirmModal
+        open={showDeleteModal}
+        title="게시글을 삭제하시겠습니까?"
+        description={`"${post.title || '(제목 없음'}" 게시글이 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
+        confirmLabel="삭제"
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteModal(false)}
+        loading={deleting}
+      />
     </div>
   )
 }
