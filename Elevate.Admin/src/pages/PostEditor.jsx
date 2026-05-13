@@ -13,20 +13,10 @@ import {
   requestUploadSas,
   updatePost,
 } from '../lib/postsApi.js'
-import { slugify } from '../lib/formatters.js'
+import { slugify, extractYoutubeId } from '../lib/formatters.js'
+import { normalizeImageMimeType, uploadBlobWithSas, supportedImageMimeTypes } from '../lib/imageUpload.js'
+import { CATEGORIES } from '../lib/categories.js'
 import { useAuth } from '../hooks/useAuth.js'
-
-const CATEGORY_OPTIONS = [
-  { value: 'm365',      label: 'M365' },
-  { value: 'copilot',   label: 'Copilot' },
-  { value: 'teams',     label: 'Teams' },
-  { value: 'minecraft', label: 'Minecraft' },
-  { value: 'excel',     label: 'Excel' },
-  { value: 'onenote',   label: 'OneNote' },
-  { value: 'agenthon',  label: 'Agenthon' },
-  { value: 'update',    label: 'Update' },
-  { value: 'mee',       label: 'MEE' },
-]
 
 const emptyPost = {
   title: '',
@@ -38,125 +28,6 @@ const emptyPost = {
   thumbnailUrl: '',
   htmlBody: '',
   youtube: '',
-}
-
-function extractYoutubeId(url) {
-  if (!url) return null
-  const patterns = [
-    /[?&]v=([a-zA-Z0-9_-]{11})/,
-    /youtu\.be\/([a-zA-Z0-9_-]{11})/,
-    /\/shorts\/([a-zA-Z0-9_-]{11})/,
-    /\/embed\/([a-zA-Z0-9_-]{11})/,
-  ]
-  for (const pattern of patterns) {
-    const match = url.match(pattern)
-    if (match) return match[1]
-  }
-  return null
-}
-
-const mimeTypeAliases = {
-  'image/jpg': 'image/jpeg',
-  'image/pjpeg': 'image/jpeg',
-  'image/x-png': 'image/png',
-  'image/heic-sequence': 'image/heic',
-  'image/heif-sequence': 'image/heif',
-}
-
-const extensionMimeMap = {
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.png': 'image/png',
-  '.webp': 'image/webp',
-  '.gif': 'image/gif',
-  '.heic': 'image/heic',
-  '.heif': 'image/heif',
-  '.avif': 'image/avif',
-}
-
-const supportedImageMimeTypes = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-  'image/heic',
-  'image/heif',
-  'image/avif',
-])
-
-function normalizeImageMimeType(file) {
-  const rawType = String(file?.type || '').trim().toLowerCase()
-  const aliasedType = mimeTypeAliases[rawType] || rawType
-
-  if (aliasedType) {
-    return aliasedType
-  }
-
-  const fileName = String(file?.name || '')
-  const dotIndex = fileName.lastIndexOf('.')
-  if (dotIndex < 0) {
-    return ''
-  }
-
-  const extension = fileName.slice(dotIndex).toLowerCase()
-  return extensionMimeMap[extension] || ''
-}
-
-async function uploadBlobWithSas(uploadUrl, selectedFile, contentType) {
-  const uploadResponse = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: {
-      'x-ms-blob-type': 'BlockBlob',
-      'Content-Type': contentType,
-    },
-    body: selectedFile,
-  })
-
-  if (uploadResponse.ok) {
-    return
-  }
-
-  let errorDetail = ''
-  try {
-    errorDetail = (await uploadResponse.text()).trim()
-  } catch {
-    errorDetail = ''
-  }
-
-  throw new Error(errorDetail || `Blob upload failed (${uploadResponse.status})`)
-}
-
-const mockPosts = {
-  'mock-1': {
-    title: 'Azure 기반 블로그 아키텍처',
-    slug: 'azure-architecture-handoff',
-    status: 'draft',
-    category: 'Architecture',
-    tags: ['Azure', 'CosmosDB'],
-    excerpt: '서버리스 기반 운영 아키텍처 요약',
-    thumbnailUrl: '',
-    htmlBody: '<h2>서버리스 기반 운영 아키텍처</h2><p>요약 콘텐츠입니다.</p>',
-  },
-  'mock-2': {
-    title: 'Copilot Studio 연계 방향',
-    slug: 'copilot-studio-knowledge',
-    status: 'published',
-    category: 'Copilot',
-    tags: ['Copilot', 'AI Search'],
-    excerpt: '지식 소스 연계를 위한 방향 정리',
-    thumbnailUrl: '',
-    htmlBody: '<h2>Copilot Studio 연계</h2><p>연계 방향 초안입니다.</p>',
-  },
-  'mock-3': {
-    title: 'Admin 운영 가이드 초안',
-    slug: 'admin-operations-guide',
-    status: 'archived',
-    category: 'Operations',
-    tags: ['Admin', 'Guide'],
-    excerpt: '운영자가 확인해야 할 항목 정리',
-    thumbnailUrl: '',
-    htmlBody: '<h2>운영 가이드</h2><p>운영 체크리스트입니다.</p>',
-  },
 }
 
 function PostEditor() {
@@ -180,14 +51,6 @@ function PostEditor() {
 
   useEffect(() => {
     if (!isApiConfigured) {
-      if (!isNew) {
-        const data = mockPosts[postId]
-        if (data) {
-          setPost({ ...emptyPost, ...data })
-          setTagsInput((data.tags || []).join(', '))
-          setYoutubeInput(data.youtube || '')
-        }
-      }
       setLoading(false)
       return
     }
@@ -411,7 +274,7 @@ function PostEditor() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => navigate('/posts')}>
+          <Button variant="secondary" onClick={() => navigate(post.category ? `/category/${post.category}` : '/')}>
             목록으로
           </Button>
           <Button onClick={handleSave} disabled={saving}>
@@ -492,7 +355,7 @@ function PostEditor() {
                 {isNew && (
                   <option value="" disabled>카테고리 선택</option>
                 )}
-                {CATEGORY_OPTIONS.map((o) => (
+                {CATEGORIES.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
