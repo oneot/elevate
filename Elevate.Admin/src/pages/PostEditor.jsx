@@ -1,11 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Card } from '../components/ui/index.js'
-import { Button } from '../components/ui/index.js'
-import { ConfirmModal } from '../components/ui/index.js'
-import { FormField } from '../components/ui/index.js'
-import { HtmlEditor } from '../components/editor/index.js'
-import { AttachUploader } from '../components/editor/index.js'
+import { Card, Button, ConfirmModal, FormField } from '../components/ui/index.js'
+import { HtmlEditor, AttachUploader } from '../components/editor/index.js'
 import { isApiConfigured } from '../lib/apiClient.js'
 import {
   createPost,
@@ -13,14 +9,10 @@ import {
   getPost,
   updatePost,
 } from '../services/postsApi.js'
-import {
-  requestUploadSas,
-  registerAsset,
-} from '../services/assetsApi.js'
 import { slugify, extractYoutubeId } from '../utils/formatters.js'
-import { normalizeImageMimeType, uploadBlobWithSas, supportedImageMimeTypes } from '../utils/imageUpload.js'
 import { CATEGORIES } from '../constants/categories.js'
 import { useAuth } from '../hooks/useAuth.js'
+import { usePostUpload } from '../hooks/usePostUpload.js'
 
 const emptyPost = {
   title: '',
@@ -51,9 +43,16 @@ function PostEditor() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+
+  const { uploading: isUploading, uploadThumbnail, uploadHtmlImage } = usePostUpload({
+    msalInstance,
+    postId,
+    setPost,
+    setError,
+    setMessage,
+  })
 
   useEffect(() => {
     if (!isApiConfigured) {
@@ -185,83 +184,6 @@ function PostEditor() {
     } finally {
       setDeleting(false)
     }
-  }
-
-  const uploadThumbnail = async (selectedFile) => {
-    if (!selectedFile) return;
-
-    const contentType = normalizeImageMimeType(selectedFile)
-    if (!supportedImageMimeTypes.has(contentType)) {
-      throw new Error('지원하지 않는 이미지 형식입니다. JPG, PNG, WEBP, GIF, HEIC, HEIF, AVIF 파일만 업로드할 수 있습니다.')
-    }
-
-    if (!isApiConfigured) {
-      const previewUrl = URL.createObjectURL(selectedFile)
-      setPost((prev) => ({ ...prev, thumbnailUrl: previewUrl }))
-      setMessage('API 없이 썸네일 미리보기 이미지를 적용했습니다.')
-      return
-    }
-
-    setUploading(true)
-    setError('')
-    setMessage('')
-
-    try {
-      const sas = await requestUploadSas({
-        fileName: selectedFile.name,
-        contentType,
-        sizeBytes: selectedFile.size,
-      }, { msalInstance })
-
-      await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType)
-
-      const asset = await registerAsset({
-        postId: postId || null,
-        blobUrl: sas.blobUrl,
-        contentType,
-        sizeBytes: selectedFile.size,
-        fileName: selectedFile.name,
-      }, { msalInstance })
-
-      setPost((prev) => ({
-        ...prev,
-        thumbnailUrl: asset?.signedUrl || asset?.url || asset?.cdnUrl || asset?.blobUrl || sas.blobUrl,
-      }))
-      setMessage('썸네일 이미지가 업로드되었습니다.')
-    } catch (err) {
-      setError(err.message || '썸네일 이미지 업로드에 실패했습니다.')
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const uploadHtmlImage = async (selectedFile) => {
-    const contentType = normalizeImageMimeType(selectedFile)
-    if (!supportedImageMimeTypes.has(contentType)) {
-      throw new Error('지원하지 않는 이미지 형식입니다. JPG, PNG, WEBP, GIF, HEIC, HEIF, AVIF 파일만 업로드할 수 있습니다.')
-    }
-
-    if (!isApiConfigured) {
-      return URL.createObjectURL(selectedFile)
-    }
-
-    const sas = await requestUploadSas({
-      fileName: selectedFile.name,
-      contentType,
-      sizeBytes: selectedFile.size,
-    }, { msalInstance })
-
-    await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType)
-
-    const asset = await registerAsset({
-      postId: postId || null,
-      blobUrl: sas.blobUrl,
-      contentType,
-      sizeBytes: selectedFile.size,
-      fileName: selectedFile.name,
-    }, { msalInstance })
-
-    return asset?.signedUrl || asset?.url || asset?.cdnUrl || asset?.blobUrl || sas.blobUrl
   }
 
   if (loading) {
@@ -424,7 +346,7 @@ function PostEditor() {
                   className="w-full text-sm text-neutral-600 file:mr-4 file:py-1.5 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200 file:transition-colors file:cursor-pointer"
                 />
               </div>
-              {uploading && <p className="text-xs text-ms-blue mt-1">썸네일 업로드 중...</p>}
+              {isUploading && <p className="text-xs text-ms-blue mt-1">썸네일 업로드 중...</p>}
             </FormField>
           </Card>
 

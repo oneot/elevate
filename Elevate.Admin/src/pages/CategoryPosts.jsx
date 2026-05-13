@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Edit, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
-import { Card } from '../components/ui/index.js'
-import { StatusPill } from '../components/ui/index.js'
+import { Edit, Calendar } from 'lucide-react'
+import { Card, Pagination, StatusPill } from '../components/ui/index.js'
 import NotFound from './NotFound.jsx'
 import { isApiConfigured } from '../lib/apiClient.js'
 import { listPosts } from '../services/postsApi.js'
@@ -12,31 +11,6 @@ import { useAuth } from '../hooks/useAuth.js'
 import { CATEGORY_MAP } from '../constants/categories.js'
 
 const PAGE_SIZE = 20
-
-function AdminPagination({ page, totalPages, onPageChange }) {
-  if (!totalPages || totalPages <= 1) return null
-  return (
-    <div className="flex items-center justify-center gap-2 py-4">
-      <button
-        onClick={() => onPageChange(page - 1)}
-        disabled={page <= 1}
-        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-neutral-300 text-sm text-neutral-700 hover:bg-neutral-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-      >
-        <ChevronLeft className="w-4 h-4" /> 이전
-      </button>
-      <span className="text-sm text-neutral-600 px-2">
-        {page} / {totalPages}
-      </span>
-      <button
-        onClick={() => onPageChange(page + 1)}
-        disabled={page >= totalPages}
-        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-neutral-300 text-sm text-neutral-700 hover:bg-neutral-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-      >
-        다음 <ChevronRight className="w-4 h-4" />
-      </button>
-    </div>
-  )
-}
 
 function PostCard({ post, index }) {
   const [ref, isVisible] = useScrollAnimation(0.1)
@@ -203,7 +177,7 @@ function CategoryPosts() {
               <PostCard key={post.id} post={post} index={index} />
             ))}
           </div>
-          <AdminPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}
     </div>
