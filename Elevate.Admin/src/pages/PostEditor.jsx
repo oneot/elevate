@@ -180,6 +180,12 @@ function PostEditor() {
   }
 
   const handleDelete = async () => {
+    // API 미구성 환경에서는 삭제 요청 자체를 차단한다.
+    if (!isApiConfigured) {
+      setError('API가 연결되어 있지 않아 삭제할 수 없습니다.')
+      setShowDeleteModal(false)
+      return
+    }
     setDeleting(true)
     setError('')
     try {
@@ -226,7 +232,7 @@ function PostEditor() {
           <Button variant="secondary" onClick={() => navigate(post.category ? `/category/${post.category}` : '/')}>
             목록으로
           </Button>
-          {!isNew && (
+          {!isNew && isApiConfigured && (
             <Button variant="danger" onClick={() => setShowDeleteModal(true)} disabled={deleting}>
               삭제
             </Button>

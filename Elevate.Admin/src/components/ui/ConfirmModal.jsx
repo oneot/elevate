@@ -1,6 +1,29 @@
 import { useEffect, useId, useRef } from 'react'
 import { AlertTriangle } from 'lucide-react'
 
+/** 모달 패널 내에서 포커스가 벗어나지 않도록 Tab/Shift+Tab 순환을 강제한다. */
+function useFocusTrap(panelRef, open) {
+  useEffect(() => {
+    if (!open || !panelRef.current) return
+    const focusable = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    const getItems = () => Array.from(panelRef.current?.querySelectorAll(focusable) ?? [])
+    const onKeyDown = (e) => {
+      if (e.key !== 'Tab') return
+      const items = getItems()
+      if (!items.length) return
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus() }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open, panelRef])
+}
+
 function ConfirmModal({
   open,
   title,
@@ -25,9 +48,13 @@ function ConfirmModal({
 
   // 모달이 열릴 때 취소 버튼으로 포커스를 이동해 스크린 리더와 키보드 접근성을 보장한다.
   const cancelRef = useRef(null)
+  const panelRef = useRef(null)
   useEffect(() => {
     if (open) cancelRef.current?.focus()
   }, [open])
+
+  // 모달이 열린 동안 포커스가 패널 외부로 나가지 않도록 트랩을 설정한다.
+  useFocusTrap(panelRef, open)
 
   const titleId = useId()
   const descId = useId()
@@ -64,7 +91,7 @@ function ConfirmModal({
       />
 
       {/* 모달 패널 */}
-      <div className="relative w-full max-w-md rounded-xl bg-white shadow-elevation-4 p-6 space-y-5 animate-slideUp">
+      <div ref={panelRef} className="relative w-full max-w-md rounded-xl bg-white shadow-elevation-4 p-6 space-y-5 animate-slideUp">
         <div className="flex items-start gap-4">
           <div className={`flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full ${iconWrapClass}`}>
             <AlertTriangle className={`w-5 h-5 ${iconClass}`} />

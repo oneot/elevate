@@ -37,7 +37,7 @@ function PostMetaSidebar({
   categories,
 }) {
   return (
-    <aside className="space-y-8">
+    <div className="space-y-8">
       <Card colorScheme="slate" className="space-y-6">
         <h3 className="text-sm font-semibold text-neutral-800">메타데이터</h3>
 
@@ -126,7 +126,7 @@ function PostMetaSidebar({
         </p>
         <AttachUploader postId={postId} />
       </Card>
-    </aside>
+    </div>
   )
 }
 
