@@ -34,7 +34,9 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
 
     const contentType = normalizeImageMimeType(selectedFile)
     if (!supportedImageMimeTypes.has(contentType)) {
-      throw new Error('지원하지 않는 이미지 형식입니다. JPG, PNG, WEBP, GIF, HEIC, HEIF, AVIF 파일만 업로드할 수 있습니다.')
+      // throw 대신 setError로 전달해 상위 컴포넌트 catch 블록이 에러를 삼키지 않도록 한다.
+      setError('지원하지 않는 이미지 형식입니다. JPG, PNG, WEBP, GIF, HEIC, HEIF, AVIF 파일만 업로드할 수 있습니다.')
+      return
     }
 
     if (!isApiConfigured) {
