@@ -1,55 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Edit, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
-import Card from '../components/Card.jsx'
-import StatusPill from '../components/StatusPill.jsx'
+import { Edit, Calendar } from 'lucide-react'
+import { Card, Pagination, StatusPill } from '../components/ui/index.js'
 import NotFound from './NotFound.jsx'
 import { isApiConfigured } from '../lib/apiClient.js'
-import { listPosts } from '../lib/postsApi.js'
-import { formatDate } from '../lib/formatters.js'
+import { listPosts } from '../services/postsApi.js'
+import { formatDate } from '../utils/formatters.js'
 import { useScrollAnimation } from '../hooks/useScrollAnimation.js'
 import { useAuth } from '../hooks/useAuth.js'
+import { CATEGORY_MAP } from '../constants/categories.js'
 
 const PAGE_SIZE = 20
-
-const CATEGORY_LABELS = {
-  m365: 'M365',
-  copilot: 'Copilot',
-  teams: 'Teams',
-  minecraft: 'Minecraft',
-  excel: 'Excel',
-  onenote: 'OneNote',
-  agenthon: 'Agenthon',
-  update: 'Update',
-  mee: 'MEE',
-  // program-news: 행사 소식 (/program-news 페이지와 연동)
-  'program-news': '행사 소식',
-}
-
-function AdminPagination({ page, totalPages, onPageChange }) {
-  if (!totalPages || totalPages <= 1) return null
-  return (
-    <div className="flex items-center justify-center gap-2 py-4">
-      <button
-        onClick={() => onPageChange(page - 1)}
-        disabled={page <= 1}
-        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-neutral-300 text-sm text-neutral-700 hover:bg-neutral-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-      >
-        <ChevronLeft className="w-4 h-4" /> 이전
-      </button>
-      <span className="text-sm text-neutral-600 px-2">
-        {page} / {totalPages}
-      </span>
-      <button
-        onClick={() => onPageChange(page + 1)}
-        disabled={page >= totalPages}
-        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-neutral-300 text-sm text-neutral-700 hover:bg-neutral-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-      >
-        다음 <ChevronRight className="w-4 h-4" />
-      </button>
-    </div>
-  )
-}
 
 function PostCard({ post, index }) {
   const [ref, isVisible] = useScrollAnimation(0.1)
@@ -105,9 +66,11 @@ function CategoryPosts() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const label = CATEGORY_LABELS[categoryId]
+  const label = CATEGORY_MAP[categoryId]
 
   useEffect(() => {
+    // 카테고리가 변경되면 필터와 페이지를 초기 상태로 리셋한다.
+    // 이전 카테고리의 statusFilter 와 page 가 그대로 유지되면 의도하지 않은 쿼리가 발생한다.
     setStatusFilter('all')
     setPage(1)
   }, [categoryId])
@@ -115,6 +78,7 @@ function CategoryPosts() {
   useEffect(() => {
     if (!isApiConfigured) return
 
+    // isMounted 플래그로 비동기 응답이 컴포넌트 언마운트 후에 도착해도 상태 업데이트를 방지한다.
     let isMounted = true
     const load = async () => {
       setLoading(true)
@@ -144,6 +108,7 @@ function CategoryPosts() {
 
   const handleStatusChange = (value) => {
     setStatusFilter(value)
+    // 필터 변경 시 page 를 1로 리셋해 범위 밖 페이지 요청을 방지한다.
     setPage(1)
   }
 
@@ -216,7 +181,7 @@ function CategoryPosts() {
               <PostCard key={post.id} post={post} index={index} />
             ))}
           </div>
-          <AdminPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}
     </div>

@@ -1,8 +1,17 @@
+/**
+ * 버튼 variant 별 스타일.
+ * - primary: 주요 행동 (파란색)
+ * - success: 긍정적 확정 행동 (초록색)
+ * - secondary: 보조 행동 (흰 배경, 테두리)
+ * - ghost: 시각적으로 비침투적인 행동 (투명 배경)
+ * - danger: 위험/삭제 행동 (빨간색)
+ */
 const styles = {
   primary: 'bg-ms-blue text-white hover:bg-[#005a9e] shadow-elevation-2 hover:shadow-elevation-4',
   success: 'bg-ms-green text-white hover:bg-[#0b5a0b] shadow-elevation-2 hover:shadow-elevation-4',
   secondary: 'bg-white text-neutral-900 border border-black/10 hover:bg-black/5 shadow-elevation-2',
   ghost: 'text-neutral-700 bg-transparent hover:bg-black/5 hover:text-neutral-900',
+  danger: 'bg-red-600 text-white hover:bg-red-700 shadow-elevation-2 hover:shadow-elevation-4',
 }
 
 function Button({ variant = 'primary', type = 'button', className = '', disabled = false, ...props }) {
