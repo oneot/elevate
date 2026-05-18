@@ -110,6 +110,7 @@ export default function PostList() {
   // 카테고리별 시리즈 목록 로드
   useEffect(() => {
     if (!isValidCategory || category === 'all') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSeriesOptions([]);
       return;
     }

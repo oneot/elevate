@@ -8,6 +8,14 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import ReactWebChat, { createDirectLine, createStore } from 'botframework-webchat';
 
+const LoadingSpinner = () => (
+  <div className="flex space-x-1.5 p-2 animate-fade-in-up">
+    <div className="loading-dot"></div>
+    <div className="loading-dot"></div>
+    <div className="loading-dot"></div>
+  </div>
+);
+
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [directLine, setDirectLine] = useState(null);
@@ -51,15 +59,6 @@ const ChatWidget = () => {
 
 
   }, []); // 빈 배열 유지 (페이지 로드 시 한 번만 실행)
-
-  // ✅ 로딩 애니메이션 (말풍선 배경 제거됨, 점만 둥둥)
-  const LoadingSpinner = () => (
-    <div className="flex space-x-1.5 p-2 animate-fade-in-up">
-      <div className="loading-dot"></div>
-      <div className="loading-dot"></div>
-      <div className="loading-dot"></div>
-    </div>
-  );
 
   // ✅ 스토어 설정: 봇의 상태(Typing/Message)를 실시간으로 감시
   const store = useMemo(

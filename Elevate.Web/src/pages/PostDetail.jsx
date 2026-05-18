@@ -41,6 +41,10 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
     // 목록 API + 상세 API 2단계 호출이 이미 캡슐화되어 있으므로 중복 구현 없이 재사용한다.
     const [resolvedPostId, setResolvedPostId] = useState(postIdParam ?? null);
     const [loadingLatest, setLoadingLatest] = useState(useLatest);
+    const [post, setPost] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [notFound, setNotFound] = useState(false);
+    const contentRef = useRef(null);
 
     useEffect(() => {
         // useLatest 모드는 현재 agenthon 카테고리에서만 지원한다.
@@ -48,6 +52,7 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
         if (!useLatest || !normalizedCategory) return;
         if (normalizedCategory !== 'agenthon') return;
         let cancelled = false;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoadingLatest(true);
         getLatestAgenthonPost()
             .then((post) => {
@@ -73,15 +78,11 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
 
     // URL 파라미터가 변경될 때 resolvedPostId를 동기화한다 (일반 /:category/:postId 라우트용)
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (!useLatest) setResolvedPostId(postIdParam ?? null);
     }, [postIdParam, useLatest]);
 
     const postId = resolvedPostId;
-
-    const [post, setPost] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [notFound, setNotFound] = useState(false);
-    const contentRef = useRef(null);
 
     useEffect(() => {
         if (!normalizedCategory || !postId) return;

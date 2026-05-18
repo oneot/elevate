@@ -7,7 +7,7 @@
  * URL hash(`#section-id`)로 진입하면 해당 섹션으로 자동 스크롤한다.
  */
 import { Helmet } from 'react-helmet-async';
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 
 // Icons
@@ -23,10 +23,11 @@ import Navigation from '../components/layout/Navigation';
 import MapSection from '../components/home/MapSection';
 import CopilotStudioSection from '../components/home/CopilotStudioSection';
 import Footer from '../components/layout/Footer';
-import ChatWidget from '../components/common/ChatWidget';
 import FeatureCard from '../components/home/FeatureCard';
 import MEESection from '../components/home/MEESection';
 import GlobalTrainingPartner from '../components/home/GlobalTrainingPartner';
+
+const ChatWidget = lazy(() => import('../components/common/ChatWidget'));
 
 // Hooks
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
@@ -198,7 +199,9 @@ const Home = () => {
             <GlobalTrainingPartner />
 
             <Footer />
-            <ChatWidget />
+            <Suspense fallback={null}>
+                <ChatWidget />
+            </Suspense>
         </div>
     );
 };
