@@ -56,6 +56,10 @@ const Home = () => {
         }
     }, [location.hash]);
     // 기능 카드 데이터
+    // mdColSpan: md(768px+) 6열 그리드에서의 col-span 클래스 — 2-3-2 레이아웃
+    //   행1 (M365·Copilot)                       → col-span-3 (2카드)
+    //   행2 (CopilotStudio·Teams·MinecraftEDU)   → col-span-2 (3카드)
+    //   행3 (Excel·OneNote)                      → col-span-3 (2카드)
     const features = [
         {
             title: 'M365',
@@ -64,7 +68,8 @@ const Home = () => {
             iconType: 'image',
             to: '/m365',
             colorScheme: 'orange',
-            ariaLabel: 'M365 개요 페이지로 이동'
+            ariaLabel: 'M365 개요 페이지로 이동',
+            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-3'
         },
         {
             title: 'Copilot',
@@ -73,7 +78,8 @@ const Home = () => {
             iconType: 'image',
             to: '/copilot',
             colorScheme: 'blue',
-            ariaLabel: 'Copilot 페이지로 이동'
+            ariaLabel: 'Copilot 페이지로 이동',
+            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-3'
         },
         {
             title: 'Copilot Studio',
@@ -83,7 +89,8 @@ const Home = () => {
             iconSize: 'w-9 h-9',
             to: '/copilot-studio',
             colorScheme: 'violet',
-            ariaLabel: 'Copilot Studio 페이지로 이동'
+            ariaLabel: 'Copilot Studio 페이지로 이동',
+            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-2'
         },
         {
             title: 'Microsoft Teams',
@@ -93,7 +100,8 @@ const Home = () => {
             iconSize: 'w-9 h-9',
             to: '/teams',
             colorScheme: 'indigo',
-            ariaLabel: 'Microsoft Teams 페이지로 이동'
+            ariaLabel: 'Microsoft Teams 페이지로 이동',
+            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-2'
         },
         {
             title: 'Minecraft EDU',
@@ -103,7 +111,8 @@ const Home = () => {
             iconSize: 'w-9 h-9',
             to: '/minecraft',
             colorScheme: 'green',
-            ariaLabel: 'Minecraft EDU 페이지로 이동'
+            ariaLabel: 'Minecraft EDU 페이지로 이동',
+            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-2'
         },
         {
             title: 'Excel',
@@ -113,7 +122,8 @@ const Home = () => {
             iconSize: 'w-9 h-9',
             to: '/excel',
             colorScheme: 'emerald',
-            ariaLabel: 'Excel 페이지로 이동'
+            ariaLabel: 'Excel 페이지로 이동',
+            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-3'
         },
         {
             title: 'OneNote',
@@ -123,7 +133,8 @@ const Home = () => {
             iconSize: 'w-9 h-9',
             to: '/onenote',
             colorScheme: 'violet',
-            ariaLabel: 'OneNote 페이지로 이동'
+            ariaLabel: 'OneNote 페이지로 이동',
+            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-3'
         }
     ];
 
@@ -157,23 +168,13 @@ const Home = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-6 md:gap-8 auto-rows-auto sm:auto-rows-[240px]">
-                    {features.map((feature, index) => {
-                        // 2-3-2 레이아웃: md(768px+) 에서 6열 그리드 기준 col-span 분기
-                        // 행1 (idx 0-1, M365·Copilot)          → col-span-3 (2카드)
-                        // 행2 (idx 2-4, CopilotStudio·Teams·Minecraft) → col-span-2 (3카드)
-                        // 행3 (idx 5-6, Excel·OneNote)          → col-span-3 (2카드)
-                        const mdColSpan =
-                            index <= 1 || index >= 5
-                                ? 'col-span-1 sm:col-span-1 md:col-span-3'
-                                : 'col-span-1 sm:col-span-1 md:col-span-2';
-                        return (
-                            <FeatureCard
-                                key={index}
-                                {...feature}
-                                wrapperClassName={mdColSpan}
-                            />
-                        );
-                    })}
+                    {features.map((feature, index) => (
+                        <FeatureCard
+                            key={index}
+                            {...feature}
+                            wrapperClassName={feature.mdColSpan}
+                        />
+                    ))}
                 </div>
             </section>
 
