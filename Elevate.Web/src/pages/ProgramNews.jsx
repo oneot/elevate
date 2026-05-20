@@ -21,7 +21,6 @@ const DISPLAY_NAME = '행사 소식';
 export default function ProgramNews() {
   const {
     qParam,
-    qParamLower,
     allTags,
     selectedTags,
     loading,

@@ -47,7 +47,7 @@ export function useSeriesNavigation(normalizedCategory, post) {
       return post.series;
     }
     return availableSeriesOptions[0].key;
-  }, [availableSeriesOptions, seriesParam, post?.series]);
+  }, [availableSeriesOptions, seriesParam, post]);
 
   const selectedSeries = useMemo(() => {
     if (!selectedSeriesKey) return null;

@@ -18,7 +18,6 @@ const DISPLAY_NAME = '업데이트 소식';
 export default function Microsoft365Update() {
   const {
     qParam,
-    qParamLower,
     allTags,
     selectedTags,
     loading,
