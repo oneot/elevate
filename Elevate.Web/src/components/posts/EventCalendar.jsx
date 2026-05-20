@@ -43,31 +43,23 @@ export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent 
 
   const handleSelectEvent = (event) => {
     const slug = event.resource.slug;
-    // 동일 이벤트 재클릭 → 선택 해제
-    if (selectedSlug === slug) {
-      onSelectEvent(null);
-    } else {
-      onSelectEvent(slug);
-    }
+    onSelectEvent(selectedSlug === slug ? null : slug);
   };
 
-  // 선택된 이벤트 하이라이트 스타일
+  // 선택 상태에 따라 CSS 클래스를 추가하여 스타일 제어
   const eventPropGetter = (event) => {
     const isSelected = event.resource.slug === selectedSlug;
     return {
-      style: {
-        backgroundColor: isSelected ? 'rgba(59, 130, 246, 0.8)' : 'rgba(59, 130, 246, 0.4)',
-        border: isSelected ? '1px solid rgba(59, 130, 246, 1)' : '1px solid rgba(59, 130, 246, 0.6)',
-        borderRadius: '4px',
-        color: '#fff',
-        fontSize: '0.75rem',
-      },
+      className: isSelected ? 'rbc-selected' : '',
+      style: isSelected ? {
+        background: 'linear-gradient(135deg, #0078D4 0%, #002050 100%)',
+        boxShadow: '0 3px 12px rgba(0,120,212,0.45), inset 0 1px 0 rgba(255,255,255,0.25)',
+      } : {},
     };
   };
 
   return (
     <div className="rbc-calendar-wrapper">
-      {/* 글래스모피즘 스타일은 기존 웹앱 스타일 패턴에 맞게 적용 */}
       <Calendar
         localizer={localizer}
         events={events}
@@ -76,15 +68,16 @@ export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent 
         view="month"
         views={['month']}
         defaultView="month"
-        style={{ height: 500 }}
+        style={{ height: 520 }}
         onSelectEvent={handleSelectEvent}
         eventPropGetter={eventPropGetter}
         culture="ko"
         messages={{
-          next: '다음',
-          previous: '이전',
+          next: '›',
+          previous: '‹',
           today: '오늘',
           month: '월',
+          showMore: (count) => `+${count}개 더`,
         }}
         popup
       />

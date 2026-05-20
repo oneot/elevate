@@ -706,43 +706,274 @@ body {
   display: none !important;
 }
 
-/* --- EventCalendar Glassmorphism Styles --- */
+/* =====================================================
+   EventCalendar — Glass Panel Design
+   기존 clean-card / .glass-nav 패턴과 일관성 유지
+   ===================================================== */
+
+/* 외부 래퍼: 사이트 clean-card와 동일한 유리판 효과 */
 .rbc-calendar-wrapper {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 1rem;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 0.5px solid rgba(255, 255, 255, 0.72);
+  border-bottom-color: rgba(255, 255, 255, 0.28);
+  border-radius: 20px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.10),
+    0 1.5px 6px rgba(0, 120, 212, 0.06),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.95);
+  overflow: hidden;
+  padding: 0;
+}
+
+/* 최상단 하이라이트 스트라이프 (유리 반사 효과) */
+.rbc-calendar-wrapper::before {
+  content: '';
+  display: block;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9) 40%, rgba(255,255,255,0.5) 70%, transparent);
+  margin-bottom: 0;
 }
 
 .rbc-calendar {
   background: transparent;
+  font-family: 'Pretendard', sans-serif;
 }
 
-.rbc-header {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: inherit;
+/* ── 커스텀 툴바 ── */
+.rbc-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.5rem 1rem;
+  background: linear-gradient(135deg, rgba(0,120,212,0.08) 0%, rgba(0,32,80,0.04) 100%);
+  border-bottom: 0.5px solid rgba(0, 120, 212, 0.12);
+  margin-bottom: 0;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
-.rbc-month-view,
-.rbc-day-bg,
-.rbc-off-range-bg {
-  background: transparent;
-  border-color: rgba(255, 255, 255, 0.1);
+/* 월/년도 레이블 */
+.rbc-toolbar-label {
+  font-size: 1.05rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #0078D4 0%, #002050 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.01em;
+  order: 2;
+  flex: 1;
+  text-align: center;
 }
+
+/* 탐색 버튼 그룹 */
+.rbc-btn-group {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.rbc-btn-group:first-child { order: 1; }
+.rbc-btn-group:last-child  { order: 3; }
 
 .rbc-toolbar button {
-  color: inherit;
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.7);
+  border: 0.5px solid rgba(0, 120, 212, 0.20);
+  border-radius: 10px;
+  color: #374151;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.38rem 0.85rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), inset 0 1px 1px rgba(255,255,255,0.9);
+  line-height: 1.4;
 }
 
 .rbc-toolbar button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 120, 212, 0.10);
+  border-color: rgba(0, 120, 212, 0.35);
+  color: #0078D4;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,120,212,0.12), inset 0 1px 1px rgba(255,255,255,0.9);
 }
 
+.rbc-toolbar button.rbc-active,
+.rbc-toolbar button.rbc-active:hover {
+  background: linear-gradient(135deg, #0078D4 0%, #005fa3 100%);
+  border-color: #005fa3;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,120,212,0.30);
+}
+
+/* ── 요일 헤더 행 ── */
+.rbc-month-header {
+  background: rgba(248, 250, 252, 0.60);
+  border-bottom: 0.5px solid rgba(0, 120, 212, 0.10);
+}
+
+.rbc-header {
+  padding: 0.55rem 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+  border: none;
+  text-align: center;
+  background: transparent;
+}
+
+.rbc-header + .rbc-header {
+  border-left: 0.5px solid rgba(0, 120, 212, 0.08);
+}
+
+/* ── 날짜 셀 그리드 ── */
+.rbc-month-view {
+  border: none;
+  background: transparent;
+  flex: 1;
+}
+
+.rbc-month-row {
+  border-top: 0.5px solid rgba(0, 120, 212, 0.08);
+  overflow: visible;
+}
+
+.rbc-day-bg {
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.rbc-day-bg + .rbc-day-bg {
+  border-left: 0.5px solid rgba(0, 120, 212, 0.08);
+}
+
+.rbc-day-bg:hover {
+  background: rgba(0, 120, 212, 0.03);
+}
+
+/* 오늘 날짜 강조 */
 .rbc-today {
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(0, 120, 212, 0.06) !important;
+  position: relative;
+}
+
+/* 날짜 숫자 */
+.rbc-date-cell {
+  padding: 0.3rem 0.5rem 0.15rem;
+  text-align: right;
+}
+
+.rbc-date-cell a,
+.rbc-date-cell button {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #475569;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+}
+
+.rbc-date-cell a:hover,
+.rbc-date-cell button:hover {
+  background: rgba(0, 120, 212, 0.10);
+  color: #0078D4;
+}
+
+.rbc-today .rbc-date-cell a,
+.rbc-today .rbc-date-cell button,
+.rbc-now .rbc-date-cell a,
+.rbc-now .rbc-date-cell button {
+  background: linear-gradient(135deg, #0078D4 0%, #005fa3 100%);
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0,120,212,0.35);
+}
+
+/* 이번 달 밖 날짜 */
+.rbc-off-range-bg {
+  background: rgba(248, 250, 252, 0.45) !important;
+}
+
+.rbc-off-range .rbc-date-cell a,
+.rbc-off-range .rbc-date-cell button {
+  color: #cbd5e1;
+}
+
+/* ── 이벤트 pill ── */
+.rbc-event {
+  background: linear-gradient(135deg, rgba(0,120,212,0.82) 0%, rgba(0,95,163,0.88) 100%) !important;
+  border: none !important;
+  border-radius: 6px !important;
+  font-size: 0.70rem !important;
+  font-weight: 600 !important;
+  color: #fff !important;
+  padding: 0.15rem 0.5rem !important;
+  box-shadow: 0 1px 4px rgba(0,120,212,0.25), inset 0 1px 0 rgba(255,255,255,0.18) !important;
+  transition: all 0.18s ease !important;
+  backdrop-filter: blur(4px);
+}
+
+.rbc-event:hover {
+  background: linear-gradient(135deg, rgba(0,120,212,0.95) 0%, rgba(0,75,135,0.98) 100%) !important;
+  box-shadow: 0 3px 10px rgba(0,120,212,0.35), inset 0 1px 0 rgba(255,255,255,0.22) !important;
+  transform: translateY(-1px);
+}
+
+/* 선택된 이벤트 */
+.rbc-selected {
+  background: linear-gradient(135deg, #0078D4 0%, #002050 100%) !important;
+  box-shadow: 0 3px 12px rgba(0,120,212,0.45), inset 0 1px 0 rgba(255,255,255,0.25) !important;
+}
+
+.rbc-event.rbc-selected:focus {
+  outline: none;
+}
+
+/* more (+N more) 링크 */
+.rbc-show-more {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #0078D4;
+  background: rgba(0,120,212,0.07);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  margin: 0.1rem 0.25rem;
+}
+
+.rbc-show-more:hover {
+  background: rgba(0,120,212,0.14);
+  color: #005fa3;
+}
+
+/* ── 팝업 오버레이 ── */
+.rbc-overlay {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 0.5px solid rgba(255,255,255,0.8);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+}
+
+.rbc-overlay-header {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0078D4;
+  border-bottom: 0.5px solid rgba(0,120,212,0.12);
+  padding: 0.5rem 0.75rem;
+}
+
+/* 내부 컨텐츠 패딩 */
+.rbc-month-view {
+  padding: 0 0.5rem 0.5rem;
 }
