@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay, addDays, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -43,18 +43,15 @@ function CustomDateHeader({ date, label }) {
  */
 export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent }) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const labelRef = useRef(null);
 
-  // 커스텀 툴바: 라벨은 외부 div에 DOM 직접 업데이트, 버튼만 렌더링
-  const BottomToolbar = useCallback(({ label, onNavigate }) => {
-    if (labelRef.current) labelRef.current.textContent = label;
-    return (
-      <div className="rbc-bottom-toolbar">
-        <button className="rbc-nav-btn" onClick={() => onNavigate('PREV')}>‹</button>
-        <button className="rbc-nav-btn rbc-today-btn" onClick={() => onNavigate('TODAY')}>오늘</button>
-        <button className="rbc-nav-btn" onClick={() => onNavigate('NEXT')}>›</button>
-      </div>
-    );
+  const navigate = useCallback((action) => {
+    setCurrentDate(prev => {
+      const d = new Date(prev);
+      if (action === 'TODAY') return new Date();
+      if (action === 'PREV') { d.setMonth(d.getMonth() - 1); return d; }
+      if (action === 'NEXT') { d.setMonth(d.getMonth() + 1); return d; }
+      return d;
+    });
   }, []);
 
   // posts → react-big-calendar 이벤트 변환
@@ -96,7 +93,7 @@ export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent 
   return (
     <div className="rbc-calendar-wrapper">
       {/* 년월 레이블: 달력 상단 중앙 */}
-      <div className="rbc-top-label" ref={labelRef}>
+      <div className="rbc-top-label">
         {format(currentDate, 'yyyy년 M월', { locale: ko })}
       </div>
       <Calendar
@@ -111,13 +108,19 @@ export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent 
         onSelectEvent={handleSelectEvent}
         eventPropGetter={eventPropGetter}
         culture="ko"
+        toolbar={false}
         components={{
-          toolbar: BottomToolbar,
           month: { dateHeader: CustomDateHeader },
         }}
         messages={{ showMore: (count) => `+${count}개 더` }}
         popup
       />
+      {/* 탐색 버튼: 달력 하단 중앙 */}
+      <div className="rbc-bottom-toolbar">
+        <button className="rbc-nav-btn" onClick={() => navigate('PREV')}>‹</button>
+        <button className="rbc-nav-btn rbc-today-btn" onClick={() => navigate('TODAY')}>오늘</button>
+        <button className="rbc-nav-btn" onClick={() => navigate('NEXT')}>›</button>
+      </div>
     </div>
   );
 }
