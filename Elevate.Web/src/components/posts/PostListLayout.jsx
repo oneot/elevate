@@ -48,8 +48,8 @@ const PostListLayout = ({
         )}
 
         <div className={`flex flex-col lg:grid gap-6 ${hasSeriesSidebar ? 'lg:grid-cols-12' : 'lg:grid-cols-10'}`}>
-          <aside className="w-full lg:col-span-2 lg:sticky lg:top-4 lg:self-start">
-            <TagFilter {...tagFilterProps} />
+          <aside className="w-full lg:col-span-2 lg:sticky lg:top-4">
+            <TagFilter {...tagFilterProps} className="h-full" />
           </aside>
 
           <section className={`w-full ${hasSeriesSidebar ? 'lg:col-span-7 xl:col-span-8' : 'lg:col-span-8'}`}>
