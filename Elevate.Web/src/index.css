@@ -766,8 +766,10 @@ body {
 
 .rbc-bottom-toolbar {
   display: flex;
+  justify-content: center;
   align-items: center;
   gap: 0.5rem;
+  padding: 1rem 0 0.5rem;
 }
 
 .rbc-nav-btn {
