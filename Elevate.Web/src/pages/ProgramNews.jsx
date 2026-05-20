@@ -18,6 +18,7 @@ import PostListLayout from '../components/posts/PostListLayout';
 import SearchBar from '../components/posts/SearchBar';
 import Logo from '../components/common/Logo';
 import Footer from '../components/layout/Footer';
+import EventCalendar from '../components/posts/EventCalendar';
 import { useCategoryPostList } from '../hooks/useCategoryPostList';
 
 // 탭 설정: key는 URL의 tab 파라미터 값, category는 API 카테고리 슬러그
@@ -37,6 +38,7 @@ const PAGE_TITLE = '행사 및 프로그램 소식';
 function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
   const {
     qParam,
+    allPosts,
     allTags,
     selectedTags,
     loading,
@@ -49,27 +51,51 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
     handleClearAllTags,
     handlePageChange,
     handleSearchSubmit,
+    updateUrlParams,
   } = useCategoryPostList(category);
 
-  // PostListLayout의 navTabs에 전달할 탭 버튼 UI
+  const [searchParams] = useSearchParams();
+  const selectedSlug = searchParams.get('event') || null;
+
+  // 달력 이벤트 선택 핸들러 (event 탭에서만 사용)
+  const handleCalendarSelect = (slug) => {
+    updateUrlParams({ event: slug || '' });
+  };
+
+  // event 탭에서 selectedSlug가 있으면 해당 게시글만 표시, 없으면 기존 필터링된 결과 표시
+  const displayedPosts = activeTab === 'event' && selectedSlug
+    ? allPosts.filter((p) => p.slug === selectedSlug)
+    : paginatedPosts;
+
+  // event 탭에서만 달력을 표시 (allPosts는 필터링되지 않은 전체 이벤트)
+  const calendarSlot = activeTab === 'event' ? (
+    <EventCalendar
+      posts={allPosts}
+      selectedSlug={selectedSlug}
+      onSelectEvent={handleCalendarSelect}
+    />
+  ) : null;
+
+  // PostListLayout의 navTabs에 전달할 탭 버튼 UI — PostList.jsx의 카테고리 이동 버튼과 동일한 스타일
   const navTabs = (
-    <div className="flex gap-2">
+    <ul className="flex flex-wrap gap-2">
       {TABS.map((tab) => (
-        <button
-          key={tab.key}
-          type="button"
-          onClick={() => onTabChange(tab.key)}
-          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors
-            ${activeTab === tab.key
-              ? 'bg-slate-900 text-white'
-              : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+        <li key={tab.key}>
+          <button
+            type="button"
+            onClick={() => onTabChange(tab.key)}
+            className={`inline-block px-3.5 py-2 rounded-full border text-sm sm:text-base transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ms-blue ${
+              activeTab === tab.key
+                ? 'bg-ms-blue text-white border-ms-blue shadow-[0_10px_24px_-12px_rgba(0,120,212,0.95)]'
+                : 'bg-white/85 backdrop-blur border-white/70 text-slate-700 hover:border-ms-blue/35 hover:text-ms-blue'
             }`}
-          aria-current={activeTab === tab.key ? 'page' : undefined}
-        >
-          {tab.label}
-        </button>
+            aria-current={activeTab === tab.key ? 'page' : undefined}
+          >
+            {tab.label}
+          </button>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 
   return (
@@ -85,19 +111,20 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
         <SearchBar placeholder={`Search ${displayName}`} value={qParam} onSubmit={handleSearchSubmit} />
       }
       navTabs={navTabs}
+      calendarSlot={calendarSlot}
       tagFilterProps={{
         allTags,
         selectedTags,
         onTagToggle: handleTagToggle,
         onClearAll: handleClearAllTags,
       }}
-      posts={paginatedPosts}
+      posts={displayedPosts}
       loading={loading}
       error={error}
       countLabel={!loading && selectedTags.length > 0 ? `${filteredPosts.length}개의 게시글이 일치합니다.` : undefined}
       activeQuery={qParam}
-      currentPage={currentPage}
-      totalPages={totalPages}
+      currentPage={activeTab === 'event' && selectedSlug ? 1 : currentPage}
+      totalPages={activeTab === 'event' && selectedSlug ? 1 : totalPages}
       onPageChange={handlePageChange}
     />
   );
