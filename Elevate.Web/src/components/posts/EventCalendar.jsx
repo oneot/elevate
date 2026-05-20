@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay, addDays, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -43,6 +43,19 @@ function CustomDateHeader({ date, label }) {
  */
 export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent }) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const labelRef = useRef(null);
+
+  // 커스텀 툴바: 라벨은 외부 div에 DOM 직접 업데이트, 버튼만 렌더링
+  const BottomToolbar = useCallback(({ label, onNavigate }) => {
+    if (labelRef.current) labelRef.current.textContent = label;
+    return (
+      <div className="rbc-bottom-toolbar">
+        <button className="rbc-nav-btn" onClick={() => onNavigate('PREV')}>‹</button>
+        <button className="rbc-nav-btn rbc-today-btn" onClick={() => onNavigate('TODAY')}>오늘</button>
+        <button className="rbc-nav-btn" onClick={() => onNavigate('NEXT')}>›</button>
+      </div>
+    );
+  }, []);
 
   // posts → react-big-calendar 이벤트 변환
   const events = useMemo(() => {
@@ -51,7 +64,6 @@ export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent 
       if (!Array.isArray(post.eventDates)) return;
       post.eventDates.forEach(d => {
         if (!d.start) return;
-        // react-big-calendar allDay 이벤트: end는 exclusive → +1일
         const endDate = addDays(parseISO(d.end || d.start), 1);
         result.push({
           title: post.title,
@@ -70,7 +82,6 @@ export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent 
     onSelectEvent(selectedSlug === slug ? null : slug);
   };
 
-  // 선택 상태에 따라 CSS 클래스를 추가하여 스타일 제어
   const eventPropGetter = (event) => {
     const isSelected = event.resource.slug === selectedSlug;
     return {
@@ -84,6 +95,10 @@ export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent 
 
   return (
     <div className="rbc-calendar-wrapper">
+      {/* 년월 레이블: 달력 상단 중앙 */}
+      <div className="rbc-top-label" ref={labelRef}>
+        {format(currentDate, 'yyyy년 M월', { locale: ko })}
+      </div>
       <Calendar
         localizer={localizer}
         events={events}
@@ -96,14 +111,11 @@ export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent 
         onSelectEvent={handleSelectEvent}
         eventPropGetter={eventPropGetter}
         culture="ko"
-        components={{ month: { dateHeader: CustomDateHeader } }}
-        messages={{
-          next: '›',
-          previous: '‹',
-          today: '오늘',
-          month: '월',
-          showMore: (count) => `+${count}개 더`,
+        components={{
+          toolbar: BottomToolbar,
+          month: { dateHeader: CustomDateHeader },
         }}
+        messages={{ showMore: (count) => `+${count}개 더` }}
         popup
       />
     </div>

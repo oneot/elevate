@@ -741,20 +741,8 @@ body {
   font-family: 'Pretendard', sans-serif;
 }
 
-/* ── 커스텀 툴바 ── */
-.rbc-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.1rem 1.5rem 1rem;
-  background: transparent;
-  border-bottom: none;
-  margin-bottom: 0;
-  position: relative;
-}
-
-/* 월/년도 레이블 — 툴바 전체 너비 기준 정중앙 */
-.rbc-toolbar-label {
+/* ── 년월 레이블 (달력 상단, 별도 div) ── */
+.rbc-top-label {
   font-size: 1.05rem;
   font-weight: 700;
   background: linear-gradient(135deg, #0078D4 0%, #002050 100%);
@@ -762,30 +750,34 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -0.01em;
-  position: absolute;
-  left: 0;
-  right: 0;
   text-align: center;
-  pointer-events: none;
-  z-index: 0;
+  padding: 1.1rem 1.5rem 1rem;
 }
 
-/* 탐색 버튼 그룹 */
-.rbc-btn-group {
+/* ── 하단 네비게이션 버튼 (커스텀 툴바) ── */
+.rbc-toolbar {
   display: flex;
-  gap: 0.35rem;
-  position: relative;
-  z-index: 1;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border-top: 0.5px solid rgba(0, 120, 212, 0.08);
+  margin-top: 0;
 }
 
-.rbc-toolbar button {
+.rbc-bottom-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rbc-nav-btn {
   background: rgba(255, 255, 255, 0.7);
   border: 0.5px solid rgba(0, 120, 212, 0.20);
   border-radius: 10px;
   color: #374151;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 600;
-  padding: 0.38rem 0.85rem;
+  padding: 0.38rem 0.9rem;
   cursor: pointer;
   transition: all 0.18s ease;
   backdrop-filter: blur(8px);
@@ -794,7 +786,7 @@ body {
   line-height: 1.4;
 }
 
-.rbc-toolbar button:hover {
+.rbc-nav-btn:hover {
   background: rgba(0, 120, 212, 0.10);
   border-color: rgba(0, 120, 212, 0.35);
   color: #0078D4;
@@ -802,12 +794,18 @@ body {
   box-shadow: 0 3px 8px rgba(0,120,212,0.12), inset 0 1px 1px rgba(255,255,255,0.9);
 }
 
-.rbc-toolbar button.rbc-active,
-.rbc-toolbar button.rbc-active:hover {
+.rbc-today-btn {
   background: linear-gradient(135deg, #0078D4 0%, #005fa3 100%);
   border-color: #005fa3;
-  color: #ffffff;
+  color: #ffffff !important;
   box-shadow: 0 2px 8px rgba(0,120,212,0.30);
+}
+
+.rbc-today-btn:hover {
+  background: linear-gradient(135deg, #106ebe 0%, #004a82 100%);
+  border-color: #004a82;
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 /* ── 요일 헤더 행 ── */
