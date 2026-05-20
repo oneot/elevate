@@ -1,183 +1,40 @@
 /**
  * @file ChatWidget.jsx
- * @description Bot Framework WebChat 기반의 우측 하단 플로팅 채팅 위젯 컴포넌트.
+ * @description 우측 하단 플로팅 채팅 토글 버튼 쉘 컴포넌트.
  *
- * `VITE_BOT_TOKEN_ENDPOINT` 환경변수가 없으면 렌더링하지 않는다.
- * 채팅창이 열릴 때 토큰 엔드포인트에서 DirectLine 토큰을 가져와 연결한다.
+ * botframework-webchat 번들은 사용자가 채팅 버튼을 처음 클릭할 때 동적으로 로드된다.
+ * 실제 WebChat UI와 DirectLine 연결은 ChatWidgetPanel에서 처리한다.
  */
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import ReactWebChat, { createDirectLine, createStore } from 'botframework-webchat';
+import { useState, lazy, Suspense } from 'react';
 
-const LoadingSpinner = () => (
-  <div className="flex space-x-1.5 p-2 animate-fade-in-up">
-    <div className="loading-dot"></div>
-    <div className="loading-dot"></div>
-    <div className="loading-dot"></div>
-  </div>
-);
+const ChatWidgetPanel = lazy(() => import('./ChatWidgetPanel'));
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [directLine, setDirectLine] = useState(null);
-  const [isBotTyping, setIsBotTyping] = useState(false); // 봇 타이핑 상태 관리
-  const typingTimeoutRef = useRef(null); // 타이핑 타임아웃 관리
+  const [hasOpened, setHasOpened] = useState(false);
 
-
-  useEffect(() => {    /* [Azure Function 복구 시 기존 코드 롤백 예정]
-    try {
-      // 1. Vite 환경 변수에서 GitHub Secrets로 주입한 키를 직접 꺼내옵니다.
-      const secretKey = import.meta.env.VITE_DIRECT_LINE_SECRET;
-
-      if (!secretKey) {
-        console.error("환경 변수에서 Secret Key를 찾을 수 없습니다.");
-        return;
-      }
-
-      // 2. 서버 통신 없이 직접 Secret Key로 Direct Line을 초기화합니다.
-      // (주의: 받아온 토큰이 아니므로 'token' 대신 'secret' 파라미터에 넣습니다)
-      const dl = createDirectLine({ secret: secretKey });
-      
-      setDirectLine(dl);
-      
-    } catch (err) {
-      console.error("비상 연결 실패:", err);
-    }
-    */
-
-    const getSecureToken = async () => {
-      try {
-        const response = await fetch('https://af01-ceh2a2e2ezgda9a6.koreacentral-01.azurewebsites.net/api/GetToken');
-        if (!response.ok) throw new Error('토큰을 가져오지 못했습니다.');
-        const data = await response.json();
-        const dl = createDirectLine({ token: data.token });
-        setDirectLine(dl);
-      } catch (err) {
-        console.error("보안 연결 실패:", err);
-      }
-    };
-    getSecureToken();
-
-
-  }, []); // 빈 배열 유지 (페이지 로드 시 한 번만 실행)
-
-  // ✅ 스토어 설정: 봇의 상태(Typing/Message)를 실시간으로 감시
-  const store = useMemo(
-    () =>
-      createStore({}, ({ dispatch }) => (next) => (action) => {
-        // 1. 봇의 행동 감지
-        if (action.type === 'DIRECT_LINE/INCOMING_ACTIVITY') {
-          const { activity } = action.payload;
-
-          // (A) 봇이 입력 중일 때 -> 로딩 표시 켜기
-          if (activity.type === 'typing' && activity.from.role === 'bot') {
-            setIsBotTyping(true);
-            // 5초 뒤에도 메시지가 안 오면 자동으로 끄기 (안전장치)
-            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-            typingTimeoutRef.current = setTimeout(() => setIsBotTyping(false), 5000);
-          }
-
-          // (B) 봇이 메시지를 보냈을 때 -> 로딩 표시 끄기
-          if (activity.type === 'message' && activity.from.role === 'bot') {
-            setIsBotTyping(false);
-            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-          }
-        }
-
-        // 2. 처음 연결 시 인사 유도
-        if (action.type === 'DIRECT_LINE/CONNECT_FULFILLED') {
-          dispatch({
-            type: 'WEB_CHAT/SEND_EVENT',
-            payload: { name: 'startConversation', type: 'event' },
-          });
-        }
-
-        return next(action);
-      }),
-    []
-  );
-
-  const styleOptions = useMemo(() => ({
-    accent: '#0078D4',
-    botAvatarInitials: null,
-    botAvatarImage: null,
-    userAvatarInitials: null,
-    userAvatarImage: null,
-    bubbleBackground: '#f1f5f9',
-    bubbleBorderRadius: 20,
-    bubbleFromUserBackground: '#0078D4',
-    bubbleFromUserBorderRadius: 20,
-    bubbleFromUserTextColor: 'White',
-    rootHeight: '100%',
-    rootWidth: '100%',
-    backgroundColor: 'transparent',
-    hideUploadButton: true,
-    hideTypingIndicator: true, // 기본 회색 점 숨기기
-  }), []);
+  const handleToggle = () => {
+    if (!hasOpened) setHasOpened(true);
+    setIsOpen(prev => !prev);
+  };
 
   return (
     <div className="fixed z-[9999] flex flex-col items-end gap-4 font-sans pointer-events-none
       right-4 sm:right-6 bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)]">
-      {/* 채팅창 컨테이너 */}
-      <div
-        className={`pointer-events-auto
-          w-[340px] sm:w-[380px] h-[70vh] sm:h-[650px] max-w-[calc(100vw-2.5rem)] max-h-[80vh]
-          bg-white/80 backdrop-blur-2xl border border-white/60
-          rounded-[2.5rem] shadow-2xl shadow-blue-900/15
-          flex flex-col overflow-hidden relative
-          origin-bottom-right transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)]
-          ${isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-0 opacity-0 invisible translate-y-12'}
-        `}
-      >
-        {/* 헤더 */}
-        <div className="h-20 bg-gradient-to-r from-[#0078D4]/90 to-cyan-500/90 backdrop-blur-md flex items-center justify-between px-6 shrink-0 shadow-sm z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg text-2xl">🤖</div>
-            <div className="text-white">
-              <h3 className="font-bold text-base tracking-wide">Elevate Agent</h3>
-              <div className="flex items-center gap-1.5 opacity-80">
-                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                <span className="text-xs font-medium">Online</span>
-              </div>
-            </div>
-          </div>
-          <button onClick={() => setIsOpen(false)} className="text-white/70 hover:text-white hover:bg-white/20 p-2 rounded-full transition-all cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        </div>
 
-        {/* WebChat 영역 */}
-        <div id="webchat-container" className="flex-1 bg-white/40 overflow-y-auto relative p-0" role="main">
-          {directLine ? (
-            <>
-              <ReactWebChat 
-                directLine={directLine} 
-                store={store} 
-                styleOptions={styleOptions} 
-                locale="ko-KR" 
-              />
-              
-              {/* ✅ [수정됨] 점 3개 애니메이션 (WebChat 위에 둥둥 떠있음) */}
-              {isBotTyping && (
-                <div className="absolute bottom-20 left-5 z-50">
-                   <LoadingSpinner />
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full space-y-4 bg-white/40 backdrop-blur-sm">
-                <LoadingSpinner />
-                <p className="text-sm font-medium text-[#0078D4]/80 animate-pulse">연결 중...</p>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* 패널: 최초 오픈 이후에만 마운트 (CSS 애니메이션으로 open/close 처리) */}
+      {hasOpened && (
+        <Suspense fallback={null}>
+          <ChatWidgetPanel isOpen={isOpen} onClose={() => setIsOpen(false)} />
+        </Suspense>
+      )}
 
       {/* 토글 버튼 */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         aria-expanded={isOpen}
         className={`pointer-events-auto
-          group relative w-14 h-14 sm:w-16 sm:h-16 rounded-full 
+          group relative w-14 h-14 sm:w-16 sm:h-16 rounded-full
           bg-gradient-to-tr from-[#0078D4]/85 to-[#00C7F4]/85 backdrop-blur-md
           border border-white/40 text-white shadow-lg shadow-blue-500/30
           flex items-center justify-center cursor-pointer
