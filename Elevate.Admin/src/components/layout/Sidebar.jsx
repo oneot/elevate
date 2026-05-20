@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import {
-  LayoutGrid, Bot, Users, Box, Table2, NotebookPen,
+  LayoutGrid, Bot, BotMessageSquare, Users, Box, Table2, NotebookPen,
   Trophy, RefreshCw, GraduationCap, Newspaper,
 } from 'lucide-react'
 import { CATEGORIES } from '../../constants/categories.js'
@@ -9,6 +9,7 @@ import { CATEGORIES } from '../../constants/categories.js'
 const iconMap = {
   m365: LayoutGrid,
   copilot: Bot,
+  'copilot-studio': BotMessageSquare,
   teams: Users,
   minecraft: Box,
   excel: Table2,

@@ -5,8 +5,9 @@
  */
 export const CATEGORIES = [
   { value: 'm365',         label: 'M365',     group: 'main' },
-  { value: 'copilot',      label: 'Copilot',  group: 'main' },
-  { value: 'teams',        label: 'Teams',    group: 'main' },
+  { value: 'copilot',        label: 'Copilot',        group: 'main' },
+  { value: 'copilot-studio', label: 'Copilot Studio', group: 'main' },
+  { value: 'teams',          label: 'Teams',          group: 'main' },
   { value: 'minecraft',    label: 'Minecraft', group: 'main' },
   { value: 'excel',        label: 'Excel',    group: 'main' },
   { value: 'onenote',      label: 'OneNote',  group: 'main' },
