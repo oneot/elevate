@@ -25,14 +25,16 @@ const ChatWidget = () => {
       {/* 패널: 최초 오픈 이후에만 마운트 (CSS 애니메이션으로 open/close 처리) */}
       {hasOpened && (
         <Suspense fallback={
-          <div className="pointer-events-auto w-[340px] sm:w-[380px] h-20 flex items-center justify-center
-            bg-white/80 backdrop-blur-2xl border border-white/60 rounded-[2.5rem] shadow-2xl shadow-blue-900/15">
-            <div className="flex space-x-1.5">
-              <div className="loading-dot"></div>
-              <div className="loading-dot"></div>
-              <div className="loading-dot"></div>
+          isOpen ? (
+            <div className="pointer-events-auto w-[340px] sm:w-[380px] h-20 flex items-center justify-center
+              bg-white/80 backdrop-blur-2xl border border-white/60 rounded-[2.5rem] shadow-2xl shadow-blue-900/15">
+              <div className="flex space-x-1.5">
+                <div className="loading-dot"></div>
+                <div className="loading-dot"></div>
+                <div className="loading-dot"></div>
+              </div>
             </div>
-          </div>
+          ) : null
         }>
           <ChatWidgetPanel isOpen={isOpen} onClose={() => setIsOpen(false)} />
         </Suspense>

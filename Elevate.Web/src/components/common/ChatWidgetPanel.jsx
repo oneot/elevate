@@ -19,6 +19,7 @@ const LoadingSpinner = () => (
 const ChatWidgetPanel = ({ isOpen, onClose }) => {
   const [directLine, setDirectLine] = useState(null);
   const [isBotTyping, setIsBotTyping] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
@@ -29,6 +30,7 @@ const ChatWidgetPanel = ({ isOpen, onClose }) => {
         const endpoint = import.meta.env.VITE_BOT_TOKEN_ENDPOINT;
         if (!endpoint) {
           console.error('[ChatWidget] VITE_BOT_TOKEN_ENDPOINT is not set.');
+          setHasError(true);
           return;
         }
         const response = await fetch(endpoint, { signal: controller.signal });
@@ -39,6 +41,7 @@ const ChatWidgetPanel = ({ isOpen, onClose }) => {
       } catch (err) {
         if (err.name !== 'AbortError') {
           console.error("보안 연결 실패:", err);
+          setHasError(true);
         }
       }
     };
@@ -147,6 +150,17 @@ const ChatWidgetPanel = ({ isOpen, onClose }) => {
               </div>
             )}
           </>
+        ) : hasError ? (
+          <div className="flex flex-col items-center justify-center h-full space-y-4 bg-white/40 backdrop-blur-sm px-6 text-center">
+            <span className="text-3xl">⚠️</span>
+            <p className="text-sm font-medium text-slate-600">채팅 연결에 실패했습니다.</p>
+            <button
+              onClick={onClose}
+              className="text-xs text-[#0078D4] underline hover:text-[#005fa3] cursor-pointer"
+            >
+              닫기
+            </button>
+          </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full space-y-4 bg-white/40 backdrop-blur-sm">
             <LoadingSpinner />
