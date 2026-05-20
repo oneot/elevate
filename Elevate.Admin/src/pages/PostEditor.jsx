@@ -1,33 +1,20 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import Card from '../components/Card.jsx'
-import Button from '../components/Button.jsx'
-import FormField from '../components/FormField.jsx'
-import HtmlEditor from '../components/HtmlEditor.jsx'
-import AttachUploader from '../components/AttachUploader.jsx'
+import { Card, Button, ConfirmModal, FormField } from '../components/ui/index.js'
+import { HtmlEditor, PostMetaSidebar } from '../components/editor/index.js'
 import { isApiConfigured } from '../lib/apiClient.js'
 import {
   createPost,
+  deletePost,
   getPost,
-  registerAsset,
-  requestUploadSas,
   updatePost,
-} from '../lib/postsApi.js'
-import { slugify } from '../lib/formatters.js'
+} from '../services/postsApi.js'
+import { slugify, extractYoutubeId } from '../utils/formatters.js'
+import { CATEGORIES } from '../constants/categories.js'
 import { useAuth } from '../hooks/useAuth.js'
+import { usePostUpload } from '../hooks/usePostUpload.js'
 
-const CATEGORY_OPTIONS = [
-  { value: 'm365',      label: 'M365' },
-  { value: 'copilot',   label: 'Copilot' },
-  { value: 'teams',     label: 'Teams' },
-  { value: 'minecraft', label: 'Minecraft' },
-  { value: 'excel',     label: 'Excel' },
-  { value: 'onenote',   label: 'OneNote' },
-  { value: 'agenthon',  label: 'Agenthon' },
-  { value: 'update',    label: 'Update' },
-  { value: 'mee',       label: 'MEE' },
-]
-
+/** 신규 게시글 작성 시 초기 상태 기본값. */
 const emptyPost = {
   title: '',
   slug: '',
@@ -38,125 +25,6 @@ const emptyPost = {
   thumbnailUrl: '',
   htmlBody: '',
   youtube: '',
-}
-
-function extractYoutubeId(url) {
-  if (!url) return null
-  const patterns = [
-    /[?&]v=([a-zA-Z0-9_-]{11})/,
-    /youtu\.be\/([a-zA-Z0-9_-]{11})/,
-    /\/shorts\/([a-zA-Z0-9_-]{11})/,
-    /\/embed\/([a-zA-Z0-9_-]{11})/,
-  ]
-  for (const pattern of patterns) {
-    const match = url.match(pattern)
-    if (match) return match[1]
-  }
-  return null
-}
-
-const mimeTypeAliases = {
-  'image/jpg': 'image/jpeg',
-  'image/pjpeg': 'image/jpeg',
-  'image/x-png': 'image/png',
-  'image/heic-sequence': 'image/heic',
-  'image/heif-sequence': 'image/heif',
-}
-
-const extensionMimeMap = {
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.png': 'image/png',
-  '.webp': 'image/webp',
-  '.gif': 'image/gif',
-  '.heic': 'image/heic',
-  '.heif': 'image/heif',
-  '.avif': 'image/avif',
-}
-
-const supportedImageMimeTypes = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-  'image/heic',
-  'image/heif',
-  'image/avif',
-])
-
-function normalizeImageMimeType(file) {
-  const rawType = String(file?.type || '').trim().toLowerCase()
-  const aliasedType = mimeTypeAliases[rawType] || rawType
-
-  if (aliasedType) {
-    return aliasedType
-  }
-
-  const fileName = String(file?.name || '')
-  const dotIndex = fileName.lastIndexOf('.')
-  if (dotIndex < 0) {
-    return ''
-  }
-
-  const extension = fileName.slice(dotIndex).toLowerCase()
-  return extensionMimeMap[extension] || ''
-}
-
-async function uploadBlobWithSas(uploadUrl, selectedFile, contentType) {
-  const uploadResponse = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: {
-      'x-ms-blob-type': 'BlockBlob',
-      'Content-Type': contentType,
-    },
-    body: selectedFile,
-  })
-
-  if (uploadResponse.ok) {
-    return
-  }
-
-  let errorDetail = ''
-  try {
-    errorDetail = (await uploadResponse.text()).trim()
-  } catch {
-    errorDetail = ''
-  }
-
-  throw new Error(errorDetail || `Blob upload failed (${uploadResponse.status})`)
-}
-
-const mockPosts = {
-  'mock-1': {
-    title: 'Azure 기반 블로그 아키텍처',
-    slug: 'azure-architecture-handoff',
-    status: 'draft',
-    category: 'Architecture',
-    tags: ['Azure', 'CosmosDB'],
-    excerpt: '서버리스 기반 운영 아키텍처 요약',
-    thumbnailUrl: '',
-    htmlBody: '<h2>서버리스 기반 운영 아키텍처</h2><p>요약 콘텐츠입니다.</p>',
-  },
-  'mock-2': {
-    title: 'Copilot Studio 연계 방향',
-    slug: 'copilot-studio-knowledge',
-    status: 'published',
-    category: 'Copilot',
-    tags: ['Copilot', 'AI Search'],
-    excerpt: '지식 소스 연계를 위한 방향 정리',
-    thumbnailUrl: '',
-    htmlBody: '<h2>Copilot Studio 연계</h2><p>연계 방향 초안입니다.</p>',
-  },
-  'mock-3': {
-    title: 'Admin 운영 가이드 초안',
-    slug: 'admin-operations-guide',
-    status: 'archived',
-    category: 'Operations',
-    tags: ['Admin', 'Guide'],
-    excerpt: '운영자가 확인해야 할 항목 정리',
-    thumbnailUrl: '',
-    htmlBody: '<h2>운영 가이드</h2><p>운영 체크리스트입니다.</p>',
-  },
 }
 
 function PostEditor() {
@@ -174,20 +42,21 @@ function PostEditor() {
   const [youtubeError, setYoutubeError] = useState('')
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
-  const [uploading, setUploading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
+  const { uploading: isUploading, uploadThumbnail, uploadHtmlImage } = usePostUpload({
+    msalInstance,
+    postId,
+    setPost,
+    setError,
+    setMessage,
+  })
+
   useEffect(() => {
     if (!isApiConfigured) {
-      if (!isNew) {
-        const data = mockPosts[postId]
-        if (data) {
-          setPost({ ...emptyPost, ...data })
-          setTagsInput((data.tags || []).join(', '))
-          setYoutubeInput(data.youtube || '')
-        }
-      }
       setLoading(false)
       return
     }
@@ -233,6 +102,8 @@ function PostEditor() {
 
     if (!url) {
       setYoutubeError('')
+      // YouTube URL이 지워졌을 때 자동으로 설정된 썸네일(img.youtube.com)도 함께 초기화한다.
+      // 사용자가 직접 업로드한 썸네일은 유지한다.
       const wasAutoThumb = post.thumbnailUrl?.includes('img.youtube.com')
       setPost((prev) => ({
         ...prev,
@@ -251,6 +122,8 @@ function PostEditor() {
 
     setYoutubeError('')
     const autoThumbUrl = `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+    // 썸네일이 비어 있을 때만 YouTube 썸네일을 자동 설정한다.
+    // 이미 썸네일이 있으면 사용자가 의도적으로 선택한 것으로 간주해 변경하지 않는다.
     setPost((prev) => ({
       ...prev,
       youtube: id,
@@ -277,6 +150,8 @@ function PostEditor() {
 
     const payload = {
       ...post,
+      // slug 가 비어 있으면 제목에서 자동 생성한다. 서버도 생성할 수 있지만
+      // 클라이언트에서 미리 생성하면 저장 후 즉시 URL을 알 수 있다.
       slug: post.slug || slugify(post.title),
       tags: tagsInput
         .split(',')
@@ -304,81 +179,24 @@ function PostEditor() {
     }
   }
 
-  const uploadThumbnail = async (selectedFile) => {
-    if (!selectedFile) return;
-
-    const contentType = normalizeImageMimeType(selectedFile)
-    if (!supportedImageMimeTypes.has(contentType)) {
-      throw new Error('지원하지 않는 이미지 형식입니다. JPG, PNG, WEBP, GIF, HEIC, HEIF, AVIF 파일만 업로드할 수 있습니다.')
-    }
-
+  const handleDelete = async () => {
+    // API 미구성 환경에서는 삭제 요청 자체를 차단한다.
     if (!isApiConfigured) {
-      const previewUrl = URL.createObjectURL(selectedFile)
-      setPost((prev) => ({ ...prev, thumbnailUrl: previewUrl }))
-      setMessage('API 없이 썸네일 미리보기 이미지를 적용했습니다.')
+      setError('API가 연결되어 있지 않아 삭제할 수 없습니다.')
+      setShowDeleteModal(false)
       return
     }
-
-    setUploading(true)
+    setDeleting(true)
     setError('')
-    setMessage('')
-
     try {
-      const sas = await requestUploadSas({
-        fileName: selectedFile.name,
-        contentType,
-        sizeBytes: selectedFile.size,
-      }, { msalInstance })
-
-      await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType)
-
-      const asset = await registerAsset({
-        postId: postId || null,
-        blobUrl: sas.blobUrl,
-        contentType,
-        sizeBytes: selectedFile.size,
-        fileName: selectedFile.name,
-      }, { msalInstance })
-
-      setPost((prev) => ({
-        ...prev,
-        thumbnailUrl: asset?.signedUrl || asset?.url || asset?.cdnUrl || asset?.blobUrl || sas.blobUrl,
-      }))
-      setMessage('썸네일 이미지가 업로드되었습니다.')
+      await deletePost(postId, { msalInstance })
+      navigate(post.category ? `/category/${post.category}` : '/')
     } catch (err) {
-      setError(err.message || '썸네일 이미지 업로드에 실패했습니다.')
+      setError(err.message || '삭제에 실패했습니다.')
+      setShowDeleteModal(false)
     } finally {
-      setUploading(false)
+      setDeleting(false)
     }
-  }
-
-  const uploadHtmlImage = async (selectedFile) => {
-    const contentType = normalizeImageMimeType(selectedFile)
-    if (!supportedImageMimeTypes.has(contentType)) {
-      throw new Error('지원하지 않는 이미지 형식입니다. JPG, PNG, WEBP, GIF, HEIC, HEIF, AVIF 파일만 업로드할 수 있습니다.')
-    }
-
-    if (!isApiConfigured) {
-      return URL.createObjectURL(selectedFile)
-    }
-
-    const sas = await requestUploadSas({
-      fileName: selectedFile.name,
-      contentType,
-      sizeBytes: selectedFile.size,
-    }, { msalInstance })
-
-    await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType)
-
-    const asset = await registerAsset({
-      postId: postId || null,
-      blobUrl: sas.blobUrl,
-      contentType,
-      sizeBytes: selectedFile.size,
-      fileName: selectedFile.name,
-    }, { msalInstance })
-
-    return asset?.signedUrl || asset?.url || asset?.cdnUrl || asset?.blobUrl || sas.blobUrl
   }
 
   if (loading) {
@@ -411,9 +229,14 @@ function PostEditor() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => navigate('/posts')}>
+          <Button variant="secondary" onClick={() => navigate(post.category ? `/category/${post.category}` : '/')}>
             목록으로
           </Button>
+          {!isNew && isApiConfigured && (
+            <Button variant="danger" onClick={() => setShowDeleteModal(true)} disabled={deleting}>
+              삭제
+            </Button>
+          )}
           <Button onClick={handleSave} disabled={saving}>
             {saving ? '저장 중...' : '저장'}
           </Button>
@@ -443,7 +266,14 @@ function PostEditor() {
             />
           </FormField>
 
-
+          <FormField label="Slug" hint="비워두면 제목에서 자동 생성됩니다.">
+            <input
+              className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-mono transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+              value={post.slug}
+              onChange={handleChange('slug')}
+              placeholder="my-post-slug"
+            />
+          </FormField>
 
           <FormField label="요약">
             <textarea
@@ -469,87 +299,32 @@ function PostEditor() {
         </Card>
 
         <aside className="space-y-8">
-          <Card colorScheme="slate" className="space-y-6">
-            <h3 className="text-sm font-semibold text-neutral-800">메타데이터</h3>
-            <FormField label="상태">
-              <select
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-                value={post.status}
-                onChange={handleChange('status')}
-              >
-                <option value="draft">draft</option>
-                <option value="published">published</option>
-                <option value="archived">archived</option>
-              </select>
-            </FormField>
-            <FormField label="카테고리">
-              <select
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed"
-                value={post.category}
-                onChange={handleChange('category')}
-                disabled={!isNew}
-              >
-                {isNew && (
-                  <option value="" disabled>카테고리 선택</option>
-                )}
-                {CATEGORY_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </FormField>
-            <FormField label="태그" hint="쉼표로 구분합니다.">
-              <input
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-                value={tagsInput}
-                onChange={(event) => setTagsInput(event.target.value)}
-                placeholder="Azure, CosmosDB"
-              />
-            </FormField>
-            <FormField label="YouTube">
-              <input
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-                value={youtubeInput}
-                onChange={handleYoutubeChange}
-                placeholder="https://www.youtube.com/watch?v=..."
-              />
-              {youtubeError && <p className="text-xs text-red-500 mt-1">{youtubeError}</p>}
-              {post.youtube && !youtubeError && (
-                <p className="text-xs text-neutral-400 mt-1">ID: {post.youtube}</p>
-              )}
-            </FormField>
-            <FormField label="썸네일">
-              {post.thumbnailUrl && (
-                <div className="mb-2 w-full rounded-md border border-neutral-200 overflow-hidden bg-neutral-50 flex items-center justify-center">
-                  <img src={post.thumbnailUrl} alt="Thumbnail preview" className="max-h-40 w-auto object-contain" />
-                </div>
-              )}
-              <div className="flex gap-2 items-center">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={async (event) => {
-                    const fileObj = event.target.files?.[0];
-                    if (fileObj) {
-                      await uploadThumbnail(fileObj);
-                    }
-                  }}
-                  className="w-full text-sm text-neutral-600 file:mr-4 file:py-1.5 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200 file:transition-colors file:cursor-pointer"
-                />
-              </div>
-              {uploading && <p className="text-xs text-ms-blue mt-1">썸네일 업로드 중...</p>}
-            </FormField>
-          </Card>
-
-          <Card colorScheme="blue" className="space-y-4">
-            <h3 className="text-base font-semibold text-neutral-700">첨부파일</h3>
-            <p className="text-xs text-neutral-400">
-              업로드 후 URL 복사 버튼으로 마크다운 콘텐츠에 붙여넣을 수 있습니다.
-            </p>
-            <AttachUploader postId={postId} />
-          </Card>
-
+          <PostMetaSidebar
+            post={post}
+            tagsInput={tagsInput}
+            youtubeInput={youtubeInput}
+            youtubeError={youtubeError}
+            isUploading={isUploading}
+            isNew={isNew}
+            onChange={handleChange}
+            onTagsChange={setTagsInput}
+            onYoutubeChange={handleYoutubeChange}
+            onThumbnailUpload={uploadThumbnail}
+            postId={postId}
+            categories={CATEGORIES}
+          />
         </aside>
       </div>
+
+      <ConfirmModal
+        open={showDeleteModal}
+        title="게시글을 삭제하시겠습니까?"
+        description={`"${post.title || '(제목 없음)'}" 게시글이 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
+        confirmLabel="삭제"
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteModal(false)}
+        loading={deleting}
+      />
     </div>
   )
 }

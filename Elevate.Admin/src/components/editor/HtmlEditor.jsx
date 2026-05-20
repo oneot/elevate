@@ -4,7 +4,14 @@ import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import { common, createLowlight } from 'lowlight'
+import { createLowlight } from 'lowlight'
+import javascript from 'highlight.js/lib/languages/javascript'
+import typescript from 'highlight.js/lib/languages/typescript'
+import python from 'highlight.js/lib/languages/python'
+import bash from 'highlight.js/lib/languages/bash'
+import html from 'highlight.js/lib/languages/xml'
+import css from 'highlight.js/lib/languages/css'
+import json from 'highlight.js/lib/languages/json'
 import {
   Bold,
   Italic,
@@ -24,10 +31,22 @@ import {
   RemoveFormatting,
 } from 'lucide-react'
 
-const lowlight = createLowlight(common)
+// lowlight 인스턴스에 지원할 언어를 등록한다.
+// 같은 언어에 여러 별칭(js/javascript, ts/typescript 등)을 등록해
+// 코드 블록의 언어 표기 방식에 유연하게 대응한다.
+const lowlight = createLowlight()
+lowlight.register('javascript', javascript)
+lowlight.register('js', javascript)
+lowlight.register('typescript', typescript)
+lowlight.register('ts', typescript)
+lowlight.register('python', python)
+lowlight.register('bash', bash)
+lowlight.register('sh', bash)
+lowlight.register('html', html)
+lowlight.register('xml', html)
+lowlight.register('css', css)
+lowlight.register('json', json)
 
-// ToolbarButton 컴포넌트를 외부로 이동
-// eslint-disable-next-line no-unused-vars
 const ToolbarButton = ({ icon: IconComponent, onClick, isActive, title, disabled = false }) => (
   <button
     type="button"
@@ -44,7 +63,6 @@ const ToolbarButton = ({ icon: IconComponent, onClick, isActive, title, disabled
   </button>
 )
 
-// Divider 컴포넌트를 외부로 이동
 const Divider = () => <div className="w-px h-5 bg-neutral-300 mx-1" />
 
 function HtmlEditor({ value, onChange, onUploadImage }) {
@@ -107,6 +125,7 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
 
   const addImage = () => {
     if (!onUploadImage) {
+      // onUploadImage 핸들러가 없으면 URL 직접 입력 방식으로 폴백한다.
       const url = window.prompt('이미지 URL을 입력하세요')
       if (url) {
         editor.chain().focus().setImage({ src: url }).run()
@@ -114,6 +133,8 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
       return
     }
 
+    // 파일 선택 input을 동적으로 생성해 파일 피커를 열고,
+    // 선택된 파일 각각을 onUploadImage로 업로드한 뒤 에디터에 삽입한다.
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = 'image/*'
@@ -127,8 +148,7 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
             if (url) {
               editor.chain().focus().setImage({ src: url }).run()
             }
-          } catch (error) {
-            console.error(error)
+          } catch {
             alert(`${file.name} 이미지 업로드에 실패했습니다.`)
           }
         }

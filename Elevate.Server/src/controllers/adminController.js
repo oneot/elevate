@@ -465,6 +465,39 @@ exports.deletePost = async (req, res) => {
       return sendError(res, 404, 'NotFound', 'Resource not found', correlationId);
     }
 
+    // 연결된 에셋(images)과 첨부파일(attach) 조회
+    const assetsContainer = getAssetsContainer();
+    const linkedQuery = {
+      query: 'SELECT * FROM c WHERE c.postId = @postId AND (c.documentType = "asset" OR c.documentType = "attach")',
+      parameters: [{ name: '@postId', value: existing.id }]
+    };
+    const { resources: linkedDocs } = await assetsContainer.items.query(linkedQuery).fetchAll();
+
+    // 에셋/첨부파일 연쇄 삭제 (best-effort)
+    await Promise.all(linkedDocs.map(async (doc) => {
+      try {
+        await deleteBlobByUrl(doc.blobUrl);
+      } catch (err) {
+        console.error(`[deletePost] blob deletion failed for doc ${doc.id}`, err);
+      }
+      try {
+        const pk = doc.partitionKey || doc.category;
+        await assetsContainer.item(doc.id, pk).delete();
+      } catch (err) {
+        console.error(`[deletePost] cosmos doc deletion failed for doc ${doc.id}`, err);
+      }
+    }));
+
+    // 썸네일 블롭 삭제 (best-effort)
+    const thumbnailUrl = existing.thumbnail?.url;
+    if (thumbnailUrl) {
+      try {
+        await deleteBlobByUrl(thumbnailUrl);
+      } catch (err) {
+        console.error('[deletePost] thumbnail blob deletion failed', err);
+      }
+    }
+
     await container.item(existing.id, existing.partitionKey || existing.category).delete();
     return res.status(204).send();
   } catch (error) {

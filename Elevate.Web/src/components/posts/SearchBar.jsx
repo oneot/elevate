@@ -23,6 +23,7 @@ const SearchBar = ({ value = '', onChange = () => {}, onSubmit = () => {}, place
 
   // 외부에서 value prop이 변경될 때 입력창을 동기화한다 (예: URL 파라미터 직접 조작 시).
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setQ(value);
   }, [value]);
 

@@ -208,7 +208,7 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
                   transformStyle: "preserve-3d",
                 }}
               >
-                {orderedCards.map(({ item, offset, index }) => {
+                {orderedCards.map(({ item, offset }) => {
                   const isCenter = offset === 0;
                   const isPlaying = playingId === item.id && isCenter;
                   const motion = orbitMotionMap[offset];

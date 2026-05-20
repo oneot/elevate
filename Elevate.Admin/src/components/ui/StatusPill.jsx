@@ -1,5 +1,11 @@
 import { CheckCircle, Edit3, Archive } from 'lucide-react'
 
+/**
+ * 게시 상태별 배경·텍스트·테두리 스타일.
+ * - draft: 작성 중 (회색)
+ * - published: 게시됨 (초록색)
+ * - archived: 보관됨 (연한 회색)
+ */
 const styles = {
   draft: 'bg-neutral-100 text-neutral-700 border-neutral-200',
   published: 'bg-ms-green/10 text-ms-green border-ms-green/20',
