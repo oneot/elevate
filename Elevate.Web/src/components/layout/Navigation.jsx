@@ -18,7 +18,8 @@ import { NAV_ITEMS } from '../../constants/navItems';
  * - item.href 가 있으면 항상 <a> 태그를 사용한다.
  *   item.external 은 새 탭(_blank) 여부만 결정하며, href 존재 여부와는 무관하다.
  * - item.to 만 있으면 React Router <Link> 를 사용한다.
- * - role="menuitem" 은 실제 포커스 가능한 링크 요소에 부여한다 (ARIA 메뉴 패턴).
+ * - ARIA menu 패턴(role="menu/menuitem")은 화살표 키 내비게이션 등을 완전 구현해야 하므로
+ *   미구현 상태에서는 role 속성을 부여하지 않고 기본 링크/리스트 시맨틱을 사용한다.
  *
  * @param {Object} props
  * @param {{ label: string, to?: string, href?: string, external?: boolean, isNew?: boolean }} props.item
@@ -58,7 +59,6 @@ const NavLink = ({ item, onClick, className = '' }) => {
                 rel={item.external ? 'noopener noreferrer' : undefined}
                 onClick={onClick}
                 className={baseClass}
-                role="menuitem"
             >
                 {content}
             </a>
@@ -66,7 +66,7 @@ const NavLink = ({ item, onClick, className = '' }) => {
     }
     // to 가 있으면 React Router Link 사용
     return (
-        <Link to={item.to} onClick={onClick} className={baseClass} role="menuitem">
+        <Link to={item.to} onClick={onClick} className={baseClass}>
             {content}
         </Link>
     );
@@ -217,12 +217,10 @@ const Navigation = () => {
                                 {/* 드롭다운 패널 */}
                                 {openMenu === menu.label && (
                                     <ul
-                                        role="menu"
                                         className="absolute top-full left-0 mt-1 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 py-2 min-w-[200px] z-50"
                                     >
                                         {menu.items.map((item) => (
-                                            // role="none": li는 ARIA 역할 없음, menuitem은 링크 요소에 부여
-                                            <li key={item.label} role="none">
+                                            <li key={item.label}>
                                                 <NavLink
                                                     item={item}
                                                     onClick={() => setOpenMenu(null)}
