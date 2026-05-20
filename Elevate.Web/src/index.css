@@ -748,13 +748,14 @@ body {
   justify-content: space-between;
   padding: 1.1rem 1.5rem 1rem;
   background: transparent;
-  border-bottom: 0.5px solid rgba(0, 120, 212, 0.10);
+  border-bottom: none;
   margin-bottom: 0;
   gap: 0.75rem;
   flex-wrap: wrap;
+  position: relative;
 }
 
-/* 월/년도 레이블 */
+/* 월/년도 레이블 — 툴바 정중앙 절대 배치 */
 .rbc-toolbar-label {
   font-size: 1.05rem;
   font-weight: 700;
@@ -763,9 +764,10 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -0.01em;
-  order: 2;
-  flex: 1;
-  text-align: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 /* 탐색 버튼 그룹 */
@@ -833,7 +835,7 @@ body {
 
 /* ── 날짜 셀 그리드 ── */
 .rbc-month-view {
-  border: none;
+  border: none !important;
   background: transparent;
   flex: 1;
 }
@@ -843,9 +845,19 @@ body {
   overflow: visible;
 }
 
+/* 첫 번째 행 상단 외곽선 제거 */
+.rbc-month-row:first-child {
+  border-top: none;
+}
+
 .rbc-day-bg {
   background: transparent;
   transition: background 0.15s ease;
+}
+
+/* 첫 번째 열 좌측 외곽선 제거 */
+.rbc-day-bg:first-child {
+  border-left: none;
 }
 
 .rbc-day-bg + .rbc-day-bg {
