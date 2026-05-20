@@ -48,8 +48,10 @@ const PostListLayout = ({
         )}
 
         <div className={`flex flex-col lg:grid gap-6 ${hasSeriesSidebar ? 'lg:grid-cols-12' : 'lg:grid-cols-10'}`}>
-          <aside className="w-full lg:col-span-2 lg:sticky lg:top-4">
-            <TagFilter {...tagFilterProps} className="h-full" />
+          <aside className="w-full lg:col-span-2 lg:sticky lg:top-4 lg:self-start">
+            {/* 게시글 카운트 라벨 높이만큼 상단 정렬 */}
+            <div className="mb-4 min-h-6 hidden lg:block" aria-hidden="true" />
+            <TagFilter {...tagFilterProps} />
           </aside>
 
           <section className={`w-full ${hasSeriesSidebar ? 'lg:col-span-7 xl:col-span-8' : 'lg:col-span-8'}`}>
