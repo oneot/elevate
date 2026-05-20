@@ -15,12 +15,14 @@
  *  - onTagsChange   {function} tagsInput 변경 핸들러
  *  - onYoutubeChange{function} YouTube URL 변경 핸들러
  *  - onThumbnailUpload{function} 파일 선택 시 썸네일 업로드 핸들러 (File → void)
+ *  - onEventDatesChange{function} eventDates 변경 핸들러
  *  - postId         {string|undefined} 첨부파일 업로더에 필요한 게시글 ID
  *  - categories     {Array<{value, label}>} 카테고리 목록
  */
 
 import { Card, FormField } from '../ui/index.js'
 import AttachUploader from './AttachUploader.jsx'
+import EventDatesEditor from './EventDatesEditor.jsx'
 
 function PostMetaSidebar({
   post,
@@ -33,6 +35,7 @@ function PostMetaSidebar({
   onTagsChange,
   onYoutubeChange,
   onThumbnailUpload,
+  onEventDatesChange,
   postId,
   categories,
 }) {
@@ -78,6 +81,15 @@ function PostMetaSidebar({
             placeholder="Azure, CosmosDB"
           />
         </FormField>
+
+        {post.category === 'event' && (
+          <FormField label="행사 일정">
+            <EventDatesEditor
+              value={post.eventDates}
+              onChange={onEventDatesChange}
+            />
+          </FormField>
+        )}
 
         <FormField label="YouTube">
           <input

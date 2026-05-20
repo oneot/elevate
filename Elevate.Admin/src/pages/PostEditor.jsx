@@ -25,6 +25,7 @@ const emptyPost = {
   thumbnailUrl: '',
   htmlBody: '',
   youtube: '',
+  eventDates: null,
 }
 
 function PostEditor() {
@@ -310,6 +311,7 @@ function PostEditor() {
             onTagsChange={setTagsInput}
             onYoutubeChange={handleYoutubeChange}
             onThumbnailUpload={uploadThumbnail}
+            onEventDatesChange={(value) => setPost((prev) => ({ ...prev, eventDates: value }))}
             postId={postId}
             categories={CATEGORIES}
           />
