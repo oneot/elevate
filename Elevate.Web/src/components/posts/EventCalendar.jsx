@@ -12,6 +12,30 @@ const localizer = dateFnsLocalizer({
   locales: { ko },
 });
 
+// 한국 공휴일 (2025~2026)
+const KR_HOLIDAYS = new Set([
+  '2025-01-01','2025-01-28','2025-01-29','2025-01-30',
+  '2025-03-01','2025-05-05','2025-05-06','2025-06-06',
+  '2025-08-15','2025-10-03','2025-10-05','2025-10-06','2025-10-07','2025-10-09',
+  '2025-12-25',
+  '2026-01-01','2026-02-17','2026-02-18','2026-02-19',
+  '2026-03-01','2026-03-02','2026-05-05','2026-05-25',
+  '2026-06-06','2026-08-15','2026-08-17',
+  '2026-09-24','2026-09-25','2026-09-26',
+  '2026-10-03','2026-10-09','2026-12-25',
+]);
+
+function CustomDateHeader({ date, label }) {
+  const isSunday = date.getDay() === 0;
+  const isHoliday = KR_HOLIDAYS.has(format(date, 'yyyy-MM-dd'));
+  const isRed = isSunday || isHoliday;
+  return (
+    <span style={isRed ? { color: '#ef4444', fontWeight: 600 } : {}}>
+      {label}
+    </span>
+  );
+}
+
 /**
  * posts: Array<{ slug, title, eventDates: Array<{start, end}> }>
  * selectedSlug: string | null — 현재 선택된 이벤트 slug
@@ -72,6 +96,7 @@ export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent 
         onSelectEvent={handleSelectEvent}
         eventPropGetter={eventPropGetter}
         culture="ko"
+        components={{ month: { dateHeader: CustomDateHeader } }}
         messages={{
           next: '›',
           previous: '‹',

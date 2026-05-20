@@ -747,8 +747,8 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 1.1rem 1.5rem 1rem;
-  background: linear-gradient(135deg, rgba(0,120,212,0.08) 0%, rgba(0,32,80,0.04) 100%);
-  border-bottom: 0.5px solid rgba(0, 120, 212, 0.12);
+  background: transparent;
+  border-bottom: 0.5px solid rgba(0, 120, 212, 0.10);
   margin-bottom: 0;
   gap: 0.75rem;
   flex-wrap: wrap;
@@ -811,7 +811,7 @@ body {
 
 /* ── 요일 헤더 행 ── */
 .rbc-month-header {
-  background: rgba(248, 250, 252, 0.60);
+  background: transparent;
   border-bottom: 0.5px solid rgba(0, 120, 212, 0.10);
 }
 
@@ -870,15 +870,15 @@ body {
 
 .rbc-date-cell a,
 .rbc-date-cell button {
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   font-weight: 500;
   color: #475569;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.7rem;
-  height: 1.7rem;
+  width: 2rem;
+  height: 2rem;
   border-radius: 50%;
   transition: all 0.15s ease;
 }
@@ -901,12 +901,13 @@ body {
 
 /* 이번 달 밖 날짜 */
 .rbc-off-range-bg {
-  background: rgba(248, 250, 252, 0.45) !important;
+  background: rgba(248, 250, 252, 0.35) !important;
 }
 
 .rbc-off-range .rbc-date-cell a,
 .rbc-off-range .rbc-date-cell button {
-  color: #cbd5e1;
+  color: #94a3b8;
+  font-weight: 400;
 }
 
 /* ── 이벤트 pill ── */
