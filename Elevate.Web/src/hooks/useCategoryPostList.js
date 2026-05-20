@@ -147,6 +147,7 @@ export function useCategoryPostList(category) {
   return {
     qParam,
     qParamLower,
+    allPosts,
     allTags,
     selectedTags,
     loading,
@@ -159,5 +160,6 @@ export function useCategoryPostList(category) {
     handleClearAllTags,
     handlePageChange,
     handleSearchSubmit,
+    updateUrlParams,
   };
 }
