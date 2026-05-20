@@ -135,6 +135,21 @@ function validatePostCreatePayload(body) {
     return 'status must be one of draft, published, archived';
   }
 
+  // eventDates validation (optional, only for event category)
+  if (body.eventDates !== undefined && body.eventDates !== null) {
+    if (!Array.isArray(body.eventDates)) {
+      return 'eventDates must be an array';
+    }
+    for (let i = 0; i < body.eventDates.length; i++) {
+      const d = body.eventDates[i];
+      if (!d || typeof d !== 'object') {
+        return `eventDates[${i}] must be an object`;
+      } else if (!d.start || !d.end) {
+        return `eventDates[${i}] must have start and end`;
+      }
+    }
+  }
+
   return null;
 }
 
@@ -157,6 +172,21 @@ function validatePostUpdatePayload(body) {
 
   if (body.youtube !== undefined && body.youtube !== null && typeof body.youtube !== 'string') {
     return 'youtube must be a string or null';
+  }
+
+  // eventDates validation (optional, only for event category)
+  if (body.eventDates !== undefined && body.eventDates !== null) {
+    if (!Array.isArray(body.eventDates)) {
+      return 'eventDates must be an array';
+    }
+    for (let i = 0; i < body.eventDates.length; i++) {
+      const d = body.eventDates[i];
+      if (!d || typeof d !== 'object') {
+        return `eventDates[${i}] must be an object`;
+      } else if (!d.start || !d.end) {
+        return `eventDates[${i}] must have start and end`;
+      }
+    }
   }
 
   return null;
@@ -212,7 +242,8 @@ function toPostResponse(post) {
     updatedAt: post.updatedAt,
     series: post.series || null,
     thumbnail: post.thumbnail || null,
-    youtube: post.youtube || null
+    youtube: post.youtube || null,
+    eventDates: Array.isArray(post.eventDates) ? post.eventDates : null
   };
 }
 
@@ -381,6 +412,7 @@ exports.createPost = async (req, res) => {
       series: req.body.series || null,
       thumbnail: req.body.thumbnail ? Object.assign({}, req.body.thumbnail, { url: stripBlobSas(req.body.thumbnail.url) }) : null,
       youtube: req.body.youtube || null,
+      eventDates: Array.isArray(req.body.eventDates) ? req.body.eventDates : null,
       status: req.body.status,
       publishedAt: req.body.status === 'published' ? now : null,
       updatedAt: now,
@@ -430,6 +462,7 @@ exports.updatePost = async (req, res) => {
       series: req.body.series !== undefined ? req.body.series : existing.series,
       thumbnail: normalizedThumbnail,
       youtube: req.body.youtube !== undefined ? (req.body.youtube || null) : (existing.youtube || null),
+      eventDates: req.body.eventDates !== undefined ? (Array.isArray(req.body.eventDates) ? req.body.eventDates : null) : existing.eventDates,
       status: req.body.status !== undefined ? req.body.status : existing.status,
       updatedAt: now
     };
