@@ -1,6 +1,6 @@
 /**
  * @file Navigation.jsx
- * @description 모든 페이지 최상단에 고정되는 내비게이션 바.
+ * @description 홈 페이지 최상단에 고정되는 내비게이션 바 (현재 Home.jsx에서만 사용).
  *
  * 5개 드롭다운 메뉴와 우측 문의하기 CTA 버튼으로 구성된다.
  * - 데스크톱: 마우스 오버 시 드롭다운, 마우스 이탈 시 자동 닫힘
@@ -106,6 +106,10 @@ const Navigation = () => {
      * 150ms 딜레이를 줌. 그 안에 마우스가 다시 진입하면 타이머를 취소.
      */
     const closeTimerRef = useRef(null);
+    /** 모바일 오버레이 DOM ref — 포커스 트랩에 사용 */
+    const overlayRef = useRef(null);
+    /** 모바일 오버레이 닫기 버튼 ref — 오버레이 열릴 때 최초 포커스 대상 */
+    const closeBtnRef = useRef(null);
 
     /** 드롭다운 열기 — 진입 시 대기 중인 닫힘 타이머 취소 */
     const handleMenuEnter = (label) => {
@@ -170,6 +174,32 @@ const Navigation = () => {
         };
     }, [mobileOpen]);
 
+    // 모바일 오버레이가 열릴 때 닫기 버튼으로 포커스 이동
+    useEffect(() => {
+        if (mobileOpen && closeBtnRef.current) {
+            closeBtnRef.current.focus();
+        }
+    }, [mobileOpen]);
+
+    /**
+     * 모바일 오버레이 내 Tab 포커스 트랩.
+     * 오버레이 밖으로 포커스가 빠지지 않도록 첫/마지막 포커스 가능 요소에서 순환한다.
+     */
+    const handleOverlayKeyDown = (e) => {
+        if (e.key !== 'Tab') return;
+        const focusable = overlayRef.current?.querySelectorAll(
+            'button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusable || focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+            if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        } else {
+            if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+    };
+
     /** 모바일 아코디언 토글 */
     const toggleMobileMenu = (label) => {
         setExpandedMobile((prev) => (prev === label ? null : label));
@@ -205,6 +235,7 @@ const Navigation = () => {
                             >
                                 {/* 최상위 메뉴 버튼 — hover(마우스) + onClick(키보드/터치) 모두 지원 */}
                                 <button
+                                    type="button"
                                     aria-expanded={openMenu === menu.label}
                                     aria-haspopup="true"
                                     onClick={() => setOpenMenu((prev) => prev === menu.label ? null : menu.label)}
@@ -248,6 +279,7 @@ const Navigation = () => {
 
                         {/* 햄버거 버튼 (모바일 전용) */}
                         <button
+                            type="button"
                             aria-label="메뉴 열기"
                             onClick={() => setMobileOpen(true)}
                             className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
@@ -261,15 +293,22 @@ const Navigation = () => {
             </nav>
 
             {/* ── 모바일 풀화면 오버레이 패널 ── */}
+            {/* role="dialog" + aria-modal: 키보드/스크린리더가 오버레이를 모달 대화상자로 인식하도록 함 */}
             {mobileOpen && (
                 <div
+                    ref={overlayRef}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="내비게이션 메뉴"
+                    onKeyDown={handleOverlayKeyDown}
                     className="fixed inset-0 z-[60] bg-white flex flex-col md:hidden overflow-y-auto"
-                    // 오버레이 배경 클릭 시 닫기는 의도하지 않음 — 콘텐츠가 꽉 차 있으므로 닫기 버튼으로만 닫음
                 >
                     {/* 오버레이 헤더 */}
                     <div className="flex items-center justify-between px-6 h-16 border-b border-slate-100 shrink-0">
                         <Logo />
                         <button
+                            ref={closeBtnRef}
+                            type="button"
                             aria-label="메뉴 닫기"
                             onClick={() => setMobileOpen(false)}
                             className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
@@ -286,6 +325,7 @@ const Navigation = () => {
                             <li key={menu.label}>
                                 {/* 최상위 메뉴 토글 버튼 */}
                                 <button
+                                    type="button"
                                     aria-expanded={expandedMobile === menu.label}
                                     onClick={() => toggleMobileMenu(menu.label)}
                                     className="w-full flex items-center justify-between px-4 py-3.5 text-base font-semibold text-slate-800 rounded-xl hover:bg-slate-50 transition-colors"
