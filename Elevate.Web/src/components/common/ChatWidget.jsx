@@ -4,6 +4,7 @@
  *
  * botframework-webchat 번들은 사용자가 채팅 버튼을 처음 클릭할 때 동적으로 로드된다.
  * 실제 WebChat UI와 DirectLine 연결은 ChatWidgetPanel에서 처리한다.
+ * 패널은 isOpen 상태에서만 마운트되어 닫힐 때 DirectLine 연결을 정리한다.
  */
 import { useState, lazy, Suspense } from 'react';
 
@@ -11,38 +12,30 @@ const ChatWidgetPanel = lazy(() => import('./ChatWidgetPanel'));
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [hasOpened, setHasOpened] = useState(false);
-
-  const handleToggle = () => {
-    if (!hasOpened) setHasOpened(true);
-    setIsOpen(prev => !prev);
-  };
 
   return (
     <div className="fixed z-[9999] flex flex-col items-end gap-4 font-sans pointer-events-none
       right-4 sm:right-6 bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)]">
 
-      {/* 패널: 최초 오픈 이후에만 마운트 (CSS 애니메이션으로 open/close 처리) */}
-      {hasOpened && (
+      {/* 패널: isOpen 상태에서만 마운트하여 불필요한 DirectLine 연결 방지 */}
+      {isOpen && (
         <Suspense fallback={
-          isOpen ? (
-            <div className="pointer-events-auto w-[340px] sm:w-[380px] h-20 flex items-center justify-center
-              bg-white/80 backdrop-blur-2xl border border-white/60 rounded-[2.5rem] shadow-2xl shadow-blue-900/15">
-              <div className="flex space-x-1.5">
-                <div className="loading-dot"></div>
-                <div className="loading-dot"></div>
-                <div className="loading-dot"></div>
-              </div>
+          <div className="pointer-events-auto w-[340px] sm:w-[380px] h-20 flex items-center justify-center
+            bg-white/80 backdrop-blur-2xl border border-white/60 rounded-[2.5rem] shadow-2xl shadow-blue-900/15">
+            <div className="flex space-x-1.5">
+              <div className="loading-dot"></div>
+              <div className="loading-dot"></div>
+              <div className="loading-dot"></div>
             </div>
-          ) : null
+          </div>
         }>
-          <ChatWidgetPanel isOpen={isOpen} onClose={() => setIsOpen(false)} />
+          <ChatWidgetPanel onClose={() => setIsOpen(false)} />
         </Suspense>
       )}
 
       {/* 토글 버튼 */}
       <button
-        onClick={handleToggle}
+        onClick={() => setIsOpen(prev => !prev)}
         aria-label={isOpen ? '채팅 닫기' : '채팅 열기'}
         aria-expanded={isOpen}
         aria-controls="chat-widget-panel"

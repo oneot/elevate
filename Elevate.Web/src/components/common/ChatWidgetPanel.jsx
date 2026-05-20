@@ -16,7 +16,7 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const ChatWidgetPanel = ({ isOpen, onClose }) => {
+const ChatWidgetPanel = ({ onClose }) => {
   const [directLine, setDirectLine] = useState(null);
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -99,13 +99,13 @@ const ChatWidgetPanel = ({ isOpen, onClose }) => {
 
   return (
     <div
+      id="chat-widget-panel"
       className={`pointer-events-auto
         w-[340px] sm:w-[380px] h-[70vh] sm:h-[650px] max-w-[calc(100vw-2.5rem)] max-h-[80vh]
         bg-white/80 backdrop-blur-2xl border border-white/60
         rounded-[2.5rem] shadow-2xl shadow-blue-900/15
         flex flex-col overflow-hidden relative
-        origin-bottom-right transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)]
-        ${isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-0 opacity-0 invisible translate-y-12'}
+        origin-bottom-right animate-fade-in-up
       `}
     >
       {/* 헤더 */}
@@ -131,7 +131,6 @@ const ChatWidgetPanel = ({ isOpen, onClose }) => {
 
       {/* WebChat 영역 */}
       <div
-        id="chat-widget-panel"
         role="region"
         aria-label="채팅 대화 영역"
         className="flex-1 bg-white/40 overflow-y-auto relative p-0"
