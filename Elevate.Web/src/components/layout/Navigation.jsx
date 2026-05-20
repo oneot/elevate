@@ -14,7 +14,11 @@ import { NAV_ITEMS } from '../../constants/navItems';
 
 /**
  * 내부/외부 링크를 통합 렌더링하는 보조 컴포넌트.
- * item.external이 true이면 <a target="_blank">, 아니면 <Link to={...}>.
+ *
+ * - item.href 가 있으면 항상 <a> 태그를 사용한다.
+ *   item.external 은 새 탭(_blank) 여부만 결정하며, href 존재 여부와는 무관하다.
+ * - item.to 만 있으면 React Router <Link> 를 사용한다.
+ * - role="menuitem" 은 실제 포커스 가능한 링크 요소에 부여한다 (ARIA 메뉴 패턴).
  *
  * @param {Object} props
  * @param {{ label: string, to?: string, href?: string, external?: boolean, isNew?: boolean }} props.item
@@ -30,7 +34,7 @@ const NavLink = ({ item, onClick, className = '' }) => {
     const content = (
         <>
             {item.label}
-            {/* "new" 배지 — Copilot Studio처럼 최근 추가된 항목에 표시 */}
+            {/* "new" 배지 — 최근 추가된 항목에 표시 */}
             {item.isNew && (
                 <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-violet-100 text-violet-700 rounded-md leading-none">
                     NEW
@@ -45,15 +49,24 @@ const NavLink = ({ item, onClick, className = '' }) => {
         </>
     );
 
-    if (item.external) {
+    // href 가 있으면 항상 <a> 사용 — external 은 새 탭 여부만 결정
+    if (item.href) {
         return (
-            <a href={item.href} target="_blank" rel="noopener noreferrer" onClick={onClick} className={baseClass}>
+            <a
+                href={item.href}
+                target={item.external ? '_blank' : '_self'}
+                rel={item.external ? 'noopener noreferrer' : undefined}
+                onClick={onClick}
+                className={baseClass}
+                role="menuitem"
+            >
                 {content}
             </a>
         );
     }
+    // to 가 있으면 React Router Link 사용
     return (
-        <Link to={item.to} onClick={onClick} className={baseClass}>
+        <Link to={item.to} onClick={onClick} className={baseClass} role="menuitem">
             {content}
         </Link>
     );
@@ -103,10 +116,22 @@ const Navigation = () => {
         setOpenMenu(label);
     };
 
-    /** 드롭다운 닫기 — 150ms 후 실행 */
+    /** 드롭다운 닫기 — 기존 타이머 clear 후 150ms 딜레이로 재설정 */
     const handleMenuLeave = () => {
-        closeTimerRef.current = setTimeout(() => setOpenMenu(null), 150);
+        // 누적 타이머 방지: 이전 타이머를 반드시 취소 후 재설정
+        if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = setTimeout(() => {
+            closeTimerRef.current = null;
+            setOpenMenu(null);
+        }, 150);
     };
+
+    // unmount 시 남은 타이머 cleanup (unmount 후 setState 방지)
+    useEffect(() => {
+        return () => {
+            if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+        };
+    }, []);
 
     // 라우트 이동 시 모든 드롭다운/오버레이 닫기
     useEffect(() => {
@@ -131,9 +156,18 @@ const Navigation = () => {
     }, []);
 
     // 모바일 오버레이 열릴 때 body 스크롤 잠금
+    // 원래 overflow 값을 ref에 저장해두고 닫을 때 정확히 복원한다.
+    const prevOverflowRef = useRef('');
     useEffect(() => {
-        document.body.style.overflow = mobileOpen ? 'hidden' : '';
-        return () => { document.body.style.overflow = ''; };
+        if (mobileOpen) {
+            prevOverflowRef.current = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = prevOverflowRef.current;
+        }
+        return () => {
+            document.body.style.overflow = prevOverflowRef.current;
+        };
     }, [mobileOpen]);
 
     /** 모바일 아코디언 토글 */
@@ -169,10 +203,11 @@ const Navigation = () => {
                                 onMouseEnter={() => handleMenuEnter(menu.label)}
                                 onMouseLeave={handleMenuLeave}
                             >
-                                {/* 최상위 메뉴 버튼 */}
+                                {/* 최상위 메뉴 버튼 — hover(마우스) + onClick(키보드/터치) 모두 지원 */}
                                 <button
                                     aria-expanded={openMenu === menu.label}
                                     aria-haspopup="true"
+                                    onClick={() => setOpenMenu((prev) => prev === menu.label ? null : menu.label)}
                                     className="flex items-center gap-1 px-3 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"
                                 >
                                     {menu.label}
@@ -186,7 +221,8 @@ const Navigation = () => {
                                         className="absolute top-full left-0 mt-1 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 py-2 min-w-[200px] z-50"
                                     >
                                         {menu.items.map((item) => (
-                                            <li key={item.label} role="menuitem">
+                                            // role="none": li는 ARIA 역할 없음, menuitem은 링크 요소에 부여
+                                            <li key={item.label} role="none">
                                                 <NavLink
                                                     item={item}
                                                     onClick={() => setOpenMenu(null)}
