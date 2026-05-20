@@ -22,18 +22,32 @@ const ChatWidgetPanel = ({ isOpen, onClose }) => {
   const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const getSecureToken = async () => {
       try {
-        const response = await fetch('https://af01-ceh2a2e2ezgda9a6.koreacentral-01.azurewebsites.net/api/GetToken');
+        const endpoint = import.meta.env.VITE_BOT_TOKEN_ENDPOINT;
+        if (!endpoint) {
+          console.error('[ChatWidget] VITE_BOT_TOKEN_ENDPOINT is not set.');
+          return;
+        }
+        const response = await fetch(endpoint, { signal: controller.signal });
         if (!response.ok) throw new Error('토큰을 가져오지 못했습니다.');
         const data = await response.json();
         const dl = createDirectLine({ token: data.token });
         setDirectLine(dl);
       } catch (err) {
-        console.error("보안 연결 실패:", err);
+        if (err.name !== 'AbortError') {
+          console.error("보안 연결 실패:", err);
+        }
       }
     };
     getSecureToken();
+
+    return () => {
+      controller.abort();
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
   }, []);
 
   const store = useMemo(
@@ -103,13 +117,22 @@ const ChatWidgetPanel = ({ isOpen, onClose }) => {
             </div>
           </div>
         </div>
-        <button onClick={onClose} className="text-white/70 hover:text-white hover:bg-white/20 p-2 rounded-full transition-all cursor-pointer">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        <button
+          onClick={onClose}
+          aria-label="채팅 닫기"
+          className="text-white/70 hover:text-white hover:bg-white/20 p-2 rounded-full transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/60"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
 
       {/* WebChat 영역 */}
-      <div id="webchat-container" className="flex-1 bg-white/40 overflow-y-auto relative p-0" role="main">
+      <div
+        id="chat-widget-panel"
+        role="region"
+        aria-label="채팅 대화 영역"
+        className="flex-1 bg-white/40 overflow-y-auto relative p-0"
+      >
         {directLine ? (
           <>
             <ReactWebChat
@@ -136,3 +159,4 @@ const ChatWidgetPanel = ({ isOpen, onClose }) => {
 };
 
 export default ChatWidgetPanel;
+
