@@ -1,15 +1,16 @@
 // PostList 탭 네비게이션용 (all 포함, MEE 제외 - 홈 화면 전용)
-export const POST_LIST_CATEGORIES = ['all', 'm365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote'];
+export const POST_LIST_CATEGORIES = ['all', 'm365', 'copilot', 'copilot-studio', 'teams', 'minecraft', 'excel', 'onenote'];
 
 // PostDetail 카테고리 검증용 (update/m365update/program-news 포함, all 제외)
-export const POST_DETAIL_VALID_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote', 'm365update', 'update', 'mee', 'agenthon', 'program-news'];
+export const POST_DETAIL_VALID_CATEGORIES = ['m365', 'copilot', 'copilot-studio', 'teams', 'minecraft', 'excel', 'onenote', 'm365update', 'update', 'mee', 'agenthon', 'program-news'];
 
-export const BASE_CATEGORIES = ['m365', 'copilot', 'teams', 'minecraft', 'excel', 'onenote'];
+export const BASE_CATEGORIES = ['m365', 'copilot', 'copilot-studio', 'teams', 'minecraft', 'excel', 'onenote'];
 
 export const CATEGORY_DISPLAY_NAMES = {
   all: 'ALL',
   m365: 'M365',
   copilot: 'Copilot',
+  'copilot-studio': 'Copilot Studio',
   teams: 'Teams',
   minecraft: 'Minecraft',
   excel: 'Excel',

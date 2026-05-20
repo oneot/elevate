@@ -13,6 +13,7 @@ import { useLocation } from 'react-router-dom';
 // Icons
 import copilotIcon from '../assets/NewMicrosoft365Icons/copilot-logo-500.png';
 import m365Icon from '../assets/NewMicrosoft365Icons/m365-copilot-logo-500.png';
+import copilotStudioIcon from '../assets/NewMicrosoft365Icons/copilotstudio.png';
 import teamsIcon from '../assets/NewMicrosoft365Icons/Teams_512.png';
 import minecraftIcon from '../assets/NewMicrosoft365Icons/minecraft.png';
 import excelIcon from '../assets/NewMicrosoft365Icons/Excel_512.png';
@@ -73,6 +74,16 @@ const Home = () => {
             to: '/copilot',
             colorScheme: 'blue',
             ariaLabel: 'Copilot 페이지로 이동'
+        },
+        {
+            title: 'Copilot Studio',
+            description: 'Microsoft Copilot Studio로 나만의 AI 에이전트를 직접 만들어 보세요.',
+            icon: copilotStudioIcon,
+            iconType: 'image',
+            iconSize: 'w-9 h-9',
+            to: '/copilot-studio',
+            colorScheme: 'violet',
+            ariaLabel: 'Copilot Studio 페이지로 이동'
         },
         {
             title: 'Microsoft Teams',
@@ -145,13 +156,24 @@ const Home = () => {
                     <p className="text-slate-500 text-base sm:text-lg">교실 속 작은 변화를 돕는 실용적인 AI 도구들을 만나보세요.</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 auto-rows-auto sm:auto-rows-[240px]">
-                    {features.map((feature, index) => (
-                        <FeatureCard 
-                            key={index}
-                            {...feature}
-                        />
-                    ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-6 md:gap-8 auto-rows-auto sm:auto-rows-[240px]">
+                    {features.map((feature, index) => {
+                        // 2-3-2 레이아웃: md(768px+) 에서 6열 그리드 기준 col-span 분기
+                        // 행1 (idx 0-1, M365·Copilot)          → col-span-3 (2카드)
+                        // 행2 (idx 2-4, CopilotStudio·Teams·Minecraft) → col-span-2 (3카드)
+                        // 행3 (idx 5-6, Excel·OneNote)          → col-span-3 (2카드)
+                        const mdColSpan =
+                            index <= 1 || index >= 5
+                                ? 'col-span-1 sm:col-span-1 md:col-span-3'
+                                : 'col-span-1 sm:col-span-1 md:col-span-2';
+                        return (
+                            <FeatureCard
+                                key={index}
+                                {...feature}
+                                wrapperClassName={mdColSpan}
+                            />
+                        );
+                    })}
                 </div>
             </section>
 
