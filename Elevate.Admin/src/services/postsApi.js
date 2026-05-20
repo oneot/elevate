@@ -23,6 +23,7 @@ function toEditorPost(apiPost) {
     youtube: apiPost.youtube || '',
     updatedAt: apiPost.updatedAt || null,
     publishedAt: apiPost.publishedAt || null,
+    eventDates: Array.isArray(apiPost.eventDates) ? apiPost.eventDates : null,
   }
 }
 
@@ -67,6 +68,10 @@ function toApiPayload(post) {
 
   if (post.youtube !== undefined) {
     payload.youtube = post.youtube || null
+  }
+
+  if (post.eventDates !== undefined) {
+    payload.eventDates = Array.isArray(post.eventDates) ? post.eventDates : null
   }
 
   return payload
