@@ -923,31 +923,42 @@ body {
 
 /* ── 이벤트 pill ── */
 .rbc-event {
-  background: linear-gradient(135deg, rgba(0,120,212,0.82) 0%, rgba(0,95,163,0.88) 100%) !important;
   border: none !important;
   border-radius: 6px !important;
   font-size: 0.70rem !important;
   font-weight: 600 !important;
-  color: #fff !important;
   padding: 0.15rem 0.5rem !important;
-  box-shadow: 0 1px 4px rgba(0,120,212,0.25), inset 0 1px 0 rgba(255,255,255,0.18) !important;
   transition: all 0.18s ease !important;
-  backdrop-filter: blur(4px);
+  cursor: pointer !important;
 }
 
-.rbc-event:hover {
-  background: linear-gradient(135deg, rgba(0,120,212,0.95) 0%, rgba(0,75,135,0.98) 100%) !important;
-  box-shadow: 0 3px 10px rgba(0,120,212,0.35), inset 0 1px 0 rgba(255,255,255,0.22) !important;
+/* 기본(미선택) 이벤트 막대: 연한 파란색 */
+.rbc-event.event-bar--default {
+  background: rgba(0, 120, 212, 0.15) !important;
+  color: #0060a8 !important;
+  box-shadow: none !important;
+}
+
+.rbc-event.event-bar--default:hover {
+  background: rgba(0, 120, 212, 0.25) !important;
+  box-shadow: 0 2px 6px rgba(0, 120, 212, 0.15) !important;
   transform: translateY(-1px);
 }
 
-/* 선택된 이벤트 */
-.rbc-selected {
-  background: linear-gradient(135deg, #0078D4 0%, #002050 100%) !important;
-  box-shadow: 0 3px 12px rgba(0,120,212,0.45), inset 0 1px 0 rgba(255,255,255,0.25) !important;
+/* 선택된 이벤트 막대: 진한 파란색 + 링 */
+.rbc-event.event-bar--selected {
+  background: #0078D4 !important;
+  color: #fff !important;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0078D4, 0 3px 10px rgba(0, 120, 212, 0.4) !important;
+  transform: translateY(-1px);
 }
 
-.rbc-event.rbc-selected:focus {
+.rbc-event.event-bar--selected:hover {
+  background: #005fa3 !important;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #005fa3, 0 4px 14px rgba(0, 120, 212, 0.5) !important;
+}
+
+.rbc-event.event-bar--selected:focus {
   outline: none;
 }
 

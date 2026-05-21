@@ -82,11 +82,7 @@ export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent 
   const eventPropGetter = (event) => {
     const isSelected = event.resource.slug === selectedSlug;
     return {
-      className: isSelected ? 'rbc-selected' : '',
-      style: isSelected ? {
-        background: 'linear-gradient(135deg, #0078D4 0%, #002050 100%)',
-        boxShadow: '0 3px 12px rgba(0,120,212,0.45), inset 0 1px 0 rgba(255,255,255,0.25)',
-      } : {},
+      className: isSelected ? 'event-bar--selected' : 'event-bar--default',
     };
   };
 
