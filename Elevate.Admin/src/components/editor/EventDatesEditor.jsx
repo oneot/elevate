@@ -14,7 +14,7 @@
  *  - multi:  다중 — 날짜 여러 개 (각각 start === end인 원소들)
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { FormField } from '../ui/index.js';
 
 const TYPE_LABELS = {
@@ -35,9 +35,15 @@ export default function EventDatesEditor({ value, onChange }) {
     Array.isArray(value) && value.length > 0 ? value : [{ start: '', end: '' }]
   );
 
-  // Memoize onChange to avoid useEffect dependency issues
+  // onChange를 ref로 관리해 deps에서 제외 → 불필요한 useEffect 재실행 방지
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  const isFirstMount = useRef(true);
+
   const notifyParent = useCallback(() => {
-    // Validate all entries
     let isValid = false;
     let result = null;
 
@@ -59,10 +65,15 @@ export default function EventDatesEditor({ value, onChange }) {
       }
     }
 
-    onChange(isValid ? result : null);
-  }, [entries, type, onChange]);
+    onChangeRef.current(isValid ? result : null);
+  }, [entries, type]); // onChange 제외 → ref로 관리
 
   useEffect(() => {
+    // 마운트 시 첫 실행 건너뜀: 부모(PostEditor)가 이미 value를 알고 있음
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
     notifyParent();
   }, [notifyParent]);
 
