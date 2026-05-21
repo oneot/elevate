@@ -1000,3 +1000,42 @@ body {
 .rbc-month-view {
   padding: 0 0.5rem 0.5rem;
 }
+
+/* ── 이벤트 호버 툴팁 ── */
+.event-tooltip {
+  position: fixed;
+  transform: translate(-50%, calc(-100% - 10px));
+  z-index: 9999;
+  background: #fff;
+  border: 1px solid rgba(0, 120, 212, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 120, 212, 0.1);
+  padding: 0.6rem 0.85rem;
+  min-width: 180px;
+  max-width: 260px;
+  pointer-events: none;
+}
+
+.event-tooltip-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 0.45rem;
+  line-height: 1.3;
+}
+
+.event-tooltip-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  color: #4b5563;
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+.event-tooltip-icon {
+  font-size: 0.78rem;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}

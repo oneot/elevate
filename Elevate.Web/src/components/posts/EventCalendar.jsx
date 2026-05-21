@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay, addDays, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -36,8 +37,76 @@ function CustomDateHeader({ date, label }) {
   );
 }
 
+function formatDateRange(start, end) {
+  if (!start) return '';
+  const s = format(parseISO(start), 'yyyy.MM.dd', { locale: ko });
+  if (!end || start === end) return s;
+  const e = format(parseISO(end), 'yyyy.MM.dd', { locale: ko });
+  return `${s} ~ ${e}`;
+}
+
+function EventBar({ event }) {
+  const [pos, setPos] = useState(null);
+  const ref = useRef(null);
+  const { title, resource } = event;
+  const { eventDate, eventLocation, eventTarget } = resource;
+
+  const handleMouseEnter = useCallback(() => {
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setPos({ x: rect.left + rect.width / 2, y: rect.top });
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => setPos(null), []);
+
+  const dateLabel = eventDate ? formatDateRange(eventDate.start, eventDate.end) : '';
+
+  return (
+    <>
+      <div
+        ref={ref}
+        style={{ width: '100%', height: '100%' }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        {title}
+      </div>
+      {pos && createPortal(
+        <div
+          className="event-tooltip"
+          style={{ left: pos.x, top: pos.y }}
+          onMouseLeave={handleMouseLeave}
+        >
+          <div className="event-tooltip-title">{title}</div>
+          {dateLabel && (
+            <div className="event-tooltip-row">
+              <span className="event-tooltip-icon">📅</span>
+              <span>{dateLabel}</span>
+            </div>
+          )}
+          {eventLocation && (
+            <div className="event-tooltip-row">
+              <span className="event-tooltip-icon">📍</span>
+              <span>{eventLocation}</span>
+            </div>
+          )}
+          {eventTarget && (
+            <div className="event-tooltip-row">
+              <span className="event-tooltip-icon">👥</span>
+              <span>{eventTarget}</span>
+            </div>
+          )}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
+
 /**
- * posts: Array<{ slug, title, eventDates: Array<{start, end}> }>
+ * posts: Array<{ slug, title, eventDates, eventLocation, eventTarget }>
  * selectedSlug: string | null — 현재 선택된 이벤트 slug
  * onSelectEvent: (slug: string | null) => void — 이벤트 클릭 핸들러
  */
@@ -67,7 +136,12 @@ export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent 
           start: parseISO(d.start),
           end: endDate,
           allDay: true,
-          resource: { slug: post.slug },
+          resource: {
+            slug: post.slug,
+            eventDate: { start: d.start, end: d.end || d.start },
+            eventLocation: post.eventLocation || null,
+            eventTarget: post.eventTarget || null,
+          },
         });
       });
     });
@@ -106,7 +180,7 @@ export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent 
         culture="ko"
         toolbar={false}
         components={{
-          month: { dateHeader: CustomDateHeader },
+          month: { dateHeader: CustomDateHeader, event: EventBar },
         }}
         messages={{ showMore: (count) => `+${count}개 더` }}
         popup
