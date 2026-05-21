@@ -932,15 +932,15 @@ body {
   cursor: pointer !important;
 }
 
-/* 기본(미선택) 이벤트 막대: 연한 파란색 */
+/* 기본(미선택) 이벤트 막대: 연한 파란색 (불투명) */
 .rbc-event.event-bar--default {
-  background: rgba(0, 120, 212, 0.15) !important;
+  background: #dbeafe !important;
   color: #0060a8 !important;
   box-shadow: none !important;
 }
 
 .rbc-event.event-bar--default:hover {
-  background: rgba(0, 120, 212, 0.25) !important;
+  background: #bfdbfe !important;
   box-shadow: 0 2px 6px rgba(0, 120, 212, 0.15) !important;
   transform: translateY(-1px);
 }
