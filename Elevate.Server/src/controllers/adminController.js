@@ -243,7 +243,9 @@ function toPostResponse(post) {
     series: post.series || null,
     thumbnail: post.thumbnail || null,
     youtube: post.youtube || null,
-    eventDates: Array.isArray(post.eventDates) ? post.eventDates : null
+    eventDates: Array.isArray(post.eventDates) ? post.eventDates : null,
+    eventLocation: post.eventLocation || null,
+    eventTarget: post.eventTarget || null,
   };
 }
 
@@ -413,6 +415,8 @@ exports.createPost = async (req, res) => {
       thumbnail: req.body.thumbnail ? Object.assign({}, req.body.thumbnail, { url: stripBlobSas(req.body.thumbnail.url) }) : null,
       youtube: req.body.youtube || null,
       eventDates: Array.isArray(req.body.eventDates) ? req.body.eventDates : null,
+      eventLocation: req.body.eventLocation || null,
+      eventTarget: req.body.eventTarget || null,
       status: req.body.status,
       publishedAt: req.body.status === 'published' ? now : null,
       updatedAt: now,
@@ -463,6 +467,8 @@ exports.updatePost = async (req, res) => {
       thumbnail: normalizedThumbnail,
       youtube: req.body.youtube !== undefined ? (req.body.youtube || null) : (existing.youtube || null),
       eventDates: req.body.eventDates !== undefined ? (Array.isArray(req.body.eventDates) ? req.body.eventDates : null) : existing.eventDates,
+      eventLocation: req.body.eventLocation !== undefined ? (req.body.eventLocation || null) : (existing.eventLocation || null),
+      eventTarget: req.body.eventTarget !== undefined ? (req.body.eventTarget || null) : (existing.eventTarget || null),
       status: req.body.status !== undefined ? req.body.status : existing.status,
       updatedAt: now
     };
