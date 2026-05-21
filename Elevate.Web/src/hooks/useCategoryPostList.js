@@ -24,6 +24,60 @@ const normalizeTag = (tag) => (tag ?? '').toString().trim().toLowerCase();
 const normalizeTagList = (list = []) => Array.from(new Set(list.map(normalizeTag).filter(Boolean)));
 
 /**
+ * event 카테고리 게시글을 "오늘과 가장 가까운 이벤트 우선" 기준으로 정렬한다.
+ *
+ * 우선순위:
+ *   0. 진행 중 (오늘이 start~end 범위 내) → 시작일 ASC
+ *   1. 미래   (start > today)             → 시작일 ASC (가장 빠른 것 먼저)
+ *   2. 과거   (end < today)               → 종료일 DESC (가장 최근 지난 것 먼저)
+ *   3. eventDates 없음                    → 변경 없음 (기존 순서 유지)
+ *
+ * @param {Array} posts - event 카테고리 게시글 목록
+ * @param {Date}  today - 기준 날짜 (테스트 주입용, 기본값 new Date())
+ */
+function sortEventPosts(posts, today = new Date()) {
+  const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+
+  function getSortKey(post) {
+    const dates = post.eventDates;
+    if (!dates || dates.length === 0) return { priority: 3, sortStr: '', desc: false };
+
+    let nearestFutureStart = null;
+    let mostRecentPastEnd = null;
+    let isOngoing = false;
+    let ongoingStart = null;
+
+    for (const d of dates) {
+      const start = d.start;
+      const end = d.end || d.start;
+
+      if (start <= todayStr && todayStr <= end) {
+        isOngoing = true;
+        if (ongoingStart === null || start < ongoingStart) ongoingStart = start;
+      } else if (start > todayStr) {
+        if (nearestFutureStart === null || start < nearestFutureStart) nearestFutureStart = start;
+      } else {
+        if (mostRecentPastEnd === null || end > mostRecentPastEnd) mostRecentPastEnd = end;
+      }
+    }
+
+    if (isOngoing) return { priority: 0, sortStr: ongoingStart, desc: false };
+    if (nearestFutureStart !== null) return { priority: 1, sortStr: nearestFutureStart, desc: false };
+    if (mostRecentPastEnd !== null) return { priority: 2, sortStr: mostRecentPastEnd, desc: true };
+    return { priority: 3, sortStr: '', desc: false };
+  }
+
+  return [...posts].sort((a, b) => {
+    const ka = getSortKey(a);
+    const kb = getSortKey(b);
+    if (ka.priority !== kb.priority) return ka.priority - kb.priority;
+    if (ka.sortStr < kb.sortStr) return ka.desc ? 1 : -1;
+    if (ka.sortStr > kb.sortStr) return ka.desc ? -1 : 1;
+    return 0;
+  });
+}
+
+/**
  * @param {string} category - 게시글을 불러올 카테고리 슬러그
  * @returns 목록 페이지에 필요한 상태·핸들러
  */
@@ -81,7 +135,8 @@ export function useCategoryPostList(category) {
     };
   }, [category]);
 
-  // 태그 + 검색어 필터 적용: 선택된 태그를 모두 포함하고 검색어가 제목/요약에 포함된 게시글만 표시
+  // 태그 + 검색어 필터 적용: 선택된 태그를 모두 포함하고 검색어가 제목/요약에 포함된 게시글만 표시.
+  // event 카테고리는 필터 후 "오늘과 가장 가까운 이벤트 우선" 기준으로 추가 정렬한다.
   const filteredPosts = useMemo(() => {
     let result = allPosts;
     if (selectedTags.length > 0) {
@@ -96,8 +151,11 @@ export function useCategoryPostList(category) {
         (p.excerpt || '').toLowerCase().includes(qParamLower)
       );
     }
+    if (category === 'event') {
+      result = sortEventPosts(result);
+    }
     return result;
-  }, [allPosts, selectedTags, qParamLower]);
+  }, [allPosts, selectedTags, qParamLower, category]);
 
   // URL 파라미터를 일괄 업데이트한다 (빈 값 또는 page=1은 파라미터 삭제).
   // PostList.jsx와 동일하게 page=1일 때 파라미터를 제거해 URL을 간결하게 유지한다.
