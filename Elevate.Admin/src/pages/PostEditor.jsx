@@ -26,6 +26,8 @@ const emptyPost = {
   htmlBody: '',
   youtube: '',
   eventDates: null,
+  eventLocation: '',
+  eventTarget: '',
 }
 
 function PostEditor() {
@@ -312,6 +314,8 @@ function PostEditor() {
             onYoutubeChange={handleYoutubeChange}
             onThumbnailUpload={uploadThumbnail}
             onEventDatesChange={(value) => setPost((prev) => ({ ...prev, eventDates: value }))}
+            onEventLocationChange={(value) => setPost((prev) => ({ ...prev, eventLocation: value }))}
+            onEventTargetChange={(value) => setPost((prev) => ({ ...prev, eventTarget: value }))}
             postId={postId}
             categories={CATEGORIES}
           />

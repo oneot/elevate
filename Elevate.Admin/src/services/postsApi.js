@@ -24,6 +24,8 @@ function toEditorPost(apiPost) {
     updatedAt: apiPost.updatedAt || null,
     publishedAt: apiPost.publishedAt || null,
     eventDates: Array.isArray(apiPost.eventDates) ? apiPost.eventDates : null,
+    eventLocation: apiPost.eventLocation || '',
+    eventTarget: apiPost.eventTarget || '',
   }
 }
 
@@ -72,6 +74,14 @@ function toApiPayload(post) {
 
   if (post.eventDates !== undefined) {
     payload.eventDates = Array.isArray(post.eventDates) ? post.eventDates : null
+  }
+
+  if (post.eventLocation !== undefined) {
+    payload.eventLocation = post.eventLocation || null
+  }
+
+  if (post.eventTarget !== undefined) {
+    payload.eventTarget = post.eventTarget || null
   }
 
   return payload
