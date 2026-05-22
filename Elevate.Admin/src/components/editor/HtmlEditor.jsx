@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
-import Link from '@tiptap/extension-link'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { createLowlight } from 'lowlight'
 import javascript from 'highlight.js/lib/languages/javascript'
@@ -71,16 +70,16 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
     extensions: [
       StarterKit.configure({
         codeBlock: false, // CodeBlockLowlight로 대체
+        link: {
+          openOnClick: false,
+          HTMLAttributes: {
+            class: 'text-blue-600 underline hover:text-blue-800',
+          },
+        },
       }),
       Image.configure({
         inline: true,
         allowBase64: true,
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-blue-600 underline hover:text-blue-800',
-        },
       }),
       CodeBlockLowlight.configure({
         lowlight,
