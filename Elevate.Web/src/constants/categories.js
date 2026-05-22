@@ -2,7 +2,7 @@
 export const POST_LIST_CATEGORIES = ['all', 'm365', 'copilot', 'copilot-studio', 'teams', 'minecraft', 'excel', 'onenote'];
 
 // PostDetail 카테고리 검증용 (update/m365update/program-news 포함, all 제외)
-export const POST_DETAIL_VALID_CATEGORIES = ['m365', 'copilot', 'copilot-studio', 'teams', 'minecraft', 'excel', 'onenote', 'm365update', 'update', 'mee', 'agenthon', 'program-news'];
+export const POST_DETAIL_VALID_CATEGORIES = ['m365', 'copilot', 'copilot-studio', 'teams', 'minecraft', 'excel', 'onenote', 'm365update', 'update', 'mee', 'agenthon', 'program-news', 'event'];
 
 export const BASE_CATEGORIES = ['m365', 'copilot', 'copilot-studio', 'teams', 'minecraft', 'excel', 'onenote'];
 
@@ -19,7 +19,8 @@ export const CATEGORY_DISPLAY_NAMES = {
   agenthon: 'Agenthon',
   m365update: 'Microsoft365 Update',
   update: '업데이트',
-  'program-news': '행사 소식',
+  'program-news': '프로그램 소식',
+  event: '행사 소식',
 };
 
 /**
@@ -34,6 +35,7 @@ export const CATEGORY_DISPLAY_NAMES = {
 export const CATEGORY_LIST_ROUTES = {
   update: '/update',
   'program-news': '/program-news',
+  event: '/program-news?tab=event',
   agenthon: '/agenthon',
 };
 

@@ -76,7 +76,10 @@ function toPostSummary(post) {
     updatedAt: post.updatedAt,
     series: post.series || null,
     seriesOrder: post.seriesOrder ?? null,
-    thumbnail: normalizeThumbnail(post.thumbnail)
+    thumbnail: normalizeThumbnail(post.thumbnail),
+    eventDates: Array.isArray(post.eventDates) ? post.eventDates : null,
+    eventLocation: post.eventLocation || null,
+    eventTarget: post.eventTarget || null,
   };
 }
 
@@ -122,7 +125,7 @@ function buildListQuery({ limit, page, category, categories, tag, q }) {
   const whereClause = whereClauses.join(' AND ');
   return {
     dataQuery: {
-      query: `SELECT p.id, p.slug, p.category, p.title, p.excerpt, p.tags, p.status, p.publishedAt, p.updatedAt, p.series, p.seriesOrder, p.thumbnail
+      query: `SELECT p.id, p.slug, p.category, p.title, p.excerpt, p.tags, p.status, p.publishedAt, p.updatedAt, p.series, p.seriesOrder, p.thumbnail, p.eventDates, p.eventLocation, p.eventTarget
               FROM p
               WHERE ${whereClause}
               ORDER BY p.publishedAt DESC

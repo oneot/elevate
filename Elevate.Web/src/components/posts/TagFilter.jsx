@@ -17,11 +17,11 @@ import React from 'react';
  * @param {Function} props.onClearAll - '전체 해제' 버튼 클릭 시 호출되는 콜백
  * @returns {JSX.Element|null} 태그가 없으면 null
  */
-export default function TagFilter({ allTags = [], selectedTags = [], onTagToggle, onClearAll }) {
+export default function TagFilter({ allTags = [], selectedTags = [], onTagToggle, onClearAll, className = '' }) {
   if (!allTags.length) return null;
 
   return (
-    <div className="clean-card no-hover rounded-2xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-sm p-4 sm:p-5 space-y-3">
+    <div className={`clean-card no-hover rounded-2xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-sm p-4 sm:p-5 space-y-3 ${className}`}>
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-slate-800">태그 필터</h3>
         {selectedTags.length > 0 && (
