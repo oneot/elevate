@@ -49,7 +49,12 @@ const PostListLayout = ({
         )}
 
         {listHeading && (
-          <h2 className="text-xl font-bold text-slate-800 mb-4">{listHeading}</h2>
+          <div className="mb-6">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">
+              {listHeading}
+            </h2>
+            <div className="mt-2 h-1 w-12 rounded-full bg-ms-blue" />
+          </div>
         )}
 
         <div className={`flex flex-col lg:grid gap-6 ${hasSeriesSidebar ? 'lg:grid-cols-12' : 'lg:grid-cols-10'}`}>
