@@ -19,6 +19,7 @@ const PostListLayout = ({
   seriesNavigatorProps,
   activeQuery,
   calendarSlot,
+  listHeading,
 }) => {
   const hasSeriesSidebar = Boolean(seriesNavigatorProps);
 
@@ -45,6 +46,10 @@ const PostListLayout = ({
           <div className="w-full mb-6">
             {calendarSlot}
           </div>
+        )}
+
+        {listHeading && (
+          <h2 className="text-xl font-bold text-slate-800 mb-4">{listHeading}</h2>
         )}
 
         <div className={`flex flex-col lg:grid gap-6 ${hasSeriesSidebar ? 'lg:grid-cols-12' : 'lg:grid-cols-10'}`}>

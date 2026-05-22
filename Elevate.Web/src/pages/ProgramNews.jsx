@@ -112,6 +112,7 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
       }
       navTabs={navTabs}
       calendarSlot={calendarSlot}
+      listHeading={activeTab === 'event' ? '이번주 행사는?' : undefined}
       tagFilterProps={{
         allTags,
         selectedTags,
