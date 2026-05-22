@@ -12,7 +12,7 @@
  * /all 페이지에는 program-news 게시글이 노출되지 않는다.
  * (BASE_CATEGORIES / POST_LIST_CATEGORIES에 포함되지 않음)
  */
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PostListLayout from '../components/posts/PostListLayout';
 import SearchBar from '../components/posts/SearchBar';
@@ -57,44 +57,14 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
   const [searchParams] = useSearchParams();
   const selectedSlug = searchParams.get('event') || null;
 
-  // 이번 주 월요일~일요일 범위 (YYYY-MM-DD)
-  const thisWeekRange = useMemo(() => {
-    const today = new Date();
-    const day = today.getDay(); // 0=Sun
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - (day === 0 ? 6 : day - 1));
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    return {
-      start: monday.toISOString().split('T')[0],
-      end: sunday.toISOString().split('T')[0],
-    };
-  }, []);
-
-  // event 탭: filteredPosts에서 이번 주에 겹치는 행사만 추출
-  const thisWeekPosts = useMemo(() => {
-    if (activeTab !== 'event') return null;
-    return filteredPosts.filter((p) => {
-      const dates = p.eventDates;
-      if (!dates || dates.length === 0) return false;
-      return dates.some((d) => {
-        const start = d.start;
-        const end = d.end || d.start;
-        return start <= thisWeekRange.end && end >= thisWeekRange.start;
-      });
-    });
-  }, [activeTab, filteredPosts, thisWeekRange]);
-
   // 달력 이벤트 선택 핸들러 (event 탭에서만 사용)
   const handleCalendarSelect = (slug) => {
     updateUrlParams({ event: slug || '' });
   };
 
-  // event 탭: 달력에서 선택된 경우 해당 게시글만, 아니면 이번 주 행사만 표시
+  // event 탭에서 selectedSlug가 있으면 해당 게시글만 표시, 없으면 기존 필터링된 결과 표시
   const displayedPosts = activeTab === 'event' && selectedSlug
     ? allPosts.filter((p) => p.slug === selectedSlug)
-    : activeTab === 'event'
-    ? thisWeekPosts
     : paginatedPosts;
 
   // event 탭에서만 달력을 표시 (allPosts는 필터링되지 않은 전체 이벤트)
@@ -142,7 +112,6 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
       }
       navTabs={navTabs}
       calendarSlot={calendarSlot}
-      listHeading={activeTab === 'event' ? '이번주 행사는?' : undefined}
       tagFilterProps={{
         allTags,
         selectedTags,
@@ -152,16 +121,10 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
       posts={displayedPosts}
       loading={loading}
       error={error}
-      countLabel={
-        !loading && activeTab === 'event'
-          ? `이번 주 행사 ${thisWeekPosts?.length ?? 0}개`
-          : !loading && selectedTags.length > 0
-          ? `${filteredPosts.length}개의 게시글이 일치합니다.`
-          : undefined
-      }
+      countLabel={!loading && selectedTags.length > 0 ? `${filteredPosts.length}개의 게시글이 일치합니다.` : undefined}
       activeQuery={qParam}
-      currentPage={activeTab === 'event' ? 1 : currentPage}
-      totalPages={activeTab === 'event' ? 1 : totalPages}
+      currentPage={activeTab === 'event' && selectedSlug ? 1 : currentPage}
+      totalPages={activeTab === 'event' && selectedSlug ? 1 : totalPages}
       onPageChange={handlePageChange}
     />
   );

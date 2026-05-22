@@ -19,7 +19,6 @@ const PostListLayout = ({
   seriesNavigatorProps,
   activeQuery,
   calendarSlot,
-  listHeading,
 }) => {
   const hasSeriesSidebar = Boolean(seriesNavigatorProps);
 
@@ -45,15 +44,6 @@ const PostListLayout = ({
         {calendarSlot && (
           <div className="w-full mb-6">
             {calendarSlot}
-          </div>
-        )}
-
-        {listHeading && (
-          <div className="mb-6">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">
-              {listHeading}
-            </h2>
-            <div className="mt-2 h-1 w-12 rounded-full bg-ms-blue" />
           </div>
         )}
 
