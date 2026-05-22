@@ -135,6 +135,21 @@ function validatePostCreatePayload(body) {
     return 'status must be one of draft, published, archived';
   }
 
+  // eventDates validation (optional, only for event category)
+  if (body.eventDates !== undefined && body.eventDates !== null) {
+    if (!Array.isArray(body.eventDates)) {
+      return 'eventDates must be an array';
+    }
+    for (let i = 0; i < body.eventDates.length; i++) {
+      const d = body.eventDates[i];
+      if (!d || typeof d !== 'object') {
+        return `eventDates[${i}] must be an object`;
+      } else if (!d.start || !d.end) {
+        return `eventDates[${i}] must have start and end`;
+      }
+    }
+  }
+
   return null;
 }
 
@@ -157,6 +172,21 @@ function validatePostUpdatePayload(body) {
 
   if (body.youtube !== undefined && body.youtube !== null && typeof body.youtube !== 'string') {
     return 'youtube must be a string or null';
+  }
+
+  // eventDates validation (optional, only for event category)
+  if (body.eventDates !== undefined && body.eventDates !== null) {
+    if (!Array.isArray(body.eventDates)) {
+      return 'eventDates must be an array';
+    }
+    for (let i = 0; i < body.eventDates.length; i++) {
+      const d = body.eventDates[i];
+      if (!d || typeof d !== 'object') {
+        return `eventDates[${i}] must be an object`;
+      } else if (!d.start || !d.end) {
+        return `eventDates[${i}] must have start and end`;
+      }
+    }
   }
 
   return null;
@@ -212,7 +242,10 @@ function toPostResponse(post) {
     updatedAt: post.updatedAt,
     series: post.series || null,
     thumbnail: post.thumbnail || null,
-    youtube: post.youtube || null
+    youtube: post.youtube || null,
+    eventDates: Array.isArray(post.eventDates) ? post.eventDates : null,
+    eventLocation: post.eventLocation || null,
+    eventTarget: post.eventTarget || null,
   };
 }
 
@@ -381,6 +414,9 @@ exports.createPost = async (req, res) => {
       series: req.body.series || null,
       thumbnail: req.body.thumbnail ? Object.assign({}, req.body.thumbnail, { url: stripBlobSas(req.body.thumbnail.url) }) : null,
       youtube: req.body.youtube || null,
+      eventDates: Array.isArray(req.body.eventDates) ? req.body.eventDates : null,
+      eventLocation: req.body.eventLocation || null,
+      eventTarget: req.body.eventTarget || null,
       status: req.body.status,
       publishedAt: req.body.status === 'published' ? now : null,
       updatedAt: now,
@@ -416,6 +452,22 @@ exports.updatePost = async (req, res) => {
     }
 
     const now = new Date().toISOString();
+
+    // slug 변경 처리: 제공된 경우에만 업데이트한다.
+    let slug = existing.slug;
+    if (req.body.slug !== undefined) {
+      const requestedSlug = toSlugBase(req.body.slug);
+      if (requestedSlug && requestedSlug !== existing.slug) {
+        if (await slugExists(container, requestedSlug, existing.id)) {
+          return sendError(res, 409, 'Conflict', 'Duplicate slug', correlationId);
+        }
+        slug = requestedSlug;
+      } else if (requestedSlug) {
+        slug = requestedSlug;
+      }
+      // req.body.slug가 빈 문자열이면 기존 slug 유지
+    }
+
     const incomingThumbnail = req.body.thumbnail !== undefined ? req.body.thumbnail : existing.thumbnail;
     const normalizedThumbnail = incomingThumbnail
       ? Object.assign({}, incomingThumbnail, { url: stripBlobSas(incomingThumbnail.url) })
@@ -423,6 +475,7 @@ exports.updatePost = async (req, res) => {
     const incomingContent = req.body.contentMarkdown !== undefined ? req.body.contentMarkdown : existing.contentMarkdown;
     const updated = {
       ...existing,
+      slug,
       title: req.body.title !== undefined ? req.body.title : existing.title,
       excerpt: req.body.excerpt !== undefined ? req.body.excerpt : existing.excerpt,
       contentMarkdown: stripBlobSasFromHtml(incomingContent),
@@ -430,6 +483,9 @@ exports.updatePost = async (req, res) => {
       series: req.body.series !== undefined ? req.body.series : existing.series,
       thumbnail: normalizedThumbnail,
       youtube: req.body.youtube !== undefined ? (req.body.youtube || null) : (existing.youtube || null),
+      eventDates: req.body.eventDates !== undefined ? (Array.isArray(req.body.eventDates) ? req.body.eventDates : null) : existing.eventDates,
+      eventLocation: req.body.eventLocation !== undefined ? (req.body.eventLocation || null) : (existing.eventLocation || null),
+      eventTarget: req.body.eventTarget !== undefined ? (req.body.eventTarget || null) : (existing.eventTarget || null),
       status: req.body.status !== undefined ? req.body.status : existing.status,
       updatedAt: now
     };

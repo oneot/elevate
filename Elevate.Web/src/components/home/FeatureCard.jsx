@@ -22,6 +22,7 @@ import { Link } from 'react-router-dom';
  * @param {string} [props.ctaLabel='더 알아보기 →'] - CTA 버튼 텍스트
  * @param {string} props.ariaLabel - 접근성을 위한 aria-label
  * @param {string} [props.iconSize='w-10 h-10'] - 이미지 아이콘 크기 (iconType이 'image'일 때만 적용)
+ * @param {string} [props.wrapperClassName='col-span-1'] - 카드 래퍼(Link) 에 적용할 CSS 클래스 (grid col-span 등)
  */
 const FeatureCard = ({ 
     title, 
@@ -32,7 +33,8 @@ const FeatureCard = ({
     colorScheme, 
     ctaLabel = '더 알아보기 →', 
     ariaLabel,
-    iconSize = 'w-10 h-10'
+    iconSize = 'w-10 h-10',
+    wrapperClassName = 'col-span-1'
 }) => {
     // 색상 스키마 매핑 (Tailwind JIT를 위해 전체 클래스명 사용)
     const colorSchemes = {
@@ -86,7 +88,7 @@ const FeatureCard = ({
         <Link 
             to={to} 
             aria-label={ariaLabel} 
-            className="card-link block h-full touch-manipulation col-span-1 row-span-1"
+            className={`card-link block h-full touch-manipulation row-span-1 ${wrapperClassName}`}
         >
             <div className={`reveal-card clean-card rounded-[2rem] p-5 sm:p-6 group fade-in-section h-full flex flex-col justify-between ${colors.gradient} shadow-soft hover:shadow-hover transition-all duration-300`}>
                 <div>

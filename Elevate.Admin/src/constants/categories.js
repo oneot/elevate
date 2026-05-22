@@ -5,15 +5,17 @@
  */
 export const CATEGORIES = [
   { value: 'm365',         label: 'M365',     group: 'main' },
-  { value: 'copilot',      label: 'Copilot',  group: 'main' },
-  { value: 'teams',        label: 'Teams',    group: 'main' },
+  { value: 'copilot',        label: 'Copilot',        group: 'main' },
+  { value: 'copilot-studio', label: 'Copilot Studio', group: 'main' },
+  { value: 'teams',          label: 'Teams',          group: 'main' },
   { value: 'minecraft',    label: 'Minecraft', group: 'main' },
   { value: 'excel',        label: 'Excel',    group: 'main' },
   { value: 'onenote',      label: 'OneNote',  group: 'main' },
   { value: 'agenthon',     label: 'Agenthon', group: 'sub' },
   { value: 'update',       label: 'Update',   group: 'sub' },
   { value: 'mee',          label: 'MEE',      group: 'sub' },
-  { value: 'program-news', label: '행사 소식', group: 'sub' },
+  { value: 'event',        label: '행사 소식 (Event)', group: 'sub' },
+  { value: 'program-news', label: '프로그램 소식',     group: 'sub' },
 ]
 
 /** value → label 빠른 조회를 위한 맵. UI 렌더링 시 카테고리 이름을 표시할 때 사용한다. */

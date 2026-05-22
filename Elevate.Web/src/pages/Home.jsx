@@ -13,6 +13,7 @@ import { useLocation } from 'react-router-dom';
 // Icons
 import copilotIcon from '../assets/NewMicrosoft365Icons/copilot-logo-500.png';
 import m365Icon from '../assets/NewMicrosoft365Icons/m365-copilot-logo-500.png';
+import copilotStudioIcon from '../assets/NewMicrosoft365Icons/copilotstudio.png';
 import teamsIcon from '../assets/NewMicrosoft365Icons/Teams_512.png';
 import minecraftIcon from '../assets/NewMicrosoft365Icons/minecraft.png';
 import excelIcon from '../assets/NewMicrosoft365Icons/Excel_512.png';
@@ -55,6 +56,10 @@ const Home = () => {
         }
     }, [location.hash]);
     // 기능 카드 데이터
+    // mdColSpan: md(768px+) 6열 그리드에서의 col-span 클래스 — 2-3-2 레이아웃
+    //   행1 (M365·Copilot)                       → col-span-3 (2카드)
+    //   행2 (CopilotStudio·Teams·MinecraftEDU)   → col-span-2 (3카드)
+    //   행3 (Excel·OneNote)                      → col-span-3 (2카드)
     const features = [
         {
             title: 'M365',
@@ -63,7 +68,8 @@ const Home = () => {
             iconType: 'image',
             to: '/m365',
             colorScheme: 'orange',
-            ariaLabel: 'M365 개요 페이지로 이동'
+            ariaLabel: 'M365 개요 페이지로 이동',
+            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-3'
         },
         {
             title: 'Copilot',
@@ -72,7 +78,19 @@ const Home = () => {
             iconType: 'image',
             to: '/copilot',
             colorScheme: 'blue',
-            ariaLabel: 'Copilot 페이지로 이동'
+            ariaLabel: 'Copilot 페이지로 이동',
+            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-3'
+        },
+        {
+            title: 'Copilot Studio',
+            description: 'Microsoft Copilot Studio로 나만의 AI 에이전트를 직접 만들어 보세요.',
+            icon: copilotStudioIcon,
+            iconType: 'image',
+            iconSize: 'w-9 h-9',
+            to: '/copilot-studio',
+            colorScheme: 'violet',
+            ariaLabel: 'Copilot Studio 페이지로 이동',
+            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-2'
         },
         {
             title: 'Microsoft Teams',
@@ -82,7 +100,8 @@ const Home = () => {
             iconSize: 'w-9 h-9',
             to: '/teams',
             colorScheme: 'indigo',
-            ariaLabel: 'Microsoft Teams 페이지로 이동'
+            ariaLabel: 'Microsoft Teams 페이지로 이동',
+            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-2'
         },
         {
             title: 'Minecraft EDU',
@@ -92,7 +111,8 @@ const Home = () => {
             iconSize: 'w-9 h-9',
             to: '/minecraft',
             colorScheme: 'green',
-            ariaLabel: 'Minecraft EDU 페이지로 이동'
+            ariaLabel: 'Minecraft EDU 페이지로 이동',
+            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-2'
         },
         {
             title: 'Excel',
@@ -102,7 +122,8 @@ const Home = () => {
             iconSize: 'w-9 h-9',
             to: '/excel',
             colorScheme: 'emerald',
-            ariaLabel: 'Excel 페이지로 이동'
+            ariaLabel: 'Excel 페이지로 이동',
+            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-3'
         },
         {
             title: 'OneNote',
@@ -112,7 +133,8 @@ const Home = () => {
             iconSize: 'w-9 h-9',
             to: '/onenote',
             colorScheme: 'violet',
-            ariaLabel: 'OneNote 페이지로 이동'
+            ariaLabel: 'OneNote 페이지로 이동',
+            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-3'
         }
     ];
 
@@ -145,11 +167,12 @@ const Home = () => {
                     <p className="text-slate-500 text-base sm:text-lg">교실 속 작은 변화를 돕는 실용적인 AI 도구들을 만나보세요.</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 auto-rows-auto sm:auto-rows-[240px]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-6 md:gap-8 auto-rows-auto sm:auto-rows-[240px]">
                     {features.map((feature, index) => (
-                        <FeatureCard 
+                        <FeatureCard
                             key={index}
                             {...feature}
+                            wrapperClassName={feature.mdColSpan}
                         />
                     ))}
                 </div>
@@ -166,7 +189,7 @@ const Home = () => {
                             <span className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mr-3 shadow-lg shadow-orange-100 border border-white text-3xl transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:bg-slate-50 group-hover:shadow-orange-200/80">
                                 📰
                             </span>
-                            <h3 className="text-xl font-bold text-orange-600 group-hover:text-orange-700 transition-colors">업데이트 소식</h3>
+                            <h3 className="text-xl font-bold text-orange-600 group-hover:text-orange-700 transition-colors">AI & M365 최신 정보</h3>
                         </div>
                         <p className="text-slate-700/80 font-medium mb-4 text-[15px]">Microsoft 제품 업데이트 소식을 매주 수요일에 이곳에서 받아보세요.</p>
                         <span className="text-orange-600 font-bold text-xs opacity-100 translate-x-0 sm:opacity-0 sm:translate-x-[-10px] sm:group-hover:opacity-100 sm:group-hover:translate-x-0 transition-all duration-300 flex items-center gap-1">더 알아보기 <span aria-hidden>→</span></span>
@@ -180,7 +203,7 @@ const Home = () => {
                             <span className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mr-3 shadow-lg shadow-blue-100 border border-white text-3xl transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:bg-slate-50 group-hover:shadow-blue-200/80">
                                 📢
                             </span>
-                            <h3 className="text-xl font-bold text-sky-600 group-hover:text-sky-700 transition-colors">프로그램 & 행사 소식</h3>
+                            <h3 className="text-xl font-bold text-sky-600 group-hover:text-sky-700 transition-colors">행사 및 프로그램 소식</h3>
                         </div>
                         <p className="text-slate-700/80 font-medium mb-4 text-[15px]">Microsoft Elevate와 함께하는 프로그램 & 행사 소식을 알아보세요.</p>
                         <span className="text-sky-600 font-bold text-xs opacity-100 translate-x-0 sm:opacity-0 sm:translate-x-[-10px] sm:group-hover:opacity-100 sm:group-hover:translate-x-0 transition-all duration-300 flex items-center gap-1">더 알아보기 <span aria-hidden>→</span></span>

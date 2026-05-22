@@ -705,3 +705,337 @@ body {
 .webchat__typing-indicator {
   display: none !important;
 }
+
+/* =====================================================
+   EventCalendar — Glass Panel Design
+   기존 clean-card / .glass-nav 패턴과 일관성 유지
+   ===================================================== */
+
+/* 외부 래퍼: 사이트 clean-card와 동일한 유리판 효과 */
+.rbc-calendar-wrapper {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 0.5px solid rgba(255, 255, 255, 0.72);
+  border-bottom-color: rgba(255, 255, 255, 0.28);
+  border-radius: 20px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.10),
+    0 1.5px 6px rgba(0, 120, 212, 0.06),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.95);
+  overflow: hidden;
+  padding: 0;
+}
+
+/* 최상단 하이라이트 스트라이프 (유리 반사 효과) */
+.rbc-calendar-wrapper::before {
+  content: '';
+  display: block;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9) 40%, rgba(255,255,255,0.5) 70%, transparent);
+  margin-bottom: 0;
+}
+
+.rbc-calendar {
+  background: transparent;
+  font-family: 'Pretendard', sans-serif;
+}
+
+/* ── 년월 레이블 (달력 상단, 별도 div) ── */
+.rbc-top-label {
+  font-size: 1.05rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #0078D4 0%, #002050 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.01em;
+  text-align: center;
+  padding: 1.1rem 1.5rem 1rem;
+}
+
+/* ── 하단 네비게이션 버튼 (커스텀 툴바) ── */
+.rbc-toolbar {
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border-top: 0.5px solid rgba(0, 120, 212, 0.08);
+  margin-top: 0;
+}
+
+.rbc-bottom-toolbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0 0.5rem;
+}
+
+.rbc-nav-btn {
+  background: rgba(255, 255, 255, 0.7);
+  border: 0.5px solid rgba(0, 120, 212, 0.20);
+  border-radius: 10px;
+  color: #374151;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.38rem 0.9rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), inset 0 1px 1px rgba(255,255,255,0.9);
+  line-height: 1.4;
+}
+
+.rbc-nav-btn:hover {
+  background: rgba(0, 120, 212, 0.10);
+  border-color: rgba(0, 120, 212, 0.35);
+  color: #0078D4;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,120,212,0.12), inset 0 1px 1px rgba(255,255,255,0.9);
+}
+
+.rbc-today-btn {
+  background: linear-gradient(135deg, #0078D4 0%, #005fa3 100%);
+  border-color: #005fa3;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0,120,212,0.30);
+}
+
+.rbc-today-btn:hover {
+  background: linear-gradient(135deg, #106ebe 0%, #004a82 100%);
+  border-color: #004a82;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* ── 요일 헤더 행 ── */
+.rbc-month-header {
+  background: transparent;
+  border-bottom: 0.5px solid rgba(0, 120, 212, 0.10);
+}
+
+.rbc-header {
+  padding: 0.55rem 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+  border: none;
+  text-align: center;
+  background: transparent;
+}
+
+.rbc-header + .rbc-header {
+  border-left: 0.5px solid rgba(0, 120, 212, 0.08);
+}
+
+/* ── 날짜 셀 그리드 ── */
+.rbc-month-view {
+  border: none !important;
+  background: transparent;
+  flex: 1;
+}
+
+.rbc-month-row {
+  border-top: 0.5px solid rgba(0, 120, 212, 0.08);
+  overflow: visible;
+}
+
+/* 첫 번째 행 상단 외곽선 제거 */
+.rbc-month-row:first-child {
+  border-top: none;
+}
+
+.rbc-day-bg {
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+/* 첫 번째 열 좌측 외곽선 제거 */
+.rbc-day-bg:first-child {
+  border-left: none;
+}
+
+.rbc-day-bg + .rbc-day-bg {
+  border-left: 0.5px solid rgba(0, 120, 212, 0.08);
+}
+
+.rbc-day-bg:hover {
+  background: rgba(0, 120, 212, 0.03);
+}
+
+/* 오늘 날짜 강조 */
+.rbc-today {
+  background: rgba(0, 120, 212, 0.06) !important;
+  position: relative;
+}
+
+/* 날짜 숫자 */
+.rbc-date-cell {
+  padding: 0.3rem 0.5rem 0.15rem;
+  text-align: right;
+}
+
+.rbc-date-cell a,
+.rbc-date-cell button {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #475569;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+}
+
+.rbc-date-cell a:hover,
+.rbc-date-cell button:hover {
+  background: rgba(0, 120, 212, 0.10);
+  color: #0078D4;
+}
+
+.rbc-today .rbc-date-cell a,
+.rbc-today .rbc-date-cell button,
+.rbc-now .rbc-date-cell a,
+.rbc-now .rbc-date-cell button {
+  background: linear-gradient(135deg, #0078D4 0%, #005fa3 100%);
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0,120,212,0.35);
+}
+
+/* 이번 달 밖 날짜 */
+.rbc-off-range-bg {
+  background: rgba(248, 250, 252, 0.35) !important;
+}
+
+.rbc-off-range .rbc-date-cell a,
+.rbc-off-range .rbc-date-cell button {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* ── 이벤트 pill ── */
+.rbc-event {
+  border: none !important;
+  border-radius: 6px !important;
+  font-size: 0.70rem !important;
+  font-weight: 600 !important;
+  padding: 0.15rem 0.5rem !important;
+  transition: all 0.18s ease !important;
+  cursor: pointer !important;
+}
+
+/* 기본(미선택) 이벤트 막대: 연한 파란색 (불투명) */
+.rbc-event.event-bar--default {
+  background: #dbeafe !important;
+  color: #0060a8 !important;
+  box-shadow: none !important;
+}
+
+.rbc-event.event-bar--default:hover {
+  background: #bfdbfe !important;
+  box-shadow: 0 2px 6px rgba(0, 120, 212, 0.15) !important;
+  transform: translateY(-1px);
+}
+
+/* 선택된 이벤트 막대: 진한 파란색 + 링 */
+.rbc-event.event-bar--selected {
+  background: #0078D4 !important;
+  color: #fff !important;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0078D4, 0 3px 10px rgba(0, 120, 212, 0.4) !important;
+  transform: translateY(-1px);
+}
+
+.rbc-event.event-bar--selected:hover {
+  background: #005fa3 !important;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #005fa3, 0 4px 14px rgba(0, 120, 212, 0.5) !important;
+}
+
+.rbc-event.event-bar--selected:focus {
+  outline: none;
+}
+
+/* more (+N more) 링크 */
+.rbc-show-more {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #0078D4;
+  background: rgba(0,120,212,0.07);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  margin: 0.1rem 0.25rem;
+}
+
+.rbc-show-more:hover {
+  background: rgba(0,120,212,0.14);
+  color: #005fa3;
+}
+
+/* ── 팝업 오버레이 ── */
+.rbc-overlay {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 0.5px solid rgba(255,255,255,0.8);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+}
+
+.rbc-overlay-header {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0078D4;
+  border-bottom: 0.5px solid rgba(0,120,212,0.12);
+  padding: 0.5rem 0.75rem;
+}
+
+/* 내부 컨텐츠 패딩 */
+.rbc-month-view {
+  padding: 0 0.5rem 0.5rem;
+}
+
+/* ── 이벤트 호버 툴팁 ── */
+.event-tooltip {
+  position: fixed;
+  transform: translate(-50%, calc(-100% - 10px));
+  z-index: 9999;
+  background: #fff;
+  border: 1px solid rgba(0, 120, 212, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 120, 212, 0.1);
+  padding: 0.6rem 0.85rem;
+  min-width: 180px;
+  max-width: 260px;
+  pointer-events: none;
+}
+
+.event-tooltip-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 0.45rem;
+  line-height: 1.3;
+}
+
+.event-tooltip-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  color: #4b5563;
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+.event-tooltip-icon {
+  font-size: 0.78rem;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}

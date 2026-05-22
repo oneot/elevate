@@ -15,12 +15,16 @@
  *  - onTagsChange   {function} tagsInput 변경 핸들러
  *  - onYoutubeChange{function} YouTube URL 변경 핸들러
  *  - onThumbnailUpload{function} 파일 선택 시 썸네일 업로드 핸들러 (File → void)
+ *  - onEventDatesChange{function} eventDates 변경 핸들러
+ *  - onEventLocationChange{function} eventLocation 변경 핸들러
+ *  - onEventTargetChange{function} eventTarget 변경 핸들러
  *  - postId         {string|undefined} 첨부파일 업로더에 필요한 게시글 ID
  *  - categories     {Array<{value, label}>} 카테고리 목록
  */
 
 import { Card, FormField } from '../ui/index.js'
 import AttachUploader from './AttachUploader.jsx'
+import EventDatesEditor from './EventDatesEditor.jsx'
 
 function PostMetaSidebar({
   post,
@@ -33,6 +37,9 @@ function PostMetaSidebar({
   onTagsChange,
   onYoutubeChange,
   onThumbnailUpload,
+  onEventDatesChange,
+  onEventLocationChange,
+  onEventTargetChange,
   postId,
   categories,
 }) {
@@ -78,6 +85,33 @@ function PostMetaSidebar({
             placeholder="Azure, CosmosDB"
           />
         </FormField>
+
+        {post.category === 'event' && (
+          <>
+            <FormField label="행사 일정">
+              <EventDatesEditor
+                value={post.eventDates}
+                onChange={onEventDatesChange}
+              />
+            </FormField>
+            <FormField label="행사 장소">
+              <input
+                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+                value={post.eventLocation || ''}
+                onChange={(e) => onEventLocationChange(e.target.value)}
+                placeholder="예: 서울 코엑스 A홀"
+              />
+            </FormField>
+            <FormField label="행사 대상">
+              <input
+                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+                value={post.eventTarget || ''}
+                onChange={(e) => onEventTargetChange(e.target.value)}
+                placeholder="예: 전체, 개발자, 학생"
+              />
+            </FormField>
+          </>
+        )}
 
         <FormField label="YouTube">
           <input
