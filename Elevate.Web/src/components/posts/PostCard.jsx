@@ -45,7 +45,8 @@ const PostCard = ({ post }) => {
                   WebkitLineClamp: 2,
                   WebkitBoxOrient: 'vertical',
                   overflow: 'hidden',
-                  wordBreak: 'break-word'
+                  wordBreak: 'keep-all',
+                  overflowWrap: 'break-word'
                 }}
               >
                 {title}
