@@ -151,11 +151,13 @@ function PostEditor() {
       return
     }
 
+    // slug 입력값을 항상 정규화한다 (한글·특수문자 제거).
+    // 정규화 후에도 빈 문자열이면 제목에서 생성하고,
+    // 여전히 비어 있으면 서버가 자동 생성하도록 비워 둔다.
+    const normalizedSlug = slugify(post.slug || '')
     const payload = {
       ...post,
-      // slug 가 비어 있으면 제목에서 자동 생성한다. 서버도 생성할 수 있지만
-      // 클라이언트에서 미리 생성하면 저장 후 즉시 URL을 알 수 있다.
-      slug: post.slug || slugify(post.title),
+      slug: normalizedSlug || slugify(post.title),
       tags: tagsInput
         .split(',')
         .map((tag) => tag.trim())
@@ -276,6 +278,11 @@ function PostEditor() {
               onChange={handleChange('slug')}
               placeholder="my-post-slug"
             />
+            {post.slug && slugify(post.slug) !== post.slug && (
+              <p className="mt-1 text-xs text-amber-600">
+                저장 시 <span className="font-mono font-semibold">{slugify(post.slug) || '(자동 생성)'}</span>으로 변환됩니다.
+              </p>
+            )}
           </FormField>
 
           <FormField label="요약">
