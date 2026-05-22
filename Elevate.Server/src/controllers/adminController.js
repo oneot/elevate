@@ -452,6 +452,22 @@ exports.updatePost = async (req, res) => {
     }
 
     const now = new Date().toISOString();
+
+    // slug 변경 처리: 제공된 경우에만 업데이트한다.
+    let slug = existing.slug;
+    if (req.body.slug !== undefined) {
+      const requestedSlug = toSlugBase(req.body.slug);
+      if (requestedSlug && requestedSlug !== existing.slug) {
+        if (await slugExists(container, requestedSlug, existing.id)) {
+          return sendError(res, 409, 'Conflict', 'Duplicate slug', correlationId);
+        }
+        slug = requestedSlug;
+      } else if (requestedSlug) {
+        slug = requestedSlug;
+      }
+      // req.body.slug가 빈 문자열이면 기존 slug 유지
+    }
+
     const incomingThumbnail = req.body.thumbnail !== undefined ? req.body.thumbnail : existing.thumbnail;
     const normalizedThumbnail = incomingThumbnail
       ? Object.assign({}, incomingThumbnail, { url: stripBlobSas(incomingThumbnail.url) })
@@ -459,6 +475,7 @@ exports.updatePost = async (req, res) => {
     const incomingContent = req.body.contentMarkdown !== undefined ? req.body.contentMarkdown : existing.contentMarkdown;
     const updated = {
       ...existing,
+      slug,
       title: req.body.title !== undefined ? req.body.title : existing.title,
       excerpt: req.body.excerpt !== undefined ? req.body.excerpt : existing.excerpt,
       contentMarkdown: stripBlobSasFromHtml(incomingContent),
