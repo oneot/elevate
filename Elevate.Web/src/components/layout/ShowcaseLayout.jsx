@@ -6,7 +6,7 @@
  * 선택적으로 브레드크럼 내비게이션, 제목, 부제목, 자식 콘텐츠를 배치한다.
  * `crumbs` 배열의 각 항목은 `{ label, to }` 링크 또는 `{ type: 'sep' }` 구분자 형태를 사용한다.
  */
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 /**
@@ -25,6 +25,16 @@ export default function ShowcaseLayout({
   subtitle,
   children,
 }) {
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.id = "showcase-hide-body-scrollbar";
+    style.textContent =
+      "body { scrollbar-width: none; } body::-webkit-scrollbar { display: none; }";
+    document.head.appendChild(style);
+    return () => {
+      document.getElementById("showcase-hide-body-scrollbar")?.remove();
+    };
+  }, []);
   return (
     <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(1200px_circle_at_20%_0%,rgba(59,130,246,0.14),transparent_60%),radial-gradient(900px_circle_at_90%_10%,rgba(99,102,241,0.12),transparent_55%),radial-gradient(900px_circle_at_50%_100%,rgba(14,165,233,0.10),transparent_60%)]">
       <div className="pointer-events-none fixed inset-0 -z-10 opacity-[0.06] [background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22200%22 height=%22200%22 filter=%22url(%23n)%22 opacity=%220.6%22/%3E%3C/svg%3E')]"></div>
