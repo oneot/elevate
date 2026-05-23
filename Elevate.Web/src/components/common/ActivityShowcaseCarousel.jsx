@@ -34,6 +34,17 @@ function getWrappedIndex(index, length) {
 }
 
 /**
+ * 오늘 날짜(UTC 기준 일(day) 번호)를 length로 나눈 나머지를 반환한다.
+ * 같은 날에는 항상 동일한 값을 반환하며, 날짜가 바뀌면 자동으로 변경된다.
+ * @param {number} length
+ * @returns {number}
+ */
+function getDailyIndex(length) {
+  if (length === 0) return 0;
+  return Math.floor(Date.now() / 86_400_000) % length;
+}
+
+/**
  * 활동 사례 3D 캐러셀 컴포넌트.
  *
  * @param {Object} props
@@ -41,7 +52,7 @@ function getWrappedIndex(index, length) {
  * @returns {JSX.Element}
  */
 export default function ActivityShowcaseCarousel({ items = [] }) {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(() => getDailyIndex(items.length));
   const [playingId, setPlayingId] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [isAnimating, setIsAnimating] = useState(false);
@@ -87,8 +98,11 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
   };
 
   const handleCategoryChange = (category) => {
+    const next = category === "전체"
+      ? items
+      : items.filter((item) => item.category === category);
     setSelectedCategory(category);
-    setActiveIndex(0);
+    setActiveIndex(getDailyIndex(next.length));
     setPlayingId(null);
   };
 
