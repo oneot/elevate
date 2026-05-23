@@ -168,7 +168,7 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
   };
 
   return (
-    <div className="space-y-6 lg:flex lg:h-full lg:flex-col">
+    <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-2">
           {categories.map((category) => {
@@ -197,10 +197,10 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px] lg:flex-1 lg:min-h-0">
-        <section className="relative min-w-0 px-2 py-4 sm:px-4 lg:h-full">
-          <div className="relative lg:h-full lg:flex lg:flex-col">
-            <div className="mx-auto mb-10 flex min-h-[470px] items-center justify-center sm:min-h-[560px] lg:flex-1 lg:min-h-0 lg:mb-4">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
+        <section className="relative min-w-0 px-2 py-4 sm:px-4">
+          <div className="relative">
+            <div className="mx-auto mb-10 flex min-h-[470px] items-center justify-center sm:min-h-[560px]">
               <div
                 className="relative h-[360px] w-full max-w-[980px] overflow-visible sm:h-[460px]"
                 style={{
@@ -362,7 +362,7 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
           </div>
         </section>
 
-        <aside className="rounded-[28px] border border-white/20 bg-white/[0.10] p-4 shadow-[0_18px_60px_rgba(15,23,42,0.10)] backdrop-blur-2xl lg:flex lg:flex-col lg:overflow-hidden">
+        <aside className="rounded-[28px] border border-white/20 bg-white/[0.10] p-4 shadow-[0_18px_60px_rgba(15,23,42,0.10)] backdrop-blur-2xl lg:sticky lg:top-6">
           <p className="mb-3 px-2 text-sm font-medium text-slate-700">
             활동 목록
           </p>
@@ -378,7 +378,7 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
 
           <div
             ref={listScrollContainerRef}
-            className="max-h-[min(62vh,560px)] lg:max-h-none lg:flex-1 lg:min-h-0 space-y-3 overflow-y-auto pr-1"
+            className="max-h-[min(62vh,560px)] space-y-3 overflow-y-auto pr-1"
           >
             {filteredItems.map((item, index) => {
               const active = index === safeActiveIndex;
