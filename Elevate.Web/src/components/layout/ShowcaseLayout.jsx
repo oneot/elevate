@@ -27,12 +27,12 @@ export default function ShowcaseLayout({
 }) {
   useEffect(() => {
     const style = document.createElement("style");
-    style.id = "showcase-hide-body-scrollbar";
     style.textContent =
-      "body { scrollbar-width: none; } body::-webkit-scrollbar { display: none; }";
+      "html, body { scrollbar-width: none; -ms-overflow-style: none; }" +
+      " html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0; height: 0; }";
     document.head.appendChild(style);
     return () => {
-      document.getElementById("showcase-hide-body-scrollbar")?.remove();
+      style.remove();
     };
   }, []);
   return (
