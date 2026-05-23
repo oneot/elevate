@@ -68,6 +68,26 @@ const buildNestedHeadings = (flatHeadings) => {
 };
 
 /**
+ * heading의 children 배열을 재귀적으로 렌더링하는 헬퍼 컴포넌트.
+ * isPostTitle 케이스와 일반 케이스 모두 이 컴포넌트를 재사용하여 중복을 방지한다.
+ */
+const ChildrenList = ({ children, activeId, onLinkClick, className = 'space-y-0' }) => {
+  if (!children || children.length === 0) return null;
+  return (
+    <ul className={className}>
+      {children.map((child) => (
+        <TableOfContentsItem
+          key={child.id}
+          heading={child}
+          activeId={activeId}
+          onLinkClick={onLinkClick}
+        />
+      ))}
+    </ul>
+  );
+};
+
+/**
  * 목차 항목 하나를 렌더링하는 재귀 컴포넌트.
  * `post-title` id는 게시글 제목을 가리키는 가상 heading으로, 클릭 시 페이지 최상단으로 이동한다.
  */
@@ -90,18 +110,12 @@ const TableOfContentsItem = ({ heading, activeId, onLinkClick }) => {
         >
           {heading.text}
         </a>
-        {heading.children && heading.children.length > 0 && (
-          <ul className="space-y-0 mt-1">
-            {heading.children.map((child) => (
-              <TableOfContentsItem
-                key={child.id}
-                heading={child}
-                activeId={activeId}
-                onLinkClick={onLinkClick}
-              />
-            ))}
-          </ul>
-        )}
+        <ChildrenList
+          children={heading.children}
+          activeId={activeId}
+          onLinkClick={onLinkClick}
+          className="space-y-0 mt-1"
+        />
       </li>
     );
   }
@@ -133,18 +147,11 @@ const TableOfContentsItem = ({ heading, activeId, onLinkClick }) => {
       >
         {heading.text}
       </a>
-      {heading.children && heading.children.length > 0 && (
-        <ul className="space-y-0">
-          {heading.children.map((child) => (
-            <TableOfContentsItem
-              key={child.id}
-              heading={child}
-              activeId={activeId}
-              onLinkClick={onLinkClick}
-            />
-          ))}
-        </ul>
-      )}
+      <ChildrenList
+        children={heading.children}
+        activeId={activeId}
+        onLinkClick={onLinkClick}
+      />
     </li>
   );
 };
