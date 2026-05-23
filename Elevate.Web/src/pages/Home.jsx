@@ -63,7 +63,7 @@ const Home = () => {
     const features = [
         {
             title: 'M365',
-            description: '교실 운영을 통합하고 학습 활동을 지속적으로 이어가는 방법을 소개합니다.',
+            description: '수업 준비, 협업, 평가까지 교실에 필요한 모든 도구를 한 곳에 모았습니다.<br/>Microsoft 365 하나로 끊김 없는 수업을 시작하세요.',
             icon: m365Icon,
             iconType: 'image',
             to: '/m365',
@@ -73,7 +73,7 @@ const Home = () => {
         },
         {
             title: 'Copilot',
-            description: '선생님의 업무 시간은 줄이고, 학생들의 창의력은 확장합니다.',
+            description: 'AI가 수업 자료 제작과 행정 업무를 돕고, 학생들의 아이디어를 함께 확장합니다.<br/>Microsoft Copilot과 함께 가르치는 시간을 되찾으세요.',
             icon: copilotIcon,
             iconType: 'image',
             to: '/copilot',
@@ -83,7 +83,7 @@ const Home = () => {
         },
         {
             title: 'Copilot Studio',
-            description: 'Microsoft Copilot Studio로 나만의 AI 에이전트를 직접 만들어 보세요.',
+            description: '학생들이 자신만의 AI 에이전트를 만들고 문제 해결에 활용할 수 있습니다.<br/>Microsoft Copilot Studio로 학생의 아이디어가 현실이 되는 미래형 수업을 시작하세요.',
             icon: copilotStudioIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
@@ -105,7 +105,7 @@ const Home = () => {
         },
         {
             title: 'Minecraft EDU',
-            description: '학생들은 탐험하고, 설계하고, 실험하며<br/>AI를 활용해 문제를 해결하는 법을 배웁니다.',
+            description: '블록으로 만든 가상 세계에서 학생들이 코딩과 AI를 직접 다루며 문제 해결력을 키웁니다.<br/>Minecraft Education과 함께 놀이로 배우는 수업을 시작하세요.',
             icon: minecraftIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
@@ -116,7 +116,7 @@ const Home = () => {
         },
         {
             title: 'Excel',
-            description: '교실과 실무에서 유용한 Excel 팁과 템플릿을 공유합니다.',
+            description: '성적, 출석, 설문 결과까지 수업에서 다루는 모든 데이터를 표로 정리하고 분석합니다.<br/>Microsoft Excel로 수업 데이터를 한눈에 살펴보세요.',
             icon: excelIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
@@ -127,7 +127,7 @@ const Home = () => {
         },
         {
             title: 'OneNote',
-            description: '교수·학습 기록과 협업을 돕는 OneNote 활용 사례입니다.',
+            description: '수업 노트, 학생 과제, 공동 작업을 한 권의 디지털 노트북에 담습니다.<br/>Microsoft OneNote와 함께 흩어진 수업 기록을 한 권에 모아보세요.',
             icon: onenoteIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
