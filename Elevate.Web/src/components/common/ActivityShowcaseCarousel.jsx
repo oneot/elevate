@@ -35,7 +35,7 @@ function getWrappedIndex(index, length) {
 
 /**
  * Unix epoch(1970-01-01 UTC) 기준으로 오늘까지 경과한 일수를 length로 나눈 나머지를 반환한다.
- * 같은 날(UTC)에는 항상 동일한 값을 반환하며, 페이지 재진입 또는 카테고리 변경 시에 반영된다.
+ * 같은 날(UTC)에는 항상 동일한 값을 반환하며, 페이지 재진입·카테고리 변경·UTC 자정 도달 시 갱신된다.
  * @param {number} length
  * @returns {number}
  */
@@ -122,6 +122,16 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
       });
     }
   }, [safeActiveIndex, selectedCategory]);
+
+  // UTC 자정에 activeIndex를 날짜 기반 인덱스로 자동 갱신한다.
+  useEffect(() => {
+    const msUntilMidnight =
+      (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 - Date.now();
+    const timer = window.setTimeout(() => {
+      setActiveIndex(getDailyIndex(filteredItems.length));
+    }, msUntilMidnight);
+    return () => window.clearTimeout(timer);
+  }, [filteredItems.length]);
 
   const visibleCards = useMemo(() => {
     if (filteredItems.length === 0) return [];
