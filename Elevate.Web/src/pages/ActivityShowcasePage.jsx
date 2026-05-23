@@ -1,10 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useLayoutEffect } from "react";
 import ShowcaseLayout from "../components/layout/ShowcaseLayout";
 import ActivityShowcaseCarousel from "../components/common/ActivityShowcaseCarousel";
 import activityVideos from "../data/activityVideos.json";
 
 export default function ActivityShowcasePage() {
-  useEffect(() => {
+  useLayoutEffect(() => {
     const style = document.createElement("style");
     style.textContent =
       "html, body { scrollbar-width: none; -ms-overflow-style: none; }" +
