@@ -1,9 +1,19 @@
-import React from "react";
+import React, { useEffect } from "react";
 import ShowcaseLayout from "../components/layout/ShowcaseLayout";
 import ActivityShowcaseCarousel from "../components/common/ActivityShowcaseCarousel";
 import activityVideos from "../data/activityVideos.json";
 
 export default function ActivityShowcasePage() {
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent =
+      "html, body { scrollbar-width: none; -ms-overflow-style: none; }" +
+      " html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0; height: 0; }";
+    document.head.appendChild(style);
+    return () => {
+      style.remove();
+    };
+  }, []);
   return (
     <ShowcaseLayout
       crumbs={[
