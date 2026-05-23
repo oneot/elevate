@@ -71,11 +71,11 @@ const buildNestedHeadings = (flatHeadings) => {
  * heading의 children 배열을 재귀적으로 렌더링하는 헬퍼 컴포넌트.
  * isPostTitle 케이스와 일반 케이스 모두 이 컴포넌트를 재사용하여 중복을 방지한다.
  */
-const ChildrenList = ({ children, activeId, onLinkClick, className = 'space-y-0' }) => {
-  if (!children || children.length === 0) return null;
+const ChildrenList = ({ items, activeId, onLinkClick, className = 'space-y-0' }) => {
+  if (!items || items.length === 0) return null;
   return (
     <ul className={className}>
-      {children.map((child) => (
+      {items.map((child) => (
         <TableOfContentsItem
           key={child.id}
           heading={child}
@@ -111,7 +111,7 @@ const TableOfContentsItem = ({ heading, activeId, onLinkClick }) => {
           {heading.text}
         </a>
         <ChildrenList
-          children={heading.children}
+          items={heading.children}
           activeId={activeId}
           onLinkClick={onLinkClick}
           className="space-y-0 mt-1"
@@ -148,7 +148,7 @@ const TableOfContentsItem = ({ heading, activeId, onLinkClick }) => {
         {heading.text}
       </a>
       <ChildrenList
-        children={heading.children}
+        items={heading.children}
         activeId={activeId}
         onLinkClick={onLinkClick}
       />
