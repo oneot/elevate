@@ -9,7 +9,7 @@
  * - `getWrappedIndex`: 음수를 포함한 원형 인덱스를 `(index + length) % length`로 처리
  * - `orbitMotionMap`: offset -2~2에 대한 rotateY + translateX/Y + scale로 입체 배치 정의
  * - `orderedCards`: z-index 충돌 없이 DOM 렌더 순서를 결정하기 위해 |offset| 내림차순 정렬
- * - 카테고리 변경 시 `activeIndex`를 0으로 리셋하여 범위 초과를 방지
+ * - 카테고리 변경 시 `activeIndex`를 날짜 기반 인덱스(`getDailyIndex`)로 초기화하여 범위 초과를 방지
  */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
@@ -34,14 +34,25 @@ function getWrappedIndex(index, length) {
 }
 
 /**
- * 오늘 날짜(UTC 기준 일(day) 번호)를 length로 나눈 나머지를 반환한다.
- * 같은 날에는 항상 동일한 값을 반환하며, 날짜가 바뀌면 자동으로 변경된다.
+ * Unix epoch(1970-01-01 UTC) 기준으로 오늘까지 경과한 일수를 length로 나눈 나머지를 반환한다.
+ * 같은 날(UTC)에는 항상 동일한 값을 반환하며, 페이지 재진입 또는 카테고리 변경 시에 반영된다.
  * @param {number} length
  * @returns {number}
  */
 function getDailyIndex(length) {
   if (length === 0) return 0;
   return Math.floor(Date.now() / 86_400_000) % length;
+}
+
+/**
+ * 카테고리에 따라 items를 필터링한다. "전체"이면 전체 목록을 반환한다.
+ * @param {Array} items
+ * @param {string} category
+ * @returns {Array}
+ */
+function getFilteredItems(items, category) {
+  if (category === "전체") return items;
+  return items.filter((item) => item.category === category);
 }
 
 /**
@@ -66,8 +77,7 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
   }, [items]);
 
   const filteredItems = useMemo(() => {
-    if (selectedCategory === "전체") return items;
-    return items.filter((item) => item.category === selectedCategory);
+    return getFilteredItems(items, selectedCategory);
   }, [items, selectedCategory]);
 
   const safeActiveIndex =
@@ -98,11 +108,8 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
   };
 
   const handleCategoryChange = (category) => {
-    const next = category === "전체"
-      ? items
-      : items.filter((item) => item.category === category);
     setSelectedCategory(category);
-    setActiveIndex(getDailyIndex(next.length));
+    setActiveIndex(getDailyIndex(getFilteredItems(items, category).length));
     setPlayingId(null);
   };
 
