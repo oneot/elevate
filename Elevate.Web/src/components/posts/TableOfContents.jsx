@@ -90,6 +90,18 @@ const TableOfContentsItem = ({ heading, activeId, onLinkClick }) => {
         >
           {heading.text}
         </a>
+        {heading.children && heading.children.length > 0 && (
+          <ul className="space-y-0 mt-1">
+            {heading.children.map((child) => (
+              <TableOfContentsItem
+                key={child.id}
+                heading={child}
+                activeId={activeId}
+                onLinkClick={onLinkClick}
+              />
+            ))}
+          </ul>
+        )}
       </li>
     );
   }
