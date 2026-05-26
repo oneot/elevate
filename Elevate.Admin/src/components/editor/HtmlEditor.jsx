@@ -160,6 +160,7 @@ function ColorPicker({ editor }) {
 }
 
 function HtmlEditor({ value, onChange, onUploadImage }) {
+  const [isDragging, setIsDragging] = useState(false)
 
   const editor = useEditor({
     extensions: [
@@ -253,12 +254,61 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
     input.click()
   }
 
+  const uploadFiles = async (files) => {
+    if (!onUploadImage) return
+    const imageFiles = Array.from(files).filter((f) => f.type.startsWith('image/'))
+    for (const file of imageFiles) {
+      try {
+        const url = await onUploadImage(file)
+        if (url) {
+          editor.chain().focus().setImage({ src: url }).run()
+        }
+      } catch {
+        alert(`${file.name} 이미지 업로드에 실패했습니다.`)
+      }
+    }
+  }
+
+  const handleDragEnter = (e) => {
+    e.preventDefault()
+    if (Array.from(e.dataTransfer.items).some((item) => item.kind === 'file' && item.type.startsWith('image/'))) {
+      setIsDragging(true)
+    }
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+  }
+
+  const handleDragLeave = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setIsDragging(false)
+    }
+  }
+
+  const handleDrop = async (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+    await uploadFiles(e.dataTransfer.files)
+  }
+
+  const handlePaste = async (e) => {
+    const files = e.clipboardData?.files
+    if (files && files.length > 0) {
+      const hasImage = Array.from(files).some((f) => f.type.startsWith('image/'))
+      if (hasImage) {
+        e.preventDefault()
+        await uploadFiles(files)
+      }
+    }
+  }
+
   if (!editor) {
     return null
   }
 
   return (
-    <div className="rounded-md border border-neutral-300 bg-white shadow-elevation-2 focus-within:border-ms-blue focus-within:ring-1 focus-within:ring-ms-blue transition-shadow duration-200">
+    <div className="relative rounded-md border border-neutral-300 bg-white shadow-elevation-2 focus-within:border-ms-blue focus-within:ring-1 focus-within:ring-ms-blue transition-shadow duration-200">
       <div className="max-h-[70vh] overflow-y-auto">
         {/* 툴바 - 스크롤 컨테이너 내에서 sticky */}
         <div className="border-b border-neutral-200 bg-[#f3f2f1] p-1 sticky top-0 z-10">
@@ -400,8 +450,23 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
           </div>
         </div>
 
-        {/* 에디터 */}
-        <div className="p-4 bg-white cursor-text" onClick={() => editor.commands.focus()}>
+        {/* 에디터 - 드래그 피드백 */}
+        <div
+          className={`relative p-4 bg-white cursor-text transition-colors duration-150 ${
+            isDragging ? 'border-dashed border-2 border-blue-400 bg-blue-50' : ''
+          }`}
+          onClick={() => editor.commands.focus()}
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onPaste={handlePaste}
+        >
+          {isDragging && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-blue-500 text-sm font-medium bg-blue-50 bg-opacity-80 rounded">
+              ⬆ 이미지를 여기에 놓으세요
+            </div>
+          )}
           <EditorContent editor={editor} />
         </div>
       </div>
