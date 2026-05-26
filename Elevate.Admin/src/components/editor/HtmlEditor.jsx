@@ -166,7 +166,12 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
   const [showRestoreBanner, setShowRestoreBanner] = useState(() => {
     if (!storageKey) return false
     const saved = localStorage.getItem(storageKey)
-    return !!saved && saved !== (value || '')
+    return (
+      !!saved &&
+      saved !== '<p></p>' &&
+      saved !== (value || '') &&
+      saved !== (value || '<p></p>')
+    )
   })
 
   const editor = useEditor({
@@ -338,6 +343,7 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
   }
 
   const handleRestore = () => {
+    if (!storageKey) return
     const saved = localStorage.getItem(storageKey)
     if (saved && editor) {
       editor.commands.setContent(saved, false)
@@ -348,6 +354,7 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
   }
 
   const handleDiscardRestore = () => {
+    if (!storageKey) return
     localStorage.removeItem(storageKey)
     setShowRestoreBanner(false)
   }
