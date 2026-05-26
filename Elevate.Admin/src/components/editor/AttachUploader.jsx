@@ -42,7 +42,7 @@ export default function AttachUploader({ postId }) {
       .then(data => setFiles(data.map(f => ({ ...f, isDeleting: false }))))
       .catch(() => {})
       .finally(() => setLoadingFiles(false))
-  }, [postId])
+  }, [postId, msalInstance])
 
   async function handleFileChange(event) {
     const file = event.target.files?.[0]
@@ -90,13 +90,14 @@ export default function AttachUploader({ postId }) {
   }
 
   async function handleDelete(fileId) {
-    setConfirmDeleteId(null)
     setFiles(prev => prev.map(f => f.id === fileId ? { ...f, isDeleting: true } : f))
     try {
       await deleteFile(fileId, { msalInstance })
       setFiles(prev => prev.filter(f => f.id !== fileId))
+      setConfirmDeleteId(null)
     } catch {
       setFiles(prev => prev.map(f => f.id === fileId ? { ...f, isDeleting: false } : f))
+      setConfirmDeleteId(null)
       setError('파일 삭제에 실패했습니다.')
     }
   }
