@@ -107,7 +107,11 @@ export default function AttachUploader({ postId }) {
   }
 
   async function copyToClipboard(text) {
-    await navigator.clipboard.writeText(text)
+    try {
+      await navigator.clipboard.writeText(text)
+    } catch {
+      setError('URL 복사에 실패했습니다. 브라우저 권한을 확인해 주세요.')
+    }
   }
 
   return (
@@ -123,13 +127,16 @@ export default function AttachUploader({ postId }) {
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          disabled={status === 'uploading'}
+          disabled={status === 'uploading' || !postId}
+          title={!postId ? '게시글 저장 후 첨부파일을 추가할 수 있습니다' : undefined}
           className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {status === 'uploading' ? '업로드 중...' : '파일 선택'}
         </button>
-        <span className="text-xs text-neutral-400">
-          docx · xlsx · pptx · pdf · csv · zip · xls · doc (최대 50MB)
+      <span className="text-xs text-neutral-400">
+          {!postId
+            ? '게시글 저장 후 첨부파일을 추가할 수 있습니다'
+            : 'docx · xlsx · pptx · pdf · csv · zip · xls · doc (최대 50MB)'}
         </span>
       </div>
 

@@ -134,6 +134,7 @@ export function injectLinkHandlers(containerEl, navigate) {
  * @param {Element} containerEl - 탐색할 DOM 컨테이너 요소
  * @returns {Function} 이벤트 리스너를 제거하는 cleanup 함수
  */
+let _collapsibleSeq = 0;
 export function injectCollapsibleCodeBlocks(containerEl) {
   if (!containerEl) return () => {};
 
@@ -154,8 +155,8 @@ export function injectCollapsibleCodeBlocks(containerEl) {
     // 원본 pre에 처리 완료 마킹 및 접근성 식별자 부여
     pre.setAttribute('data-collapsible-injected', 'true');
 
-    // 접근성: 기존 pre.id 재사용, 없을 때만 충돌 없는 고유 id 생성
-    const fullId = pre.id || `collapsible-code-${Math.random().toString(36).slice(2, 8)}-full`;
+    // 접근성: 기존 pre.id 재사용, 없을 때만 모듈 스코프 카운터로 충돌 없는 id 생성
+    const fullId = pre.id || `collapsible-code-${++_collapsibleSeq}`;
     if (!pre.id) pre.id = fullId;
 
     // 미리보기용 code 요소 (항상 DOM에 존재, hidden으로 가시성 토글)
