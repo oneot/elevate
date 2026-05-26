@@ -31,15 +31,12 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
   const handleToggle = () => {
     const next = !isCollapsed
     setIsCollapsed(next)
-    requestAnimationFrame(() => {
-      if (next) {
-        // 접힘: 토글 버튼이 뷰포트 안에 오도록 스크롤
+    if (next) {
+      // 접힘: 토글 버튼이 뷰포트 안에 오도록 스크롤
+      requestAnimationFrame(() => {
         btnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-      } else {
-        // 펼침: 코드 블록 상단으로 스크롤
-        wrapperRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
-    })
+      })
+    }
   }
 
   const handleCopy = () => {

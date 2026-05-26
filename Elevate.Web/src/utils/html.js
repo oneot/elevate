@@ -214,22 +214,81 @@ export function injectCollapsibleCodeBlocks(containerEl) {
     wrapper.appendChild(previewPre);
     wrapper.appendChild(actionRow);
 
+    const ANIM_MS = 300;
+
     const handleToggle = () => {
       collapsed = !collapsed;
+      btn.setAttribute('aria-expanded', String(!collapsed));
+
       if (collapsed) {
-        previewPre.hidden = false;
-        previewPre.setAttribute('aria-hidden', 'false');
-        pre.hidden = true;
-        pre.setAttribute('aria-hidden', 'true');
+        // ---- 접기 ----
         btn.textContent = `코드 펼치기 (${lines.length}줄)`;
-        btn.setAttribute('aria-expanded', 'false');
+
+        // pre를 현재 높이에서 0으로 애니메이션
+        const h = pre.scrollHeight;
+        pre.style.overflow = 'hidden';
+        pre.style.maxHeight = `${h}px`;
+        pre.style.transition = `max-height ${ANIM_MS}ms ease, opacity ${Math.round(ANIM_MS * 0.7)}ms ease`;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            pre.style.maxHeight = '0';
+            pre.style.opacity = '0';
+          });
+        });
+
+        setTimeout(() => {
+          pre.hidden = true;
+          pre.setAttribute('aria-hidden', 'true');
+          pre.style.maxHeight = '';
+          pre.style.overflow = '';
+          pre.style.transition = '';
+          pre.style.opacity = '';
+
+          // previewPre 페이드인
+          previewPre.style.opacity = '0';
+          previewPre.style.transition = `opacity ${Math.round(ANIM_MS * 0.4)}ms ease`;
+          previewPre.hidden = false;
+          previewPre.setAttribute('aria-hidden', 'false');
+          requestAnimationFrame(() => { previewPre.style.opacity = '1'; });
+
+          // 접기 후 코드블록 상단으로 스크롤
+          wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, ANIM_MS);
+
       } else {
-        previewPre.hidden = true;
-        previewPre.setAttribute('aria-hidden', 'true');
-        pre.hidden = false;
-        pre.setAttribute('aria-hidden', 'false');
+        // ---- 펼치기 ----
         btn.textContent = '코드 접기';
-        btn.setAttribute('aria-expanded', 'true');
+
+        // previewPre 페이드아웃
+        previewPre.style.transition = `opacity ${Math.round(ANIM_MS * 0.4)}ms ease`;
+        previewPre.style.opacity = '0';
+
+        setTimeout(() => {
+          previewPre.hidden = true;
+          previewPre.setAttribute('aria-hidden', 'true');
+          previewPre.style.transition = '';
+          previewPre.style.opacity = '';
+
+          // pre를 0에서 실제 높이로 애니메이션
+          pre.hidden = false;
+          pre.setAttribute('aria-hidden', 'false');
+          pre.style.overflow = 'hidden';
+          pre.style.maxHeight = '0';
+          pre.style.opacity = '0';
+          pre.style.transition = `max-height ${ANIM_MS}ms ease, opacity ${Math.round(ANIM_MS * 0.7)}ms ease`;
+          requestAnimationFrame(() => {
+            const fullH = pre.scrollHeight;
+            pre.style.maxHeight = `${fullH}px`;
+            pre.style.opacity = '1';
+          });
+
+          setTimeout(() => {
+            pre.style.maxHeight = 'none';
+            pre.style.overflow = '';
+            pre.style.transition = '';
+            pre.style.opacity = '';
+          }, ANIM_MS + 50);
+        }, Math.round(ANIM_MS * 0.4));
       }
     };
 
