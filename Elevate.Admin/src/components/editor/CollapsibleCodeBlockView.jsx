@@ -25,18 +25,10 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
 
   const contentIdRef = useRef(`collapsible-code-${Math.random().toString(36).slice(2, 8)}`)
   const contentId = contentIdRef.current
-  const wrapperRef = useRef(null)
   const btnRef = useRef(null)
 
   const handleToggle = () => {
-    const next = !isCollapsed
-    setIsCollapsed(next)
-    if (next) {
-      // 접힘: 토글 버튼이 뷰포트 안에 오도록 스크롤
-      requestAnimationFrame(() => {
-        btnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-      })
-    }
+    setIsCollapsed((prev) => !prev)
   }
 
   const handleCopy = () => {
@@ -51,7 +43,7 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
   }
 
   return (
-    <NodeViewWrapper ref={wrapperRef} className="relative my-4">
+    <NodeViewWrapper className="relative my-4">
       <pre
         id={contentId}
         className={`hljs rounded-md overflow-x-auto text-sm ${isCollapsed ? 'max-h-none' : ''}`}
