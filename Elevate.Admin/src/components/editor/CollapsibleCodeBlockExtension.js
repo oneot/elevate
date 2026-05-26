@@ -23,12 +23,12 @@ const CollapsibleCodeBlockExtension = CodeBlockLowlight.extend({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(CollapsibleCodeBlockView, {
-      // 접기/펼치기로 인한 pre 스타일 변경(max-height, overflow)은 contentDOM 외부에서
-      // 발생하므로 기본 ignoreMutation 로직으로도 무시된다.
-      // selection 변경은 ProseMirror가 처리해야 하므로 그대로 허용한다.
-      ignoreMutation: ({ mutation }) => mutation.type !== 'selection',
-    })
+    // ignoreMutation 옵션을 사용하지 않는다.
+    // options.ignoreMutation 이 존재하면 TipTap이 contentDOM.contains() 체크를 우회해
+    // characterData/childList 변경(타이핑)까지 무시하게 되어 ProseMirror 내부 doc이
+    // 업데이트되지 않고, 저장 시 타이핑한 내용이 소실된다.
+    // 접기/펼치기 scroll 문제는 max-height CSS로 이미 해결됐으므로 ignoreMutation 불필요.
+    return ReactNodeViewRenderer(CollapsibleCodeBlockView)
   },
 })
 
