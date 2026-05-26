@@ -123,3 +123,96 @@ export function injectLinkHandlers(containerEl, navigate) {
   containerEl.addEventListener('click', handleClick);
   return () => containerEl.removeEventListener('click', handleClick);
 }
+
+/**
+ * 렌더링된 HTML 내 `data-collapsible="true"` 속성의 `<pre>` 코드 블록에
+ * 접이식 토글 버튼을 주입한다.
+ *
+ * 에디터에서 15줄 이상의 코드 블록에 data-collapsible 속성이 저장되며,
+ * 공개 게시글 페이지에서 이를 감지해 미리보기(3줄) + 펼치기 버튼 UI를 추가한다.
+ *
+ * @param {Element} containerEl - 탐색할 DOM 컨테이너 요소
+ * @returns {Function} 이벤트 리스너를 제거하는 cleanup 함수
+ */
+let _collapsibleSeq = 0;
+export function injectCollapsibleCodeBlocks(containerEl) {
+  if (!containerEl) return () => {};
+
+  const PREVIEW_LINES = 3;
+  const cleanups = [];
+
+  // data-collapsible-injected 속성으로 중복 주입 방지 (idempotency)
+  containerEl.querySelectorAll('pre[data-collapsible="true"]:not([data-collapsible-injected])').forEach((pre) => {
+    const code = pre.querySelector('code');
+    if (!code) return;
+
+    const lines = code.textContent.replace(/\n$/, '').split('\n');
+    if (lines.length <= PREVIEW_LINES) return;
+
+    const previewText = lines.slice(0, PREVIEW_LINES).join('\n');
+    let collapsed = true;
+
+    // 원본 pre에 처리 완료 마킹 및 접근성 식별자 부여
+    pre.setAttribute('data-collapsible-injected', 'true');
+
+    // 접근성: 기존 pre.id 재사용, 없을 때만 모듈 스코프 카운터로 충돌 없는 id 생성
+    const fullId = pre.id || `collapsible-code-${++_collapsibleSeq}`;
+    if (!pre.id) pre.id = fullId;
+
+    // 미리보기용 code 요소 (항상 DOM에 존재, hidden으로 가시성 토글)
+    const previewCode = document.createElement('code');
+    previewCode.className = code.className;
+    previewCode.textContent = previewText;
+
+    const previewPre = document.createElement('pre');
+    previewPre.className = pre.className;
+    previewPre.setAttribute('data-collapsible-injected', 'true');
+    previewPre.setAttribute('aria-hidden', 'false');
+    previewPre.appendChild(previewCode);
+
+    // 전체 코드는 초기에 숨김
+    pre.hidden = true;
+    pre.setAttribute('aria-hidden', 'true');
+
+    // 토글 버튼 — aria-controls는 항상 전체 코드 영역을 가리킴
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = `코드 펼치기 (${lines.length}줄)`;
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-controls', fullId);
+    btn.className = 'collapsible-code-toggle';
+
+    const wrapper = document.createElement('div');
+    wrapper.appendChild(previewPre);
+    wrapper.appendChild(btn);
+
+    const handleToggle = () => {
+      collapsed = !collapsed;
+      if (collapsed) {
+        previewPre.hidden = false;
+        previewPre.setAttribute('aria-hidden', 'false');
+        pre.hidden = true;
+        pre.setAttribute('aria-hidden', 'true');
+        btn.textContent = `코드 펼치기 (${lines.length}줄)`;
+        btn.setAttribute('aria-expanded', 'false');
+      } else {
+        previewPre.hidden = true;
+        previewPre.setAttribute('aria-hidden', 'true');
+        pre.hidden = false;
+        pre.setAttribute('aria-hidden', 'false');
+        btn.textContent = '코드 접기';
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    };
+
+    btn.addEventListener('click', handleToggle);
+    cleanups.push(() => btn.removeEventListener('click', handleToggle));
+
+    // pre를 DOM에서 wrapper 위치로 교체한 뒤 wrapper 내부에 삽입 (btn 앞)
+    pre.replaceWith(wrapper);
+    wrapper.insertBefore(pre, btn);
+  });
+
+  return () => cleanups.forEach((fn) => fn());
+}
+
