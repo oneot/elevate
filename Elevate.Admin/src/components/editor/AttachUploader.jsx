@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react'
-import { requestAttachUploadSas, registerFile } from '../../services/assetsApi.js'
+import { useEffect, useRef, useState } from 'react'
+import { requestAttachUploadSas, registerFile, getFiles, deleteFile } from '../../services/assetsApi.js'
 import { uploadBlobWithSas } from '../../utils/imageUpload.js'
 import { useAuth } from '../../hooks/useAuth.js'
 
@@ -30,8 +30,19 @@ export default function AttachUploader({ postId }) {
   const { msalInstance } = useAuth()
   const inputRef = useRef(null)
   const [status, setStatus] = useState(null) // null | 'uploading' | 'done' | 'error'
-  const [uploadedFiles, setUploadedFiles] = useState([])
+  const [files, setFiles] = useState([])      // [{ id, fileName, blobUrl, isDeleting }]
+  const [loadingFiles, setLoadingFiles] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const [error, setError] = useState(null)
+
+  useEffect(() => {
+    if (!postId) return
+    setLoadingFiles(true)
+    getFiles(postId, { msalInstance })
+      .then(data => setFiles(data.map(f => ({ ...f, isDeleting: false }))))
+      .catch(() => {})
+      .finally(() => setLoadingFiles(false))
+  }, [postId])
 
   async function handleFileChange(event) {
     const file = event.target.files?.[0]
@@ -54,16 +65,11 @@ export default function AttachUploader({ postId }) {
 
     setStatus('uploading')
     try {
-      // 1단계: 서버에서 Azure Blob SAS URL을 발급받는다.
       const sas = await requestAttachUploadSas(
         { fileName: file.name, contentType, sizeBytes: file.size },
         { msalInstance }
       )
-
-      // 2단계: SAS URL을 사용해 Azure Blob Storage에 직접 업로드한다.
       await uploadBlobWithSas(sas.uploadUrl, file, contentType)
-
-      // 3단계: 업로드 완료된 Blob 정보를 서버에 등록해 자산 레코드를 생성한다.
       const result = await registerFile(
         {
           postId: postId || null,
@@ -74,13 +80,24 @@ export default function AttachUploader({ postId }) {
         },
         { msalInstance }
       )
-
       const blobUrl = result?.url || sas.blobUrl
-      setUploadedFiles((prev) => [...prev, { fileName: file.name, blobUrl }])
+      setFiles(prev => [...prev, { id: result.fileId, fileName: file.name, blobUrl, isDeleting: false }])
       setStatus('done')
     } catch {
       setError('업로드에 실패했습니다.')
       setStatus('error')
+    }
+  }
+
+  async function handleDelete(fileId) {
+    setConfirmDeleteId(null)
+    setFiles(prev => prev.map(f => f.id === fileId ? { ...f, isDeleting: true } : f))
+    try {
+      await deleteFile(fileId, { msalInstance })
+      setFiles(prev => prev.filter(f => f.id !== fileId))
+    } catch {
+      setFiles(prev => prev.map(f => f.id === fileId ? { ...f, isDeleting: false } : f))
+      setError('파일 삭제에 실패했습니다.')
     }
   }
 
@@ -115,21 +132,57 @@ export default function AttachUploader({ postId }) {
         <p className="text-xs text-rose-600">{error}</p>
       )}
 
-      {uploadedFiles.length > 0 && (
+      {loadingFiles && (
+        <p className="text-xs text-neutral-400">파일 목록 불러오는 중...</p>
+      )}
+
+      {files.length > 0 && (
         <ul className="space-y-2">
-          {uploadedFiles.map((f, i) => (
+          {files.map((f) => (
             <li
-              key={i}
-              className="flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs"
+              key={f.id}
+              className={`flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs${f.isDeleting ? ' opacity-50' : ''}`}
             >
               <span className="flex-1 truncate font-medium text-neutral-700">{f.fileName}</span>
-              <button
-                type="button"
-                onClick={() => copyToClipboard(f.blobUrl)}
-                className="shrink-0 rounded px-2 py-1 text-ms-blue hover:bg-ms-blue/10 transition-colors font-semibold"
-              >
-                URL 복사
-              </button>
+              {confirmDeleteId === f.id ? (
+                <span className="flex items-center gap-1 shrink-0">
+                  <span className="text-neutral-500">삭제할까요?</span>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteId(null)}
+                    className="rounded px-2 py-1 text-neutral-500 hover:bg-neutral-200 transition-colors font-semibold"
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(f.id)}
+                    className="rounded px-2 py-1 text-rose-600 hover:bg-rose-50 transition-colors font-semibold"
+                  >
+                    확인
+                  </button>
+                </span>
+              ) : f.isDeleting ? (
+                <span className="shrink-0 text-xs text-neutral-400">삭제 중...</span>
+              ) : (
+                <span className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(f.blobUrl)}
+                    className="rounded px-2 py-1 text-ms-blue hover:bg-ms-blue/10 transition-colors font-semibold"
+                  >
+                    URL 복사
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteId(f.id)}
+                    className="rounded px-2 py-1 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                    aria-label="삭제"
+                  >
+                    🗑️
+                  </button>
+                </span>
+              )}
             </li>
           ))}
         </ul>
