@@ -13,6 +13,7 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
   const shouldCollapse = lineCount >= COLLAPSE_THRESHOLD
   const [isCollapsed, setIsCollapsed] = useState(shouldCollapse)
   const [copyLabel, setCopyLabel] = useState('복사')
+  const copyTimerRef = useRef(null)
 
   useEffect(() => {
     if (node.attrs.collapsible !== shouldCollapse) {
@@ -24,6 +25,11 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
     setIsCollapsed(shouldCollapse)
   }, [shouldCollapse])
 
+  // 언마운트 시 진행 중인 타이머 정리
+  useEffect(() => {
+    return () => { if (copyTimerRef.current) clearTimeout(copyTimerRef.current) }
+  }, [])
+
   const contentIdRef = useRef(`collapsible-code-${Math.random().toString(36).slice(2, 8)}`)
   const contentId = contentIdRef.current
 
@@ -31,15 +37,37 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
     setIsCollapsed((prev) => !prev)
   }
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     const fullText = lines.join('\n')
-    navigator.clipboard.writeText(fullText).then(() => {
-      setCopyLabel('복사됨 ✓')
-      setTimeout(() => setCopyLabel('복사'), 2000)
-    }).catch(() => {
-      setCopyLabel('복사 실패')
-      setTimeout(() => setCopyLabel('복사'), 2000)
-    })
+    let success = false
+
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(fullText)
+        success = true
+      } catch {
+        // clipboard API 실패 시 execCommand 폴백으로 진행
+      }
+    }
+
+    if (!success) {
+      try {
+        const ta = document.createElement('textarea')
+        ta.value = fullText
+        ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0'
+        document.body.appendChild(ta)
+        ta.focus()
+        ta.select()
+        success = document.execCommand('copy')
+        document.body.removeChild(ta)
+      } catch {
+        success = false
+      }
+    }
+
+    setCopyLabel(success ? '복사됨 ✓' : '복사 실패')
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+    copyTimerRef.current = setTimeout(() => setCopyLabel('복사'), 2000)
   }
 
   // display:none 대신 max-height+overflow 클리핑 사용.

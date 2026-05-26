@@ -127,9 +127,8 @@ export function injectLinkHandlers(containerEl, navigate) {
 /**
  * 렌더링된 HTML 내 긴 코드 블록에 접이식 토글 버튼과 복사 버튼을 주입한다.
  *
- * `data-collapsible="true"` 속성이 있거나, 속성 없이 COLLAPSE_THRESHOLD 줄 이상인
- * `<pre>` 요소 모두를 처리한다. 이는 속성 도입 이전에 작성된 기존 게시글에도
- * 접이식 UI가 적용되도록 하기 위함이다.
+ * COLLAPSE_THRESHOLD 줄 이상인 `<pre>` 요소를 대상으로 하며,
+ * `data-collapsible="false"`가 명시된 블록은 건너뛴다.
  *
  * @param {Element} containerEl - 탐색할 DOM 컨테이너 요소
  * @returns {Function} 이벤트 리스너를 제거하는 cleanup 함수
@@ -193,7 +192,27 @@ export function injectCollapsibleCodeBlocks(containerEl) {
     copyBtn.className = 'collapsible-code-copy';
 
     const handleCopy = () => {
-      navigator.clipboard.writeText(fullText).then(() => {
+      const write = (text) => {
+        if (navigator.clipboard?.writeText) {
+          return navigator.clipboard.writeText(text);
+        }
+        // clipboard API 미지원 시 execCommand 폴백
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          return ok ? Promise.resolve() : Promise.reject();
+        } catch (e) {
+          return Promise.reject(e);
+        }
+      };
+
+      write(fullText).then(() => {
         copyBtn.textContent = '복사됨 ✓';
         setTimeout(() => { copyBtn.textContent = '복사'; }, 2000);
       }).catch(() => {
@@ -215,8 +234,11 @@ export function injectCollapsibleCodeBlocks(containerEl) {
     wrapper.appendChild(actionRow);
 
     const ANIM_MS = 300;
+    let isAnimating = false;
 
     const handleToggle = () => {
+      if (isAnimating) return;
+      isAnimating = true;
       collapsed = !collapsed;
       btn.setAttribute('aria-expanded', String(!collapsed));
 
@@ -253,6 +275,7 @@ export function injectCollapsibleCodeBlocks(containerEl) {
 
           // 접기 후 코드블록 상단으로 스크롤
           wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          isAnimating = false;
         }, ANIM_MS);
 
       } else {
@@ -287,6 +310,7 @@ export function injectCollapsibleCodeBlocks(containerEl) {
             pre.style.overflow = '';
             pre.style.transition = '';
             pre.style.opacity = '';
+            isAnimating = false;
           }, ANIM_MS + 50);
         }, Math.round(ANIM_MS * 0.4));
       }
