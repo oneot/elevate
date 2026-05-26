@@ -58,7 +58,7 @@ const COLOR_PALETTE = [
   { label: '핑크', value: '#EC4899' },
   { label: '회색', value: '#6B7280' },
   { label: '검정', value: '#1F2937' },
-  { label: '흰색', value: '#FFFFFF' },
+  { label: '연회색', value: '#94A3B8' },
 ]
 
 const ToolbarButton = ({ icon: IconComponent, onClick, isActive, title, disabled = false }) => (
@@ -87,8 +87,15 @@ function ColorPicker({ editor }) {
     const handleClickOutside = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false)
     }
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [])
 
   const currentColor = editor.getAttributes('textStyle').color || null
@@ -98,6 +105,8 @@ function ColorPicker({ editor }) {
       <button
         type="button"
         title="글자 색상"
+        aria-expanded={open}
+        aria-haspopup="true"
         onClick={() => setOpen((prev) => !prev)}
         className="rounded p-1.5 transition-colors hover:bg-neutral-100 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-ms-blue"
       >
