@@ -386,6 +386,7 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
 
   const handleRestore = () => {
     if (!storageKey) return
+    clearTimeout(autoSaveTimerRef.current)
     try {
       const saved = localStorage.getItem(storageKey)
       if (saved && editor) {
@@ -401,6 +402,7 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
 
   const handleDiscardRestore = () => {
     if (!storageKey) return
+    clearTimeout(autoSaveTimerRef.current)
     try {
       localStorage.removeItem(storageKey)
     } catch {
