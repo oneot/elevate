@@ -105,8 +105,10 @@ function ColorPicker({ editor }) {
       <button
         type="button"
         title="글자 색상"
+        aria-label="글자 색상"
         aria-expanded={open}
         aria-haspopup="true"
+        aria-controls="color-picker-popover"
         onClick={() => setOpen((prev) => !prev)}
         className="rounded p-1.5 transition-colors hover:bg-neutral-100 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-ms-blue"
       >
@@ -120,13 +122,15 @@ function ColorPicker({ editor }) {
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-neutral-200 rounded-lg shadow-lg p-2 w-36">
+        <div id="color-picker-popover" className="absolute top-full left-0 mt-1 z-50 bg-white border border-neutral-200 rounded-lg shadow-lg p-2 w-36">
           <div className="grid grid-cols-5 gap-1 mb-2">
             {COLOR_PALETTE.map(({ label, value }) => (
               <button
                 key={value}
                 type="button"
                 title={label}
+                aria-label={label}
+                aria-pressed={currentColor === value}
                 onClick={() => {
                   editor.chain().focus().setColor(value).run()
                   setOpen(false)

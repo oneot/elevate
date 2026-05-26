@@ -22,9 +22,14 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
     setIsCollapsed(shouldCollapse)
   }, [shouldCollapse])
 
+  const contentId = `collapsible-code-${node.attrs.id ?? Math.random().toString(36).slice(2, 8)}`
+
   return (
     <NodeViewWrapper className="relative my-4">
-      <pre className={`hljs rounded-md overflow-x-auto text-sm ${isCollapsed ? 'max-h-none' : ''}`}>
+      <pre
+        id={contentId}
+        className={`hljs rounded-md overflow-x-auto text-sm ${isCollapsed ? 'max-h-none' : ''}`}
+      >
         {isCollapsed ? (
           <code className={node.attrs.language ? `language-${node.attrs.language}` : ''}>
             {previewText}
@@ -41,6 +46,8 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
         <button
           type="button"
           contentEditable={false}
+          aria-expanded={!isCollapsed}
+          aria-controls={contentId}
           onClick={() => setIsCollapsed((prev) => !prev)}
           className="mt-1 flex items-center gap-1 text-xs text-neutral-500 transition-colors hover:text-ms-blue"
         >
