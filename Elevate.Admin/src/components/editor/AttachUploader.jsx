@@ -36,6 +36,9 @@ export default function AttachUploader({ postId }) {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    setFiles([])
+    setConfirmDeleteId(null)
+    setError(null)
     if (!postId) return
     setLoadingFiles(true)
     getFiles(postId, { msalInstance })

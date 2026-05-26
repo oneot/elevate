@@ -179,10 +179,7 @@ export function injectCollapsibleCodeBlocks(containerEl) {
     btn.textContent = `코드 펼치기 (${lines.length}줄)`;
     btn.setAttribute('aria-expanded', 'false');
     btn.setAttribute('aria-controls', fullId);
-    btn.style.cssText =
-      'display:block;margin-top:4px;padding:2px 10px;font-size:0.75rem;' +
-      'background:transparent;border:1px solid #d1d5db;border-radius:4px;' +
-      'cursor:pointer;color:#6b7280;';
+    btn.className = 'collapsible-code-toggle';
 
     const wrapper = document.createElement('div');
     wrapper.appendChild(previewPre);
