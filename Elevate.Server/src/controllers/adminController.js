@@ -805,6 +805,29 @@ exports.deleteFile = async (req, res) => {
   }
 };
 
+exports.getFiles = async (req, res) => {
+  const correlationId = req.correlationId;
+  const postId = req.query?.postId;
+
+  if (!postId) {
+    return sendError(res, 400, 'BadRequest', 'postId query parameter is required', correlationId);
+  }
+
+  try {
+    const container = getAssetsContainer();
+    const querySpec = {
+      query: 'SELECT c.id, c.fileName, c.blobUrl FROM c WHERE c.postId = @postId AND c.documentType = "attach"',
+      parameters: [{ name: '@postId', value: postId }]
+    };
+
+    const { resources } = await container.items.query(querySpec).fetchAll();
+    return res.json(resources);
+  } catch (error) {
+    console.error('[getFiles] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
 exports.getAnalyticsSummary = async (req, res) => {
   const correlationId = req.correlationId;
 
