@@ -170,9 +170,9 @@ function PostEditor() {
       if (isNew) {
         const created = await createPost(payload, { msalInstance })
         const newId = created?.id || created?.postId
-        localStorage.removeItem(storageKey)
         setMessage('저장되었습니다.')
         if (newId) {
+          localStorage.removeItem(storageKey)
           navigate(`/posts/${newId}`)
         }
       } else {
