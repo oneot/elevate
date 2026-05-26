@@ -827,8 +827,8 @@ exports.getFiles = async (req, res) => {
         let signedUrl = null;
         try {
           signedUrl = await getBlobReadSasUrl(file.blobUrl);
-        } catch {
-          // non-fatal — return null signedUrl
+        } catch (err) {
+          console.warn(`[getFiles] signedUrl generation failed for file ${file.id} (${file.blobUrl}) correlationId=${correlationId}`, err.message);
         }
         return { ...file, signedUrl };
       })

@@ -192,7 +192,7 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
     } catch {
       setShowRestoreBanner(false)
     }
-  }, [storageKey, value])
+  }, [storageKey])
 
   const editor = useEditor({
     extensions: [

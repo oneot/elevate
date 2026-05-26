@@ -172,12 +172,12 @@ function PostEditor() {
         const newId = created?.id || created?.postId
         setMessage('저장되었습니다.')
         if (newId) {
-          localStorage.removeItem(storageKey)
+          try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
           navigate(`/posts/${newId}`)
         }
       } else {
         await updatePost(postId, payload, { msalInstance })
-        localStorage.removeItem(storageKey)
+        try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
         setMessage('업데이트되었습니다.')
       }
     } catch (err) {

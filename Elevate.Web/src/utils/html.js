@@ -151,7 +151,14 @@ export function injectCollapsibleCodeBlocks(containerEl) {
     const previewText = lines.slice(0, PREVIEW_LINES).join('\n');
     let collapsed = true;
 
-    // 미리보기용 code 요소
+    // 원본 pre에 처리 완료 마킹 및 접근성 식별자 부여
+    pre.setAttribute('data-collapsible-injected', 'true');
+
+    // 접근성: 전체 코드 영역을 항상 aria-controls 대상으로 사용
+    const contentId = `collapsible-code-${Math.random().toString(36).slice(2, 8)}`;
+    pre.id = `${contentId}-full`;
+
+    // 미리보기용 code 요소 (항상 DOM에 존재, hidden으로 가시성 토글)
     const previewCode = document.createElement('code');
     previewCode.className = code.className;
     previewCode.textContent = previewText;
@@ -159,22 +166,19 @@ export function injectCollapsibleCodeBlocks(containerEl) {
     const previewPre = document.createElement('pre');
     previewPre.className = pre.className;
     previewPre.setAttribute('data-collapsible-injected', 'true');
+    previewPre.setAttribute('aria-hidden', 'false');
     previewPre.appendChild(previewCode);
 
-    // 원본 pre에도 처리 완료 마킹
-    pre.setAttribute('data-collapsible-injected', 'true');
+    // 전체 코드는 초기에 숨김
+    pre.hidden = true;
+    pre.setAttribute('aria-hidden', 'true');
 
-    // 접근성: 토글 대상 식별자
-    const contentId = `collapsible-code-${Math.random().toString(36).slice(2, 8)}`;
-    previewPre.id = `${contentId}-preview`;
-    pre.id = `${contentId}-full`;
-
-    // 토글 버튼
+    // 토글 버튼 — aria-controls는 항상 전체 코드 영역을 가리킴
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.textContent = `코드 펼치기 (${lines.length}줄)`;
     btn.setAttribute('aria-expanded', 'false');
-    btn.setAttribute('aria-controls', `${contentId}-preview`);
+    btn.setAttribute('aria-controls', `${contentId}-full`);
     btn.style.cssText =
       'display:block;margin-top:4px;padding:2px 10px;font-size:0.75rem;' +
       'background:transparent;border:1px solid #d1d5db;border-radius:4px;' +
@@ -187,22 +191,28 @@ export function injectCollapsibleCodeBlocks(containerEl) {
     const handleToggle = () => {
       collapsed = !collapsed;
       if (collapsed) {
-        wrapper.replaceChild(previewPre, wrapper.firstChild);
+        previewPre.hidden = false;
+        previewPre.setAttribute('aria-hidden', 'false');
+        pre.hidden = true;
+        pre.setAttribute('aria-hidden', 'true');
         btn.textContent = `코드 펼치기 (${lines.length}줄)`;
         btn.setAttribute('aria-expanded', 'false');
-        btn.setAttribute('aria-controls', `${contentId}-preview`);
       } else {
-        wrapper.replaceChild(pre, wrapper.firstChild);
+        previewPre.hidden = true;
+        previewPre.setAttribute('aria-hidden', 'true');
+        pre.hidden = false;
+        pre.setAttribute('aria-hidden', 'false');
         btn.textContent = '코드 접기';
         btn.setAttribute('aria-expanded', 'true');
-        btn.setAttribute('aria-controls', `${contentId}-full`);
       }
     };
 
     btn.addEventListener('click', handleToggle);
     cleanups.push(() => btn.removeEventListener('click', handleToggle));
 
+    // pre를 DOM에서 wrapper 위치로 교체한 뒤 wrapper 내부에 삽입 (btn 앞)
     pre.replaceWith(wrapper);
+    wrapper.insertBefore(pre, btn);
   });
 
   return () => cleanups.forEach((fn) => fn());
