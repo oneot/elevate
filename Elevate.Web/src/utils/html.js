@@ -154,9 +154,9 @@ export function injectCollapsibleCodeBlocks(containerEl) {
     // 원본 pre에 처리 완료 마킹 및 접근성 식별자 부여
     pre.setAttribute('data-collapsible-injected', 'true');
 
-    // 접근성: 전체 코드 영역을 항상 aria-controls 대상으로 사용
-    const contentId = `collapsible-code-${Math.random().toString(36).slice(2, 8)}`;
-    pre.id = `${contentId}-full`;
+    // 접근성: 기존 pre.id 재사용, 없을 때만 충돌 없는 고유 id 생성
+    const fullId = pre.id || `collapsible-code-${Math.random().toString(36).slice(2, 8)}-full`;
+    if (!pre.id) pre.id = fullId;
 
     // 미리보기용 code 요소 (항상 DOM에 존재, hidden으로 가시성 토글)
     const previewCode = document.createElement('code');
@@ -178,7 +178,7 @@ export function injectCollapsibleCodeBlocks(containerEl) {
     btn.type = 'button';
     btn.textContent = `코드 펼치기 (${lines.length}줄)`;
     btn.setAttribute('aria-expanded', 'false');
-    btn.setAttribute('aria-controls', `${contentId}-full`);
+    btn.setAttribute('aria-controls', fullId);
     btn.style.cssText =
       'display:block;margin-top:4px;padding:2px 10px;font-size:0.75rem;' +
       'background:transparent;border:1px solid #d1d5db;border-radius:4px;' +

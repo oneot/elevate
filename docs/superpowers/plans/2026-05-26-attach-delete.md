@@ -6,7 +6,7 @@
 
 **Architecture:** 서버에 `GET /api/admin/files?postId=...` 엔드포인트를 추가하고, 클라이언트 API에 `getFiles`/`deleteFile` 함수를 추가한다. `AttachUploader.jsx`는 마운트 시 기존 파일 목록을 로드하고, 각 행에 삭제 버튼과 인라인 확인 UI를 제공한다.
 
-**Tech Stack:** Node.js (Azure Functions v4), Cosmos DB, React 18, Tailwind CSS
+**Tech Stack:** Node.js (Azure Functions v4), Cosmos DB, React 19, Tailwind CSS
 
 ---
 

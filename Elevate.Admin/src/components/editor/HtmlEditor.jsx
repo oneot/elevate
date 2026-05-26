@@ -179,6 +179,7 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
     }
   })
 
+  // 초기 storageKey 변경 시 배너 재평가
   useEffect(() => {
     if (!storageKey) return
     try {
@@ -192,7 +193,24 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
     } catch {
       setShowRestoreBanner(false)
     }
+  }, [storageKey]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // value가 비동기로 로드될 때 1회 재평가 (PostEditor처럼 초기값이 늦게 도착하는 경우)
+  const didCheckWithValueRef = useRef(false)
+  useEffect(() => {
+    didCheckWithValueRef.current = false
   }, [storageKey])
+  useEffect(() => {
+    if (!storageKey || !value || didCheckWithValueRef.current) return
+    didCheckWithValueRef.current = true
+    try {
+      const saved = localStorage.getItem(storageKey)
+      const hasDraft = !!saved && saved !== '<p></p>' && saved !== value
+      setShowRestoreBanner(hasDraft)
+    } catch {
+      setShowRestoreBanner(false)
+    }
+  }, [storageKey, value]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const editor = useEditor({
     extensions: [
