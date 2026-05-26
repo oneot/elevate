@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
 
 const COLLAPSE_THRESHOLD = 15
+// 접힌 상태에서 보여줄 줄 수 (em 단위 max-height 계산에 사용)
+const PREVIEW_LINE_HEIGHT_EM = 1.6
 const PREVIEW_LINES = 3
 
 export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
@@ -9,7 +11,6 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
   const lines = useMemo(() => (code ? code.replace(/\n$/, '').split('\n') : []), [code])
   const lineCount = lines.length
   const shouldCollapse = lineCount >= COLLAPSE_THRESHOLD
-  const previewText = useMemo(() => lines.slice(0, PREVIEW_LINES).join('\n'), [lines])
   const [isCollapsed, setIsCollapsed] = useState(shouldCollapse)
   const [copyLabel, setCopyLabel] = useState('복사')
 
@@ -25,7 +26,6 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
 
   const contentIdRef = useRef(`collapsible-code-${Math.random().toString(36).slice(2, 8)}`)
   const contentId = contentIdRef.current
-  const btnRef = useRef(null)
 
   const handleToggle = () => {
     setIsCollapsed((prev) => !prev)
@@ -42,32 +42,31 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
     })
   }
 
+  // display:none 대신 max-height+overflow 클리핑 사용.
+  // contentDOMElement를 항상 visible하게 유지해야 브라우저가 커서를 잃지 않아 스크롤이 발생하지 않는다.
+  const collapsedStyle = isCollapsed
+    ? { maxHeight: `${PREVIEW_LINES * PREVIEW_LINE_HEIGHT_EM}em`, overflowY: 'hidden' }
+    : undefined
+
   return (
     <NodeViewWrapper className="relative my-4">
       <pre
         id={contentId}
         className="hljs rounded-md overflow-x-auto text-sm"
+        style={collapsedStyle}
       >
-        {/* NodeViewContent는 항상 DOM에 유지 — 언마운트 시 Tiptap이 스크롤을 발생시키므로 */}
         <NodeViewContent
           as="code"
           className={node.attrs.language ? `language-${node.attrs.language}` : ''}
-          style={isCollapsed ? { display: 'none' } : undefined}
         />
-        {isCollapsed && (
-          <code className={node.attrs.language ? `language-${node.attrs.language}` : ''}>
-            {previewText}
-            {lineCount > PREVIEW_LINES && '\n...'}
-          </code>
-        )}
       </pre>
       <div contentEditable={false} className="mt-1 flex items-center gap-2">
         {shouldCollapse && (
           <button
-            ref={btnRef}
             type="button"
             aria-expanded={!isCollapsed}
             aria-controls={contentId}
+            onMouseDown={(e) => e.preventDefault()}
             onClick={handleToggle}
             className="flex items-center gap-1 text-xs text-neutral-500 transition-colors hover:text-ms-blue border border-neutral-200 rounded px-2 py-0.5"
           >
@@ -77,6 +76,7 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
         )}
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={handleCopy}
           className="flex items-center gap-1 text-xs text-neutral-500 transition-colors hover:text-ms-blue border border-neutral-200 rounded px-2 py-0.5"
         >
