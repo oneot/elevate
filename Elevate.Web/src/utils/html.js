@@ -123,3 +123,72 @@ export function injectLinkHandlers(containerEl, navigate) {
   containerEl.addEventListener('click', handleClick);
   return () => containerEl.removeEventListener('click', handleClick);
 }
+
+/**
+ * 렌더링된 HTML 내 `data-collapsible="true"` 속성의 `<pre>` 코드 블록에
+ * 접이식 토글 버튼을 주입한다.
+ *
+ * 에디터에서 15줄 이상의 코드 블록에 data-collapsible 속성이 저장되며,
+ * 공개 게시글 페이지에서 이를 감지해 미리보기(3줄) + 펼치기 버튼 UI를 추가한다.
+ *
+ * @param {Element} containerEl - 탐색할 DOM 컨테이너 요소
+ * @returns {Function} 이벤트 리스너를 제거하는 cleanup 함수
+ */
+export function injectCollapsibleCodeBlocks(containerEl) {
+  if (!containerEl) return () => {};
+
+  const PREVIEW_LINES = 3;
+  const cleanups = [];
+
+  containerEl.querySelectorAll('pre[data-collapsible="true"]').forEach((pre) => {
+    const code = pre.querySelector('code');
+    if (!code) return;
+
+    const lines = code.textContent.replace(/\n$/, '').split('\n');
+    if (lines.length <= PREVIEW_LINES) return;
+
+    const previewText = lines.slice(0, PREVIEW_LINES).join('\n');
+    let collapsed = true;
+
+    // 미리보기용 code 요소
+    const previewCode = document.createElement('code');
+    previewCode.className = code.className;
+    previewCode.textContent = previewText;
+
+    const previewPre = document.createElement('pre');
+    previewPre.className = pre.className;
+    previewPre.appendChild(previewCode);
+
+    // 토글 버튼
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = `코드 펼치기 (${lines.length}줄)`;
+    btn.style.cssText =
+      'display:block;margin-top:4px;padding:2px 10px;font-size:0.75rem;' +
+      'background:transparent;border:1px solid #d1d5db;border-radius:4px;' +
+      'cursor:pointer;color:#6b7280;';
+
+    const wrapper = document.createElement('div');
+    wrapper.appendChild(previewPre);
+    wrapper.appendChild(btn);
+
+    const handleToggle = () => {
+      collapsed = !collapsed;
+      if (collapsed) {
+        wrapper.replaceChild(previewPre, wrapper.firstChild);
+        btn.textContent = `코드 펼치기 (${lines.length}줄)`;
+      } else {
+        wrapper.replaceChild(pre, wrapper.firstChild);
+        btn.textContent = '코드 접기';
+      }
+    };
+
+    btn.addEventListener('click', handleToggle);
+    cleanups.push(() => btn.removeEventListener('click', handleToggle));
+
+    pre.replaceWith(wrapper);
+  });
+
+  return () => cleanups.forEach((fn) => fn());
+}
+
