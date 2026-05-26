@@ -161,6 +161,7 @@ function ColorPicker({ editor }) {
 
 function HtmlEditor({ value, onChange, onUploadImage }) {
   const [isDragging, setIsDragging] = useState(false)
+  const isUploadingRef = useRef(false)
 
   const editor = useEditor({
     extensions: [
@@ -256,16 +257,27 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
 
   const uploadFiles = async (files) => {
     if (!onUploadImage) return
-    const imageFiles = Array.from(files).filter((f) => f.type.startsWith('image/'))
-    for (const file of imageFiles) {
-      try {
-        const url = await onUploadImage(file)
-        if (url) {
-          editor.chain().focus().setImage({ src: url }).run()
+    if (isUploadingRef.current) return
+    isUploadingRef.current = true
+    try {
+      const imageFiles = Array.from(files).filter((f) => f.type.startsWith('image/'))
+      const MAX_SIZE = 10 * 1024 * 1024 // 10MB
+      for (const file of imageFiles) {
+        if (file.size > MAX_SIZE) {
+          alert(`${file.name} 파일이 너무 큽니다. (최대 10MB)`)
+          continue
         }
-      } catch {
-        alert(`${file.name} 이미지 업로드에 실패했습니다.`)
+        try {
+          const url = await onUploadImage(file)
+          if (url) {
+            editor.chain().focus().setImage({ src: url }).run()
+          }
+        } catch {
+          alert(`${file.name} 이미지 업로드에 실패했습니다.`)
+        }
       }
+    } finally {
+      isUploadingRef.current = false
     }
   }
 
@@ -281,7 +293,7 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
   }
 
   const handleDragLeave = (e) => {
-    if (!e.currentTarget.contains(e.relatedTarget)) {
+    if (e.relatedTarget === null || !e.currentTarget.contains(e.relatedTarget)) {
       setIsDragging(false)
     }
   }
