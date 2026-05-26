@@ -1,7 +1,9 @@
-import { useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
+import Color from '@tiptap/extension-color'
+import { TextStyle } from '@tiptap/extension-text-style'
 import CollapsibleCodeBlockExtension from './CollapsibleCodeBlockExtension'
 import { createLowlight } from 'lowlight'
 import javascript from 'highlight.js/lib/languages/javascript'
@@ -46,6 +48,19 @@ lowlight.register('xml', html)
 lowlight.register('css', css)
 lowlight.register('json', json)
 
+const COLOR_PALETTE = [
+  { label: '빨강', value: '#EF4444' },
+  { label: '주황', value: '#F97316' },
+  { label: '노랑', value: '#EAB308' },
+  { label: '초록', value: '#22C55E' },
+  { label: '파랑', value: '#3B82F6' },
+  { label: '보라', value: '#8B5CF6' },
+  { label: '핑크', value: '#EC4899' },
+  { label: '회색', value: '#6B7280' },
+  { label: '검정', value: '#1F2937' },
+  { label: '흰색', value: '#FFFFFF' },
+]
+
 const ToolbarButton = ({ icon: IconComponent, onClick, isActive, title, disabled = false }) => (
   <button
     type="button"
@@ -63,6 +78,73 @@ const ToolbarButton = ({ icon: IconComponent, onClick, isActive, title, disabled
 )
 
 const Divider = () => <div className="w-px h-5 bg-neutral-300 mx-1" />
+
+function ColorPicker({ editor }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const currentColor = editor.getAttributes('textStyle').color || null
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        title="글자 색상"
+        onClick={() => setOpen((prev) => !prev)}
+        className="rounded p-1.5 transition-colors hover:bg-neutral-100 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-ms-blue"
+      >
+        <span className="flex flex-col items-center leading-none">
+          <span className="font-bold text-sm text-neutral-700">A</span>
+          <span
+            className="block h-1 w-4 rounded-full mt-0.5"
+            style={{ background: currentColor || '#1F2937' }}
+          />
+        </span>
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-neutral-200 rounded-lg shadow-lg p-2 w-36">
+          <div className="grid grid-cols-5 gap-1 mb-2">
+            {COLOR_PALETTE.map(({ label, value }) => (
+              <button
+                key={value}
+                type="button"
+                title={label}
+                onClick={() => {
+                  editor.chain().focus().setColor(value).run()
+                  setOpen(false)
+                }}
+                className="w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform"
+                style={{
+                  background: value,
+                  borderColor: currentColor === value ? '#3B82F6' : '#e5e7eb',
+                }}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              editor.chain().focus().unsetColor().run()
+              setOpen(false)
+            }}
+            className="w-full text-xs text-neutral-500 hover:text-neutral-800 py-0.5"
+          >
+            색상 초기화
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function HtmlEditor({ value, onChange, onUploadImage }) {
 
@@ -84,6 +166,8 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
       CollapsibleCodeBlockExtension.configure({
         lowlight,
       }),
+      TextStyle,
+      Color,
     ],
     content: value || '',
     onUpdate: ({ editor: currentEditor }) => {
@@ -284,6 +368,11 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
             isActive={false}
             title="이미지"
           />
+
+          <Divider />
+
+          {/* 글자 색상 */}
+          <ColorPicker editor={editor} />
 
           <Divider />
 
