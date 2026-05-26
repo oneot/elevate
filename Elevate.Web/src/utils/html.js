@@ -140,7 +140,8 @@ export function injectCollapsibleCodeBlocks(containerEl) {
   const PREVIEW_LINES = 3;
   const cleanups = [];
 
-  containerEl.querySelectorAll('pre[data-collapsible="true"]').forEach((pre) => {
+  // data-collapsible-injected 속성으로 중복 주입 방지 (idempotency)
+  containerEl.querySelectorAll('pre[data-collapsible="true"]:not([data-collapsible-injected])').forEach((pre) => {
     const code = pre.querySelector('code');
     if (!code) return;
 
@@ -157,12 +158,23 @@ export function injectCollapsibleCodeBlocks(containerEl) {
 
     const previewPre = document.createElement('pre');
     previewPre.className = pre.className;
+    previewPre.setAttribute('data-collapsible-injected', 'true');
     previewPre.appendChild(previewCode);
+
+    // 원본 pre에도 처리 완료 마킹
+    pre.setAttribute('data-collapsible-injected', 'true');
+
+    // 접근성: 토글 대상 식별자
+    const contentId = `collapsible-code-${Math.random().toString(36).slice(2, 8)}`;
+    previewPre.id = `${contentId}-preview`;
+    pre.id = `${contentId}-full`;
 
     // 토글 버튼
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.textContent = `코드 펼치기 (${lines.length}줄)`;
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-controls', `${contentId}-preview`);
     btn.style.cssText =
       'display:block;margin-top:4px;padding:2px 10px;font-size:0.75rem;' +
       'background:transparent;border:1px solid #d1d5db;border-radius:4px;' +
@@ -177,9 +189,13 @@ export function injectCollapsibleCodeBlocks(containerEl) {
       if (collapsed) {
         wrapper.replaceChild(previewPre, wrapper.firstChild);
         btn.textContent = `코드 펼치기 (${lines.length}줄)`;
+        btn.setAttribute('aria-expanded', 'false');
+        btn.setAttribute('aria-controls', `${contentId}-preview`);
       } else {
         wrapper.replaceChild(pre, wrapper.firstChild);
         btn.textContent = '코드 접기';
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-controls', `${contentId}-full`);
       }
     };
 
