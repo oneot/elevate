@@ -258,9 +258,9 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
   }
 
   return (
-    <div className="rounded-md border border-neutral-300 bg-white overflow-hidden shadow-elevation-2 focus-within:border-ms-blue focus-within:ring-1 focus-within:ring-ms-blue transition-shadow duration-200">
+    <div className="rounded-md border border-neutral-300 bg-white flex flex-col shadow-elevation-2 focus-within:border-ms-blue focus-within:ring-1 focus-within:ring-ms-blue transition-shadow duration-200">
       {/* 툴바 */}
-      <div className="border-b border-neutral-200 bg-[#f3f2f1] p-1">
+      <div className="border-b border-neutral-200 bg-[#f3f2f1] p-1 sticky top-0 z-10 rounded-t-md">
         <div className="flex flex-wrap gap-0.5 items-center px-1">
           {/* 실행취소/다시실행 */}
           <ToolbarButton
@@ -400,7 +400,7 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
       </div>
 
       {/* 에디터 */}
-      <div className="p-4 bg-white cursor-text" onClick={() => editor.commands.focus()}>
+      <div className="p-4 bg-white cursor-text max-h-[70vh] overflow-y-auto" onClick={() => editor.commands.focus()}>
         <EditorContent editor={editor} />
       </div>
     </div>
