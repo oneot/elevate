@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import CollapsibleCodeBlockExtension from './CollapsibleCodeBlockExtension'
 import { createLowlight } from 'lowlight'
 import javascript from 'highlight.js/lib/languages/javascript'
 import typescript from 'highlight.js/lib/languages/typescript'
@@ -81,7 +81,7 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
         inline: true,
         allowBase64: true,
       }),
-      CodeBlockLowlight.configure({
+      CollapsibleCodeBlockExtension.configure({
         lowlight,
       }),
     ],
