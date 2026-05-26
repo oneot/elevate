@@ -46,18 +46,19 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
     <NodeViewWrapper className="relative my-4">
       <pre
         id={contentId}
-        className={`hljs rounded-md overflow-x-auto text-sm ${isCollapsed ? 'max-h-none' : ''}`}
+        className="hljs rounded-md overflow-x-auto text-sm"
       >
-        {isCollapsed ? (
+        {/* NodeViewContent는 항상 DOM에 유지 — 언마운트 시 Tiptap이 스크롤을 발생시키므로 */}
+        <NodeViewContent
+          as="code"
+          className={node.attrs.language ? `language-${node.attrs.language}` : ''}
+          style={isCollapsed ? { display: 'none' } : undefined}
+        />
+        {isCollapsed && (
           <code className={node.attrs.language ? `language-${node.attrs.language}` : ''}>
             {previewText}
             {lineCount > PREVIEW_LINES && '\n...'}
           </code>
-        ) : (
-          <NodeViewContent
-            as="code"
-            className={node.attrs.language ? `language-${node.attrs.language}` : ''}
-          />
         )}
       </pre>
       <div contentEditable={false} className="mt-1 flex items-center gap-2">
