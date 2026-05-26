@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
 
 const COLLAPSE_THRESHOLD = 15
@@ -22,7 +22,8 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
     setIsCollapsed(shouldCollapse)
   }, [shouldCollapse])
 
-  const contentId = `collapsible-code-${node.attrs.id ?? Math.random().toString(36).slice(2, 8)}`
+  const contentIdRef = useRef(`collapsible-code-${Math.random().toString(36).slice(2, 8)}`)
+  const contentId = contentIdRef.current
 
   return (
     <NodeViewWrapper className="relative my-4">

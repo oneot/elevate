@@ -81,7 +81,8 @@ export default function AttachUploader({ postId }) {
         { msalInstance }
       )
       const blobUrl = result?.url || sas.blobUrl
-      setFiles(prev => [...prev, { id: result.fileId, fileName: file.name, blobUrl, isDeleting: false }])
+      const signedUrl = result?.signedUrl || null
+      setFiles(prev => [...prev, { id: result.fileId, fileName: file.name, blobUrl, signedUrl, isDeleting: false }])
       setStatus('done')
     } catch {
       setError('업로드에 실패했습니다.')
@@ -145,7 +146,9 @@ export default function AttachUploader({ postId }) {
               className={`flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs${f.isDeleting ? ' opacity-50' : ''}`}
             >
               <span className="flex-1 truncate font-medium text-neutral-700">{f.fileName}</span>
-              {confirmDeleteId === f.id ? (
+              {f.isDeleting ? (
+                <span className="shrink-0 text-xs text-neutral-400">삭제 중...</span>
+              ) : confirmDeleteId === f.id ? (
                 <span className="flex items-center gap-1 shrink-0">
                   <span className="text-neutral-500">삭제할까요?</span>
                   <button
@@ -163,13 +166,11 @@ export default function AttachUploader({ postId }) {
                     확인
                   </button>
                 </span>
-              ) : f.isDeleting ? (
-                <span className="shrink-0 text-xs text-neutral-400">삭제 중...</span>
               ) : (
                 <span className="flex items-center gap-1 shrink-0">
                   <button
                     type="button"
-                    onClick={() => copyToClipboard(f.blobUrl)}
+                    onClick={() => copyToClipboard(f.signedUrl || f.blobUrl)}
                     className="rounded px-2 py-1 text-ms-blue hover:bg-ms-blue/10 transition-colors font-semibold"
                   >
                     URL 복사

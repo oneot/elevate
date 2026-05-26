@@ -816,12 +816,25 @@ exports.getFiles = async (req, res) => {
   try {
     const container = getAssetsContainer();
     const querySpec = {
-      query: 'SELECT c.id, c.fileName, c.blobUrl FROM c WHERE c.postId = @postId AND c.documentType = "attach"',
+      query: 'SELECT c.id, c.fileName, c.blobUrl, c.contentType, c.sizeBytes FROM c WHERE c.postId = @postId AND c.documentType = "attach"',
       parameters: [{ name: '@postId', value: postId }]
     };
 
-    const { resources } = await container.items.query(querySpec).fetchAll();
-    return res.json(resources);
+    const { resources } = await container.items.query(querySpec, { partitionKey: attachCategoryPartition }).fetchAll();
+
+    const withSignedUrls = await Promise.all(
+      resources.map(async (file) => {
+        let signedUrl = null;
+        try {
+          signedUrl = await getBlobReadSasUrl(file.blobUrl);
+        } catch {
+          // non-fatal — return null signedUrl
+        }
+        return { ...file, signedUrl };
+      })
+    );
+
+    return res.json(withSignedUrls);
   } catch (error) {
     console.error('[getFiles] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);

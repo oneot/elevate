@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useId } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
@@ -82,6 +82,7 @@ const Divider = () => <div className="w-px h-5 bg-neutral-300 mx-1" />
 function ColorPicker({ editor }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
+  const popoverId = useId()
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -108,7 +109,7 @@ function ColorPicker({ editor }) {
         aria-label="글자 색상"
         aria-expanded={open}
         aria-haspopup="true"
-        aria-controls="color-picker-popover"
+        aria-controls={popoverId}
         onClick={() => setOpen((prev) => !prev)}
         className="rounded p-1.5 transition-colors hover:bg-neutral-100 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-ms-blue"
       >
@@ -122,7 +123,7 @@ function ColorPicker({ editor }) {
       </button>
 
       {open && (
-        <div id="color-picker-popover" className="absolute top-full left-0 mt-1 z-50 bg-white border border-neutral-200 rounded-lg shadow-lg p-2 w-36">
+        <div id={popoverId} className="absolute top-full left-0 mt-1 z-50 bg-white border border-neutral-200 rounded-lg shadow-lg p-2 w-36">
           <div className="grid grid-cols-5 gap-1 mb-2">
             {COLOR_PALETTE.map(({ label, value }) => (
               <button
@@ -165,14 +166,33 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
   const autoSaveTimerRef = useRef(null)
   const [showRestoreBanner, setShowRestoreBanner] = useState(() => {
     if (!storageKey) return false
-    const saved = localStorage.getItem(storageKey)
-    return (
-      !!saved &&
-      saved !== '<p></p>' &&
-      saved !== (value || '') &&
-      saved !== (value || '<p></p>')
-    )
+    try {
+      const saved = localStorage.getItem(storageKey)
+      return (
+        !!saved &&
+        saved !== '<p></p>' &&
+        saved !== (value || '') &&
+        saved !== (value || '<p></p>')
+      )
+    } catch {
+      return false
+    }
   })
+
+  useEffect(() => {
+    if (!storageKey) return
+    try {
+      const saved = localStorage.getItem(storageKey)
+      const hasDraft =
+        !!saved &&
+        saved !== '<p></p>' &&
+        saved !== (value || '') &&
+        saved !== (value || '<p></p>')
+      setShowRestoreBanner(hasDraft)
+    } catch {
+      setShowRestoreBanner(false)
+    }
+  }, [storageKey, value])
 
   const editor = useEditor({
     extensions: [
@@ -222,7 +242,11 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
       clearTimeout(autoSaveTimerRef.current)
       autoSaveTimerRef.current = setTimeout(() => {
         const html = editor.getHTML()
-        localStorage.setItem(storageKey, html)
+        try {
+          localStorage.setItem(storageKey, html)
+        } catch {
+          // storage quota exceeded or blocked — silently skip auto-save
+        }
       }, 3000)
     }
     editor.on('update', handler)
@@ -344,18 +368,26 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
 
   const handleRestore = () => {
     if (!storageKey) return
-    const saved = localStorage.getItem(storageKey)
-    if (saved && editor) {
-      editor.commands.setContent(saved, false)
-      onChange?.(saved)
+    try {
+      const saved = localStorage.getItem(storageKey)
+      if (saved && editor) {
+        editor.commands.setContent(saved, false)
+        onChange?.(saved)
+      }
+      localStorage.removeItem(storageKey)
+    } catch {
+      // ignore storage errors
     }
-    localStorage.removeItem(storageKey)
     setShowRestoreBanner(false)
   }
 
   const handleDiscardRestore = () => {
     if (!storageKey) return
-    localStorage.removeItem(storageKey)
+    try {
+      localStorage.removeItem(storageKey)
+    } catch {
+      // ignore storage errors
+    }
     setShowRestoreBanner(false)
   }
 

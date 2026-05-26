@@ -58,7 +58,7 @@ export function registerFile(payload, options = {}) {
  * 게시글에 등록된 첨부파일 목록을 조회한다.
  * @param {string} postId
  * @param {{ msalInstance }} options
- * @returns {Promise<Array<{ id: string, fileName: string, blobUrl: string }>>}
+ * @returns {Promise<Array<{ id: string, fileName: string, blobUrl: string, signedUrl: string | null, contentType: string, sizeBytes: number }>>}
  */
 export function getFiles(postId, options = {}) {
   return apiFetch(`/files?postId=${encodeURIComponent(postId)}`, {
