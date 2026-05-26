@@ -6,14 +6,17 @@ const PREVIEW_LINES = 3
 
 export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
   const code = node.textContent || ''
-  const lineCount = useMemo(() => code.split('\n').length, [code])
+  const lines = useMemo(() => (code ? code.replace(/\n$/, '').split('\n') : []), [code])
+  const lineCount = lines.length
   const shouldCollapse = lineCount >= COLLAPSE_THRESHOLD
-  const previewText = useMemo(() => code.split('\n').slice(0, PREVIEW_LINES).join('\n'), [code])
+  const previewText = useMemo(() => lines.slice(0, PREVIEW_LINES).join('\n'), [lines])
   const [isCollapsed, setIsCollapsed] = useState(shouldCollapse)
 
   useEffect(() => {
-    updateAttributes({ collapsible: shouldCollapse })
-  }, [shouldCollapse, updateAttributes])
+    if (node.attrs.collapsible !== shouldCollapse) {
+      updateAttributes({ collapsible: shouldCollapse })
+    }
+  }, [shouldCollapse, updateAttributes, node.attrs.collapsible])
 
   useEffect(() => {
     setIsCollapsed(shouldCollapse)
