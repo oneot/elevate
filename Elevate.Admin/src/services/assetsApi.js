@@ -53,3 +53,29 @@ export function registerFile(payload, options = {}) {
     body: JSON.stringify(payload),
   })
 }
+
+/**
+ * 게시글에 등록된 첨부파일 목록을 조회한다.
+ * @param {string} postId
+ * @param {{ msalInstance }} options
+ * @returns {Promise<Array<{ id: string, fileName: string, blobUrl: string }>>}
+ */
+export function getFiles(postId, options = {}) {
+  return apiFetch(`/files?postId=${encodeURIComponent(postId)}`, {
+    ...options,
+    method: 'GET',
+  })
+}
+
+/**
+ * 첨부파일을 서버 DB와 Blob Storage에서 삭제한다.
+ * @param {string} fileId
+ * @param {{ msalInstance }} options
+ * @returns {Promise<null>} 성공 시 null (204 No Content)
+ */
+export function deleteFile(fileId, options = {}) {
+  return apiFetch(`/files/${encodeURIComponent(fileId)}`, {
+    ...options,
+    method: 'DELETE',
+  })
+}
