@@ -12,7 +12,7 @@
  * /all 페이지에는 program-news 게시글이 노출되지 않는다.
  * (BASE_CATEGORIES / POST_LIST_CATEGORIES에 포함되지 않음)
  */
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PostListLayout from '../components/posts/PostListLayout';
 import SearchBar from '../components/posts/SearchBar';
@@ -20,6 +20,7 @@ import Logo from '../components/common/Logo';
 import Footer from '../components/layout/Footer';
 import EventCalendar from '../components/posts/EventCalendar';
 import { useCategoryPostList } from '../hooks/useCategoryPostList';
+import { listCalendarEvents } from '../api/calendarEvents';
 
 // 탭 설정: key는 URL의 tab 파라미터 값, category는 API 카테고리 슬러그
 const TABS = [
@@ -54,24 +55,40 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
     updateUrlParams,
   } = useCategoryPostList(category);
 
-  const [searchParams] = useSearchParams();
-  const selectedSlug = searchParams.get('event') || null;
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [calendarEventsLoading, setCalendarEventsLoading] = useState(false);
 
-  // 달력 이벤트 선택 핸들러 (event 탭에서만 사용)
-  const handleCalendarSelect = (slug) => {
-    updateUrlParams({ event: slug || '' });
+  useEffect(() => {
+    if (activeTab !== 'event') return;
+    let isMounted = true;
+    const controller = new AbortController();
+    setCalendarEventsLoading(true);
+    listCalendarEvents({ signal: controller.signal })
+      .then(data => { if (isMounted) setCalendarEvents(Array.isArray(data?.items) ? data.items : []); })
+      .catch(() => {})
+      .finally(() => { if (isMounted) setCalendarEventsLoading(false); });
+    return () => { isMounted = false; controller.abort(); };
+  }, [activeTab]);
+
+  const [searchParams] = useSearchParams();
+  const selectedEventId = searchParams.get('event') || null;
+
+  const handleCalendarSelect = (id) => {
+    updateUrlParams({ event: id || '' });
   };
 
-  // event 탭에서 selectedSlug가 있으면 해당 게시글만 표시, 없으면 기존 필터링된 결과 표시
-  const displayedPosts = activeTab === 'event' && selectedSlug
-    ? allPosts.filter((p) => p.slug === selectedSlug)
+  const selectedCalendarEvent = selectedEventId
+    ? calendarEvents.find(ce => ce.id === selectedEventId)
+    : null;
+
+  const displayedPosts = activeTab === 'event' && selectedCalendarEvent?.linkedPostId
+    ? allPosts.filter(p => p.id === selectedCalendarEvent.linkedPostId)
     : paginatedPosts;
 
-  // event 탭에서만 달력을 표시 (allPosts는 필터링되지 않은 전체 이벤트)
   const calendarSlot = activeTab === 'event' ? (
     <EventCalendar
-      posts={allPosts}
-      selectedSlug={selectedSlug}
+      calendarEvents={calendarEvents}
+      selectedEventId={selectedEventId}
       onSelectEvent={handleCalendarSelect}
     />
   ) : null;
@@ -123,8 +140,8 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
       error={error}
       countLabel={!loading && selectedTags.length > 0 ? `${filteredPosts.length}개의 게시글이 일치합니다.` : undefined}
       activeQuery={qParam}
-      currentPage={activeTab === 'event' && selectedSlug ? 1 : currentPage}
-      totalPages={activeTab === 'event' && selectedSlug ? 1 : totalPages}
+      currentPage={activeTab === 'event' && selectedCalendarEvent?.linkedPostId ? 1 : currentPage}
+      totalPages={activeTab === 'event' && selectedCalendarEvent?.linkedPostId ? 1 : totalPages}
       onPageChange={handlePageChange}
     />
   );
