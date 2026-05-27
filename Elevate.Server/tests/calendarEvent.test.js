@@ -1,7 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const path = require('path');
 
-// cosmosClient 모킹
+// cosmosClient 모킹 — require.cache 국소 스텁 (전역 Module._load 패치 없음)
 const mockContainer = {
   items: {
     query: () => ({ fetchAll: async () => ({ resources: [] }) }),
@@ -14,22 +15,24 @@ const mockContainer = {
   }),
 };
 
-// 모듈 캐시를 우회해 cosmosClient를 교체한다
-const Module = require('module');
-const originalLoad = Module._load;
-Module._load = function (request, parent, isMain) {
-  if (request.includes('cosmosClient')) {
-    return { getCalendarEventsContainer: () => mockContainer };
-  }
-  return originalLoad.call(this, request, parent, isMain);
+const cosmosClientPath = require.resolve('../src/services/cosmosClient');
+const ctrlPath = require.resolve('../src/controllers/calendarEventController');
+
+// cosmosClient를 mock으로 캐시에 주입한 뒤 controller를 로드
+require.cache[cosmosClientPath] = {
+  id: cosmosClientPath,
+  filename: cosmosClientPath,
+  loaded: true,
+  exports: { getCalendarEventsContainer: () => mockContainer },
 };
-
-// 테스트 종료 후 Module._load 복구
-test.after(() => {
-  Module._load = originalLoad;
-});
-
+delete require.cache[ctrlPath];
 const ctrl = require('../src/controllers/calendarEventController');
+
+// 테스트 종료 후 캐시 정리
+test.after(() => {
+  delete require.cache[cosmosClientPath];
+  delete require.cache[ctrlPath];
+});
 
 function makeRes() {
   let _status = 200;
@@ -45,6 +48,20 @@ function makeRes() {
 
 test('createCalendarEvent — title 없으면 400', async () => {
   const req = { body: {}, correlationId: 'x', params: {}, query: {} };
+  const res = makeRes();
+  await ctrl.createCalendarEvent(req, res);
+  assert.equal(res.getStatus(), 400);
+});
+
+test('createCalendarEvent — 잘못된 eventDates 포맷이면 400', async () => {
+  const req = { body: { title: '이벤트', eventDates: [{ start: 'not-a-date' }] }, correlationId: 'x', params: {}, query: {} };
+  const res = makeRes();
+  await ctrl.createCalendarEvent(req, res);
+  assert.equal(res.getStatus(), 400);
+});
+
+test('createCalendarEvent — end < start이면 400', async () => {
+  const req = { body: { title: '이벤트', eventDates: [{ start: '2026-06-05', end: '2026-06-01' }] }, correlationId: 'x', params: {}, query: {} };
   const res = makeRes();
   await ctrl.createCalendarEvent(req, res);
   assert.equal(res.getStatus(), 400);

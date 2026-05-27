@@ -63,7 +63,7 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
     const controller = new AbortController();
     listCalendarEvents({ signal: controller.signal })
       .then(data => { if (isMounted) setCalendarEvents(Array.isArray(data?.items) ? data.items : []); })
-      .catch(() => {});
+      .catch(err => { if (err?.name !== 'AbortError') console.error('[ProgramNews] calendarEvents fetch failed', err); });
     return () => { isMounted = false; controller.abort(); };
   }, [activeTab]);
 

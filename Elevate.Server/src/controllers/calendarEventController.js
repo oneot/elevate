@@ -5,6 +5,22 @@ const { getCalendarEventsContainer } = require('../services/cosmosClient');
 const { sendError } = require('../utils/http');
 
 const PARTITION_KEY = 'calendarEvent';
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function validateEventDate(d) {
+  if (!d || typeof d.start !== 'string' || !d.start.trim() || !ISO_DATE_RE.test(d.start.trim())) {
+    return 'each eventDate must have a valid start date (YYYY-MM-DD)';
+  }
+  if (d.end !== undefined && d.end !== null) {
+    if (typeof d.end !== 'string' || !d.end.trim() || !ISO_DATE_RE.test(d.end.trim())) {
+      return 'eventDate end must be a valid date string (YYYY-MM-DD)';
+    }
+    if (d.end.trim() < d.start.trim()) {
+      return 'eventDate end must be >= start';
+    }
+  }
+  return null;
+}
 
 function toCalendarEventResponse(doc) {
   return {
@@ -28,7 +44,8 @@ function validateCreatePayload(body) {
   }
   if (Array.isArray(body.eventDates)) {
     for (const d of body.eventDates) {
-      if (!d || typeof d.start !== 'string') return 'each eventDate must have a start string';
+      const err = validateEventDate(d);
+      if (err) return err;
     }
   }
   return null;
@@ -44,7 +61,8 @@ function validateUpdatePayload(body) {
   }
   if (Array.isArray(body.eventDates)) {
     for (const d of body.eventDates) {
-      if (!d || typeof d.start !== 'string') return 'each eventDate must have a start string';
+      const err = validateEventDate(d);
+      if (err) return err;
     }
   }
   return null;
