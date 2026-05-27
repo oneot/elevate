@@ -1041,9 +1041,15 @@ body {
 }
 
 /* Collapsible code block toggle button (injected by html.js) */
+.collapsible-code-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
 .collapsible-code-toggle {
   display: block;
-  margin-top: 4px;
   padding: 2px 10px;
   font-size: 0.75rem;
   background: transparent;
@@ -1053,6 +1059,21 @@ body {
   color: #6b7280;
 }
 .collapsible-code-toggle:hover {
+  color: #374151;
+  border-color: #9ca3af;
+}
+
+.collapsible-code-copy {
+  display: block;
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #6b7280;
+}
+.collapsible-code-copy:hover {
   color: #374151;
   border-color: #9ca3af;
 }

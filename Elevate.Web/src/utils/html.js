@@ -125,11 +125,10 @@ export function injectLinkHandlers(containerEl, navigate) {
 }
 
 /**
- * 렌더링된 HTML 내 `data-collapsible="true"` 속성의 `<pre>` 코드 블록에
- * 접이식 토글 버튼을 주입한다.
+ * 렌더링된 HTML 내 긴 코드 블록에 접이식 토글 버튼과 복사 버튼을 주입한다.
  *
- * 에디터에서 15줄 이상의 코드 블록에 data-collapsible 속성이 저장되며,
- * 공개 게시글 페이지에서 이를 감지해 미리보기(3줄) + 펼치기 버튼 UI를 추가한다.
+ * COLLAPSE_THRESHOLD 줄 이상인 `<pre>` 요소를 대상으로 하며,
+ * `data-collapsible="false"`가 명시된 블록은 건너뛴다.
  *
  * @param {Element} containerEl - 탐색할 DOM 컨테이너 요소
  * @returns {Function} 이벤트 리스너를 제거하는 cleanup 함수
@@ -138,16 +137,18 @@ let _collapsibleSeq = 0;
 export function injectCollapsibleCodeBlocks(containerEl) {
   if (!containerEl) return () => {};
 
+  const COLLAPSE_THRESHOLD = 15;
   const PREVIEW_LINES = 3;
   const cleanups = [];
 
   // data-collapsible-injected 속성으로 중복 주입 방지 (idempotency)
-  containerEl.querySelectorAll('pre[data-collapsible="true"]:not([data-collapsible-injected])').forEach((pre) => {
+  // data-collapsible="false"로 명시 비활성화된 블록은 건너뜀
+  containerEl.querySelectorAll('pre:not([data-collapsible="false"]):not([data-collapsible-injected])').forEach((pre) => {
     const code = pre.querySelector('code');
     if (!code) return;
 
     const lines = code.textContent.replace(/\n$/, '').split('\n');
-    if (lines.length <= PREVIEW_LINES) return;
+    if (lines.length < COLLAPSE_THRESHOLD) return;
 
     const previewText = lines.slice(0, PREVIEW_LINES).join('\n');
     let collapsed = true;
@@ -182,35 +183,145 @@ export function injectCollapsibleCodeBlocks(containerEl) {
     btn.setAttribute('aria-controls', fullId);
     btn.className = 'collapsible-code-toggle';
 
+    // 복사 버튼
+    const fullText = lines.join('\n');
+    const copyBtn = document.createElement('button');
+    copyBtn.type = 'button';
+    copyBtn.textContent = '복사';
+    copyBtn.setAttribute('aria-label', '코드 복사');
+    copyBtn.className = 'collapsible-code-copy';
+
+    const handleCopy = () => {
+      const write = (text) => {
+        if (navigator.clipboard?.writeText) {
+          return navigator.clipboard.writeText(text);
+        }
+        // clipboard API 미지원 시 execCommand 폴백
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          return ok ? Promise.resolve() : Promise.reject();
+        } catch (e) {
+          return Promise.reject(e);
+        }
+      };
+
+      write(fullText).then(() => {
+        copyBtn.textContent = '복사됨 ✓';
+        setTimeout(() => { copyBtn.textContent = '복사'; }, 2000);
+      }).catch(() => {
+        copyBtn.textContent = '복사 실패';
+        setTimeout(() => { copyBtn.textContent = '복사'; }, 2000);
+      });
+    };
+
+    copyBtn.addEventListener('click', handleCopy);
+    cleanups.push(() => copyBtn.removeEventListener('click', handleCopy));
+
+    const actionRow = document.createElement('div');
+    actionRow.className = 'collapsible-code-actions';
+    actionRow.appendChild(btn);
+    actionRow.appendChild(copyBtn);
+
     const wrapper = document.createElement('div');
     wrapper.appendChild(previewPre);
-    wrapper.appendChild(btn);
+    wrapper.appendChild(actionRow);
+
+    const ANIM_MS = 300;
+    let isAnimating = false;
 
     const handleToggle = () => {
+      if (isAnimating) return;
+      isAnimating = true;
       collapsed = !collapsed;
+      btn.setAttribute('aria-expanded', String(!collapsed));
+
       if (collapsed) {
-        previewPre.hidden = false;
-        previewPre.setAttribute('aria-hidden', 'false');
-        pre.hidden = true;
-        pre.setAttribute('aria-hidden', 'true');
+        // ---- 접기 ----
         btn.textContent = `코드 펼치기 (${lines.length}줄)`;
-        btn.setAttribute('aria-expanded', 'false');
+
+        // pre를 현재 높이에서 0으로 애니메이션
+        const h = pre.scrollHeight;
+        pre.style.overflow = 'hidden';
+        pre.style.maxHeight = `${h}px`;
+        pre.style.transition = `max-height ${ANIM_MS}ms ease, opacity ${Math.round(ANIM_MS * 0.7)}ms ease`;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            pre.style.maxHeight = '0';
+            pre.style.opacity = '0';
+          });
+        });
+
+        setTimeout(() => {
+          pre.hidden = true;
+          pre.setAttribute('aria-hidden', 'true');
+          pre.style.maxHeight = '';
+          pre.style.overflow = '';
+          pre.style.transition = '';
+          pre.style.opacity = '';
+
+          // previewPre 페이드인
+          previewPre.style.opacity = '0';
+          previewPre.style.transition = `opacity ${Math.round(ANIM_MS * 0.4)}ms ease`;
+          previewPre.hidden = false;
+          previewPre.setAttribute('aria-hidden', 'false');
+          requestAnimationFrame(() => { previewPre.style.opacity = '1'; });
+
+          // 접기 후 코드블록 상단으로 스크롤
+          wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          isAnimating = false;
+        }, ANIM_MS);
+
       } else {
-        previewPre.hidden = true;
-        previewPre.setAttribute('aria-hidden', 'true');
-        pre.hidden = false;
-        pre.setAttribute('aria-hidden', 'false');
+        // ---- 펼치기 ----
         btn.textContent = '코드 접기';
-        btn.setAttribute('aria-expanded', 'true');
+
+        // previewPre 페이드아웃
+        previewPre.style.transition = `opacity ${Math.round(ANIM_MS * 0.4)}ms ease`;
+        previewPre.style.opacity = '0';
+
+        setTimeout(() => {
+          previewPre.hidden = true;
+          previewPre.setAttribute('aria-hidden', 'true');
+          previewPre.style.transition = '';
+          previewPre.style.opacity = '';
+
+          // pre를 0에서 실제 높이로 애니메이션
+          pre.hidden = false;
+          pre.setAttribute('aria-hidden', 'false');
+          pre.style.overflow = 'hidden';
+          pre.style.maxHeight = '0';
+          pre.style.opacity = '0';
+          pre.style.transition = `max-height ${ANIM_MS}ms ease, opacity ${Math.round(ANIM_MS * 0.7)}ms ease`;
+          requestAnimationFrame(() => {
+            const fullH = pre.scrollHeight;
+            pre.style.maxHeight = `${fullH}px`;
+            pre.style.opacity = '1';
+          });
+
+          setTimeout(() => {
+            pre.style.maxHeight = 'none';
+            pre.style.overflow = '';
+            pre.style.transition = '';
+            pre.style.opacity = '';
+            isAnimating = false;
+          }, ANIM_MS + 50);
+        }, Math.round(ANIM_MS * 0.4));
       }
     };
 
     btn.addEventListener('click', handleToggle);
     cleanups.push(() => btn.removeEventListener('click', handleToggle));
 
-    // pre를 DOM에서 wrapper 위치로 교체한 뒤 wrapper 내부에 삽입 (btn 앞)
+    // pre를 DOM에서 wrapper 위치로 교체한 뒤 wrapper 내부에 삽입 (actionRow 앞)
     pre.replaceWith(wrapper);
-    wrapper.insertBefore(pre, btn);
+    wrapper.insertBefore(pre, actionRow);
   });
 
   return () => cleanups.forEach((fn) => fn());
