@@ -2,29 +2,27 @@
  * PostMetaSidebar
  *
  * PostEditor의 우측 메타데이터 패널.
- * 상태(status), slug, 카테고리, 태그, YouTube, 썸네일, 첨부파일을 관리한다.
  *
  * Props:
- *  - post           {object}   현재 게시글 상태
- *  - tagsInput      {string}   쉼표 구분 태그 문자열 (post.tags와 별도 관리)
- *  - youtubeInput   {string}   사용자가 입력한 YouTube URL (post.youtube는 ID만 저장)
- *  - youtubeError   {string}   YouTube URL 검증 오류 메시지
- *  - isUploading    {boolean}  썸네일 업로드 진행 중 여부
- *  - isNew          {boolean}  신규 게시글 여부 (카테고리 선택 가능 여부에 영향)
- *  - onChange       {function} handleChange(field)(event) — PostEditor에서 전달
- *  - onTagsChange   {function} tagsInput 변경 핸들러
- *  - onYoutubeChange{function} YouTube URL 변경 핸들러
- *  - onThumbnailUpload{function} 파일 선택 시 썸네일 업로드 핸들러 (File → void)
- *  - onEventDatesChange{function} eventDates 변경 핸들러
- *  - onEventLocationChange{function} eventLocation 변경 핸들러
- *  - onEventTargetChange{function} eventTarget 변경 핸들러
- *  - postId         {string|undefined} 첨부파일 업로더에 필요한 게시글 ID
- *  - categories     {Array<{value, label}>} 카테고리 목록
+ *  - post                        {object}   현재 게시글 상태
+ *  - tagsInput                   {string}
+ *  - youtubeInput                {string}
+ *  - youtubeError                {string}
+ *  - isUploading                 {boolean}
+ *  - isNew                       {boolean}
+ *  - onChange                    {function}
+ *  - onTagsChange                {function}
+ *  - onYoutubeChange             {function}
+ *  - onThumbnailUpload           {function}
+ *  - postId                      {string|undefined}
+ *  - categories                  {Array<{value, label}>}
+ *  - linkedCalendarEventId       {string}   event 카테고리: 선택된 calendarEvent id ('' = 없음)
+ *  - calendarEvents              {Array}    event 카테고리: picker 옵션 목록
+ *  - onLinkedCalendarEventChange {function} event 카테고리: id 변경 핸들러
  */
 
 import { Card, FormField } from '../ui/index.js'
 import AttachUploader from './AttachUploader.jsx'
-import EventDatesEditor from './EventDatesEditor.jsx'
 
 function PostMetaSidebar({
   post,
@@ -37,11 +35,11 @@ function PostMetaSidebar({
   onTagsChange,
   onYoutubeChange,
   onThumbnailUpload,
-  onEventDatesChange,
-  onEventLocationChange,
-  onEventTargetChange,
   postId,
   categories,
+  linkedCalendarEventId = '',
+  calendarEvents = [],
+  onLinkedCalendarEventChange,
 }) {
   return (
     <div className="space-y-8">
@@ -87,30 +85,18 @@ function PostMetaSidebar({
         </FormField>
 
         {post.category === 'event' && (
-          <>
-            <FormField label="행사 일정">
-              <EventDatesEditor
-                value={post.eventDates}
-                onChange={onEventDatesChange}
-              />
-            </FormField>
-            <FormField label="행사 장소">
-              <input
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-                value={post.eventLocation || ''}
-                onChange={(e) => onEventLocationChange(e.target.value)}
-                placeholder="예: 서울 코엑스 A홀"
-              />
-            </FormField>
-            <FormField label="행사 대상">
-              <input
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-                value={post.eventTarget || ''}
-                onChange={(e) => onEventTargetChange(e.target.value)}
-                placeholder="예: 전체, 개발자, 학생"
-              />
-            </FormField>
-          </>
+          <FormField label="연결된 달력 이벤트" hint="이 게시글에 연결할 달력 이벤트를 선택합니다.">
+            <select
+              className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+              value={linkedCalendarEventId}
+              onChange={(e) => onLinkedCalendarEventChange && onLinkedCalendarEventChange(e.target.value)}
+            >
+              <option value="">연결 없음</option>
+              {calendarEvents.map(ev => (
+                <option key={ev.id} value={ev.id}>{ev.title}</option>
+              ))}
+            </select>
+          </FormField>
         )}
 
         <FormField label="YouTube">

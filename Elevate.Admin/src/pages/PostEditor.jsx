@@ -9,6 +9,7 @@ import {
   getPost,
   updatePost,
 } from '../services/postsApi.js'
+import { listCalendarEvents, updateCalendarEvent } from '../services/calendarEventsApi.js'
 import { slugify, extractYoutubeId } from '../utils/formatters.js'
 import { CATEGORIES } from '../constants/categories.js'
 import { useAuth } from '../hooks/useAuth.js'
@@ -25,9 +26,6 @@ const emptyPost = {
   thumbnailUrl: '',
   htmlBody: '',
   youtube: '',
-  eventDates: null,
-  eventLocation: '',
-  eventTarget: '',
 }
 
 function PostEditor() {
@@ -50,6 +48,9 @@ function PostEditor() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [linkedCalendarEventId, setLinkedCalendarEventId] = useState('')
+  const [initialLinkedCalendarEventId, setInitialLinkedCalendarEventId] = useState('')
+  const [calendarEvents, setCalendarEvents] = useState([])
 
   const { uploading: isUploading, uploadThumbnail, uploadHtmlImage } = usePostUpload({
     msalInstance,
@@ -94,6 +95,31 @@ function PostEditor() {
       isMounted = false
     }
   }, [postId, isNew, msalInstance])
+
+  useEffect(() => {
+    if (!isApiConfigured || post.category !== 'event') return
+    let isMounted = true
+
+    const loadCalendarData = async () => {
+      try {
+        const [allEvents, linkedResult] = await Promise.all([
+          listCalendarEvents({ msalInstance }),
+          !isNew ? listCalendarEvents({ msalInstance, linkedPostId: postId }) : Promise.resolve({ items: [] }),
+        ])
+        if (isMounted) {
+          setCalendarEvents(Array.isArray(allEvents?.items) ? allEvents.items : [])
+          const linked = linkedResult?.items?.[0]
+          if (linked) {
+            setLinkedCalendarEventId(linked.id)
+            setInitialLinkedCalendarEventId(linked.id)
+          }
+        }
+      } catch { /* 달력 데이터 로드 실패는 non-fatal */ }
+    }
+
+    loadCalendarData()
+    return () => { isMounted = false }
+  }, [post.category, isNew, postId, msalInstance])
 
 
   const handleChange = (field) => (event) => {
@@ -170,6 +196,9 @@ function PostEditor() {
       if (isNew) {
         const created = await createPost(payload, { msalInstance })
         const newId = created?.id || created?.postId
+        if (post.category === 'event' && newId) {
+          await syncCalendarEventLink(newId)
+        }
         setMessage('저장되었습니다.')
         if (newId) {
           try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
@@ -177,6 +206,9 @@ function PostEditor() {
         }
       } else {
         await updatePost(postId, payload, { msalInstance })
+        if (post.category === 'event') {
+          await syncCalendarEventLink(postId)
+        }
         try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
         setMessage('업데이트되었습니다.')
       }
@@ -184,6 +216,20 @@ function PostEditor() {
       setError(err.message || '저장에 실패했습니다.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const syncCalendarEventLink = async (savedPostId) => {
+    try {
+      if (initialLinkedCalendarEventId && initialLinkedCalendarEventId !== linkedCalendarEventId) {
+        await updateCalendarEvent(initialLinkedCalendarEventId, { linkedPostId: null }, { msalInstance })
+      }
+      if (linkedCalendarEventId && linkedCalendarEventId !== initialLinkedCalendarEventId) {
+        await updateCalendarEvent(linkedCalendarEventId, { linkedPostId: savedPostId }, { msalInstance })
+      }
+      setInitialLinkedCalendarEventId(linkedCalendarEventId)
+    } catch (err) {
+      setError('게시글은 저장되었으나 달력 이벤트 연결에 실패했습니다: ' + (err.message || ''))
     }
   }
 
@@ -324,9 +370,9 @@ function PostEditor() {
             onTagsChange={setTagsInput}
             onYoutubeChange={handleYoutubeChange}
             onThumbnailUpload={uploadThumbnail}
-            onEventDatesChange={(value) => setPost((prev) => ({ ...prev, eventDates: value }))}
-            onEventLocationChange={(value) => setPost((prev) => ({ ...prev, eventLocation: value }))}
-            onEventTargetChange={(value) => setPost((prev) => ({ ...prev, eventTarget: value }))}
+            linkedCalendarEventId={linkedCalendarEventId}
+            calendarEvents={calendarEvents}
+            onLinkedCalendarEventChange={setLinkedCalendarEventId}
             postId={postId}
             categories={CATEGORIES}
           />
