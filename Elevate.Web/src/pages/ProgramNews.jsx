@@ -56,17 +56,14 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
   } = useCategoryPostList(category);
 
   const [calendarEvents, setCalendarEvents] = useState([]);
-  const [calendarEventsLoading, setCalendarEventsLoading] = useState(false);
 
   useEffect(() => {
     if (activeTab !== 'event') return;
     let isMounted = true;
     const controller = new AbortController();
-    setCalendarEventsLoading(true);
     listCalendarEvents({ signal: controller.signal })
       .then(data => { if (isMounted) setCalendarEvents(Array.isArray(data?.items) ? data.items : []); })
-      .catch(() => {})
-      .finally(() => { if (isMounted) setCalendarEventsLoading(false); });
+      .catch(() => {});
     return () => { isMounted = false; controller.abort(); };
   }, [activeTab]);
 

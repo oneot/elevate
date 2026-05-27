@@ -24,6 +24,11 @@ Module._load = function (request, parent, isMain) {
   return originalLoad.call(this, request, parent, isMain);
 };
 
+// 테스트 종료 후 Module._load 복구
+test.after(() => {
+  Module._load = originalLoad;
+});
+
 const ctrl = require('../src/controllers/calendarEventController');
 
 function makeRes() {
