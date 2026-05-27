@@ -17,7 +17,7 @@ import GlassDocLayout from '../components/layout/GlassDocLayout';
 import TableOfContents from '../components/posts/TableOfContents';
 import SeriesNavigator from '../components/posts/SeriesNavigator';
 import { getPost, getLatestAgenthonPost } from '../api/posts';
-import { sanitizeHtml, injectHeadingIds, injectLinkHandlers } from '../utils/html';
+import { sanitizeHtml, injectHeadingIds, injectLinkHandlers, injectCollapsibleCodeBlocks } from '../utils/html';
 import { formatDateKo } from '../utils/url';
 import { POST_DETAIL_VALID_CATEGORIES, CATEGORY_DISPLAY_NAMES, getCategoryListRoute } from '../constants/categories';
 import { useSeriesNavigation } from '../hooks/useSeriesNavigation';
@@ -112,11 +112,16 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
     }, [normalizedCategory, postId]);
 
     // HTML 콘텐츠 렌더링 후 heading ID 주입(TableOfContents용) + 링크 핸들러 주입(SPA 이동/외부 링크)
+    // + data-collapsible="true" 코드 블록에 접이식 토글 버튼 주입
     useEffect(() => {
         if (!contentRef.current || !post?.contentMarkdown) return;
         injectHeadingIds(contentRef.current);
-        const cleanup = injectLinkHandlers(contentRef.current, navigate);
-        return cleanup;
+        const cleanupLinks = injectLinkHandlers(contentRef.current, navigate);
+        const cleanupCollapsible = injectCollapsibleCodeBlocks(contentRef.current);
+        return () => {
+            cleanupLinks();
+            cleanupCollapsible();
+        };
     }, [post?.contentMarkdown, navigate]);
 
     const {

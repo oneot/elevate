@@ -805,6 +805,42 @@ exports.deleteFile = async (req, res) => {
   }
 };
 
+exports.getFiles = async (req, res) => {
+  const correlationId = req.correlationId;
+  const postId = req.query?.postId;
+
+  if (!postId) {
+    return sendError(res, 400, 'BadRequest', 'postId query parameter is required', correlationId);
+  }
+
+  try {
+    const container = getAssetsContainer();
+    const querySpec = {
+      query: 'SELECT c.id, c.fileName, c.blobUrl, c.contentType, c.sizeBytes FROM c WHERE c.postId = @postId AND c.documentType = "attach"',
+      parameters: [{ name: '@postId', value: postId }]
+    };
+
+    const { resources } = await container.items.query(querySpec, { partitionKey: attachCategoryPartition }).fetchAll();
+
+    const withSignedUrls = await Promise.all(
+      resources.map(async (file) => {
+        let signedUrl = null;
+        try {
+          signedUrl = await getBlobReadSasUrl(file.blobUrl);
+        } catch (err) {
+          console.warn(`[getFiles] signedUrl generation failed for file ${file.id} (${file.blobUrl}) correlationId=${correlationId}`, err.message);
+        }
+        return { ...file, signedUrl };
+      })
+    );
+
+    return res.json(withSignedUrls);
+  } catch (error) {
+    console.error('[getFiles] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
 exports.getAnalyticsSummary = async (req, res) => {
   const correlationId = req.correlationId;
 

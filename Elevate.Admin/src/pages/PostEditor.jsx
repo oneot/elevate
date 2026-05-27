@@ -35,6 +35,7 @@ function PostEditor() {
   const { postId } = useParams()
   const [searchParams] = useSearchParams()
   const isNew = !postId
+  const storageKey = isNew ? 'post-draft-new' : `post-draft-${postId}`
   const navigate = useNavigate()
   const [post, setPost] = useState(() => ({
     ...emptyPost,
@@ -171,10 +172,12 @@ function PostEditor() {
         const newId = created?.id || created?.postId
         setMessage('저장되었습니다.')
         if (newId) {
+          try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
           navigate(`/posts/${newId}`)
         }
       } else {
         await updatePost(postId, payload, { msalInstance })
+        try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
         setMessage('업데이트되었습니다.')
       }
     } catch (err) {
@@ -304,6 +307,7 @@ function PostEditor() {
                 }))
               }
               onUploadImage={uploadHtmlImage}
+              storageKey={storageKey}
             />
           </FormField>
         </Card>

@@ -1,8 +1,10 @@
-import { useEffect } from 'react'
+import { useState, useRef, useEffect, useId } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import Color from '@tiptap/extension-color'
+import { TextStyle } from '@tiptap/extension-text-style'
+import CollapsibleCodeBlockExtension from './CollapsibleCodeBlockExtension'
 import { createLowlight } from 'lowlight'
 import javascript from 'highlight.js/lib/languages/javascript'
 import typescript from 'highlight.js/lib/languages/typescript'
@@ -46,6 +48,19 @@ lowlight.register('xml', html)
 lowlight.register('css', css)
 lowlight.register('json', json)
 
+const COLOR_PALETTE = [
+  { label: '빨강', value: '#EF4444' },
+  { label: '주황', value: '#F97316' },
+  { label: '노랑', value: '#EAB308' },
+  { label: '초록', value: '#22C55E' },
+  { label: '파랑', value: '#3B82F6' },
+  { label: '보라', value: '#8B5CF6' },
+  { label: '핑크', value: '#EC4899' },
+  { label: '회색', value: '#6B7280' },
+  { label: '검정', value: '#1F2937' },
+  { label: '연회색', value: '#94A3B8' },
+]
+
 const ToolbarButton = ({ icon: IconComponent, onClick, isActive, title, disabled = false }) => (
   <button
     type="button"
@@ -64,7 +79,138 @@ const ToolbarButton = ({ icon: IconComponent, onClick, isActive, title, disabled
 
 const Divider = () => <div className="w-px h-5 bg-neutral-300 mx-1" />
 
-function HtmlEditor({ value, onChange, onUploadImage }) {
+function ColorPicker({ editor }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const popoverId = useId()
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
+
+  const currentColor = editor.getAttributes('textStyle').color || null
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        title="글자 색상"
+        aria-label="글자 색상"
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-controls={popoverId}
+        onClick={() => setOpen((prev) => !prev)}
+        className="rounded p-1.5 transition-colors hover:bg-neutral-100 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-ms-blue"
+      >
+        <span className="flex flex-col items-center leading-none">
+          <span className="font-bold text-sm text-neutral-700">A</span>
+          <span
+            className="block h-1 w-4 rounded-full mt-0.5"
+            style={{ background: currentColor || '#1F2937' }}
+          />
+        </span>
+      </button>
+
+      {open && (
+        <div id={popoverId} className="absolute top-full left-0 mt-1 z-50 bg-white border border-neutral-200 rounded-lg shadow-lg p-2 w-36">
+          <div className="grid grid-cols-5 gap-1 mb-2">
+            {COLOR_PALETTE.map(({ label, value }) => (
+              <button
+                key={value}
+                type="button"
+                title={label}
+                aria-label={label}
+                aria-pressed={currentColor === value}
+                onClick={() => {
+                  editor.chain().focus().setColor(value).run()
+                  setOpen(false)
+                }}
+                className="w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform"
+                style={{
+                  background: value,
+                  borderColor: currentColor === value ? '#3B82F6' : '#e5e7eb',
+                }}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              editor.chain().focus().unsetColor().run()
+              setOpen(false)
+            }}
+            className="w-full text-xs text-neutral-500 hover:text-neutral-800 py-0.5"
+          >
+            색상 초기화
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
+  const [isDragging, setIsDragging] = useState(false)
+  const isUploadingRef = useRef(false)
+  const autoSaveTimerRef = useRef(null)
+  const [showRestoreBanner, setShowRestoreBanner] = useState(() => {
+    if (!storageKey) return false
+    try {
+      const saved = localStorage.getItem(storageKey)
+      return (
+        !!saved &&
+        saved !== '<p></p>' &&
+        saved !== (value || '') &&
+        saved !== (value || '<p></p>')
+      )
+    } catch {
+      return false
+    }
+  })
+
+  // 초기 storageKey 변경 시 배너 재평가
+  useEffect(() => {
+    if (!storageKey) return
+    try {
+      const saved = localStorage.getItem(storageKey)
+      const hasDraft =
+        !!saved &&
+        saved !== '<p></p>' &&
+        saved !== (value || '') &&
+        saved !== (value || '<p></p>')
+      setShowRestoreBanner(hasDraft)
+    } catch {
+      setShowRestoreBanner(false)
+    }
+  }, [storageKey]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // value가 비동기로 로드될 때 1회 재평가 (PostEditor처럼 초기값이 늦게 도착하는 경우)
+  const didCheckWithValueRef = useRef(false)
+  useEffect(() => {
+    didCheckWithValueRef.current = false
+  }, [storageKey])
+  useEffect(() => {
+    if (!storageKey || !value || didCheckWithValueRef.current) return
+    didCheckWithValueRef.current = true
+    try {
+      const saved = localStorage.getItem(storageKey)
+      const hasDraft = !!saved && saved !== '<p></p>' && saved !== value
+      setShowRestoreBanner(hasDraft)
+    } catch {
+      setShowRestoreBanner(false)
+    }
+  }, [storageKey, value]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const editor = useEditor({
     extensions: [
@@ -81,9 +227,11 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
         inline: true,
         allowBase64: true,
       }),
-      CodeBlockLowlight.configure({
+      CollapsibleCodeBlockExtension.configure({
         lowlight,
       }),
+      TextStyle,
+      Color,
     ],
     content: value || '',
     onUpdate: ({ editor: currentEditor }) => {
@@ -105,6 +253,26 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
       editor.commands.setContent(next, false)
     }
   }, [editor, value])
+
+  useEffect(() => {
+    if (!storageKey || !editor) return
+    const handler = () => {
+      clearTimeout(autoSaveTimerRef.current)
+      autoSaveTimerRef.current = setTimeout(() => {
+        const html = editor.getHTML()
+        try {
+          localStorage.setItem(storageKey, html)
+        } catch {
+          // storage quota exceeded or blocked — silently skip auto-save
+        }
+      }, 3000)
+    }
+    editor.on('update', handler)
+    return () => {
+      editor.off('update', handler)
+      clearTimeout(autoSaveTimerRef.current)
+    }
+  }, [editor, storageKey])
 
   const setLink = () => {
     const previousUrl = editor.getAttributes('link').href
@@ -156,150 +324,282 @@ function HtmlEditor({ value, onChange, onUploadImage }) {
     input.click()
   }
 
+  const uploadFiles = async (files) => {
+    if (!onUploadImage) return
+    if (isUploadingRef.current) return
+    isUploadingRef.current = true
+    try {
+      const imageFiles = Array.from(files).filter((f) => f.type.startsWith('image/'))
+      const MAX_SIZE = 10 * 1024 * 1024 // 10MB
+      for (const file of imageFiles) {
+        if (file.size > MAX_SIZE) {
+          alert(`${file.name} 파일이 너무 큽니다. (최대 10MB)`)
+          continue
+        }
+        try {
+          const url = await onUploadImage(file)
+          if (url) {
+            editor.chain().focus().setImage({ src: url }).run()
+          }
+        } catch {
+          alert(`${file.name} 이미지 업로드에 실패했습니다.`)
+        }
+      }
+    } finally {
+      isUploadingRef.current = false
+    }
+  }
+
+  const handleDragEnter = (e) => {
+    e.preventDefault()
+    if (Array.from(e.dataTransfer.items).some((item) => item.kind === 'file' && item.type.startsWith('image/'))) {
+      setIsDragging(true)
+    }
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+  }
+
+  const handleDragLeave = (e) => {
+    if (e.relatedTarget === null || !e.currentTarget.contains(e.relatedTarget)) {
+      setIsDragging(false)
+    }
+  }
+
+  const handleDrop = async (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+    await uploadFiles(e.dataTransfer.files)
+  }
+
+  const handlePaste = async (e) => {
+    const files = e.clipboardData?.files
+    if (files && files.length > 0) {
+      const hasImage = Array.from(files).some((f) => f.type.startsWith('image/'))
+      if (hasImage) {
+        e.preventDefault()
+        await uploadFiles(files)
+      }
+    }
+  }
+
+  const handleRestore = () => {
+    if (!storageKey) return
+    clearTimeout(autoSaveTimerRef.current)
+    try {
+      const saved = localStorage.getItem(storageKey)
+      if (saved && editor) {
+        editor.commands.setContent(saved, false)
+        onChange?.(saved)
+      }
+      localStorage.removeItem(storageKey)
+    } catch {
+      // ignore storage errors
+    }
+    setShowRestoreBanner(false)
+  }
+
+  const handleDiscardRestore = () => {
+    if (!storageKey) return
+    clearTimeout(autoSaveTimerRef.current)
+    try {
+      localStorage.removeItem(storageKey)
+    } catch {
+      // ignore storage errors
+    }
+    setShowRestoreBanner(false)
+  }
+
   if (!editor) {
     return null
   }
 
   return (
-    <div className="rounded-md border border-neutral-300 bg-white overflow-hidden shadow-elevation-2 focus-within:border-ms-blue focus-within:ring-1 focus-within:ring-ms-blue transition-shadow duration-200">
-      {/* 툴바 */}
-      <div className="border-b border-neutral-200 bg-[#f3f2f1] p-1">
-        <div className="flex flex-wrap gap-0.5 items-center px-1">
-          {/* 실행취소/다시실행 */}
-          <ToolbarButton
-            icon={Undo}
-            onClick={() => editor.chain().focus().undo().run()}
-            isActive={false}
-            title="실행취소 (Ctrl+Z)"
-            disabled={!editor.can().undo()}
-          />
-          <ToolbarButton
-            icon={Redo}
-            onClick={() => editor.chain().focus().redo().run()}
-            isActive={false}
-            title="다시실행 (Ctrl+Shift+Z)"
-            disabled={!editor.can().redo()}
-          />
-
-          <Divider />
-
-          {/* 텍스트 서식 */}
-          <ToolbarButton
-            icon={Bold}
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            isActive={editor.isActive('bold')}
-            title="굵게 (Ctrl+B)"
-          />
-          <ToolbarButton
-            icon={Italic}
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            isActive={editor.isActive('italic')}
-            title="기울임 (Ctrl+I)"
-          />
-          <ToolbarButton
-            icon={Strikethrough}
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-            isActive={editor.isActive('strike')}
-            title="취소선"
-          />
-          <ToolbarButton
-            icon={Code}
-            onClick={() => editor.chain().focus().toggleCode().run()}
-            isActive={editor.isActive('code')}
-            title="인라인 코드"
-          />
-
-          <Divider />
-
-          {/* 제목 */}
-          <ToolbarButton
-            icon={Heading1}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-            isActive={editor.isActive('heading', { level: 1 })}
-            title="제목 1"
-          />
-          <ToolbarButton
-            icon={Heading2}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-            isActive={editor.isActive('heading', { level: 2 })}
-            title="제목 2"
-          />
-          <ToolbarButton
-            icon={Heading3}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-            isActive={editor.isActive('heading', { level: 3 })}
-            title="제목 3"
-          />
-
-          <Divider />
-
-          {/* 목록 */}
-          <ToolbarButton
-            icon={List}
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            isActive={editor.isActive('bulletList')}
-            title="글머리 목록"
-          />
-          <ToolbarButton
-            icon={ListOrdered}
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            isActive={editor.isActive('orderedList')}
-            title="번호 목록"
-          />
-
-          <Divider />
-
-          {/* 블록 요소 */}
-          <ToolbarButton
-            icon={Quote}
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            isActive={editor.isActive('blockquote')}
-            title="인용"
-          />
-          <ToolbarButton
-            icon={Code}
-            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-            isActive={editor.isActive('codeBlock')}
-            title="코드 블록"
-          />
-          <ToolbarButton
-            icon={Minus}
-            onClick={() => editor.chain().focus().setHorizontalRule().run()}
-            isActive={false}
-            title="구분선"
-          />
-
-          <Divider />
-
-          {/* 링크 & 이미지 */}
-          <ToolbarButton
-            icon={Link2}
-            onClick={setLink}
-            isActive={editor.isActive('link')}
-            title="링크"
-          />
-          <ToolbarButton
-            icon={ImageIcon}
-            onClick={addImage}
-            isActive={false}
-            title="이미지"
-          />
-
-          <Divider />
-
-          {/* 서식 지우기 */}
-          <ToolbarButton
-            icon={RemoveFormatting}
-            onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
-            isActive={false}
-            title="서식 지우기"
-          />
+    <div>
+      {showRestoreBanner && (
+        <div className="mb-2 flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-700">
+          <span>저장되지 않은 작업이 있습니다. 복구하시겠어요?</span>
+          <div className="flex gap-2 ml-4">
+            <button
+              type="button"
+              onClick={handleRestore}
+              className="rounded px-3 py-1 text-xs font-medium bg-amber-600 text-white hover:bg-amber-700 transition-colors"
+            >
+              복구하기
+            </button>
+            <button
+              type="button"
+              onClick={handleDiscardRestore}
+              className="rounded px-3 py-1 text-xs font-medium text-amber-600 hover:bg-amber-100 transition-colors"
+            >
+              버리기
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+      <div className="relative rounded-md border border-neutral-300 bg-white shadow-elevation-2 focus-within:border-ms-blue focus-within:ring-1 focus-within:ring-ms-blue transition-shadow duration-200">
+        <div className="max-h-[70vh] overflow-y-auto">
+          {/* 툴바 - 스크롤 컨테이너 내에서 sticky */}
+          <div className="border-b border-neutral-200 bg-[#f3f2f1] p-1 sticky top-0 z-10">
+            <div className="flex flex-wrap gap-0.5 items-center px-1">
+              {/* 실행취소/다시실행 */}
+              <ToolbarButton
+                icon={Undo}
+                onClick={() => editor.chain().focus().undo().run()}
+                isActive={false}
+                title="실행취소 (Ctrl+Z)"
+                disabled={!editor.can().undo()}
+              />
+              <ToolbarButton
+                icon={Redo}
+                onClick={() => editor.chain().focus().redo().run()}
+                isActive={false}
+                title="다시실행 (Ctrl+Shift+Z)"
+                disabled={!editor.can().redo()}
+              />
 
-      {/* 에디터 */}
-      <div className="p-4 bg-white cursor-text" onClick={() => editor.commands.focus()}>
-        <EditorContent editor={editor} />
+              <Divider />
+
+              {/* 텍스트 서식 */}
+              <ToolbarButton
+                icon={Bold}
+                onClick={() => editor.chain().focus().toggleBold().run()}
+                isActive={editor.isActive('bold')}
+                title="굵게 (Ctrl+B)"
+              />
+              <ToolbarButton
+                icon={Italic}
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+                isActive={editor.isActive('italic')}
+                title="기울임 (Ctrl+I)"
+              />
+              <ToolbarButton
+                icon={Strikethrough}
+                onClick={() => editor.chain().focus().toggleStrike().run()}
+                isActive={editor.isActive('strike')}
+                title="취소선"
+              />
+              <ToolbarButton
+                icon={Code}
+                onClick={() => editor.chain().focus().toggleCode().run()}
+                isActive={editor.isActive('code')}
+                title="인라인 코드"
+              />
+
+              <Divider />
+
+              {/* 제목 */}
+              <ToolbarButton
+                icon={Heading1}
+                onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                isActive={editor.isActive('heading', { level: 1 })}
+                title="제목 1"
+              />
+              <ToolbarButton
+                icon={Heading2}
+                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                isActive={editor.isActive('heading', { level: 2 })}
+                title="제목 2"
+              />
+              <ToolbarButton
+                icon={Heading3}
+                onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                isActive={editor.isActive('heading', { level: 3 })}
+                title="제목 3"
+              />
+
+              <Divider />
+
+              {/* 목록 */}
+              <ToolbarButton
+                icon={List}
+                onClick={() => editor.chain().focus().toggleBulletList().run()}
+                isActive={editor.isActive('bulletList')}
+                title="글머리 목록"
+              />
+              <ToolbarButton
+                icon={ListOrdered}
+                onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                isActive={editor.isActive('orderedList')}
+                title="번호 목록"
+              />
+
+              <Divider />
+
+              {/* 블록 요소 */}
+              <ToolbarButton
+                icon={Quote}
+                onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                isActive={editor.isActive('blockquote')}
+                title="인용"
+              />
+              <ToolbarButton
+                icon={Code}
+                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                isActive={editor.isActive('codeBlock')}
+                title="코드 블록"
+              />
+              <ToolbarButton
+                icon={Minus}
+                onClick={() => editor.chain().focus().setHorizontalRule().run()}
+                isActive={false}
+                title="구분선"
+              />
+
+              <Divider />
+
+              {/* 링크 & 이미지 */}
+              <ToolbarButton
+                icon={Link2}
+                onClick={setLink}
+                isActive={editor.isActive('link')}
+                title="링크"
+              />
+              <ToolbarButton
+                icon={ImageIcon}
+                onClick={addImage}
+                isActive={false}
+                title="이미지"
+              />
+
+              <Divider />
+
+              {/* 글자 색상 */}
+              <ColorPicker editor={editor} />
+
+              <Divider />
+
+              {/* 서식 지우기 */}
+              <ToolbarButton
+                icon={RemoveFormatting}
+                onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
+                isActive={false}
+                title="서식 지우기"
+              />
+            </div>
+          </div>
+
+          {/* 에디터 - 드래그 피드백 */}
+          <div
+            className={`relative p-4 bg-white cursor-text transition-colors duration-150 ${
+              isDragging ? 'border-dashed border-2 border-blue-400 bg-blue-50' : ''
+            }`}
+            onClick={() => editor.commands.focus()}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onPaste={handlePaste}
+          >
+            {isDragging && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-blue-500 text-sm font-medium bg-blue-50 bg-opacity-80 rounded">
+                ⬆ 이미지를 여기에 놓으세요
+              </div>
+            )}
+            <EditorContent editor={editor} />
+          </div>
+        </div>
       </div>
     </div>
   )
