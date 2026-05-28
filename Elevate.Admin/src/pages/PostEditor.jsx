@@ -113,10 +113,18 @@ function PostEditor() {
   }, [postId, isNew, msalInstance])
 
   useEffect(() => {
-    if (!isApiConfigured || post.category !== 'event') return
+    if (!isApiConfigured || post.category !== 'event') {
+      setCalendarEvents([])
+      setLinkedCalendarEventId('')
+      setInitialLinkedCalendarEventId('')
+      return
+    }
     let isMounted = true
 
     const loadCalendarData = async () => {
+      setCalendarEvents([])
+      setLinkedCalendarEventId('')
+      setInitialLinkedCalendarEventId('')
       try {
         const range = getCalendarEventRange()
         const [allEvents, linkedResult] = await Promise.all([
@@ -240,14 +248,35 @@ function PostEditor() {
   }
 
   const syncCalendarEventLink = async (savedPostId) => {
+    const previousEventId = initialLinkedCalendarEventId
+    const nextEventId = linkedCalendarEventId
+    const linkChanged = previousEventId !== nextEventId
+
+    if (!linkChanged) return
+
+    let linkedNextEvent = false
     try {
-      if (initialLinkedCalendarEventId && initialLinkedCalendarEventId !== linkedCalendarEventId) {
-        await updateCalendarEvent(initialLinkedCalendarEventId, { linkedPostId: null }, { msalInstance })
+      if (nextEventId) {
+        await updateCalendarEvent(nextEventId, { linkedPostId: savedPostId }, { msalInstance })
+        linkedNextEvent = true
       }
-      if (linkedCalendarEventId && linkedCalendarEventId !== initialLinkedCalendarEventId) {
-        await updateCalendarEvent(linkedCalendarEventId, { linkedPostId: savedPostId }, { msalInstance })
+
+      if (previousEventId) {
+        try {
+          await updateCalendarEvent(previousEventId, { linkedPostId: null }, { msalInstance })
+        } catch (unlinkError) {
+          if (linkedNextEvent) {
+            try {
+              await updateCalendarEvent(nextEventId, { linkedPostId: null }, { msalInstance })
+            } catch (rollbackError) {
+              console.error('[PostEditor] calendar event link rollback failed', rollbackError)
+            }
+          }
+          throw unlinkError
+        }
       }
-      setInitialLinkedCalendarEventId(linkedCalendarEventId)
+
+      setInitialLinkedCalendarEventId(nextEventId)
     } catch (err) {
       throw new Error('게시글은 저장되었으나 달력 이벤트 연결에 실패했습니다: ' + (err.message || ''))
     }

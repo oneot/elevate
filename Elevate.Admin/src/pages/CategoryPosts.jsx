@@ -14,20 +14,6 @@ import { CATEGORY_MAP } from '../constants/categories.js'
 const PAGE_SIZE = 20
 const CALENDAR_EVENT_LIMIT = 500
 
-function toDateString(date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-function getCalendarEventRange(today = new Date()) {
-  return {
-    start: toDateString(new Date(today.getFullYear() - 1, 0, 1)),
-    end: toDateString(new Date(today.getFullYear() + 2, 11, 31)),
-  }
-}
-
 function PostCard({ post, index }) {
   const [ref, isVisible] = useScrollAnimation(0.1)
   const colorScheme =
@@ -169,8 +155,7 @@ function CategoryPosts() {
       setCalendarLoading(true)
       setCalendarError('')
       try {
-        const range = getCalendarEventRange()
-        const data = await listCalendarEvents({ msalInstance, ...range, limit: CALENDAR_EVENT_LIMIT })
+        const data = await listCalendarEvents({ msalInstance, limit: CALENDAR_EVENT_LIMIT })
         if (isMounted) setCalendarEvents(Array.isArray(data?.items) ? data.items : [])
       } catch (err) {
         if (isMounted) setCalendarError(err.message || '달력 이벤트를 불러오지 못했습니다.')
