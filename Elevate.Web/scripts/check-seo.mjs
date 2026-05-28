@@ -33,8 +33,8 @@ const indexHtml = read('index.html');
 
 assert(indexHtml.includes('<html lang="ko">'), 'index.html must declare Korean language');
 assert(indexHtml.includes('<meta name="description"'), 'index.html must include meta description');
-assert(indexHtml.includes(`<link rel="canonical" href="${siteUrl}/"`), 'index.html must include canonical URL');
-assert(indexHtml.includes(`<meta property="og:url" content="${siteUrl}/"`), 'index.html must include og:url');
+assert(!indexHtml.includes('rel="canonical"'), 'index.html must not include a static canonical URL for every SPA route');
+assert(!indexHtml.includes('property="og:url"'), 'index.html must not include a static og:url for every SPA route');
 assert(indexHtml.includes('<meta property="og:locale" content="ko_KR"'), 'index.html must include Korean OG locale');
 assert(indexHtml.includes(`<meta property="og:image" content="${siteUrl}/og-image.png"`), 'index.html must use absolute OG image URL');
 assert(indexHtml.includes('<meta name="twitter:card" content="summary_large_image"'), 'index.html must include Twitter card');
@@ -67,8 +67,16 @@ for (const page of [
   'src/pages/Microsoft365Update.jsx',
   'src/pages/ProgramNews.jsx',
   'src/pages/ActivityShowcasePage.jsx',
+  'src/pages/PostDetail.jsx',
 ]) {
   const source = read(page);
   assert(source.includes("from 'react-helmet-async'") || source.includes('from "react-helmet-async"'), `${page} must import Helmet`);
   assert(source.includes('<Helmet>'), `${page} must render Helmet metadata`);
 }
+
+const postDetailPage = read('src/pages/PostDetail.jsx');
+assert(postDetailPage.includes('<link rel="canonical" href={pageUrl} />'), 'PostDetail must render canonical metadata');
+assert(postDetailPage.includes('<meta property="og:url" content={pageUrl} />'), 'PostDetail must render og:url metadata');
+assert(postDetailPage.includes('<meta property="og:type" content="article" />'), 'PostDetail must render article OG type');
+assert(postDetailPage.includes('<meta name="twitter:image" content={ogImage} />'), 'PostDetail must render Twitter image metadata');
+assert(!postDetailPage.includes('post?.thumbnail?.signedUrl'), 'PostDetail SEO image metadata must not use expiring signedUrl values');
