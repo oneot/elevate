@@ -1,6 +1,5 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const path = require('path');
 
 // cosmosClient 모킹 — require.cache 국소 스텁 (전역 Module._load 패치 없음)
 const mockContainer = {
@@ -80,6 +79,14 @@ test('createCalendarEvent — 정상 생성 시 201', async () => {
   await ctrl.createCalendarEvent(req, res);
   assert.equal(res.getStatus(), 201);
   assert.equal(res.getBody().title, '테스트 이벤트');
+});
+
+test('createCalendarEvent — 빈 eventDates 배열은 응답에서 유지', async () => {
+  const req = { body: { title: '테스트 이벤트', eventDates: [] }, correlationId: 'x', params: {}, query: {} };
+  const res = makeRes();
+  await ctrl.createCalendarEvent(req, res);
+  assert.equal(res.getStatus(), 201);
+  assert.deepEqual(res.getBody().eventDates, []);
 });
 
 test('listCalendarEvents — items 배열 반환', async () => {

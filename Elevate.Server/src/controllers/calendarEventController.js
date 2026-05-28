@@ -50,7 +50,7 @@ function toCalendarEventResponse(doc) {
   return {
     id: doc.id,
     title: doc.title,
-    eventDates: doc.eventDates || null,
+    eventDates: doc.eventDates ?? null,
     eventLocation: doc.eventLocation || null,
     eventTarget: doc.eventTarget || null,
     linkedPostId: doc.linkedPostId || null,

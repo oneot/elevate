@@ -21,6 +21,7 @@ import Footer from '../components/layout/Footer';
 import EventCalendar from '../components/posts/EventCalendar';
 import { useCategoryPostList } from '../hooks/useCategoryPostList';
 import { listCalendarEvents } from '../api/calendarEvents';
+import { sortByEventDates } from '../utils/eventSorting';
 
 // 탭 설정: key는 URL의 tab 파라미터 값, category는 API 카테고리 슬러그
 const TABS = [
@@ -31,37 +32,6 @@ const TABS = [
 const PAGE_TITLE = '행사 및 프로그램 소식';
 const PAGE_SIZE = 20;
 
-function getCalendarSortKey(calendarEvent, today = new Date()) {
-  const todayStr = today.toISOString().split('T')[0];
-  const dates = calendarEvent?.eventDates;
-  if (!Array.isArray(dates) || dates.length === 0) return { priority: 3, sortStr: '', desc: false };
-
-  let nearestFutureStart = null;
-  let mostRecentPastEnd = null;
-  let isOngoing = false;
-  let ongoingStart = null;
-
-  for (const d of dates) {
-    if (!d?.start) continue;
-    const start = d.start;
-    const end = d.end || d.start;
-
-    if (start <= todayStr && todayStr <= end) {
-      isOngoing = true;
-      if (ongoingStart === null || start < ongoingStart) ongoingStart = start;
-    } else if (start > todayStr) {
-      if (nearestFutureStart === null || start < nearestFutureStart) nearestFutureStart = start;
-    } else if (mostRecentPastEnd === null || end > mostRecentPastEnd) {
-      mostRecentPastEnd = end;
-    }
-  }
-
-  if (isOngoing) return { priority: 0, sortStr: ongoingStart, desc: false };
-  if (nearestFutureStart !== null) return { priority: 1, sortStr: nearestFutureStart, desc: false };
-  if (mostRecentPastEnd !== null) return { priority: 2, sortStr: mostRecentPastEnd, desc: true };
-  return { priority: 3, sortStr: '', desc: false };
-}
-
 function sortPostsByCalendarEvents(posts, calendarEvents) {
   const eventByPostId = new Map(
     calendarEvents
@@ -69,14 +39,7 @@ function sortPostsByCalendarEvents(posts, calendarEvents) {
       .map((event) => [event.linkedPostId, event])
   );
 
-  return [...posts].sort((a, b) => {
-    const ka = getCalendarSortKey(eventByPostId.get(a.id));
-    const kb = getCalendarSortKey(eventByPostId.get(b.id));
-    if (ka.priority !== kb.priority) return ka.priority - kb.priority;
-    if (ka.sortStr < kb.sortStr) return ka.desc ? 1 : -1;
-    if (ka.sortStr > kb.sortStr) return ka.desc ? -1 : 1;
-    return 0;
-  });
+  return sortByEventDates(posts, (post) => eventByPostId.get(post.id)?.eventDates);
 }
 
 /**

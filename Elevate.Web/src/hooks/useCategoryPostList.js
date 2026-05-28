@@ -17,6 +17,7 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { listPosts } from '../api/posts';
+import { sortByEventDates } from '../utils/eventSorting';
 
 const PAGE_SIZE = 20;
 
@@ -36,45 +37,7 @@ const normalizeTagList = (list = []) => Array.from(new Set(list.map(normalizeTag
  * @param {Date}  today - 기준 날짜 (테스트 주입용, 기본값 new Date())
  */
 function sortEventPosts(posts, today = new Date()) {
-  const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
-
-  function getSortKey(post) {
-    const dates = post.eventDates;
-    if (!dates || dates.length === 0) return { priority: 3, sortStr: '', desc: false };
-
-    let nearestFutureStart = null;
-    let mostRecentPastEnd = null;
-    let isOngoing = false;
-    let ongoingStart = null;
-
-    for (const d of dates) {
-      const start = d.start;
-      const end = d.end || d.start;
-
-      if (start <= todayStr && todayStr <= end) {
-        isOngoing = true;
-        if (ongoingStart === null || start < ongoingStart) ongoingStart = start;
-      } else if (start > todayStr) {
-        if (nearestFutureStart === null || start < nearestFutureStart) nearestFutureStart = start;
-      } else {
-        if (mostRecentPastEnd === null || end > mostRecentPastEnd) mostRecentPastEnd = end;
-      }
-    }
-
-    if (isOngoing) return { priority: 0, sortStr: ongoingStart, desc: false };
-    if (nearestFutureStart !== null) return { priority: 1, sortStr: nearestFutureStart, desc: false };
-    if (mostRecentPastEnd !== null) return { priority: 2, sortStr: mostRecentPastEnd, desc: true };
-    return { priority: 3, sortStr: '', desc: false };
-  }
-
-  return [...posts].sort((a, b) => {
-    const ka = getSortKey(a);
-    const kb = getSortKey(b);
-    if (ka.priority !== kb.priority) return ka.priority - kb.priority;
-    if (ka.sortStr < kb.sortStr) return ka.desc ? 1 : -1;
-    if (ka.sortStr > kb.sortStr) return ka.desc ? -1 : 1;
-    return 0;
-  });
+  return sortByEventDates(posts, (post) => post.eventDates, today);
 }
 
 /**
