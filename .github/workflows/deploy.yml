@@ -34,6 +34,9 @@ jobs:
       - name: Install dependencies (ignore peer conflicts)
         run: npm ci --legacy-peer-deps
 
+      - name: Check SEO metadata
+        run: npm run check:seo
+
       - name: Build
         run: npm run build
         env:

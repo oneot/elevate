@@ -3,6 +3,7 @@ import { Layout } from './components/layout/index.js'
 import NotFound from './pages/NotFound.jsx'
 import PostEditor from './pages/PostEditor.jsx'
 import CategoryPosts from './pages/CategoryPosts.jsx'
+import CalendarEventEditor from './pages/CalendarEventEditor.jsx'
 
 /**
  * 앱 라우팅 구조.
@@ -20,6 +21,8 @@ function App() {
         <Route path="/category/:categoryId" element={<CategoryPosts />} />
         <Route path="/posts/new" element={<PostEditor />} />
         <Route path="/posts/:postId" element={<PostEditor />} />
+        <Route path="/calendar-events/new" element={<CalendarEventEditor />} />
+        <Route path="/calendar-events/:eventId" element={<CalendarEventEditor />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

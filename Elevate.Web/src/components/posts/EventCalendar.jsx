@@ -106,11 +106,11 @@ function EventBar({ event }) {
 
 
 /**
- * posts: Array<{ slug, title, eventDates, eventLocation, eventTarget }>
- * selectedSlug: string | null — 현재 선택된 이벤트 slug
- * onSelectEvent: (slug: string | null) => void — 이벤트 클릭 핸들러
+ * calendarEvents: Array<{ id, title, eventDates, eventLocation, eventTarget, linkedPostId }>
+ * selectedEventId: string | null — 현재 선택된 calendarEvent id
+ * onSelectEvent: (id: string | null) => void
  */
-export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent }) {
+export default function EventCalendar({ calendarEvents = [], selectedEventId, onSelectEvent }) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const navigate = useCallback((action) => {
@@ -123,42 +123,41 @@ export default function EventCalendar({ posts = [], selectedSlug, onSelectEvent 
     });
   }, []);
 
-  // posts → react-big-calendar 이벤트 변환
+  // calendarEvents → react-big-calendar 이벤트 변환
   const events = useMemo(() => {
     const result = [];
-    posts.forEach(post => {
-      if (!Array.isArray(post.eventDates)) return;
-      post.eventDates.forEach(d => {
+    calendarEvents.forEach(ce => {
+      if (!Array.isArray(ce.eventDates)) return;
+      ce.eventDates.forEach(d => {
         if (!d.start) return;
         const endDate = addDays(parseISO(d.end || d.start), 1);
         result.push({
-          title: post.title,
+          title: ce.title,
           start: parseISO(d.start),
           end: endDate,
           allDay: true,
           resource: {
-            slug: post.slug,
+            calendarEventId: ce.id,
             eventDate: { start: d.start, end: d.end || d.start },
-            eventLocation: post.eventLocation || null,
-            eventTarget: post.eventTarget || null,
+            eventLocation: ce.eventLocation || null,
+            eventTarget: ce.eventTarget || null,
           },
         });
       });
     });
     return result;
-  }, [posts]);
+  }, [calendarEvents]);
 
   const handleSelectEvent = (event) => {
-    const slug = event.resource.slug;
-    onSelectEvent(selectedSlug === slug ? null : slug);
+    const id = event.resource.calendarEventId;
+    onSelectEvent(selectedEventId === id ? null : id);
   };
 
-  const eventPropGetter = (event) => {
-    const isSelected = event.resource.slug === selectedSlug;
-    return {
-      className: isSelected ? 'event-bar--selected' : 'event-bar--default',
-    };
-  };
+  const eventPropGetter = (event) => ({
+    className: event.resource.calendarEventId === selectedEventId
+      ? 'event-bar--selected'
+      : 'event-bar--default',
+  });
 
   return (
     <div className="rbc-calendar-wrapper">

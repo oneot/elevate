@@ -1041,6 +1041,14 @@ body {
 }
 
 /* Collapsible code block toggle button (injected by html.js) */
+.prose .collapsible-code-block {
+  margin: 1rem 0;
+}
+
+.prose .collapsible-code-block pre {
+  margin: 0;
+}
+
 .collapsible-code-actions {
   display: flex;
   align-items: center;
