@@ -111,8 +111,9 @@ function makeCodeBlock(text, attributes = {}) {
 
 function loadInjectCollapsibleCodeBlocks() {
   const source = fs.readFileSync(new URL('../src/utils/html.js', import.meta.url), 'utf8')
-    .replace("import DOMPurify from 'dompurify';", '')
-    .replaceAll('export function ', 'function ')
+    .replace(/^import\s+DOMPurify\s+from\s+['"]dompurify['"];\s*$/m, '')
+    .replace(/\bexport\s+(?=(?:async\s+)?function\b)/g, '')
+    .replace(/\bexport\s+(?=(?:let|const|var)\b)/g, '')
     .replace('let _collapsibleSeq = 0;', 'var _collapsibleSeq = 0;');
 
   const context = {

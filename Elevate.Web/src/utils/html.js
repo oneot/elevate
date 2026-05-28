@@ -197,6 +197,7 @@ export function injectCollapsibleCodeBlocks(containerEl) {
     actionRow.appendChild(copyBtn);
 
     const wrapper = document.createElement('div');
+    wrapper.className = 'collapsible-code-block';
     wrapper.appendChild(actionRow);
 
     if (!isCollapsible) {
