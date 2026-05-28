@@ -13,6 +13,7 @@
  * (BASE_CATEGORIES / POST_LIST_CATEGORIES에 포함되지 않음)
  */
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useSearchParams } from 'react-router-dom';
 import PostListLayout from '../components/posts/PostListLayout';
 import SearchBar from '../components/posts/SearchBar';
@@ -20,6 +21,7 @@ import Logo from '../components/common/Logo';
 import Footer from '../components/layout/Footer';
 import EventCalendar from '../components/posts/EventCalendar';
 import { useCategoryPostList } from '../hooks/useCategoryPostList';
+import { DEFAULT_OG_IMAGE, SITE_NAME, canonicalUrl } from '../constants/seo';
 
 // 탭 설정: key는 URL의 tab 파라미터 값, category는 API 카테고리 슬러그
 const TABS = [
@@ -28,6 +30,8 @@ const TABS = [
 ];
 
 const PAGE_TITLE = '행사 및 프로그램 소식';
+const SEO_TITLE = `${PAGE_TITLE} | Microsoft Elevate`;
+const SEO_DESCRIPTION = 'Microsoft Elevate와 함께하는 교육 행사, 프로그램, 커뮤니티 소식을 확인하세요.';
 
 /**
  * 탭 하나의 콘텐츠 (게시글 목록 + 검색 + 태그 필터).
@@ -153,6 +157,21 @@ export default function ProgramNews() {
 
   return (
     <>
+      <Helmet>
+        <title>{SEO_TITLE}</title>
+        <meta name="description" content={SEO_DESCRIPTION} />
+        <link rel="canonical" href={canonicalUrl('/program-news')} />
+        <meta property="og:site_name" content={SITE_NAME} />
+        <meta property="og:title" content={SEO_TITLE} />
+        <meta property="og:description" content={SEO_DESCRIPTION} />
+        <meta property="og:url" content={canonicalUrl('/program-news')} />
+        <meta property="og:image" content={DEFAULT_OG_IMAGE} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={SEO_TITLE} />
+        <meta name="twitter:description" content={SEO_DESCRIPTION} />
+        <meta name="twitter:image" content={DEFAULT_OG_IMAGE} />
+      </Helmet>
       {/* key={activeTab}: 탭 전환 시 컴포넌트를 강제 remount해 훅 상태(q/tags/page)를 초기화한다 */}
       <NewsTabContent
         key={activeTab}

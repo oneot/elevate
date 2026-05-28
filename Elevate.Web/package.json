@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "check:seo": "node scripts/check-seo.mjs",
     "generate-posts": "node scripts/generate-posts.js"
   },
   "dependencies": {

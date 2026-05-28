@@ -9,6 +9,7 @@
  * 시리즈가 없는 경우: `listPosts`로 페이지 기반 목록 조회
  */
 import React, { useEffect, useState, useCallback } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import NotFound from './NotFound';
 import PostListLayout from '../components/posts/PostListLayout';
@@ -16,6 +17,7 @@ import SearchBar from '../components/posts/SearchBar';
 import Logo from '../components/common/Logo';
 import { listPosts, listTags, listSeriesByCategory, listSeriesPosts } from '../api/posts';
 import { POST_LIST_CATEGORIES, BASE_CATEGORIES, CATEGORY_DISPLAY_NAMES } from '../constants/categories';
+import { DEFAULT_OG_IMAGE, SITE_NAME, canonicalUrl } from '../constants/seo';
 
 const VALID_CATEGORIES = POST_LIST_CATEGORIES;
 const PAGE_SIZE = 20;
@@ -152,9 +154,28 @@ export default function PostList() {
         ? `${totalCount}개의 게시글`
         : `총 ${totalCount}개 · ${pageParam} / ${totalPages} 페이지`)
     : undefined;
+  const seoTitle = `${displayName} Posts | Microsoft Elevate`;
+  const seoDescription = `${displayName} 관련 Microsoft AI 교육 자료와 실습 콘텐츠를 확인하세요.`;
+  const canonicalPath = `/${category}`;
 
   return (
-    <PostListLayout
+    <>
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        <link rel="canonical" href={canonicalUrl(canonicalPath)} />
+        <meta property="og:site_name" content={SITE_NAME} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:url" content={canonicalUrl(canonicalPath)} />
+        <meta property="og:image" content={DEFAULT_OG_IMAGE} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription} />
+        <meta name="twitter:image" content={DEFAULT_OG_IMAGE} />
+      </Helmet>
+      <PostListLayout
       title={
         <>
           <Logo isBlog={true} />
@@ -206,6 +227,7 @@ export default function PostList() {
         showAllOption: true,
         sticky: false,
       } : undefined}
-    />
+      />
+    </>
   );
 }

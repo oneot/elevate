@@ -20,6 +20,7 @@ import { getPost, getLatestAgenthonPost } from '../api/posts';
 import { sanitizeHtml, injectHeadingIds, injectLinkHandlers, injectCollapsibleCodeBlocks } from '../utils/html';
 import { formatDateKo } from '../utils/url';
 import { POST_DETAIL_VALID_CATEGORIES, CATEGORY_DISPLAY_NAMES, getCategoryListRoute } from '../constants/categories';
+import { DEFAULT_OG_IMAGE, SITE_NAME, canonicalUrl } from '../constants/seo';
 import { useSeriesNavigation } from '../hooks/useSeriesNavigation';
 import NotFound from './NotFound';
 
@@ -147,6 +148,10 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
     const categoryDisplayName = CATEGORY_DISPLAY_NAMES[normalizedCategory];
     // 로딩 중에는 URL의 postId를 임시 제목으로 사용한다.
     const postTitle = post?.title || postId;
+    const pageTitle = `${postTitle ?? ''} | ${categoryDisplayName} | Microsoft Elevate`;
+    const pageDescription = post?.excerpt || `${postTitle ?? ''} - ${categoryDisplayName} 블로그 포스트입니다.`;
+    const pageUrl = canonicalUrl(useLatest ? '/agenthon' : `/${normalizedCategory}/${postId || ''}`);
+    const ogImage = post?.thumbnail?.signedUrl || post?.thumbnail?.url || (typeof post?.thumbnail === 'string' && post.thumbnail) || DEFAULT_OG_IMAGE;
 
     // GlassDocLayout에 전달할 breadcrumb 목록.
     // 로딩이 완료되기 전에는 마지막 항목이 postId(슬러그)로 표시된다.
@@ -222,13 +227,22 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
         <>
             {/* Helmet은 GlassDocLayout 외부에 위치해도 React Portal로 <head>에 주입된다. */}
             <Helmet>
-                <title>{`${postTitle ?? ''} | ${categoryDisplayName} | Microsoft Elevate`}</title>
-                <meta name="description" content={post?.excerpt || `${postTitle ?? ''} - ${categoryDisplayName} 블로그 포스트입니다.`} />
-                <meta property="og:title" content={`${postTitle ?? ''} | ${categoryDisplayName} | Microsoft Elevate`} />
-                <meta property="og:description" content={post?.excerpt || `${postTitle ?? ''} - ${categoryDisplayName} 블로그 포스트입니다.`} />
-                {(post?.thumbnail?.signedUrl || post?.thumbnail?.url || (typeof post?.thumbnail === 'string' && post?.thumbnail)) && (
-                    <meta property="og:image" content={post.thumbnail?.signedUrl || post.thumbnail?.url || post.thumbnail} />
-                )}
+                <title>{pageTitle}</title>
+                <meta name="description" content={pageDescription} />
+                <link rel="canonical" href={pageUrl} />
+                <meta property="og:site_name" content={SITE_NAME} />
+                <meta property="og:title" content={pageTitle} />
+                <meta property="og:description" content={pageDescription} />
+                <meta property="og:url" content={pageUrl} />
+                <meta property="og:image" content={ogImage} />
+                <meta property="og:type" content="article" />
+                <meta property="og:locale" content="ko_KR" />
+                {post?.publishedAt && <meta property="article:published_time" content={post.publishedAt} />}
+                {post?.updatedAt && <meta property="article:modified_time" content={post.updatedAt} />}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={pageTitle} />
+                <meta name="twitter:description" content={pageDescription} />
+                <meta name="twitter:image" content={ogImage} />
             </Helmet>
 
             <GlassDocLayout
