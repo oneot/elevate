@@ -60,6 +60,13 @@ test('createCalendarEvent — 잘못된 eventDates 포맷이면 400', async () =
   assert.equal(res.getStatus(), 400);
 });
 
+test('createCalendarEvent — 존재하지 않는 날짜면 400', async () => {
+  const req = { body: { title: '이벤트', eventDates: [{ start: '2026-99-99' }] }, correlationId: 'x', params: {}, query: {} };
+  const res = makeRes();
+  await ctrl.createCalendarEvent(req, res);
+  assert.equal(res.getStatus(), 400);
+});
+
 test('createCalendarEvent — end < start이면 400', async () => {
   const req = { body: { title: '이벤트', eventDates: [{ start: '2026-06-05', end: '2026-06-01' }] }, correlationId: 'x', params: {}, query: {} };
   const res = makeRes();
@@ -82,6 +89,13 @@ test('listCalendarEvents — items 배열 반환', async () => {
   assert.ok(Array.isArray(res.getBody().items));
 });
 
+test('listCalendarEvents — 잘못된 limit이면 400', async () => {
+  const req = { correlationId: 'x', params: {}, query: { limit: '0' } };
+  const res = makeRes();
+  await ctrl.listCalendarEvents(req, res);
+  assert.equal(res.getStatus(), 400);
+});
+
 test('updateCalendarEvent — body 없으면 400', async () => {
   const req = { body: null, correlationId: 'x', params: { id: 'abc' }, query: {} };
   const res = makeRes();
@@ -89,8 +103,22 @@ test('updateCalendarEvent — body 없으면 400', async () => {
   assert.equal(res.getStatus(), 400);
 });
 
+test('updateCalendarEvent — body가 객체가 아니면 400', async () => {
+  const req = { body: [], correlationId: 'x', params: { eventId: 'abc' }, query: {} };
+  const res = makeRes();
+  await ctrl.updateCalendarEvent(req, res);
+  assert.equal(res.getStatus(), 400);
+});
+
+test('updateCalendarEvent — 잘못된 eventDates면 400', async () => {
+  const req = { body: { eventDates: [{ start: '2026-06-05', end: '2026-06-01' }] }, correlationId: 'x', params: { eventId: 'abc' }, query: {} };
+  const res = makeRes();
+  await ctrl.updateCalendarEvent(req, res);
+  assert.equal(res.getStatus(), 400);
+});
+
 test('updateCalendarEvent — 정상 업데이트 시 200', async () => {
-  const req = { body: { title: '수정된 이벤트' }, correlationId: 'x', params: { id: 'abc' }, query: {} };
+  const req = { body: { title: '수정된 이벤트' }, correlationId: 'x', params: { eventId: 'abc' }, query: {} };
   const res = makeRes();
   await ctrl.updateCalendarEvent(req, res);
   assert.equal(res.getStatus(), 200);

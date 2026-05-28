@@ -2,17 +2,33 @@
 
 const { v4: createUuid } = require('uuid');
 const { getCalendarEventsContainer } = require('../services/cosmosClient');
-const { sendError } = require('../utils/http');
+const { parsePositiveInt, sendError } = require('../utils/http');
 
 const PARTITION_KEY = 'calendarEvent';
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+function isPlainObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function getEventId(req) {
+  return req.params.eventId || req.params.id;
+}
+
+function isValidIsoDateString(value) {
+  if (typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  if (!ISO_DATE_RE.test(trimmed)) return false;
+  const date = new Date(`${trimmed}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === trimmed;
+}
+
 function validateEventDate(d) {
-  if (!d || typeof d.start !== 'string' || !d.start.trim() || !ISO_DATE_RE.test(d.start.trim())) {
+  if (!isPlainObject(d) || !isValidIsoDateString(d.start)) {
     return 'each eventDate must have a valid start date (YYYY-MM-DD)';
   }
   if (d.end !== undefined && d.end !== null) {
-    if (typeof d.end !== 'string' || !d.end.trim() || !ISO_DATE_RE.test(d.end.trim())) {
+    if (!isValidIsoDateString(d.end)) {
       return 'eventDate end must be a valid date string (YYYY-MM-DD)';
     }
     if (d.end.trim() < d.start.trim()) {
@@ -20,6 +36,14 @@ function validateEventDate(d) {
     }
   }
   return null;
+}
+
+function normalizeEventDates(eventDates) {
+  if (!Array.isArray(eventDates)) return null;
+  return eventDates.map((d) => ({
+    start: d.start.trim(),
+    ...(d.end !== undefined && d.end !== null && d.end.trim() ? { end: d.end.trim() } : {}),
+  }));
 }
 
 function toCalendarEventResponse(doc) {
@@ -36,7 +60,8 @@ function toCalendarEventResponse(doc) {
 }
 
 function validateCreatePayload(body) {
-  if (!body || typeof body.title !== 'string' || !body.title.trim()) {
+  if (!isPlainObject(body)) return 'request body must be an object';
+  if (typeof body.title !== 'string' || !body.title.trim()) {
     return 'title is required';
   }
   if (body.eventDates !== undefined && body.eventDates !== null && !Array.isArray(body.eventDates)) {
@@ -52,7 +77,7 @@ function validateCreatePayload(body) {
 }
 
 function validateUpdatePayload(body) {
-  if (!body) return 'request body is required';
+  if (!isPlainObject(body)) return 'request body must be an object';
   if (body.title !== undefined && (typeof body.title !== 'string' || !body.title.trim())) {
     return 'title must be a non-empty string';
   }
@@ -71,8 +96,14 @@ function validateUpdatePayload(body) {
 exports.listCalendarEvents = async (req, res) => {
   const correlationId = req.correlationId;
   try {
+    const query = req.query || {};
+    const limit = parsePositiveInt(query.limit, 100, 1, 100);
+    if (limit === null) {
+      return sendError(res, 400, 'BadRequest', 'Invalid limit value', correlationId);
+    }
+
     const container = getCalendarEventsContainer();
-    const linkedPostId = req.query.linkedPostId;
+    const linkedPostId = query.linkedPostId;
 
     let queryText = 'SELECT * FROM c WHERE c.type = @type';
     const parameters = [{ name: '@type', value: PARTITION_KEY }];
@@ -82,13 +113,13 @@ exports.listCalendarEvents = async (req, res) => {
       parameters.push({ name: '@linkedPostId', value: linkedPostId });
     }
 
-    queryText += ' ORDER BY c.createdAt DESC';
+    queryText += ` ORDER BY c.createdAt DESC OFFSET 0 LIMIT ${limit}`;
 
     const { resources } = await container.items
       .query({ query: queryText, parameters }, { partitionKey: PARTITION_KEY })
       .fetchAll();
 
-    return res.json({ items: resources.map(toCalendarEventResponse) });
+    return res.json({ items: resources.map(toCalendarEventResponse), limit });
   } catch (error) {
     console.error('[listCalendarEvents] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
@@ -101,7 +132,7 @@ exports.getCalendarEventDetail = async (req, res) => {
     const container = getCalendarEventsContainer();
     let resource;
     try {
-      const result = await container.item(req.params.id, PARTITION_KEY).read();
+      const result = await container.item(getEventId(req), PARTITION_KEY).read();
       resource = result.resource;
     } catch (e) {
       if (e.code === 404) {
@@ -132,7 +163,7 @@ exports.createCalendarEvent = async (req, res) => {
       id: createUuid(),
       type: PARTITION_KEY,
       title: req.body.title.trim(),
-      eventDates: Array.isArray(req.body.eventDates) ? req.body.eventDates : null,
+      eventDates: normalizeEventDates(req.body.eventDates),
       eventLocation: req.body.eventLocation || null,
       eventTarget: req.body.eventTarget || null,
       linkedPostId: req.body.linkedPostId || null,
@@ -157,7 +188,7 @@ exports.updateCalendarEvent = async (req, res) => {
     const container = getCalendarEventsContainer();
     let existing;
     try {
-      const result = await container.item(req.params.id, PARTITION_KEY).read();
+      const result = await container.item(getEventId(req), PARTITION_KEY).read();
       existing = result.resource;
     } catch (e) {
       if (e.code === 404) {
@@ -173,7 +204,7 @@ exports.updateCalendarEvent = async (req, res) => {
       ...existing,
       title: req.body.title !== undefined ? req.body.title.trim() : existing.title,
       eventDates: req.body.eventDates !== undefined
-        ? (Array.isArray(req.body.eventDates) ? req.body.eventDates : null)
+        ? normalizeEventDates(req.body.eventDates)
         : existing.eventDates,
       eventLocation: req.body.eventLocation !== undefined
         ? (req.body.eventLocation || null)
@@ -199,7 +230,7 @@ exports.deleteCalendarEvent = async (req, res) => {
   try {
     const container = getCalendarEventsContainer();
     try {
-      await container.item(req.params.id, PARTITION_KEY).delete();
+      await container.item(getEventId(req), PARTITION_KEY).delete();
     } catch (e) {
       if (e.code === 404) {
         return sendError(res, 404, 'NotFound', 'Resource not found', correlationId);

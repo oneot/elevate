@@ -10,7 +10,7 @@ const functionDefinition = {
   name: 'adminCalendarEventDetail',
   methods: ['GET'],
   authLevel: 'anonymous',
-  route: 'api/admin/calendar-events/{id}',
+  route: 'api/admin/calendar-events/{eventId}',
   handler: adminCalendarEventDetailHandler
 };
 

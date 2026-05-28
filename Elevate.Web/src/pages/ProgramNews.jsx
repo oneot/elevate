@@ -12,7 +12,7 @@
  * /all 페이지에는 program-news 게시글이 노출되지 않는다.
  * (BASE_CATEGORIES / POST_LIST_CATEGORIES에 포함되지 않음)
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PostListLayout from '../components/posts/PostListLayout';
 import SearchBar from '../components/posts/SearchBar';
@@ -29,6 +29,55 @@ const TABS = [
 ];
 
 const PAGE_TITLE = '행사 및 프로그램 소식';
+const PAGE_SIZE = 20;
+
+function getCalendarSortKey(calendarEvent, today = new Date()) {
+  const todayStr = today.toISOString().split('T')[0];
+  const dates = calendarEvent?.eventDates;
+  if (!Array.isArray(dates) || dates.length === 0) return { priority: 3, sortStr: '', desc: false };
+
+  let nearestFutureStart = null;
+  let mostRecentPastEnd = null;
+  let isOngoing = false;
+  let ongoingStart = null;
+
+  for (const d of dates) {
+    if (!d?.start) continue;
+    const start = d.start;
+    const end = d.end || d.start;
+
+    if (start <= todayStr && todayStr <= end) {
+      isOngoing = true;
+      if (ongoingStart === null || start < ongoingStart) ongoingStart = start;
+    } else if (start > todayStr) {
+      if (nearestFutureStart === null || start < nearestFutureStart) nearestFutureStart = start;
+    } else if (mostRecentPastEnd === null || end > mostRecentPastEnd) {
+      mostRecentPastEnd = end;
+    }
+  }
+
+  if (isOngoing) return { priority: 0, sortStr: ongoingStart, desc: false };
+  if (nearestFutureStart !== null) return { priority: 1, sortStr: nearestFutureStart, desc: false };
+  if (mostRecentPastEnd !== null) return { priority: 2, sortStr: mostRecentPastEnd, desc: true };
+  return { priority: 3, sortStr: '', desc: false };
+}
+
+function sortPostsByCalendarEvents(posts, calendarEvents) {
+  const eventByPostId = new Map(
+    calendarEvents
+      .filter((event) => event.linkedPostId)
+      .map((event) => [event.linkedPostId, event])
+  );
+
+  return [...posts].sort((a, b) => {
+    const ka = getCalendarSortKey(eventByPostId.get(a.id));
+    const kb = getCalendarSortKey(eventByPostId.get(b.id));
+    if (ka.priority !== kb.priority) return ka.priority - kb.priority;
+    if (ka.sortStr < kb.sortStr) return ka.desc ? 1 : -1;
+    if (ka.sortStr > kb.sortStr) return ka.desc ? -1 : 1;
+    return 0;
+  });
+}
 
 /**
  * 탭 하나의 콘텐츠 (게시글 목록 + 검색 + 태그 필터).
@@ -78,9 +127,22 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
     ? calendarEvents.find(ce => ce.id === selectedEventId)
     : null;
 
+  const eventFilteredPosts = useMemo(() => (
+    activeTab === 'event'
+      ? sortPostsByCalendarEvents(filteredPosts, calendarEvents)
+      : filteredPosts
+  ), [activeTab, filteredPosts, calendarEvents]);
+
+  const eventTotalPages = Math.max(1, Math.ceil(eventFilteredPosts.length / PAGE_SIZE));
+  const eventCurrentPage = Math.min(Math.max(currentPage, 1), eventTotalPages);
+  const eventPaginatedPosts = eventFilteredPosts.slice(
+    (eventCurrentPage - 1) * PAGE_SIZE,
+    eventCurrentPage * PAGE_SIZE
+  );
+
   const displayedPosts = activeTab === 'event' && selectedCalendarEvent?.linkedPostId
     ? allPosts.filter(p => p.id === selectedCalendarEvent.linkedPostId)
-    : paginatedPosts;
+    : (activeTab === 'event' ? eventPaginatedPosts : paginatedPosts);
 
   const calendarSlot = activeTab === 'event' ? (
     <EventCalendar
@@ -135,10 +197,10 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
       posts={displayedPosts}
       loading={loading}
       error={error}
-      countLabel={!loading && selectedTags.length > 0 ? `${filteredPosts.length}개의 게시글이 일치합니다.` : undefined}
+      countLabel={!loading && selectedTags.length > 0 ? `${eventFilteredPosts.length}개의 게시글이 일치합니다.` : undefined}
       activeQuery={qParam}
-      currentPage={activeTab === 'event' && selectedCalendarEvent?.linkedPostId ? 1 : currentPage}
-      totalPages={activeTab === 'event' && selectedCalendarEvent?.linkedPostId ? 1 : totalPages}
+      currentPage={activeTab === 'event' && selectedCalendarEvent?.linkedPostId ? 1 : (activeTab === 'event' ? eventCurrentPage : currentPage)}
+      totalPages={activeTab === 'event' && selectedCalendarEvent?.linkedPostId ? 1 : (activeTab === 'event' ? eventTotalPages : totalPages)}
       onPageChange={handlePageChange}
     />
   );
