@@ -12,14 +12,16 @@
  * /all 페이지에는 program-news 게시글이 노출되지 않는다.
  * (BASE_CATEGORIES / POST_LIST_CATEGORIES에 포함되지 않음)
  */
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PostListLayout from '../components/posts/PostListLayout';
 import SearchBar from '../components/posts/SearchBar';
 import Logo from '../components/common/Logo';
 import Footer from '../components/layout/Footer';
 import EventCalendar from '../components/posts/EventCalendar';
-import { useCategoryPostList } from '../hooks/useCategoryPostList';
+import { POST_LIST_PAGE_SIZE, useCategoryPostList } from '../hooks/useCategoryPostList';
+import { listCalendarEvents } from '../api/calendarEvents';
+import { sortByEventDates } from '../utils/eventSorting';
 
 // 탭 설정: key는 URL의 tab 파라미터 값, category는 API 카테고리 슬러그
 const TABS = [
@@ -28,6 +30,32 @@ const TABS = [
 ];
 
 const PAGE_TITLE = '행사 및 프로그램 소식';
+const CALENDAR_EVENT_LIMIT = 500;
+
+function toDateString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getCalendarEventRange(today = new Date()) {
+  return {
+    start: toDateString(new Date(today.getFullYear() - 1, 0, 1)),
+    end: toDateString(new Date(today.getFullYear() + 2, 11, 31)),
+  };
+}
+
+function sortPostsByCalendarEvents(posts, calendarEvents) {
+  const eventDatesByPostId = new Map();
+  for (const event of calendarEvents) {
+    if (!event.linkedPostId || !Array.isArray(event.eventDates)) continue;
+    const currentDates = eventDatesByPostId.get(event.linkedPostId) || [];
+    eventDatesByPostId.set(event.linkedPostId, [...currentDates, ...event.eventDates]);
+  }
+
+  return sortByEventDates(posts, (post) => eventDatesByPostId.get(post.id));
+}
 
 /**
  * 탭 하나의 콘텐츠 (게시글 목록 + 검색 + 태그 필터).
@@ -52,26 +80,53 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
     handlePageChange,
     handleSearchSubmit,
     updateUrlParams,
-  } = useCategoryPostList(category);
+  } = useCategoryPostList(category, { sortEventPosts: activeTab !== 'event' });
+
+  const [calendarEvents, setCalendarEvents] = useState([]);
+
+  useEffect(() => {
+    if (activeTab !== 'event') return;
+    let isMounted = true;
+    const controller = new AbortController();
+    const range = getCalendarEventRange();
+    listCalendarEvents({ signal: controller.signal, ...range, limit: CALENDAR_EVENT_LIMIT })
+      .then(data => { if (isMounted) setCalendarEvents(Array.isArray(data?.items) ? data.items : []); })
+      .catch(err => { if (err?.name !== 'AbortError') console.error('[ProgramNews] calendarEvents fetch failed', err); });
+    return () => { isMounted = false; controller.abort(); };
+  }, [activeTab]);
 
   const [searchParams] = useSearchParams();
-  const selectedSlug = searchParams.get('event') || null;
+  const selectedEventId = searchParams.get('event') || null;
 
-  // 달력 이벤트 선택 핸들러 (event 탭에서만 사용)
-  const handleCalendarSelect = (slug) => {
-    updateUrlParams({ event: slug || '' });
+  const handleCalendarSelect = (id) => {
+    updateUrlParams({ event: id || '' });
   };
 
-  // event 탭에서 selectedSlug가 있으면 해당 게시글만 표시, 없으면 기존 필터링된 결과 표시
-  const displayedPosts = activeTab === 'event' && selectedSlug
-    ? allPosts.filter((p) => p.slug === selectedSlug)
-    : paginatedPosts;
+  const selectedCalendarEvent = selectedEventId
+    ? calendarEvents.find(ce => ce.id === selectedEventId)
+    : null;
 
-  // event 탭에서만 달력을 표시 (allPosts는 필터링되지 않은 전체 이벤트)
+  const eventFilteredPosts = useMemo(() => (
+    activeTab === 'event'
+      ? sortPostsByCalendarEvents(filteredPosts, calendarEvents)
+      : filteredPosts
+  ), [activeTab, filteredPosts, calendarEvents]);
+
+  const eventTotalPages = Math.max(1, Math.ceil(eventFilteredPosts.length / POST_LIST_PAGE_SIZE));
+  const eventCurrentPage = Math.min(Math.max(currentPage, 1), eventTotalPages);
+  const eventPaginatedPosts = eventFilteredPosts.slice(
+    (eventCurrentPage - 1) * POST_LIST_PAGE_SIZE,
+    eventCurrentPage * POST_LIST_PAGE_SIZE
+  );
+
+  const displayedPosts = activeTab === 'event' && selectedCalendarEvent?.linkedPostId
+    ? allPosts.filter(p => p.id === selectedCalendarEvent.linkedPostId)
+    : (activeTab === 'event' ? eventPaginatedPosts : paginatedPosts);
+
   const calendarSlot = activeTab === 'event' ? (
     <EventCalendar
-      posts={allPosts}
-      selectedSlug={selectedSlug}
+      calendarEvents={calendarEvents}
+      selectedEventId={selectedEventId}
       onSelectEvent={handleCalendarSelect}
     />
   ) : null;
@@ -121,10 +176,10 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
       posts={displayedPosts}
       loading={loading}
       error={error}
-      countLabel={!loading && selectedTags.length > 0 ? `${filteredPosts.length}개의 게시글이 일치합니다.` : undefined}
+      countLabel={!loading && selectedTags.length > 0 ? `${eventFilteredPosts.length}개의 게시글이 일치합니다.` : undefined}
       activeQuery={qParam}
-      currentPage={activeTab === 'event' && selectedSlug ? 1 : currentPage}
-      totalPages={activeTab === 'event' && selectedSlug ? 1 : totalPages}
+      currentPage={activeTab === 'event' && selectedCalendarEvent?.linkedPostId ? 1 : (activeTab === 'event' ? eventCurrentPage : currentPage)}
+      totalPages={activeTab === 'event' && selectedCalendarEvent?.linkedPostId ? 1 : (activeTab === 'event' ? eventTotalPages : totalPages)}
       onPageChange={handlePageChange}
     />
   );
