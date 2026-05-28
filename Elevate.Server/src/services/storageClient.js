@@ -13,6 +13,7 @@ const storageAccountName = process.env.STORAGE_ACCOUNT_NAME;
 const storageContainerName = process.env.STORAGE_CONTAINER_NAME || 'images';
 const storageAttachContainerName = process.env.STORAGE_ATTACH_CONTAINER_NAME || 'attachments';
 let blobServiceClient = null;
+const READ_SAS_CLOCK_SKEW_MS = 5 * 60 * 1000;
 
 function getBlobServiceClient() {
   if (!storageAccountName) {
@@ -119,7 +120,6 @@ async function issueBlobAttachSas({ fileName }) {
 }
 
 async function getBlobReadSasUrl(blobUrl, validHours) {
-  const hours = validHours || 1;
   if (!blobUrl) return null;
   try {
     const serviceClient = getBlobServiceClient();
@@ -130,8 +130,9 @@ async function getBlobReadSasUrl(blobUrl, validHours) {
     const containerName = pathSegments[0];
     const blobName = pathSegments.slice(1).join('/');
 
-    const startsOn = new Date(Date.now() - 5 * 60 * 1000);
-    const expiresOn = new Date(Date.now() + hours * 60 * 60 * 1000);
+    const { startsOn, expiresOn } = validHours
+      ? getRollingReadSasWindow(validHours)
+      : getStableReadSasWindow();
 
     const userDelegationKey = await serviceClient.getUserDelegationKey(startsOn, expiresOn);
     const sasToken = generateBlobSASQueryParameters(
@@ -152,6 +153,24 @@ async function getBlobReadSasUrl(blobUrl, validHours) {
     console.error('[getBlobReadSasUrl] failed', error);
     return null;
   }
+}
+
+function getRollingReadSasWindow(validHours) {
+  const hours = validHours || 1;
+  return {
+    startsOn: new Date(Date.now() - READ_SAS_CLOCK_SKEW_MS),
+    expiresOn: new Date(Date.now() + hours * 60 * 60 * 1000)
+  };
+}
+
+function getStableReadSasWindow(now = new Date()) {
+  const dayStartMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const nextDayStartMs = dayStartMs + 24 * 60 * 60 * 1000;
+
+  return {
+    startsOn: new Date(dayStartMs - READ_SAS_CLOCK_SKEW_MS),
+    expiresOn: new Date(nextDayStartMs)
+  };
 }
 
 async function deleteBlobByUrl(blobUrl) {
@@ -182,5 +201,6 @@ module.exports = {
   issueBlobUploadSas,
   issueBlobAttachSas,
   getBlobReadSasUrl,
+  getStableReadSasWindow,
   deleteBlobByUrl
 };

@@ -113,7 +113,7 @@ const MapSection = () => {
         className="py-4 group relative overflow-hidden bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] border border-white/60 border-b-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_1px_2px_rgba(255,255,255,0.9)] flex items-center gap-5 w-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-white/50 hover:shadow-[0_20px_50px_rgba(0,0,0,0.3),inset_0_1px_2px_rgba(255,255,255,1)] cursor-pointer card-link outline-none"
     >
         <div className="w-16 h-16 bg-white/60 rounded-2xl p-2 shadow-sm border border-white/80 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 shrink-0">
-            <img src={feelingsMonster} alt="Student icon" className="w-full h-full object-contain" />
+            <img src={feelingsMonster} alt="Student icon" decoding="async" className="w-full h-full object-contain" />
         </div>
         <div className="flex flex-col items-start text-left w-full">
             <h3 className="text-lg font-extrabold text-slate-900 leading-snug">

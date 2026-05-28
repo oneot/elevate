@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import { getThumbnailUrl } from '../../api/posts';
 import { formatDateKo } from '../../utils/url';
 
-const PostCard = ({ post }) => {
+const PostCard = ({ post, priority = false }) => {
   const { slug, title, excerpt, thumbnail, publishedAt, category, tags = [] } = post;
   const safeCategory = category || 'all';
   const to = `/${safeCategory}/${slug}`;
@@ -30,7 +30,14 @@ const PostCard = ({ post }) => {
         <div className="flex flex-col h-full">
           <div className="w-full rounded-xl overflow-hidden bg-white/70 border border-white/60" style={{height: 150}}>
             {imageUrl ? (
-              <img src={imageUrl} alt={title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+              <img
+                src={imageUrl}
+                alt={title}
+                loading={priority ? 'eager' : 'lazy'}
+                decoding="async"
+                fetchPriority={priority ? 'high' : 'low'}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-500 text-sm bg-slate-50/70">No image</div>
             )}

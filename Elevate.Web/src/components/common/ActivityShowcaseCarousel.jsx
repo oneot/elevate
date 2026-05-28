@@ -289,6 +289,9 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
                                 <img
                                   src={getYouTubeThumbnail(item.videoId)}
                                   alt={item.title}
+                                  loading={isCenter ? "eager" : "lazy"}
+                                  decoding="async"
+                                  fetchPriority={isCenter ? "high" : "low"}
                                   className={[
                                     "h-full w-full object-cover transition-transform duration-700",
                                     isCenter ? "scale-[1.02]" : "scale-100",
@@ -450,6 +453,9 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
                     <img
                       src={getYouTubeThumbnail(item.videoId)}
                       alt={item.title}
+                      loading="lazy"
+                      decoding="async"
+                      fetchPriority="low"
                       className={[
                         "h-16 w-24 rounded-xl object-cover transition-all duration-300",
                         active

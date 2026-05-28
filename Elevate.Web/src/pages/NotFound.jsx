@@ -35,6 +35,7 @@ const NotFound = () => {
                         <img 
                             src={microsoftLogo} 
                             alt="Microsoft Logo" 
+                            decoding="async"
                             className="h-12 object-contain opacity-90"
                         />
                     </div>
