@@ -31,6 +31,7 @@ function assert(condition, message) {
 }
 
 const indexHtml = read('index.html');
+const packageJson = JSON.parse(read('package.json'));
 
 assert(indexHtml.includes('<html lang="ko">'), 'index.html must declare Korean language');
 assert(indexHtml.includes('<meta name="description"'), 'index.html must include meta description');
@@ -55,6 +56,16 @@ for (const path of requiredSitemapUrls) {
     `sitemap.xml must include ${path}`,
   );
 }
+
+assert(existsSync(resolve(root, 'scripts/generate-seo-routes.mjs')), 'scripts/generate-seo-routes.mjs must exist');
+assert(packageJson.scripts.build.includes('generate:seo-routes'), 'build script must generate static SEO route HTML');
+assert(packageJson.scripts['generate:seo-routes'] === 'node scripts/generate-seo-routes.mjs', 'generate:seo-routes script must run the SEO route generator');
+const routeGenerator = read('scripts/generate-seo-routes.mjs');
+for (const path of requiredSitemapUrls.filter((path) => path !== '/')) {
+  assert(routeGenerator.includes(`path: '${path}'`), `SEO route generator must emit static HTML for ${path}`);
+}
+assert(routeGenerator.includes('directoryIndexPath'), 'SEO route generator must emit directory index HTML for GitHub Pages');
+assert(routeGenerator.includes('extensionlessPath'), 'SEO route generator must emit extensionless HTML for sitemap URLs');
 
 const homePage = read('src/pages/Home.jsx');
 const seoConstants = read('src/constants/seo.js');
