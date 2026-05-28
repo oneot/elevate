@@ -1,10 +1,15 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
+let lastQuerySpec = null;
+
 // cosmosClient 모킹 — require.cache 국소 스텁 (전역 Module._load 패치 없음)
 const mockContainer = {
   items: {
-    query: () => ({ fetchAll: async () => ({ resources: [] }) }),
+    query: (querySpec) => {
+      lastQuerySpec = querySpec;
+      return { fetchAll: async () => ({ resources: [] }) };
+    },
     create: async (doc) => ({ resource: doc }),
     upsert: async (doc) => ({ resource: doc }),
   },
@@ -148,6 +153,34 @@ test('listCalendarEvents — 잘못된 limit이면 400', async () => {
   const res = makeRes();
   await ctrl.listCalendarEvents(req, res);
   assert.equal(res.getStatus(), 400);
+});
+
+test('listCalendarEvents — 잘못된 기간 필터이면 400', async () => {
+  const req = { correlationId: 'x', params: {}, query: { start: '2026-99-99' } };
+  const res = makeRes();
+  await ctrl.listCalendarEvents(req, res);
+  assert.equal(res.getStatus(), 400);
+});
+
+test('listCalendarEvents — 기간 필터와 최대 500개 limit을 query에 반영', async () => {
+  lastQuerySpec = null;
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { start: '2026-01-01', end: '2026-12-31', limit: '500' },
+  };
+  const res = makeRes();
+  await ctrl.listCalendarEvents(req, res);
+  assert.equal(res.getStatus(), 200);
+  assert.match(lastQuerySpec.query, /EXISTS/);
+  assert.match(lastQuerySpec.query, /LIMIT 500/);
+  assert.deepEqual(
+    lastQuerySpec.parameters.filter((p) => p.name === '@start' || p.name === '@end'),
+    [
+      { name: '@start', value: '2026-01-01' },
+      { name: '@end', value: '2026-12-31' },
+    ]
+  );
 });
 
 test('updateCalendarEvent — body 없으면 400', async () => {

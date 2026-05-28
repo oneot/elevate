@@ -121,13 +121,24 @@ exports.listCalendarEvents = async (req, res) => {
   const correlationId = req.correlationId;
   try {
     const query = req.query || {};
-    const limit = parsePositiveInt(query.limit, 100, 1, 100);
+    const limit = parsePositiveInt(query.limit, 100, 1, 500);
     if (limit === null) {
       return sendError(res, 400, 'BadRequest', 'Invalid limit value', correlationId);
+    }
+    if (query.start && !isValidIsoDateString(query.start)) {
+      return sendError(res, 400, 'BadRequest', 'Invalid start value', correlationId);
+    }
+    if (query.end && !isValidIsoDateString(query.end)) {
+      return sendError(res, 400, 'BadRequest', 'Invalid end value', correlationId);
+    }
+    if (query.start && query.end && query.end.trim() < query.start.trim()) {
+      return sendError(res, 400, 'BadRequest', 'end must be >= start', correlationId);
     }
 
     const container = getCalendarEventsContainer();
     const linkedPostId = query.linkedPostId;
+    const start = query.start?.trim();
+    const end = query.end?.trim();
 
     let queryText = 'SELECT * FROM c WHERE c.type = @type';
     const parameters = [{ name: '@type', value: PARTITION_KEY }];
@@ -135,6 +146,34 @@ exports.listCalendarEvents = async (req, res) => {
     if (linkedPostId) {
       queryText += ' AND c.linkedPostId = @linkedPostId';
       parameters.push({ name: '@linkedPostId', value: linkedPostId });
+    }
+
+    if (start && end) {
+      queryText += ` AND EXISTS(
+        SELECT VALUE d FROM d IN c.eventDates
+        WHERE d.start <= @end
+        AND (
+          (IS_DEFINED(d.end) AND NOT IS_NULL(d.end) AND d.end >= @start)
+          OR ((NOT IS_DEFINED(d.end) OR IS_NULL(d.end)) AND d.start >= @start)
+        )
+      )`;
+      parameters.push({ name: '@start', value: start });
+      parameters.push({ name: '@end', value: end });
+    } else if (start) {
+      queryText += ` AND EXISTS(
+        SELECT VALUE d FROM d IN c.eventDates
+        WHERE (
+          (IS_DEFINED(d.end) AND NOT IS_NULL(d.end) AND d.end >= @start)
+          OR ((NOT IS_DEFINED(d.end) OR IS_NULL(d.end)) AND d.start >= @start)
+        )
+      )`;
+      parameters.push({ name: '@start', value: start });
+    } else if (end) {
+      queryText += ` AND EXISTS(
+        SELECT VALUE d FROM d IN c.eventDates
+        WHERE d.start <= @end
+      )`;
+      parameters.push({ name: '@end', value: end });
     }
 
     queryText += ` ORDER BY c.createdAt DESC OFFSET 0 LIMIT ${limit}`;

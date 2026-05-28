@@ -2,11 +2,14 @@ import { apiFetch } from '../lib/apiClient.js'
 
 /**
  * 달력 이벤트 목록을 조회한다.
- * @param {{ msalInstance, linkedPostId? }} options
+ * @param {{ msalInstance, linkedPostId?, start?, end?, limit? }} options
  */
-export function listCalendarEvents({ msalInstance, linkedPostId } = {}) {
+export function listCalendarEvents({ msalInstance, linkedPostId, start, end, limit } = {}) {
   const params = new URLSearchParams()
   if (linkedPostId) params.set('linkedPostId', linkedPostId)
+  if (start) params.set('start', start)
+  if (end) params.set('end', end)
+  if (limit) params.set('limit', String(limit))
   const qs = params.toString()
   return apiFetch(`/calendar-events${qs ? `?${qs}` : ''}`, { msalInstance })
 }

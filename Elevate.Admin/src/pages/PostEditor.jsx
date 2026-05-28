@@ -28,6 +28,22 @@ const emptyPost = {
   youtube: '',
 }
 
+const CALENDAR_EVENT_LIMIT = 500
+
+function toDateString(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function getCalendarEventRange(today = new Date()) {
+  return {
+    start: toDateString(new Date(today.getFullYear() - 1, 0, 1)),
+    end: toDateString(new Date(today.getFullYear() + 2, 11, 31)),
+  }
+}
+
 function PostEditor() {
   const { msalInstance } = useAuth()
   const { postId } = useParams()
@@ -102,8 +118,9 @@ function PostEditor() {
 
     const loadCalendarData = async () => {
       try {
+        const range = getCalendarEventRange()
         const [allEvents, linkedResult] = await Promise.all([
-          listCalendarEvents({ msalInstance }),
+          listCalendarEvents({ msalInstance, ...range, limit: CALENDAR_EVENT_LIMIT }),
           !isNew ? listCalendarEvents({ msalInstance, linkedPostId: postId }) : Promise.resolve({ items: [] }),
         ])
         if (isMounted) {
@@ -114,7 +131,10 @@ function PostEditor() {
             setInitialLinkedCalendarEventId(linked.id)
           }
         }
-      } catch { /* 달력 데이터 로드 실패는 non-fatal */ }
+      } catch (err) {
+        console.error('[PostEditor] calendar events fetch failed', err)
+        if (isMounted) setError(err.message || '달력 이벤트 목록을 불러오지 못했습니다.')
+      }
     }
 
     loadCalendarData()

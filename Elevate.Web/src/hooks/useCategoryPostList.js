@@ -36,15 +36,16 @@ const normalizeTagList = (list = []) => Array.from(new Set(list.map(normalizeTag
  * @param {Array} posts - event 카테고리 게시글 목록
  * @param {Date}  today - 기준 날짜 (테스트 주입용, 기본값 new Date())
  */
-function sortEventPosts(posts, today = new Date()) {
+function sortPostsByOwnEventDates(posts, today = new Date()) {
   return sortByEventDates(posts, (post) => post.eventDates, today);
 }
 
 /**
  * @param {string} category - 게시글을 불러올 카테고리 슬러그
+ * @param {{ sortEventPosts?: boolean }} options - event 카테고리의 post.eventDates 정렬 여부
  * @returns 목록 페이지에 필요한 상태·핸들러
  */
-export function useCategoryPostList(category) {
+export function useCategoryPostList(category, { sortEventPosts = true } = {}) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const _rawPage = parseInt(searchParams.get('page') || '1', 10);
@@ -114,11 +115,11 @@ export function useCategoryPostList(category) {
         (p.excerpt || '').toLowerCase().includes(qParamLower)
       );
     }
-    if (category === 'event') {
-      result = sortEventPosts(result);
+    if (category === 'event' && sortEventPosts) {
+      result = sortPostsByOwnEventDates(result);
     }
     return result;
-  }, [allPosts, selectedTags, qParamLower, category]);
+  }, [allPosts, selectedTags, qParamLower, category, sortEventPosts]);
 
   // URL 파라미터를 일괄 업데이트한다 (빈 값 또는 page=1은 파라미터 삭제).
   // PostList.jsx와 동일하게 page=1일 때 파라미터를 제거해 URL을 간결하게 유지한다.

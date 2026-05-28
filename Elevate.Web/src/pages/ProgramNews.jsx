@@ -30,15 +30,31 @@ const TABS = [
 ];
 
 const PAGE_TITLE = '행사 및 프로그램 소식';
+const CALENDAR_EVENT_LIMIT = 500;
+
+function toDateString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getCalendarEventRange(today = new Date()) {
+  return {
+    start: toDateString(new Date(today.getFullYear() - 1, 0, 1)),
+    end: toDateString(new Date(today.getFullYear() + 2, 11, 31)),
+  };
+}
 
 function sortPostsByCalendarEvents(posts, calendarEvents) {
-  const eventByPostId = new Map(
-    calendarEvents
-      .filter((event) => event.linkedPostId)
-      .map((event) => [event.linkedPostId, event])
-  );
+  const eventDatesByPostId = new Map();
+  for (const event of calendarEvents) {
+    if (!event.linkedPostId || !Array.isArray(event.eventDates)) continue;
+    const currentDates = eventDatesByPostId.get(event.linkedPostId) || [];
+    eventDatesByPostId.set(event.linkedPostId, [...currentDates, ...event.eventDates]);
+  }
 
-  return sortByEventDates(posts, (post) => eventByPostId.get(post.id)?.eventDates);
+  return sortByEventDates(posts, (post) => eventDatesByPostId.get(post.id));
 }
 
 /**
@@ -64,7 +80,7 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
     handlePageChange,
     handleSearchSubmit,
     updateUrlParams,
-  } = useCategoryPostList(category);
+  } = useCategoryPostList(category, { sortEventPosts: activeTab !== 'event' });
 
   const [calendarEvents, setCalendarEvents] = useState([]);
 
@@ -72,7 +88,8 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
     if (activeTab !== 'event') return;
     let isMounted = true;
     const controller = new AbortController();
-    listCalendarEvents({ signal: controller.signal })
+    const range = getCalendarEventRange();
+    listCalendarEvents({ signal: controller.signal, ...range, limit: CALENDAR_EVENT_LIMIT })
       .then(data => { if (isMounted) setCalendarEvents(Array.isArray(data?.items) ? data.items : []); })
       .catch(err => { if (err?.name !== 'AbortError') console.error('[ProgramNews] calendarEvents fetch failed', err); });
     return () => { isMounted = false; controller.abort(); };
