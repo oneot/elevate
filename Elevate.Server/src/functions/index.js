@@ -8,6 +8,12 @@ const { functionDefinition: publicPostDetail } = require('./publicPostDetail');
 const { functionDefinition: publicSeriesByCategory } = require('./publicSeriesByCategory');
 const { functionDefinition: publicSeriesPosts } = require('./publicSeriesPosts');
 const { functionDefinition: publicTags } = require('./publicTags');
+const { functionDefinition: adminCalendarEventsList } = require('./adminCalendarEventsList');
+const { functionDefinition: adminCalendarEventCreate } = require('./adminCalendarEventCreate');
+const { functionDefinition: adminCalendarEventDetail } = require('./adminCalendarEventDetail');
+const { functionDefinition: adminCalendarEventUpdate } = require('./adminCalendarEventUpdate');
+const { functionDefinition: adminCalendarEventDelete } = require('./adminCalendarEventDelete');
+const { functionDefinition: publicCalendarEventsList } = require('./publicCalendarEventsList');
 const { functionDefinition: adminPostsList } = require('./adminPostsList');
 const { functionDefinition: adminPostDetail } = require('./adminPostDetail');
 const { functionDefinition: adminCreatePost } = require('./adminCreatePost');
@@ -29,11 +35,17 @@ const functionDefinitions = [
   publicSeriesByCategory, // literal route (api/public/series) — must be before publicSeriesPosts
   publicSeriesPosts,
   publicTags,
+  publicCalendarEventsList,       // literal route — before parameterized routes
   adminPostsList,
   adminPostDetail,
   adminCreatePost,
   adminUpdatePost,
   adminDeletePost,
+  adminCalendarEventsList,        // literal route — before parameterized routes
+  adminCalendarEventCreate,       // literal route — before parameterized routes
+  adminCalendarEventDetail,       // parameterized route
+  adminCalendarEventUpdate,       // parameterized route
+  adminCalendarEventDelete,       // parameterized route
   adminIssueAssetSas,
   adminCreateAsset,
   adminDeleteAsset,

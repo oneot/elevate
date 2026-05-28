@@ -9,7 +9,6 @@ const requiredSitemapUrls = [
   '/program-news',
   '/activity',
   '/agenthon',
-  '/mee/pre-mee',
   '/all',
   '/m365',
   '/copilot',
@@ -35,8 +34,8 @@ const packageJson = JSON.parse(read('package.json'));
 
 assert(indexHtml.includes('<html lang="ko">'), 'index.html must declare Korean language');
 assert(indexHtml.includes('<meta name="description"'), 'index.html must include meta description');
-assert(!indexHtml.includes('rel="canonical"'), 'index.html must not include a static canonical URL for every SPA route');
-assert(!indexHtml.includes('property="og:url"'), 'index.html must not include a static og:url for every SPA route');
+assert(indexHtml.includes(`<link rel="canonical" href="${siteUrl}/"`), 'index.html must include the root canonical URL');
+assert(indexHtml.includes(`<meta property="og:url" content="${siteUrl}/"`), 'index.html must include the root og:url');
 assert(indexHtml.includes('<meta property="og:locale" content="ko_KR"'), 'index.html must include Korean OG locale');
 assert(indexHtml.includes(`<meta property="og:image" content="${siteUrl}/og-image.png"`), 'index.html must use absolute OG image URL');
 assert(indexHtml.includes('<meta name="twitter:card" content="summary_large_image"'), 'index.html must include Twitter card');
@@ -64,6 +63,9 @@ const routeGenerator = read('scripts/generate-seo-routes.mjs');
 for (const path of requiredSitemapUrls.filter((path) => path !== '/')) {
   assert(routeGenerator.includes(`path: '${path}'`), `SEO route generator must emit static HTML for ${path}`);
 }
+assert(routeGenerator.includes("path: '/agenthon'") && routeGenerator.includes("type: 'article'"), 'SEO route generator must mark /agenthon as an article');
+assert(!sitemapXml.includes(`${siteUrl}/mee/pre-mee`), 'sitemap.xml must not include detail routes without prerendered post data');
+assert(!routeGenerator.includes("path: '/mee/pre-mee'"), 'SEO route generator must not emit fake metadata for detail routes without post data');
 assert(routeGenerator.includes('directoryIndexPath'), 'SEO route generator must emit directory index HTML for GitHub Pages');
 assert(routeGenerator.includes('extensionlessPath'), 'SEO route generator must emit extensionless HTML for sitemap URLs');
 

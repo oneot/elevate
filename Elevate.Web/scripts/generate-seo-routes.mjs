@@ -27,11 +27,7 @@ const routes = [
     path: '/agenthon',
     title: 'Agenthon | Microsoft Elevate',
     description: 'Microsoft Copilot Studio와 AI 에이전트 실습 콘텐츠를 확인하세요.',
-  },
-  {
-    path: '/mee/pre-mee',
-    title: 'MEE | Microsoft Elevate',
-    description: 'Microsoft Elevate for Educators 커뮤니티와 교육 혁신 프로그램을 확인하세요.',
+    type: 'article',
   },
   {
     path: '/all',

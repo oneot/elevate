@@ -17,8 +17,9 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { listPosts } from '../api/posts';
+import { sortByEventDates } from '../utils/eventSorting';
 
-const PAGE_SIZE = 20;
+export const POST_LIST_PAGE_SIZE = 20;
 
 const normalizeTag = (tag) => (tag ?? '').toString().trim().toLowerCase();
 const normalizeTagList = (list = []) => Array.from(new Set(list.map(normalizeTag).filter(Boolean)));
@@ -35,53 +36,16 @@ const normalizeTagList = (list = []) => Array.from(new Set(list.map(normalizeTag
  * @param {Array} posts - event 카테고리 게시글 목록
  * @param {Date}  today - 기준 날짜 (테스트 주입용, 기본값 new Date())
  */
-function sortEventPosts(posts, today = new Date()) {
-  const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
-
-  function getSortKey(post) {
-    const dates = post.eventDates;
-    if (!dates || dates.length === 0) return { priority: 3, sortStr: '', desc: false };
-
-    let nearestFutureStart = null;
-    let mostRecentPastEnd = null;
-    let isOngoing = false;
-    let ongoingStart = null;
-
-    for (const d of dates) {
-      const start = d.start;
-      const end = d.end || d.start;
-
-      if (start <= todayStr && todayStr <= end) {
-        isOngoing = true;
-        if (ongoingStart === null || start < ongoingStart) ongoingStart = start;
-      } else if (start > todayStr) {
-        if (nearestFutureStart === null || start < nearestFutureStart) nearestFutureStart = start;
-      } else {
-        if (mostRecentPastEnd === null || end > mostRecentPastEnd) mostRecentPastEnd = end;
-      }
-    }
-
-    if (isOngoing) return { priority: 0, sortStr: ongoingStart, desc: false };
-    if (nearestFutureStart !== null) return { priority: 1, sortStr: nearestFutureStart, desc: false };
-    if (mostRecentPastEnd !== null) return { priority: 2, sortStr: mostRecentPastEnd, desc: true };
-    return { priority: 3, sortStr: '', desc: false };
-  }
-
-  return [...posts].sort((a, b) => {
-    const ka = getSortKey(a);
-    const kb = getSortKey(b);
-    if (ka.priority !== kb.priority) return ka.priority - kb.priority;
-    if (ka.sortStr < kb.sortStr) return ka.desc ? 1 : -1;
-    if (ka.sortStr > kb.sortStr) return ka.desc ? -1 : 1;
-    return 0;
-  });
+function sortPostsByOwnEventDates(posts, today = new Date()) {
+  return sortByEventDates(posts, (post) => post.eventDates, today);
 }
 
 /**
  * @param {string} category - 게시글을 불러올 카테고리 슬러그
+ * @param {{ sortEventPosts?: boolean }} options - event 카테고리의 post.eventDates 정렬 여부
  * @returns 목록 페이지에 필요한 상태·핸들러
  */
-export function useCategoryPostList(category) {
+export function useCategoryPostList(category, { sortEventPosts = true } = {}) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const _rawPage = parseInt(searchParams.get('page') || '1', 10);
@@ -151,11 +115,11 @@ export function useCategoryPostList(category) {
         (p.excerpt || '').toLowerCase().includes(qParamLower)
       );
     }
-    if (category === 'event') {
-      result = sortEventPosts(result);
+    if (category === 'event' && sortEventPosts) {
+      result = sortPostsByOwnEventDates(result);
     }
     return result;
-  }, [allPosts, selectedTags, qParamLower, category]);
+  }, [allPosts, selectedTags, qParamLower, category, sortEventPosts]);
 
   // URL 파라미터를 일괄 업데이트한다 (빈 값 또는 page=1은 파라미터 삭제).
   // PostList.jsx와 동일하게 page=1일 때 파라미터를 제거해 URL을 간결하게 유지한다.
@@ -185,12 +149,12 @@ export function useCategoryPostList(category) {
     updateUrlParams({ tags: '', page: '1' });
   };
 
-  // 클라이언트 사이드 페이지네이션: 필터링된 결과를 PAGE_SIZE 단위로 slice한다.
+  // 클라이언트 사이드 페이지네이션: 필터링된 결과를 POST_LIST_PAGE_SIZE 단위로 slice한다.
   const total = filteredPosts.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / POST_LIST_PAGE_SIZE));
   const currentPage = Math.min(Math.max(pageParam, 1), totalPages);
-  const start = (currentPage - 1) * PAGE_SIZE;
-  const paginatedPosts = filteredPosts.slice(start, start + PAGE_SIZE);
+  const start = (currentPage - 1) * POST_LIST_PAGE_SIZE;
+  const paginatedPosts = filteredPosts.slice(start, start + POST_LIST_PAGE_SIZE);
 
   const handlePageChange = (p) => {
     updateUrlParams({ page: String(p) });
