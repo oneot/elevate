@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://microsoft-elevate.com/sitemap.xml

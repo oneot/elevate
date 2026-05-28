@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && npm run generate:seo-routes",
     "lint": "eslint .",
     "preview": "vite preview",
+    "check:seo": "node scripts/check-seo.mjs",
+    "generate:seo-routes": "node scripts/generate-seo-routes.mjs",
     "generate-posts": "node scripts/generate-posts.js"
   },
   "dependencies": {

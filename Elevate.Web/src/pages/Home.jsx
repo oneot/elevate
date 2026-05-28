@@ -9,6 +9,7 @@
 import { Helmet } from 'react-helmet-async';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { DEFAULT_DESCRIPTION, DEFAULT_OG_IMAGE, DEFAULT_TITLE, SITE_NAME, canonicalUrl } from '../constants/seo';
 
 // Icons
 import copilotIcon from '../assets/NewMicrosoft365Icons/copilot-logo-500.png';
@@ -141,12 +142,20 @@ const Home = () => {
     return (
         <div className="relative min-h-screen font-sans selection:bg-ms-blue/20 selection:text-ms-blue">
             <Helmet>
-                <title>Microsoft Elevate | AI for ALL</title>
-                <meta name="description" content="교육 현장을 위한 Microsoft AI 솔루션. M365와 Copilot으로 시작하는 모두를 위한 AI 교육 환경." />
-                <meta property="og:title" content="Microsoft Elevate | AI for ALL" />
-                <meta property="og:description" content="교육 현장을 위한 Microsoft AI 솔루션. M365와 Copilot으로 시작하는 모두를 위한 AI 교육 환경." />
-                <meta property="og:image" content="https://raw.githubusercontent.com/oneot/elevate/main/Elevate.Web/public/elevate-og.png" />
+                <title>{DEFAULT_TITLE}</title>
+                <meta name="description" content={DEFAULT_DESCRIPTION} />
+                <link rel="canonical" href={canonicalUrl('/')} />
+                <meta property="og:site_name" content={SITE_NAME} />
+                <meta property="og:title" content={DEFAULT_TITLE} />
+                <meta property="og:description" content={DEFAULT_DESCRIPTION} />
+                <meta property="og:url" content={canonicalUrl('/')} />
+                <meta property="og:image" content={DEFAULT_OG_IMAGE} />
                 <meta property="og:type" content="website" />
+                <meta property="og:locale" content="ko_KR" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={DEFAULT_TITLE} />
+                <meta name="twitter:description" content={DEFAULT_DESCRIPTION} />
+                <meta name="twitter:image" content={DEFAULT_OG_IMAGE} />
             </Helmet>
 
             {/* Background Blobs */}
