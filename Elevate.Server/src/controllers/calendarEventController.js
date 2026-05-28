@@ -52,6 +52,14 @@ function validateOptionalString(value, fieldName) {
   return null;
 }
 
+function validateOptionalStringFields(body, fieldNames) {
+  for (const fieldName of fieldNames) {
+    const err = validateOptionalString(body[fieldName], fieldName);
+    if (err) return err;
+  }
+  return null;
+}
+
 function normalizeOptionalString(value) {
   if (value === undefined || value === null) return null;
   const trimmed = value.trim();
@@ -85,8 +93,8 @@ function validateCreatePayload(body) {
       if (err) return err;
     }
   }
-  const linkedPostIdError = validateOptionalString(body.linkedPostId, 'linkedPostId');
-  if (linkedPostIdError) return linkedPostIdError;
+  const optionalStringError = validateOptionalStringFields(body, ['eventLocation', 'eventTarget', 'linkedPostId']);
+  if (optionalStringError) return optionalStringError;
   return null;
 }
 
@@ -104,8 +112,8 @@ function validateUpdatePayload(body) {
       if (err) return err;
     }
   }
-  const linkedPostIdError = validateOptionalString(body.linkedPostId, 'linkedPostId');
-  if (linkedPostIdError) return linkedPostIdError;
+  const optionalStringError = validateOptionalStringFields(body, ['eventLocation', 'eventTarget', 'linkedPostId']);
+  if (optionalStringError) return optionalStringError;
   return null;
 }
 
@@ -180,8 +188,8 @@ exports.createCalendarEvent = async (req, res) => {
       type: PARTITION_KEY,
       title: req.body.title.trim(),
       eventDates: normalizeEventDates(req.body.eventDates),
-      eventLocation: req.body.eventLocation || null,
-      eventTarget: req.body.eventTarget || null,
+      eventLocation: normalizeOptionalString(req.body.eventLocation),
+      eventTarget: normalizeOptionalString(req.body.eventTarget),
       linkedPostId: normalizeOptionalString(req.body.linkedPostId),
       createdAt: now,
       updatedAt: now,
@@ -223,10 +231,10 @@ exports.updateCalendarEvent = async (req, res) => {
         ? normalizeEventDates(req.body.eventDates)
         : existing.eventDates,
       eventLocation: req.body.eventLocation !== undefined
-        ? (req.body.eventLocation || null)
+        ? normalizeOptionalString(req.body.eventLocation)
         : existing.eventLocation,
       eventTarget: req.body.eventTarget !== undefined
-        ? (req.body.eventTarget || null)
+        ? normalizeOptionalString(req.body.eventTarget)
         : existing.eventTarget,
       linkedPostId: req.body.linkedPostId !== undefined
         ? normalizeOptionalString(req.body.linkedPostId)

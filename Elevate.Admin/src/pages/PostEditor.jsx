@@ -229,7 +229,7 @@ function PostEditor() {
       }
       setInitialLinkedCalendarEventId(linkedCalendarEventId)
     } catch (err) {
-      setError('게시글은 저장되었으나 달력 이벤트 연결에 실패했습니다: ' + (err.message || ''))
+      throw new Error('게시글은 저장되었으나 달력 이벤트 연결에 실패했습니다: ' + (err.message || ''))
     }
   }
 
