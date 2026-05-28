@@ -9,6 +9,7 @@ const requiredSitemapUrls = [
   '/program-news',
   '/activity',
   '/agenthon',
+  '/mee/pre-mee',
   '/all',
   '/m365',
   '/copilot',
@@ -80,3 +81,5 @@ assert(postDetailPage.includes('<meta property="og:url" content={pageUrl} />'), 
 assert(postDetailPage.includes('<meta property="og:type" content="article" />'), 'PostDetail must render article OG type');
 assert(postDetailPage.includes('<meta name="twitter:image" content={ogImage} />'), 'PostDetail must render Twitter image metadata');
 assert(!postDetailPage.includes('post?.thumbnail?.signedUrl'), 'PostDetail SEO image metadata must not use expiring signedUrl values');
+assert(postDetailPage.includes('getStableOgImage'), 'PostDetail must filter unstable post thumbnail URLs for SEO image metadata');
+assert(postDetailPage.includes('blob.core.windows.net'), 'PostDetail must avoid Azure Blob bare URLs in SEO image metadata');

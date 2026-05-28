@@ -26,6 +26,14 @@ import NotFound from './NotFound';
 
 const VALID_CATEGORIES = POST_DETAIL_VALID_CATEGORIES;
 
+function getStableOgImage(thumbnail) {
+    const imageUrl = typeof thumbnail === 'string' ? thumbnail : thumbnail?.url;
+    if (!imageUrl || imageUrl.includes('blob.core.windows.net')) {
+        return DEFAULT_OG_IMAGE;
+    }
+    return imageUrl;
+}
+
 /**
  * @param {object}  props
  * @param {string}  [props.categoryProp]  URL 파라미터 대신 사용할 카테고리 (예: "agenthon")
@@ -151,7 +159,7 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
     const pageTitle = `${postTitle ?? ''} | ${categoryDisplayName} | Microsoft Elevate`;
     const pageDescription = post?.excerpt || `${postTitle ?? ''} - ${categoryDisplayName} 블로그 포스트입니다.`;
     const pageUrl = canonicalUrl(useLatest ? '/agenthon' : `/${normalizedCategory}/${postId || ''}`);
-    const ogImage = post?.thumbnail?.url || (typeof post?.thumbnail === 'string' && post.thumbnail) || DEFAULT_OG_IMAGE;
+    const ogImage = getStableOgImage(post?.thumbnail);
 
     // GlassDocLayout에 전달할 breadcrumb 목록.
     // 로딩이 완료되기 전에는 마지막 항목이 postId(슬러그)로 표시된다.
