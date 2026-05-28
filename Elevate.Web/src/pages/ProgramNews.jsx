@@ -19,7 +19,7 @@ import SearchBar from '../components/posts/SearchBar';
 import Logo from '../components/common/Logo';
 import Footer from '../components/layout/Footer';
 import EventCalendar from '../components/posts/EventCalendar';
-import { useCategoryPostList } from '../hooks/useCategoryPostList';
+import { POST_LIST_PAGE_SIZE, useCategoryPostList } from '../hooks/useCategoryPostList';
 import { listCalendarEvents } from '../api/calendarEvents';
 import { sortByEventDates } from '../utils/eventSorting';
 
@@ -30,7 +30,6 @@ const TABS = [
 ];
 
 const PAGE_TITLE = '행사 및 프로그램 소식';
-const PAGE_SIZE = 20;
 
 function sortPostsByCalendarEvents(posts, calendarEvents) {
   const eventByPostId = new Map(
@@ -96,11 +95,11 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
       : filteredPosts
   ), [activeTab, filteredPosts, calendarEvents]);
 
-  const eventTotalPages = Math.max(1, Math.ceil(eventFilteredPosts.length / PAGE_SIZE));
+  const eventTotalPages = Math.max(1, Math.ceil(eventFilteredPosts.length / POST_LIST_PAGE_SIZE));
   const eventCurrentPage = Math.min(Math.max(currentPage, 1), eventTotalPages);
   const eventPaginatedPosts = eventFilteredPosts.slice(
-    (eventCurrentPage - 1) * PAGE_SIZE,
-    eventCurrentPage * PAGE_SIZE
+    (eventCurrentPage - 1) * POST_LIST_PAGE_SIZE,
+    eventCurrentPage * POST_LIST_PAGE_SIZE
   );
 
   const displayedPosts = activeTab === 'event' && selectedCalendarEvent?.linkedPostId

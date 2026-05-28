@@ -89,6 +89,27 @@ test('createCalendarEvent — 빈 eventDates 배열은 응답에서 유지', asy
   assert.deepEqual(res.getBody().eventDates, []);
 });
 
+test('createCalendarEvent — linkedPostId가 문자열/null이 아니면 400', async () => {
+  const req = { body: { title: '테스트 이벤트', linkedPostId: {} }, correlationId: 'x', params: {}, query: {} };
+  const res = makeRes();
+  await ctrl.createCalendarEvent(req, res);
+  assert.equal(res.getStatus(), 400);
+});
+
+test('createCalendarEvent — linkedPostId는 trim하고 빈 문자열은 null로 저장', async () => {
+  const req = { body: { title: '테스트 이벤트', linkedPostId: '  post-1  ' }, correlationId: 'x', params: {}, query: {} };
+  const res = makeRes();
+  await ctrl.createCalendarEvent(req, res);
+  assert.equal(res.getStatus(), 201);
+  assert.equal(res.getBody().linkedPostId, 'post-1');
+
+  const emptyReq = { body: { title: '테스트 이벤트', linkedPostId: '   ' }, correlationId: 'x', params: {}, query: {} };
+  const emptyRes = makeRes();
+  await ctrl.createCalendarEvent(emptyReq, emptyRes);
+  assert.equal(emptyRes.getStatus(), 201);
+  assert.equal(emptyRes.getBody().linkedPostId, null);
+});
+
 test('listCalendarEvents — items 배열 반환', async () => {
   const req = { correlationId: 'x', params: {}, query: {} };
   const res = makeRes();
@@ -119,6 +140,13 @@ test('updateCalendarEvent — body가 객체가 아니면 400', async () => {
 
 test('updateCalendarEvent — 잘못된 eventDates면 400', async () => {
   const req = { body: { eventDates: [{ start: '2026-06-05', end: '2026-06-01' }] }, correlationId: 'x', params: { eventId: 'abc' }, query: {} };
+  const res = makeRes();
+  await ctrl.updateCalendarEvent(req, res);
+  assert.equal(res.getStatus(), 400);
+});
+
+test('updateCalendarEvent — linkedPostId가 문자열/null이 아니면 400', async () => {
+  const req = { body: { linkedPostId: [] }, correlationId: 'x', params: { eventId: 'abc' }, query: {} };
   const res = makeRes();
   await ctrl.updateCalendarEvent(req, res);
   assert.equal(res.getStatus(), 400);

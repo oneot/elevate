@@ -19,7 +19,7 @@ import { useSearchParams } from 'react-router-dom';
 import { listPosts } from '../api/posts';
 import { sortByEventDates } from '../utils/eventSorting';
 
-const PAGE_SIZE = 20;
+export const POST_LIST_PAGE_SIZE = 20;
 
 const normalizeTag = (tag) => (tag ?? '').toString().trim().toLowerCase();
 const normalizeTagList = (list = []) => Array.from(new Set(list.map(normalizeTag).filter(Boolean)));
@@ -148,12 +148,12 @@ export function useCategoryPostList(category) {
     updateUrlParams({ tags: '', page: '1' });
   };
 
-  // 클라이언트 사이드 페이지네이션: 필터링된 결과를 PAGE_SIZE 단위로 slice한다.
+  // 클라이언트 사이드 페이지네이션: 필터링된 결과를 POST_LIST_PAGE_SIZE 단위로 slice한다.
   const total = filteredPosts.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / POST_LIST_PAGE_SIZE));
   const currentPage = Math.min(Math.max(pageParam, 1), totalPages);
-  const start = (currentPage - 1) * PAGE_SIZE;
-  const paginatedPosts = filteredPosts.slice(start, start + PAGE_SIZE);
+  const start = (currentPage - 1) * POST_LIST_PAGE_SIZE;
+  const paginatedPosts = filteredPosts.slice(start, start + POST_LIST_PAGE_SIZE);
 
   const handlePageChange = (p) => {
     updateUrlParams({ page: String(p) });

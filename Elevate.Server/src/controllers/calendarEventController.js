@@ -46,6 +46,18 @@ function normalizeEventDates(eventDates) {
   }));
 }
 
+function validateOptionalString(value, fieldName) {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'string') return `${fieldName} must be a string or null`;
+  return null;
+}
+
+function normalizeOptionalString(value) {
+  if (value === undefined || value === null) return null;
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
 function toCalendarEventResponse(doc) {
   return {
     id: doc.id,
@@ -73,6 +85,8 @@ function validateCreatePayload(body) {
       if (err) return err;
     }
   }
+  const linkedPostIdError = validateOptionalString(body.linkedPostId, 'linkedPostId');
+  if (linkedPostIdError) return linkedPostIdError;
   return null;
 }
 
@@ -90,6 +104,8 @@ function validateUpdatePayload(body) {
       if (err) return err;
     }
   }
+  const linkedPostIdError = validateOptionalString(body.linkedPostId, 'linkedPostId');
+  if (linkedPostIdError) return linkedPostIdError;
   return null;
 }
 
@@ -166,7 +182,7 @@ exports.createCalendarEvent = async (req, res) => {
       eventDates: normalizeEventDates(req.body.eventDates),
       eventLocation: req.body.eventLocation || null,
       eventTarget: req.body.eventTarget || null,
-      linkedPostId: req.body.linkedPostId || null,
+      linkedPostId: normalizeOptionalString(req.body.linkedPostId),
       createdAt: now,
       updatedAt: now,
     };
@@ -213,7 +229,7 @@ exports.updateCalendarEvent = async (req, res) => {
         ? (req.body.eventTarget || null)
         : existing.eventTarget,
       linkedPostId: req.body.linkedPostId !== undefined
-        ? (req.body.linkedPostId || null)
+        ? normalizeOptionalString(req.body.linkedPostId)
         : existing.linkedPostId,
       updatedAt: now,
     };
