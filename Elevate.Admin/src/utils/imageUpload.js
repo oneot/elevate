@@ -45,7 +45,7 @@ const thumbnailOptimizableMimeTypes = new Set([
 
 const thumbnailMaxWidth = 640
 const thumbnailJpegQuality = 0.82
-export const imageBlobCacheControl = 'public, max-age=2592000'
+export const imageBlobCacheControl = 'private, max-age=2592000'
 
 /**
  * 파일의 MIME 타입을 정규화한다.
@@ -80,8 +80,7 @@ function getFileNameWithExtension(fileName, extension) {
   return `${baseName}${extension}`
 }
 
-function canvasHasTransparency(canvas) {
-  const context = canvas.getContext('2d', { willReadFrequently: true })
+function canvasHasTransparency(canvas, context) {
   if (!context) return false
 
   const { width, height } = canvas
@@ -141,7 +140,8 @@ export async function optimizeThumbnailForUpload(file) {
     canvas.width = targetWidth
     canvas.height = targetHeight
 
-    const context = canvas.getContext('2d')
+    const shouldCheckTransparency = contentType !== 'image/jpeg'
+    const context = canvas.getContext('2d', shouldCheckTransparency ? { willReadFrequently: true } : undefined)
     if (!context) {
       bitmap.close?.()
       return file
@@ -150,7 +150,7 @@ export async function optimizeThumbnailForUpload(file) {
     context.drawImage(bitmap, 0, 0, targetWidth, targetHeight)
     bitmap.close?.()
 
-    const keepPng = canvasHasTransparency(canvas)
+    const keepPng = shouldCheckTransparency && canvasHasTransparency(canvas, context)
     const outputType = keepPng ? 'image/png' : 'image/jpeg'
     const outputBlob = await canvasToBlob(canvas, outputType, keepPng ? undefined : thumbnailJpegQuality)
 

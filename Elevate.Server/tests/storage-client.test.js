@@ -28,3 +28,10 @@ test('explicit invalid rolling SAS hours fall back to one hour instead of stable
   assert.equal(window.startsOn.toISOString(), '2026-05-28T12:25:00.000Z');
   assert.equal(window.expiresOn.toISOString(), '2026-05-28T13:30:00.000Z');
 });
+
+test('non-image containers use one hour rolling SAS by default', () => {
+  const window = getReadSasWindow(null, new Date('2026-05-28T12:30:00.000Z'), 'attachments');
+
+  assert.equal(window.startsOn.toISOString(), '2026-05-28T12:25:00.000Z');
+  assert.equal(window.expiresOn.toISOString(), '2026-05-28T13:30:00.000Z');
+});
