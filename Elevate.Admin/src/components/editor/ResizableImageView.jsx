@@ -16,6 +16,17 @@ const getElementContentWidth = (element) => {
   return Math.max(0, Math.floor(rect.width - paddingLeft - paddingRight))
 }
 
+const clampImageWidth = (width, maxWidth) => (
+  Math.min(Math.max(MIN_IMAGE_WIDTH, width), maxWidth)
+)
+
+const getDerivedSize = ({ width, height, aspectRatio }) => {
+  if (width && height) return { width, height }
+  if (width && aspectRatio) return { width, height: Math.max(1, Math.round(width / aspectRatio)) }
+  if (height && aspectRatio) return { width: Math.max(1, Math.round(height * aspectRatio)), height }
+  return null
+}
+
 function ResizableImageView({ node, selected, updateAttributes }) {
   const wrapperRef = useRef(null)
   const imageRef = useRef(null)
@@ -28,16 +39,24 @@ function ResizableImageView({ node, selected, updateAttributes }) {
 
   const storedWidth = toPositiveInteger(node.attrs.width)
   const storedHeight = toPositiveInteger(node.attrs.height)
-  const storedSize = storedWidth && storedHeight ? { width: storedWidth, height: storedHeight } : null
-  const appliedSize = resizeSize ?? storedSize
+  const measuredAspectRatio =
+    measuredSize?.width && measuredSize?.height ? measuredSize.width / measuredSize.height : null
+  const storedAspectRatio = storedWidth && storedHeight ? storedWidth / storedHeight : null
+  const aspectRatio = measuredAspectRatio || storedAspectRatio
+  const storedSize = getDerivedSize({
+    width: storedWidth,
+    height: storedHeight,
+    aspectRatio,
+  })
+  const appliedWidth = resizeSize?.width || storedWidth || storedSize?.width || null
   const displaySize = resizeSize ?? (measuredSize?.width && measuredSize?.height ? measuredSize : storedSize)
 
   const imageStyle = useMemo(() => {
-    if (!appliedSize) return undefined
+    if (!appliedWidth) return undefined
     return {
-      width: `${appliedSize.width}px`,
+      width: `${appliedWidth}px`,
     }
-  }, [appliedSize])
+  }, [appliedWidth])
 
   useEffect(() => {
     updateAttributesRef.current = updateAttributes
@@ -56,18 +75,9 @@ function ResizableImageView({ node, selected, updateAttributes }) {
   }, [])
 
   useEffect(() => {
-    if (storedWidth && storedHeight) return undefined
-
     const frameId = window.requestAnimationFrame(measureImage)
     return () => window.cancelAnimationFrame(frameId)
-  }, [measureImage, storedHeight, storedWidth])
-
-  useEffect(() => {
-    if (!storedWidth || !storedHeight) return undefined
-
-    const frameId = window.requestAnimationFrame(measureImage)
-    return () => window.cancelAnimationFrame(frameId)
-  }, [measureImage, storedHeight, storedWidth])
+  }, [appliedWidth, measureImage])
 
   useEffect(() => {
     const restoreDocumentStyles = (dragState) => {
@@ -101,10 +111,7 @@ function ResizableImageView({ node, selected, updateAttributes }) {
 
       event.preventDefault()
       const deltaX = event.clientX - dragState.startX
-      const nextWidth = Math.min(
-        Math.max(MIN_IMAGE_WIDTH, dragState.startWidth + deltaX),
-        dragState.maxWidth,
-      )
+      const nextWidth = clampImageWidth(dragState.startWidth + deltaX, dragState.maxWidth)
       const nextHeight = Math.max(1, Math.round(nextWidth / dragState.aspectRatio))
       const roundedWidth = Math.round(nextWidth)
       const nextSize = { width: roundedWidth, height: nextHeight }
@@ -169,14 +176,11 @@ function ResizableImageView({ node, selected, updateAttributes }) {
     }
   }, [])
 
-  const handlePointerDown = (event) => {
-    event.preventDefault()
-    event.stopPropagation()
-
+  const getResizeMetrics = () => {
     const image = imageRef.current
     const wrapper = wrapperRef.current
     const editorRoot = wrapper?.closest('.ProseMirror')
-    if (!image || !editorRoot) return
+    if (!image || !editorRoot) return null
 
     const imageRect = image.getBoundingClientRect()
     const maxWidth = getElementContentWidth(editorRoot)
@@ -186,24 +190,60 @@ function ResizableImageView({ node, selected, updateAttributes }) {
     const naturalHeight = Math.round(image.naturalHeight)
     const startWidth = measuredWidth > 0 ? measuredWidth : naturalWidth
     const startHeight = measuredHeight > 0 ? measuredHeight : naturalHeight
-    if (startWidth <= 0 || startHeight <= 0) return
+    if (startWidth <= 0 || startHeight <= 0) return null
 
-    const aspectRatio = startWidth / startHeight
+    return {
+      startWidth,
+      startHeight,
+      aspectRatio: startWidth / startHeight,
+      maxWidth: Math.max(MIN_IMAGE_WIDTH, maxWidth),
+    }
+  }
+
+  const handlePointerDown = (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+
+    const metrics = getResizeMetrics()
+    if (!metrics) return
 
     dragStateRef.current = {
       startX: event.clientX,
-      startWidth,
-      aspectRatio,
-      maxWidth: Math.max(MIN_IMAGE_WIDTH, maxWidth),
-      latestSize: { width: startWidth, height: startHeight },
+      startWidth: metrics.startWidth,
+      aspectRatio: metrics.aspectRatio,
+      maxWidth: metrics.maxWidth,
+      latestSize: { width: metrics.startWidth, height: metrics.startHeight },
       committedSize: null,
       previousCursor: document.body.style.cursor,
       previousUserSelect: document.body.style.userSelect,
     }
-    setResizeSize({ width: startWidth, height: startHeight })
+    setResizeSize({ width: metrics.startWidth, height: metrics.startHeight })
     setIsResizing(true)
     document.body.style.cursor = 'nwse-resize'
     document.body.style.userSelect = 'none'
+  }
+
+  const handleResizeKeyDown = (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    const metrics = getResizeMetrics()
+    if (!metrics) return
+
+    const direction = event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? -1 : 1
+    const step = event.shiftKey ? 50 : 10
+    const nextWidth = clampImageWidth(metrics.startWidth + (direction * step), metrics.maxWidth)
+    const nextHeight = Math.max(1, Math.round(nextWidth / metrics.aspectRatio))
+    const nextSize = { width: nextWidth, height: nextHeight }
+
+    setResizeSize(nextSize)
+    updateAttributesRef.current(nextSize)
+    window.requestAnimationFrame(() => {
+      setResizeSize(null)
+      measureImage()
+    })
   }
 
   const showControls = selected || isResizing
@@ -233,10 +273,13 @@ function ResizableImageView({ node, selected, updateAttributes }) {
       {showControls && (
         <>
           {badgeText ? <span className="resizable-image-badge">{badgeText}</span> : null}
-          <span
+          <button
+            type="button"
             className="resizable-image-handle"
-            role="presentation"
+            aria-label="이미지 크기 조절"
+            title="이미지 크기 조절"
             onPointerDown={handlePointerDown}
+            onKeyDown={handleResizeKeyDown}
           />
         </>
       )}
