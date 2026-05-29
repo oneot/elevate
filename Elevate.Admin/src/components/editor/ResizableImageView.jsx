@@ -271,7 +271,7 @@ function ResizableImageView({ node, selected, updateAttributes }) {
         onLoad={measureImage}
       />
       {showControls && (
-        <>
+        <span contentEditable={false}>
           {badgeText ? <span className="resizable-image-badge">{badgeText}</span> : null}
           <button
             type="button"
@@ -281,7 +281,7 @@ function ResizableImageView({ node, selected, updateAttributes }) {
             onPointerDown={handlePointerDown}
             onKeyDown={handleResizeKeyDown}
           />
-        </>
+        </span>
       )}
     </NodeViewWrapper>
   )
