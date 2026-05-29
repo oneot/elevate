@@ -130,9 +130,7 @@ async function getBlobReadSasUrl(blobUrl, validHours) {
     const containerName = pathSegments[0];
     const blobName = pathSegments.slice(1).join('/');
 
-    const { startsOn, expiresOn } = validHours
-      ? getRollingReadSasWindow(validHours)
-      : getStableReadSasWindow();
+    const { startsOn, expiresOn } = getReadSasWindow(validHours);
 
     const userDelegationKey = await serviceClient.getUserDelegationKey(startsOn, expiresOn);
     const sasToken = generateBlobSASQueryParameters(
@@ -155,11 +153,17 @@ async function getBlobReadSasUrl(blobUrl, validHours) {
   }
 }
 
-function getRollingReadSasWindow(validHours) {
-  const hours = validHours || 1;
+function getReadSasWindow(validHours, now = new Date()) {
+  return validHours == null
+    ? getStableReadSasWindow(now)
+    : getRollingReadSasWindow(validHours, now);
+}
+
+function getRollingReadSasWindow(validHours, now = new Date()) {
+  const hours = Number.isFinite(validHours) && validHours > 0 ? validHours : 1;
   return {
-    startsOn: new Date(Date.now() - READ_SAS_CLOCK_SKEW_MS),
-    expiresOn: new Date(Date.now() + hours * 60 * 60 * 1000)
+    startsOn: new Date(now.getTime() - READ_SAS_CLOCK_SKEW_MS),
+    expiresOn: new Date(now.getTime() + hours * 60 * 60 * 1000)
   };
 }
 
@@ -201,6 +205,7 @@ module.exports = {
   issueBlobUploadSas,
   issueBlobAttachSas,
   getBlobReadSasUrl,
+  getReadSasWindow,
   getStableReadSasWindow,
   deleteBlobByUrl
 };

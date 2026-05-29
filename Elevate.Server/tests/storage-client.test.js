@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { getStableReadSasWindow } = require('../src/services/storageClient');
+const { getReadSasWindow, getStableReadSasWindow } = require('../src/services/storageClient');
 
 test('stable read SAS window is fixed for the same UTC day', () => {
   const morning = getStableReadSasWindow(new Date('2026-05-28T01:15:00.000Z'));
@@ -20,4 +20,11 @@ test('stable read SAS window changes at the next UTC day', () => {
   assert.notEqual(dayTwo.startsOn.toISOString(), dayOne.startsOn.toISOString());
   assert.equal(dayTwo.startsOn.toISOString(), '2026-05-28T23:55:00.000Z');
   assert.equal(dayTwo.expiresOn.toISOString(), '2026-05-30T00:05:00.000Z');
+});
+
+test('explicit invalid rolling SAS hours fall back to one hour instead of stable window', () => {
+  const window = getReadSasWindow(0, new Date('2026-05-28T12:30:00.000Z'));
+
+  assert.equal(window.startsOn.toISOString(), '2026-05-28T12:25:00.000Z');
+  assert.equal(window.expiresOn.toISOString(), '2026-05-28T13:30:00.000Z');
 });
