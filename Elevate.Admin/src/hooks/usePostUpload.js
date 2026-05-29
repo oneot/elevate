@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { isApiConfigured } from '../lib/apiClient.js'
 import { requestUploadSas, registerAsset } from '../services/assetsApi.js'
-import { normalizeImageMimeType, uploadBlobWithSas, supportedImageMimeTypes } from '../utils/imageUpload.js'
+import { imageBlobCacheControl, normalizeImageMimeType, optimizeThumbnailForUpload, uploadBlobWithSas, supportedImageMimeTypes } from '../utils/imageUpload.js'
 
 /**
  * 게시글 편집기에서 썸네일 및 본문 이미지 업로드를 담당하는 훅.
@@ -57,23 +57,28 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
     setMessage('')
 
     try {
+      const uploadFile = await optimizeThumbnailForUpload(selectedFile)
+      const uploadContentType = normalizeImageMimeType(uploadFile)
+
       // 1단계: SAS URL 발급
       const sas = await requestUploadSas({
-        fileName: selectedFile.name,
-        contentType,
-        sizeBytes: selectedFile.size,
+        fileName: uploadFile.name,
+        contentType: uploadContentType,
+        sizeBytes: uploadFile.size,
       }, { msalInstance })
 
       // 2단계: Azure Blob Storage에 직접 업로드
-      await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType)
+      await uploadBlobWithSas(sas.uploadUrl, uploadFile, uploadContentType, {
+        cacheControl: imageBlobCacheControl,
+      })
 
       // 3단계: 서버에 자산 등록 — CDN 서명 URL 또는 원본 URL을 응답으로 받는다
       const asset = await registerAsset({
         postId: postId || null,
         blobUrl: sas.blobUrl,
-        contentType,
-        sizeBytes: selectedFile.size,
-        fileName: selectedFile.name,
+        contentType: uploadContentType,
+        sizeBytes: uploadFile.size,
+        fileName: uploadFile.name,
       }, { msalInstance })
 
       // 응답에서 사용 가능한 URL을 우선순위대로 선택한다.
@@ -112,7 +117,9 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
       sizeBytes: selectedFile.size,
     }, { msalInstance })
 
-    await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType)
+    await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType, {
+      cacheControl: imageBlobCacheControl,
+    })
 
     const asset = await registerAsset({
       postId: postId || null,

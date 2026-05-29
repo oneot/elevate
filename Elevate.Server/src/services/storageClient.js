@@ -13,6 +13,7 @@ const storageAccountName = process.env.STORAGE_ACCOUNT_NAME;
 const storageContainerName = process.env.STORAGE_CONTAINER_NAME || 'images';
 const storageAttachContainerName = process.env.STORAGE_ATTACH_CONTAINER_NAME || 'attachments';
 let blobServiceClient = null;
+const READ_SAS_CLOCK_SKEW_MS = 5 * 60 * 1000;
 
 function getBlobServiceClient() {
   if (!storageAccountName) {
@@ -119,7 +120,6 @@ async function issueBlobAttachSas({ fileName }) {
 }
 
 async function getBlobReadSasUrl(blobUrl, validHours) {
-  const hours = validHours || 1;
   if (!blobUrl) return null;
   try {
     const serviceClient = getBlobServiceClient();
@@ -130,8 +130,7 @@ async function getBlobReadSasUrl(blobUrl, validHours) {
     const containerName = pathSegments[0];
     const blobName = pathSegments.slice(1).join('/');
 
-    const startsOn = new Date(Date.now() - 5 * 60 * 1000);
-    const expiresOn = new Date(Date.now() + hours * 60 * 60 * 1000);
+    const { startsOn, expiresOn } = getReadSasWindow(validHours, new Date(), containerName);
 
     const userDelegationKey = await serviceClient.getUserDelegationKey(startsOn, expiresOn);
     const sasToken = generateBlobSASQueryParameters(
@@ -152,6 +151,30 @@ async function getBlobReadSasUrl(blobUrl, validHours) {
     console.error('[getBlobReadSasUrl] failed', error);
     return null;
   }
+}
+
+function getReadSasWindow(validHours, now = new Date(), containerName = storageContainerName) {
+  return validHours == null && containerName === storageContainerName
+    ? getStableReadSasWindow(now)
+    : getRollingReadSasWindow(validHours, now);
+}
+
+function getRollingReadSasWindow(validHours, now = new Date()) {
+  const hours = Number.isFinite(validHours) && validHours > 0 ? validHours : 1;
+  return {
+    startsOn: new Date(now.getTime() - READ_SAS_CLOCK_SKEW_MS),
+    expiresOn: new Date(now.getTime() + hours * 60 * 60 * 1000)
+  };
+}
+
+function getStableReadSasWindow(now = new Date()) {
+  const dayStartMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const nextDayStartMs = dayStartMs + 24 * 60 * 60 * 1000;
+
+  return {
+    startsOn: new Date(dayStartMs - READ_SAS_CLOCK_SKEW_MS),
+    expiresOn: new Date(nextDayStartMs + READ_SAS_CLOCK_SKEW_MS)
+  };
 }
 
 async function deleteBlobByUrl(blobUrl) {
@@ -182,5 +205,7 @@ module.exports = {
   issueBlobUploadSas,
   issueBlobAttachSas,
   getBlobReadSasUrl,
+  getReadSasWindow,
+  getStableReadSasWindow,
   deleteBlobByUrl
 };
