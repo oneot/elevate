@@ -169,7 +169,7 @@ function getStableReadSasWindow(now = new Date()) {
 
   return {
     startsOn: new Date(dayStartMs - READ_SAS_CLOCK_SKEW_MS),
-    expiresOn: new Date(nextDayStartMs)
+    expiresOn: new Date(nextDayStartMs + READ_SAS_CLOCK_SKEW_MS)
   };
 }
 

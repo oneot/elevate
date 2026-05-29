@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { isApiConfigured } from '../lib/apiClient.js'
 import { requestUploadSas, registerAsset } from '../services/assetsApi.js'
-import { normalizeImageMimeType, optimizeThumbnailForUpload, uploadBlobWithSas, supportedImageMimeTypes } from '../utils/imageUpload.js'
+import { imageBlobCacheControl, normalizeImageMimeType, optimizeThumbnailForUpload, uploadBlobWithSas, supportedImageMimeTypes } from '../utils/imageUpload.js'
 
 /**
  * 게시글 편집기에서 썸네일 및 본문 이미지 업로드를 담당하는 훅.
@@ -68,7 +68,9 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
       }, { msalInstance })
 
       // 2단계: Azure Blob Storage에 직접 업로드
-      await uploadBlobWithSas(sas.uploadUrl, uploadFile, uploadContentType)
+      await uploadBlobWithSas(sas.uploadUrl, uploadFile, uploadContentType, {
+        cacheControl: imageBlobCacheControl,
+      })
 
       // 3단계: 서버에 자산 등록 — CDN 서명 URL 또는 원본 URL을 응답으로 받는다
       const asset = await registerAsset({
@@ -115,7 +117,9 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
       sizeBytes: selectedFile.size,
     }, { msalInstance })
 
-    await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType)
+    await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType, {
+      cacheControl: imageBlobCacheControl,
+    })
 
     const asset = await registerAsset({
       postId: postId || null,

@@ -8,7 +8,7 @@ test('stable read SAS window is fixed for the same UTC day', () => {
   const evening = getStableReadSasWindow(new Date('2026-05-28T22:45:00.000Z'));
 
   assert.equal(morning.startsOn.toISOString(), '2026-05-27T23:55:00.000Z');
-  assert.equal(morning.expiresOn.toISOString(), '2026-05-29T00:00:00.000Z');
+  assert.equal(morning.expiresOn.toISOString(), '2026-05-29T00:05:00.000Z');
   assert.equal(evening.startsOn.toISOString(), morning.startsOn.toISOString());
   assert.equal(evening.expiresOn.toISOString(), morning.expiresOn.toISOString());
 });
@@ -19,5 +19,5 @@ test('stable read SAS window changes at the next UTC day', () => {
 
   assert.notEqual(dayTwo.startsOn.toISOString(), dayOne.startsOn.toISOString());
   assert.equal(dayTwo.startsOn.toISOString(), '2026-05-28T23:55:00.000Z');
-  assert.equal(dayTwo.expiresOn.toISOString(), '2026-05-30T00:00:00.000Z');
+  assert.equal(dayTwo.expiresOn.toISOString(), '2026-05-30T00:05:00.000Z');
 });

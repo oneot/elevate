@@ -45,7 +45,7 @@ const thumbnailOptimizableMimeTypes = new Set([
 
 const thumbnailMaxWidth = 640
 const thumbnailJpegQuality = 0.82
-const imageCacheControl = 'public, max-age=2592000'
+export const imageBlobCacheControl = 'public, max-age=2592000'
 
 /**
  * 파일의 MIME 타입을 정규화한다.
@@ -98,6 +98,14 @@ function canvasToBlob(canvas, type, quality) {
   })
 }
 
+async function createImageBitmapWithOrientation(file) {
+  try {
+    return await createImageBitmap(file, { imageOrientation: 'from-image' })
+  } catch {
+    return null
+  }
+}
+
 /**
  * 목록 카드에 쓰는 썸네일은 업로드 전에 브라우저에서 축소한다.
  * 브라우저 디코딩이 불안정한 GIF/HEIC/HEIF/AVIF 등은 원본 파일로 폴백한다.
@@ -115,7 +123,11 @@ export async function optimizeThumbnailForUpload(file) {
   }
 
   try {
-    const bitmap = await createImageBitmap(file)
+    const bitmap = await createImageBitmapWithOrientation(file)
+    if (!bitmap) {
+      return file
+    }
+
     const targetWidth = Math.min(bitmap.width, thumbnailMaxWidth)
     const scale = targetWidth / bitmap.width
     const targetHeight = Math.max(1, Math.round(bitmap.height * scale))
@@ -138,7 +150,7 @@ export async function optimizeThumbnailForUpload(file) {
     context.drawImage(bitmap, 0, 0, targetWidth, targetHeight)
     bitmap.close?.()
 
-    const keepPng = contentType === 'image/png' && canvasHasTransparency(canvas)
+    const keepPng = canvasHasTransparency(canvas)
     const outputType = keepPng ? 'image/png' : 'image/jpeg'
     const outputBlob = await canvasToBlob(canvas, outputType, keepPng ? undefined : thumbnailJpegQuality)
 
@@ -163,15 +175,21 @@ export async function optimizeThumbnailForUpload(file) {
  * @param {string} uploadUrl SAS 서명이 포함된 업로드 URL
  * @param {File} file 업로드할 파일
  * @param {string} contentType 파일의 MIME 타입
+ * @param {{ cacheControl?: string }} [options]
  */
-export async function uploadBlobWithSas(uploadUrl, file, contentType) {
+export async function uploadBlobWithSas(uploadUrl, file, contentType, options = {}) {
+  const headers = {
+    'x-ms-blob-type': 'BlockBlob',
+    'Content-Type': contentType,
+  }
+
+  if (options.cacheControl) {
+    headers['x-ms-blob-cache-control'] = options.cacheControl
+  }
+
   const uploadResponse = await fetch(uploadUrl, {
     method: 'PUT',
-    headers: {
-      'x-ms-blob-type': 'BlockBlob',
-      'x-ms-blob-cache-control': imageCacheControl,
-      'Content-Type': contentType,
-    },
+    headers,
     body: file,
   })
 
