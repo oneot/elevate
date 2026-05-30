@@ -37,6 +37,12 @@ export const supportedImageMimeTypes = new Set([
   'image/avif',
 ])
 
+export const thumbnailVariantSpecs = [
+  { key: 'thumb', maxWidth: 480, type: 'image/webp', quality: 0.82 },
+  { key: 'card', maxWidth: 960, type: 'image/webp', quality: 0.82 },
+  { key: 'hero', maxWidth: 1440, type: 'image/webp', quality: 0.84 },
+]
+
 /**
  * 파일의 MIME 타입을 정규화한다.
  * 1차: mimeTypeAliases 로 브라우저 비표준 타입 교정
@@ -93,4 +99,51 @@ export async function uploadBlobWithSas(uploadUrl, file, contentType) {
   }
 
   throw new Error(errorDetail || `Blob upload failed (${uploadResponse.status})`)
+}
+
+export function buildVariantFileName(fileName, variantKey, extension = 'webp') {
+  const safeName = String(fileName || 'thumbnail').replace(/[^\w.-]+/g, '-')
+  const dotIndex = safeName.lastIndexOf('.')
+  const baseName = dotIndex > 0 ? safeName.slice(0, dotIndex) : safeName
+  return `${baseName}-${variantKey}.${extension}`
+}
+
+function canvasToBlob(canvas, type, quality) {
+  if (typeof canvas.convertToBlob === 'function') {
+    return canvas.convertToBlob({ type, quality })
+  }
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob)
+      else reject(new Error('Image variant conversion failed'))
+    }, type, quality)
+  })
+}
+
+export async function createImageVariantBlob(file, spec) {
+  if (typeof createImageBitmap !== 'function') {
+    throw new Error('createImageBitmap is not supported')
+  }
+
+  const bitmap = await createImageBitmap(file)
+  try {
+    const scale = Math.min(1, spec.maxWidth / bitmap.width)
+    const width = Math.max(1, Math.round(bitmap.width * scale))
+    const height = Math.max(1, Math.round(bitmap.height * scale))
+    const canvas = typeof OffscreenCanvas === 'function'
+      ? new OffscreenCanvas(width, height)
+      : document.createElement('canvas')
+
+    canvas.width = width
+    canvas.height = height
+    const context = canvas.getContext('2d')
+    if (!context) throw new Error('Canvas 2D context is not available')
+    context.drawImage(bitmap, 0, 0, width, height)
+
+    const blob = await canvasToBlob(canvas, spec.type, spec.quality)
+    return { blob, width, height, type: blob.type || spec.type }
+  } finally {
+    if (typeof bitmap.close === 'function') bitmap.close()
+  }
 }

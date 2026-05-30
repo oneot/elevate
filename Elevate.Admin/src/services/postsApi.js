@@ -20,6 +20,7 @@ function toEditorPost(apiPost) {
     excerpt: apiPost.excerpt || '',
     htmlBody: apiPost.contentMarkdown || '',
     thumbnailUrl: apiPost.thumbnail?.signedUrl || apiPost.thumbnail?.url || '',
+    thumbnail: apiPost.thumbnail || null,
     youtube: apiPost.youtube || '',
     updatedAt: apiPost.updatedAt || null,
     publishedAt: apiPost.publishedAt || null,
@@ -57,14 +58,16 @@ function toApiPayload(post) {
     payload.series = post.series || null
   }
 
-  if (post.thumbnailUrl) {
+  if (post.thumbnail?.url) {
+    payload.thumbnail = post.thumbnail
+  } else if (post.thumbnailUrl) {
     payload.thumbnail = {
       url: post.thumbnailUrl,
       alt: '',
       width: 0,
       height: 0,
-      mimeType: post.thumbnail?.mimeType || 'image/jpeg',
-      sizeBytes: post.thumbnail?.sizeBytes || 0,
+      mimeType: 'image/jpeg',
+      sizeBytes: 0,
     }
   }
 

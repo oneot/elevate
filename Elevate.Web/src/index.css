@@ -2,7 +2,7 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --font-sans: 'Pretendard', sans-serif;
+  --font-sans: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
   --color-ms-blue: #0078D4;
   --color-ms-green: #107C10;
   --color-ms-orange: #D83B01;
@@ -469,6 +469,18 @@ body {
   border-radius: 0.5rem;
   margin: 1rem 0;
 }
+.prose .post-content-media {
+  display: block;
+}
+.prose .post-content-iframe {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+}
 .prose pre {
   background-color: #1e293b;
   color: #e2e8f0;
@@ -665,7 +677,7 @@ body {
 }
 
 #webchat-container .webchat__basic-transcript__text {
-  font-family: 'Pretendard', sans-serif !important;
+  font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif !important;
 }
 
 /* 아바타 숨김 */
@@ -738,7 +750,7 @@ body {
 
 .rbc-calendar {
   background: transparent;
-  font-family: 'Pretendard', sans-serif;
+  font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
 }
 
 /* ── 년월 레이블 (달력 상단, 별도 div) ── */

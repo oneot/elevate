@@ -210,7 +210,7 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
     } catch {
       setShowRestoreBanner(false)
     }
-  }, [storageKey, value]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [storageKey, value])
 
   const editor = useEditor({
     extensions: [

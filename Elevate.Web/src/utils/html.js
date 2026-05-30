@@ -124,6 +124,49 @@ export function injectLinkHandlers(containerEl, navigate) {
   return () => containerEl.removeEventListener('click', handleClick);
 }
 
+function appendClassName(element, className) {
+  const current = element.className || '';
+  const classes = new Set(current.split(/\s+/).filter(Boolean));
+  classes.add(className);
+  element.className = Array.from(classes).join(' ');
+}
+
+/**
+ * 렌더링된 HTML 내 이미지와 iframe의 로딩 방식을 최적화한다.
+ *
+ * 첫 번째 이미지는 상세 본문의 LCP 후보일 수 있으므로 eager/high로 유지하고,
+ * 그 외 미디어는 lazy load한다. dangerouslySetInnerHTML 이후 실제 DOM에 적용되므로
+ * 기존 sanitize 정책을 넓히지 않아도 된다.
+ *
+ * @param {Element} containerEl - 미디어를 탐색할 DOM 컨테이너 요소
+ */
+export function optimizeEmbeddedMedia(containerEl) {
+  if (!containerEl) return;
+
+  containerEl.querySelectorAll('img').forEach((image, index) => {
+    if (!image.hasAttribute('loading')) {
+      image.setAttribute('loading', index === 0 ? 'eager' : 'lazy');
+    }
+    if (!image.hasAttribute('decoding')) {
+      image.setAttribute('decoding', 'async');
+    }
+    if (!image.hasAttribute('fetchpriority')) {
+      image.setAttribute('fetchpriority', index === 0 ? 'high' : 'auto');
+    }
+    if (!image.hasAttribute('sizes')) {
+      image.setAttribute('sizes', '(min-width: 1024px) 768px, 100vw');
+    }
+    appendClassName(image, 'post-content-media');
+  });
+
+  containerEl.querySelectorAll('iframe').forEach((iframe) => {
+    if (!iframe.hasAttribute('loading')) {
+      iframe.setAttribute('loading', 'lazy');
+    }
+    appendClassName(iframe, 'post-content-iframe');
+  });
+}
+
 /**
  * 렌더링된 HTML 내 코드 블록에 복사 버튼을 주입한다.
  *

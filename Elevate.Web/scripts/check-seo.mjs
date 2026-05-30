@@ -66,6 +66,9 @@ for (const path of requiredSitemapUrls.filter((path) => path !== '/')) {
 assert(routeGenerator.includes("path: '/agenthon'") && routeGenerator.includes("type: 'article'"), 'SEO route generator must mark /agenthon as an article');
 assert(!sitemapXml.includes(`${siteUrl}/mee/pre-mee`), 'sitemap.xml must not include detail routes without prerendered post data');
 assert(!routeGenerator.includes("path: '/mee/pre-mee'"), 'SEO route generator must not emit fake metadata for detail routes without post data');
+assert(routeGenerator.includes('VITE_API_BASE_URL'), 'SEO route generator must read the public API base URL for real post detail routes');
+assert(routeGenerator.includes('collectPostRoutes'), 'SEO route generator must collect real post detail routes from the public API when available');
+assert(routeGenerator.includes('fetchPublicPostsPage'), 'SEO route generator must fetch public post summaries for detail route generation');
 assert(routeGenerator.includes('directoryIndexPath'), 'SEO route generator must emit directory index HTML for GitHub Pages');
 assert(routeGenerator.includes('extensionlessPath'), 'SEO route generator must emit extensionless HTML for sitemap URLs');
 

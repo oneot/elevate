@@ -17,7 +17,7 @@ import GlassDocLayout from '../components/layout/GlassDocLayout';
 import TableOfContents from '../components/posts/TableOfContents';
 import SeriesNavigator from '../components/posts/SeriesNavigator';
 import { getPost, getLatestAgenthonPost } from '../api/posts';
-import { sanitizeHtml, injectHeadingIds, injectLinkHandlers, injectCollapsibleCodeBlocks } from '../utils/html';
+import { sanitizeHtml, injectHeadingIds, injectLinkHandlers, injectCollapsibleCodeBlocks, optimizeEmbeddedMedia } from '../utils/html';
 import { formatDateKo } from '../utils/url';
 import { POST_DETAIL_VALID_CATEGORIES, CATEGORY_DISPLAY_NAMES, getCategoryListRoute } from '../constants/categories';
 import { DEFAULT_OG_IMAGE, SITE_NAME, canonicalUrl } from '../constants/seo';
@@ -124,6 +124,7 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
     // + data-collapsible="true" 코드 블록에 접이식 토글 버튼 주입
     useEffect(() => {
         if (!contentRef.current || !post?.contentMarkdown) return;
+        optimizeEmbeddedMedia(contentRef.current);
         injectHeadingIds(contentRef.current);
         const cleanupLinks = injectLinkHandlers(contentRef.current, navigate);
         const cleanupCollapsible = injectCollapsibleCodeBlocks(contentRef.current);

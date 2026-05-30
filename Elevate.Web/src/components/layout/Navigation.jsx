@@ -140,9 +140,12 @@ const Navigation = () => {
     // 라우트 이동 시 모든 드롭다운/오버레이 닫기
     useEffect(() => {
         if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-        setOpenMenu(null);
-        setMobileOpen(false);
-        setExpandedMobile(null);
+        const resetTimer = window.setTimeout(() => {
+            setOpenMenu(null);
+            setMobileOpen(false);
+            setExpandedMobile(null);
+        }, 0);
+        return () => window.clearTimeout(resetTimer);
     }, [location.pathname]);
 
     // Escape 키로 드롭다운/오버레이 닫기
