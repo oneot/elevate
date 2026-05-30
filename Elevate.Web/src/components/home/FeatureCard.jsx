@@ -99,6 +99,7 @@ const FeatureCard = ({
                             <img 
                                 src={icon} 
                                 alt={title} 
+                                decoding="async"
                                 className={`${iconSize} group-hover:scale-110 transition-transform`} 
                             />
                         )}

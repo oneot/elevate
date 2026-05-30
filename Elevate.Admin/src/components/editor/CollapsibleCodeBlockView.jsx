@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
 
 const COLLAPSE_THRESHOLD = 15
@@ -30,8 +30,8 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
     return () => { if (copyTimerRef.current) clearTimeout(copyTimerRef.current) }
   }, [])
 
-  const contentIdRef = useRef(`collapsible-code-${Math.random().toString(36).slice(2, 8)}`)
-  const contentId = contentIdRef.current
+  const generatedId = useId()
+  const contentId = `collapsible-code-${generatedId.replace(/:/g, '')}`
 
   const handleToggle = () => {
     setIsCollapsed((prev) => !prev)

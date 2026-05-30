@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "check:seo": "node scripts/check-seo.mjs",
+    "perf:lighthouse": "node scripts/perf-lighthouse.mjs",
     "generate:seo-routes": "node scripts/generate-seo-routes.mjs",
     "generate-posts": "node scripts/generate-posts.js"
   },

@@ -84,6 +84,8 @@ const CopilotStudioSection = () => {
                             <img
                                 src={copilotStudioIcon}
                                 alt="CopilotStudio Logo"
+                                loading="lazy"
+                                decoding="async"
                                 className="w-[250px] h-[250px] object-contain
                                             filter drop-shadow-lg
                                             transition-transform duration-500

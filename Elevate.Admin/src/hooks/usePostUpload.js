@@ -1,7 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { isApiConfigured } from '../lib/apiClient.js'
 import { requestUploadSas, registerAsset } from '../services/assetsApi.js'
-import { normalizeImageMimeType, uploadBlobWithSas, supportedImageMimeTypes } from '../utils/imageUpload.js'
+import {
+  buildVariantFileName,
+  createImageVariantBlob,
+  imageBlobCacheControl,
+  normalizeImageMimeType,
+  optimizeThumbnailForUpload,
+  thumbnailVariantSpecs,
+  uploadBlobWithSas,
+  supportedImageMimeTypes,
+} from '../utils/imageUpload.js'
+import { assertCompleteThumbnailVariants, canCreateThumbnailVariants } from '../utils/thumbnailVariants.js'
 
 /**
  * 게시글 편집기에서 썸네일 및 본문 이미지 업로드를 담당하는 훅.
@@ -23,6 +33,47 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
       }
     }
   }, [])
+
+  const uploadThumbnailVariants = async (selectedFile) => {
+    if (!canCreateThumbnailVariants(selectedFile)) return {}
+
+    try {
+      const entries = await Promise.all(thumbnailVariantSpecs.map(async (spec) => {
+        const variant = await createImageVariantBlob(selectedFile, spec)
+        const fileName = buildVariantFileName(selectedFile.name, spec.key)
+        const sas = await requestUploadSas({
+          fileName,
+          contentType: variant.type,
+          sizeBytes: variant.blob.size,
+        }, { msalInstance })
+
+        await uploadBlobWithSas(sas.uploadUrl, variant.blob, variant.type, {
+          cacheControl: imageBlobCacheControl,
+        })
+
+        const asset = await registerAsset({
+          postId: postId || null,
+          blobUrl: sas.blobUrl,
+          contentType: variant.type,
+          sizeBytes: variant.blob.size,
+          fileName,
+        }, { msalInstance })
+
+        return [spec.key, {
+          url: asset?.blobUrl || asset?.url || sas.blobUrl,
+          signedUrl: asset?.signedUrl || null,
+          width: variant.width,
+          height: variant.height,
+          type: variant.type,
+          sizeBytes: variant.blob.size,
+        }]
+      }))
+      return assertCompleteThumbnailVariants(Object.fromEntries(entries))
+    } catch (error) {
+      console.warn('[usePostUpload] thumbnail variants skipped', error)
+      return {}
+    }
+  }
 
   /**
    * 썸네일 이미지를 업로드하고 postId에 연결한다.
@@ -57,29 +108,47 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
     setMessage('')
 
     try {
+      const uploadFile = await optimizeThumbnailForUpload(selectedFile)
+      const uploadContentType = normalizeImageMimeType(uploadFile)
+
       // 1단계: SAS URL 발급
       const sas = await requestUploadSas({
-        fileName: selectedFile.name,
-        contentType,
-        sizeBytes: selectedFile.size,
+        fileName: uploadFile.name,
+        contentType: uploadContentType,
+        sizeBytes: uploadFile.size,
       }, { msalInstance })
 
       // 2단계: Azure Blob Storage에 직접 업로드
-      await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType)
+      await uploadBlobWithSas(sas.uploadUrl, uploadFile, uploadContentType, {
+        cacheControl: imageBlobCacheControl,
+      })
 
       // 3단계: 서버에 자산 등록 — CDN 서명 URL 또는 원본 URL을 응답으로 받는다
       const asset = await registerAsset({
         postId: postId || null,
         blobUrl: sas.blobUrl,
-        contentType,
-        sizeBytes: selectedFile.size,
-        fileName: selectedFile.name,
+        contentType: uploadContentType,
+        sizeBytes: uploadFile.size,
+        fileName: uploadFile.name,
       }, { msalInstance })
+
+      const variants = await uploadThumbnailVariants(selectedFile)
+      const thumbnail = {
+        url: asset?.blobUrl || asset?.url || sas.blobUrl,
+        signedUrl: asset?.signedUrl || null,
+        alt: '',
+        width: 0,
+        height: 0,
+        mimeType: uploadContentType,
+        sizeBytes: uploadFile.size,
+        ...(Object.keys(variants).length > 0 ? { variants } : {}),
+      }
 
       // 응답에서 사용 가능한 URL을 우선순위대로 선택한다.
       setPost((prev) => ({
         ...prev,
-        thumbnailUrl: asset?.signedUrl || asset?.url || asset?.cdnUrl || asset?.blobUrl || sas.blobUrl,
+        thumbnailUrl: thumbnail.signedUrl || thumbnail.url,
+        thumbnail,
       }))
       setMessage('썸네일 이미지가 업로드되었습니다.')
     } catch (err) {
@@ -112,7 +181,9 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
       sizeBytes: selectedFile.size,
     }, { msalInstance })
 
-    await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType)
+    await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType, {
+      cacheControl: imageBlobCacheControl,
+    })
 
     const asset = await registerAsset({
       postId: postId || null,

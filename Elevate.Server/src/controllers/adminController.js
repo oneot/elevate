@@ -73,10 +73,67 @@ async function enrichHtmlWithSas(html) {
 }
 
 async function enrichThumbnailWithSas(thumbnail) {
-  if (!thumbnail || !isBlobUrl(thumbnail.url)) return thumbnail;
-  var signedUrl = await getBlobReadSasUrl(thumbnail.url);
-  if (!signedUrl) return thumbnail;
-  return Object.assign({}, thumbnail, { signedUrl: signedUrl });
+  if (!thumbnail) return thumbnail;
+  var enriched = Object.assign({}, thumbnail);
+  if (isBlobUrl(thumbnail.url)) {
+    var signedUrl = await getBlobReadSasUrl(thumbnail.url);
+    if (signedUrl) enriched.signedUrl = signedUrl;
+  }
+
+  if (thumbnail.variants && typeof thumbnail.variants === 'object') {
+    var entries = await Promise.all(Object.entries(thumbnail.variants).map(async function(entry) {
+      var key = entry[0];
+      var variant = entry[1];
+      if (!variant || !isBlobUrl(variant.url)) return [key, variant];
+      var variantSignedUrl = await getBlobReadSasUrl(variant.url);
+      return [key, variantSignedUrl ? Object.assign({}, variant, { signedUrl: variantSignedUrl }) : variant];
+    }));
+    enriched.variants = Object.fromEntries(entries);
+  }
+
+  return enriched;
+}
+
+function normalizeThumbnailForStorage(thumbnail) {
+  if (!thumbnail) return null;
+  if (typeof thumbnail === 'string') return { url: stripBlobSas(thumbnail) };
+  if (!thumbnail.url || typeof thumbnail.url !== 'string') return null;
+
+  var normalized = {
+    url: stripBlobSas(thumbnail.url)
+  };
+  if (typeof thumbnail.alt === 'string') normalized.alt = thumbnail.alt;
+  if (Number.isFinite(Number(thumbnail.width)) && Number(thumbnail.width) > 0) normalized.width = Number(thumbnail.width);
+  if (Number.isFinite(Number(thumbnail.height)) && Number(thumbnail.height) > 0) normalized.height = Number(thumbnail.height);
+  if (typeof thumbnail.mimeType === 'string') normalized.mimeType = thumbnail.mimeType;
+  if (Number.isFinite(Number(thumbnail.sizeBytes)) && Number(thumbnail.sizeBytes) >= 0) normalized.sizeBytes = Number(thumbnail.sizeBytes);
+
+  if (thumbnail.variants && typeof thumbnail.variants === 'object') {
+    var variants = {};
+    Object.entries(thumbnail.variants).forEach(function(entry) {
+      var key = entry[0];
+      var variant = entry[1];
+      if (!variant || !variant.url || typeof variant.url !== 'string') return;
+      var safeKey = key.replace(/[^a-zA-Z0-9_-]/g, '');
+      if (!safeKey) return;
+      variants[safeKey] = { url: stripBlobSas(variant.url) };
+      if (Number.isFinite(Number(variant.width)) && Number(variant.width) > 0) variants[safeKey].width = Number(variant.width);
+      if (Number.isFinite(Number(variant.height)) && Number(variant.height) > 0) variants[safeKey].height = Number(variant.height);
+      if (typeof variant.type === 'string') variants[safeKey].type = variant.type;
+      if (Number.isFinite(Number(variant.sizeBytes)) && Number(variant.sizeBytes) >= 0) variants[safeKey].sizeBytes = Number(variant.sizeBytes);
+    });
+    if (Object.keys(variants).length > 0) normalized.variants = variants;
+    else delete normalized.variants;
+  }
+
+  return normalized;
+}
+
+function collectThumbnailUrls(thumbnail) {
+  return Array.from(new Set([
+    thumbnail?.url,
+    ...Object.values(thumbnail?.variants || {}).map(function(variant) { return variant?.url; })
+  ].filter(Boolean)));
 }
 
 function encodeAdminCursor(post) {
@@ -412,7 +469,7 @@ exports.createPost = async (req, res) => {
       contentMarkdown: stripBlobSasFromHtml(req.body.contentMarkdown),
       tags: req.body.tags,
       series: req.body.series || null,
-      thumbnail: req.body.thumbnail ? Object.assign({}, req.body.thumbnail, { url: stripBlobSas(req.body.thumbnail.url) }) : null,
+      thumbnail: normalizeThumbnailForStorage(req.body.thumbnail),
       youtube: req.body.youtube || null,
       eventDates: Array.isArray(req.body.eventDates) ? req.body.eventDates : null,
       eventLocation: req.body.eventLocation || null,
@@ -470,7 +527,7 @@ exports.updatePost = async (req, res) => {
 
     const incomingThumbnail = req.body.thumbnail !== undefined ? req.body.thumbnail : existing.thumbnail;
     const normalizedThumbnail = incomingThumbnail
-      ? Object.assign({}, incomingThumbnail, { url: stripBlobSas(incomingThumbnail.url) })
+      ? normalizeThumbnailForStorage(incomingThumbnail)
       : incomingThumbnail;
     const incomingContent = req.body.contentMarkdown !== undefined ? req.body.contentMarkdown : existing.contentMarkdown;
     const updated = {
@@ -545,8 +602,8 @@ exports.deletePost = async (req, res) => {
     }));
 
     // 썸네일 블롭 삭제 (best-effort)
-    const thumbnailUrl = existing.thumbnail?.url;
-    if (thumbnailUrl) {
+    const thumbnailUrls = collectThumbnailUrls(existing.thumbnail);
+    for (const thumbnailUrl of thumbnailUrls) {
       try {
         await deleteBlobByUrl(thumbnailUrl);
       } catch (err) {
@@ -875,4 +932,9 @@ exports.getAnalyticsSummary = async (req, res) => {
     console.error('[getAnalyticsSummary] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
   }
+};
+
+exports._test = {
+  normalizeThumbnailForStorage,
+  collectThumbnailUrls
 };

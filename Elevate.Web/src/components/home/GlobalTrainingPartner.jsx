@@ -70,6 +70,8 @@ const GlobalTrainingPartner = () => {
                                         group">
                             <img src={gtpImage}
                                  alt="Global Training Partner"
+                                 loading="lazy"
+                                 decoding="async"
                                  className="w-full h-auto object-cover rounded-[2.5rem] border-4 border-white
                                             transition-transform duration-500 group-hover:scale-[1.02]" />
                             <div className="absolute -bottom-6 -right-6 lg:-right-10 bg-white p-4 rounded-2xl shadow-xl border border-slate-50 flex items-center gap-3 transform group-hover:-translate-y-2 transition-transform duration-500">

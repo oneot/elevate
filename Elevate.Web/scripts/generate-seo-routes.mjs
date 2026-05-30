@@ -6,6 +6,9 @@ const distDir = join(process.cwd(), 'dist');
 const templatePath = join(distDir, 'index.html');
 const template = readFileSync(templatePath, 'utf8');
 const defaultImage = `${siteUrl}/og-image.png`;
+const rawApiBaseUrl = process.env.VITE_API_BASE_URL;
+const apiBaseUrl = rawApiBaseUrl?.replace(/\/$/, '');
+const requireApiRoutes = process.env.REQUIRE_API_ROUTES === 'true';
 
 const routes = [
   {
@@ -72,7 +75,7 @@ const routes = [
 ];
 
 function escapeHtml(value) {
-  return value
+  return String(value || '')
     .replaceAll('&', '&amp;')
     .replaceAll('"', '&quot;')
     .replaceAll('<', '&lt;')
@@ -86,10 +89,32 @@ function upsertTag(html, pattern, replacement) {
   return html.replace('</head>', `    ${replacement}\n  </head>`);
 }
 
+function toSafeRouteSegment(value) {
+  const segment = String(value || '').trim();
+  if (!/^[a-z0-9-]+$/i.test(segment)) return null;
+  if (segment === '.' || segment === '..') return null;
+  return segment;
+}
+
+function routePathToOutputStem(path) {
+  const segments = String(path || '')
+    .replace(/^\/+/, '')
+    .split('/')
+    .filter(Boolean);
+
+  if (!segments.length) return null;
+
+  const safeSegments = segments.map(toSafeRouteSegment);
+  if (safeSegments.some((segment) => !segment)) return null;
+
+  return safeSegments.join('/');
+}
+
 function renderRouteHtml(route) {
   const title = escapeHtml(route.title);
   const description = escapeHtml(route.description);
   const url = `${siteUrl}${route.path}`;
+  const image = route.image || defaultImage;
   let html = template;
 
   html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
@@ -130,20 +155,88 @@ function renderRouteHtml(route) {
   html = upsertTag(
     html,
     /<meta property="og:image" content="[^"]*" \/>/,
-    `<meta property="og:image" content="${defaultImage}" />`,
+    `<meta property="og:image" content="${escapeHtml(image)}" />`,
   );
   html = upsertTag(
     html,
     /<meta name="twitter:image" content="[^"]*" \/>/,
-    `<meta name="twitter:image" content="${defaultImage}" />`,
+    `<meta name="twitter:image" content="${escapeHtml(image)}" />`,
   );
   return html;
 }
 
-for (const route of routes) {
+function getStablePostImage(thumbnail) {
+  const imageUrl = typeof thumbnail === 'string' ? thumbnail : thumbnail?.url;
+  // Azure Blob containers are private and build-time SAS URLs expire, so prerendered
+  // social metadata intentionally falls back to the stable site-level OG image.
+  if (!imageUrl || imageUrl.includes('blob.core.windows.net')) return defaultImage;
+  return imageUrl;
+}
+
+async function fetchPublicPostsPage(page) {
+  if (!apiBaseUrl) return null;
+  const url = new URL(`${apiBaseUrl}/posts`);
+  url.searchParams.set('limit', '100');
+  url.searchParams.set('page', String(page));
+  const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  if (!response.ok) throw new Error(`HTTP ${response.status} from ${url}`);
+  return response.json();
+}
+
+async function collectPostRoutes() {
+  if (!apiBaseUrl) {
+    if (requireApiRoutes) {
+      throw new Error('VITE_API_BASE_URL is required when REQUIRE_API_ROUTES=true');
+    }
+    return [];
+  }
+
+  const postsByRoute = new Map();
+  let page = 1;
+  let totalPages = 1;
+
+  try {
+    do {
+      const data = await fetchPublicPostsPage(page);
+      const items = Array.isArray(data?.items) ? data.items : [];
+      totalPages = Math.max(1, Number(data?.totalPages) || 1);
+
+      for (const post of items) {
+        if (!post?.category || !post?.slug || !post?.title) continue;
+        const category = toSafeRouteSegment(post.category);
+        const slug = toSafeRouteSegment(post.slug);
+        if (!category || !slug) continue;
+        const path = `/${category}/${slug}`;
+        postsByRoute.set(path, {
+          path,
+          title: `${post.title} | Microsoft Elevate`,
+          description: post.excerpt || `${post.title} - Microsoft Elevate 게시글입니다.`,
+          image: getStablePostImage(post.thumbnail),
+          type: 'article',
+        });
+      }
+
+      page += 1;
+    } while (page <= totalPages && page <= 20);
+  } catch (error) {
+    console.warn(`[generate-seo-routes] Skipping post detail routes: ${error.message}`);
+    return [];
+  }
+
+  return Array.from(postsByRoute.values());
+}
+
+const allRoutes = [...routes, ...await collectPostRoutes()];
+
+for (const route of allRoutes) {
+  const outputStem = routePathToOutputStem(route.path);
+  if (!outputStem) {
+    console.warn(`[generate-seo-routes] Skipping unsafe route path: ${route.path}`);
+    continue;
+  }
   const routeHtml = renderRouteHtml(route);
-  const directoryIndexPath = join(distDir, route.path.replace(/^\//, ''), 'index.html');
-  const extensionlessPath = join(distDir, `${route.path.replace(/^\//, '')}.html`);
+  const directoryIndexPath = join(distDir, outputStem, 'index.html');
+  const extensionlessPath = join(distDir, `${outputStem}.html`);
   mkdirSync(dirname(directoryIndexPath), { recursive: true });
   mkdirSync(dirname(extensionlessPath), { recursive: true });
   writeFileSync(directoryIndexPath, routeHtml);

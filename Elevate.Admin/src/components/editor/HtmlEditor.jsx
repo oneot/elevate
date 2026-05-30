@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useId } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import Image from '@tiptap/extension-image'
+import ResizableImageExtension from './ResizableImageExtension'
 import Color from '@tiptap/extension-color'
 import { TextStyle } from '@tiptap/extension-text-style'
 import CollapsibleCodeBlockExtension from './CollapsibleCodeBlockExtension'
@@ -210,7 +210,7 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
     } catch {
       setShowRestoreBanner(false)
     }
-  }, [storageKey, value]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [storageKey, value])
 
   const editor = useEditor({
     extensions: [
@@ -223,7 +223,7 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
           },
         },
       }),
-      Image.configure({
+      ResizableImageExtension.configure({
         inline: true,
         allowBase64: true,
       }),

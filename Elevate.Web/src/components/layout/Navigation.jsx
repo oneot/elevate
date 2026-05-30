@@ -97,7 +97,6 @@ const Navigation = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
     // 모바일 아코디언에서 현재 펼쳐진 메뉴의 label
     const [expandedMobile, setExpandedMobile] = useState(null);
-
     const location = useLocation();
 
     /**
@@ -137,14 +136,6 @@ const Navigation = () => {
         };
     }, []);
 
-    // 라우트 이동 시 모든 드롭다운/오버레이 닫기
-    useEffect(() => {
-        if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-        setOpenMenu(null);
-        setMobileOpen(false);
-        setExpandedMobile(null);
-    }, [location.pathname]);
-
     // Escape 키로 드롭다운/오버레이 닫기
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -180,6 +171,15 @@ const Navigation = () => {
             closeBtnRef.current.focus();
         }
     }, [mobileOpen]);
+
+    // 라우트 이동 시 모든 드롭다운/오버레이 닫기
+    useEffect(() => {
+        if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setOpenMenu(null);
+        setMobileOpen(false);
+        setExpandedMobile(null);
+    }, [location.pathname]);
 
     /**
      * 모바일 오버레이 내 Tab 포커스 트랩.

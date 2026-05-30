@@ -1,4 +1,5 @@
 import { apiFetch } from '../lib/apiClient.js'
+import { stripThumbnailSignedUrls } from '../utils/thumbnailPayload.js'
 
 /**
  * API 응답 객체를 에디터에서 사용하는 형태로 변환한다.
@@ -20,6 +21,7 @@ function toEditorPost(apiPost) {
     excerpt: apiPost.excerpt || '',
     htmlBody: apiPost.contentMarkdown || '',
     thumbnailUrl: apiPost.thumbnail?.signedUrl || apiPost.thumbnail?.url || '',
+    thumbnail: apiPost.thumbnail || null,
     youtube: apiPost.youtube || '',
     updatedAt: apiPost.updatedAt || null,
     publishedAt: apiPost.publishedAt || null,
@@ -57,14 +59,16 @@ function toApiPayload(post) {
     payload.series = post.series || null
   }
 
-  if (post.thumbnailUrl) {
+  if (post.thumbnail?.url) {
+    payload.thumbnail = stripThumbnailSignedUrls(post.thumbnail)
+  } else if (post.thumbnailUrl) {
     payload.thumbnail = {
       url: post.thumbnailUrl,
       alt: '',
       width: 0,
       height: 0,
-      mimeType: post.thumbnail?.mimeType || 'image/jpeg',
-      sizeBytes: post.thumbnail?.sizeBytes || 0,
+      mimeType: 'image/jpeg',
+      sizeBytes: 0,
     }
   }
 
@@ -85,6 +89,10 @@ function toApiPayload(post) {
   }
 
   return payload
+}
+
+export const _test = {
+  toApiPayload,
 }
 
 /**
