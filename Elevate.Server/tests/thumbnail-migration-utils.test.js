@@ -24,19 +24,20 @@ test('isAzureBlobUrl accepts only Azure Blob URLs', () => {
   assert.equal(isAzureBlobUrl('not a url'), false);
 });
 
-test('hasCompleteThumbnailVariants requires every configured variant URL', () => {
+test('hasCompleteThumbnailVariants requires every configured variant with usable metadata', () => {
   assert.equal(hasCompleteThumbnailVariants({
     variants: {
-      thumb: { url: 'https://example.com/thumb.webp' },
-      card: { url: 'https://example.com/card.webp' },
-      hero: { url: 'https://example.com/hero.webp' },
+      thumb: { url: 'https://example.com/thumb.webp', width: 480, height: 270, type: 'image/webp' },
+      card: { url: 'https://example.com/card.webp', width: 960, height: 540, type: 'image/webp' },
+      hero: { url: 'https://example.com/hero.webp', width: 1440, height: 810, type: 'image/webp' },
     },
   }), true);
 
   assert.equal(hasCompleteThumbnailVariants({
     variants: {
-      thumb: { url: 'https://example.com/thumb.webp' },
-      card: { url: 'https://example.com/card.webp' },
+      thumb: { url: 'https://example.com/thumb.webp', width: 480, height: 270, type: 'image/webp' },
+      card: { url: 'https://example.com/card.webp', width: 960, height: 540, type: 'image/webp' },
+      hero: { url: 'https://example.com/hero.webp' },
     },
   }), false);
 });
@@ -98,13 +99,26 @@ test('shouldMigrateThumbnail skips complete variants unless force is true', () =
     thumbnail: {
       url: 'https://acct.blob.core.windows.net/images/uploads/source.jpg',
       variants: {
-        thumb: { url: 'https://example.com/thumb.webp' },
-        card: { url: 'https://example.com/card.webp' },
-        hero: { url: 'https://example.com/hero.webp' },
+        thumb: { url: 'https://example.com/thumb.webp', width: 480, height: 270, type: 'image/webp' },
+        card: { url: 'https://example.com/card.webp', width: 960, height: 540, type: 'image/webp' },
+        hero: { url: 'https://example.com/hero.webp', width: 1440, height: 810, type: 'image/webp' },
       },
     },
   };
 
   assert.equal(shouldMigrateThumbnail(post), false);
   assert.equal(shouldMigrateThumbnail(post, { force: true }), true);
+});
+
+test('shouldMigrateThumbnail remigrates variants missing usable metadata', () => {
+  assert.equal(shouldMigrateThumbnail({
+    thumbnail: {
+      url: 'https://acct.blob.core.windows.net/images/uploads/source.jpg',
+      variants: {
+        thumb: { url: 'https://example.com/thumb.webp' },
+        card: { url: 'https://example.com/card.webp', width: 960, height: 540, type: 'image/webp' },
+        hero: { url: 'https://example.com/hero.webp', width: 1440, height: 810, type: 'image/webp' },
+      },
+    },
+  }), true);
 });

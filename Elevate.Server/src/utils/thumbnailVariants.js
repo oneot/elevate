@@ -18,7 +18,15 @@ function isAzureBlobUrl(url) {
 function hasCompleteThumbnailVariants(thumbnail) {
   const variants = thumbnail?.variants;
   if (!variants || typeof variants !== 'object') return false;
-  return requiredThumbnailVariantSpecs.every((spec) => typeof variants[spec.key]?.url === 'string');
+  return requiredThumbnailVariantSpecs.every((spec) => {
+    const variant = variants[spec.key];
+    return typeof variant?.url === 'string'
+      && Number.isFinite(variant.width)
+      && variant.width > 0
+      && Number.isFinite(variant.height)
+      && variant.height > 0
+      && variant.type === spec.type;
+  });
 }
 
 function buildVariantBlobPath(sourceUrl, variantKey) {

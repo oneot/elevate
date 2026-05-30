@@ -51,23 +51,17 @@ async function downloadBlobBuffer(sourceUrl) {
 
 async function generateVariantBuffer(inputBuffer, spec) {
   const image = sharp(inputBuffer, { failOn: 'none' }).rotate();
-  const metadata = await image.metadata();
-  const dimensions = getResizedDimensions({
-    width: metadata.width,
-    height: metadata.height,
-    maxWidth: spec.maxWidth,
-  });
-  const buffer = await image
-    .resize({ width: dimensions.width, withoutEnlargement: true })
+  const { data, info } = await image
+    .resize({ width: spec.maxWidth, withoutEnlargement: true })
     .webp({ quality: spec.quality })
-    .toBuffer();
+    .toBuffer({ resolveWithObject: true });
 
   return {
-    buffer,
-    width: dimensions.width,
-    height: dimensions.height,
+    buffer: data,
+    width: info.width,
+    height: info.height,
     type: spec.type,
-    sizeBytes: buffer.length,
+    sizeBytes: data.length,
   };
 }
 

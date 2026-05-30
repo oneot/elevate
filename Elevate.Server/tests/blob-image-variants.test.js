@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 
 const {
   downloadBlobBuffer,
+  generateVariantBuffer,
   getResizedDimensions,
   getVariantContentSettings,
 } = require('../src/services/blobImageVariants');
@@ -46,4 +47,26 @@ test('downloadBlobBuffer does not expose signed URLs in errors', async (t) => {
       return true;
     }
   );
+});
+
+test('generateVariantBuffer stores actual output dimensions', async () => {
+  const input = await require('sharp')({
+    create: {
+      width: 400,
+      height: 200,
+      channels: 3,
+      background: '#ffffff',
+    },
+  }).jpeg().toBuffer();
+
+  const variant = await generateVariantBuffer(input, {
+    key: 'card',
+    maxWidth: 100,
+    type: 'image/webp',
+    quality: 82,
+  });
+  const metadata = await require('sharp')(variant.buffer).metadata();
+
+  assert.equal(variant.width, metadata.width);
+  assert.equal(variant.height, metadata.height);
 });
