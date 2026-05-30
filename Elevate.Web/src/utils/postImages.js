@@ -28,11 +28,12 @@ export function getThumbnailImageProps(thumbnail, { sizes = POST_CARD_IMAGE_SIZE
 
   if (!variants.length && !fallbackSrc) return null;
 
-  const selected = variants.at(-1) || {
+  const fallbackDimensions = {
     src: fallbackSrc,
     width: toPositiveNumber(thumbnail?.width),
     height: toPositiveNumber(thumbnail?.height),
   };
+  const selected = fallbackSrc ? fallbackDimensions : variants.at(-1) || fallbackDimensions;
 
   return {
     src: selected.src,

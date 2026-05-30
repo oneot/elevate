@@ -2,7 +2,7 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --font-sans: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
+  --font-sans: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
   --color-ms-blue: #0078D4;
   --color-ms-green: #107C10;
   --color-ms-orange: #D83B01;
