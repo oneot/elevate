@@ -36,15 +36,25 @@ export default function AttachUploader({ postId }) {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    setFiles([])
-    setConfirmDeleteId(null)
-    setError(null)
-    if (!postId) return
-    setLoadingFiles(true)
-    getFiles(postId, { msalInstance })
-      .then(data => setFiles(data.map(f => ({ ...f, isDeleting: false }))))
-      .catch(() => {})
-      .finally(() => setLoadingFiles(false))
+    let cancelled = false
+    const resetTimer = window.setTimeout(() => {
+      setFiles([])
+      setConfirmDeleteId(null)
+      setError(null)
+      if (!postId) {
+        setLoadingFiles(false)
+        return
+      }
+      setLoadingFiles(true)
+      getFiles(postId, { msalInstance })
+        .then(data => { if (!cancelled) setFiles(data.map(f => ({ ...f, isDeleting: false }))) })
+        .catch(() => {})
+        .finally(() => { if (!cancelled) setLoadingFiles(false) })
+    }, 0)
+    return () => {
+      cancelled = true
+      window.clearTimeout(resetTimer)
+    }
   }, [postId, msalInstance])
 
   async function handleFileChange(event) {

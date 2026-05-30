@@ -5,8 +5,9 @@
  * ChatWidget(쉘)이 처음 열릴 때 동적으로 로드된다.
  * 마운트 시점에 DirectLine 토큰을 가져와 연결한다.
  */
-import { useState, useEffect, useMemo, useRef } from 'react';
-import ReactWebChat, { createDirectLine, createStore } from 'botframework-webchat';
+import { lazy, Suspense, useEffect, useState } from 'react';
+
+const ChatWidgetWebChat = lazy(() => import('./ChatWidgetWebChat'));
 
 const LoadingSpinner = () => (
   <div className="flex space-x-1.5 p-2 animate-fade-in-up">
@@ -17,10 +18,8 @@ const LoadingSpinner = () => (
 );
 
 const ChatWidgetPanel = ({ onClose }) => {
-  const [directLine, setDirectLine] = useState(null);
-  const [isBotTyping, setIsBotTyping] = useState(false);
+  const [token, setToken] = useState(null);
   const [hasError, setHasError] = useState(false);
-  const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -36,8 +35,7 @@ const ChatWidgetPanel = ({ onClose }) => {
         const response = await fetch(endpoint, { signal: controller.signal });
         if (!response.ok) throw new Error('토큰을 가져오지 못했습니다.');
         const data = await response.json();
-        const dl = createDirectLine({ token: data.token });
-        setDirectLine(dl);
+        setToken(data.token);
       } catch (err) {
         if (err.name !== 'AbortError') {
           console.error("보안 연결 실패:", err);
@@ -49,53 +47,8 @@ const ChatWidgetPanel = ({ onClose }) => {
 
     return () => {
       controller.abort();
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
   }, []);
-
-  const store = useMemo(
-    () =>
-      createStore({}, ({ dispatch }) => (next) => (action) => {
-        if (action.type === 'DIRECT_LINE/INCOMING_ACTIVITY') {
-          const { activity } = action.payload;
-          if (activity.type === 'typing' && activity.from.role === 'bot') {
-            setIsBotTyping(true);
-            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-            typingTimeoutRef.current = setTimeout(() => setIsBotTyping(false), 5000);
-          }
-          if (activity.type === 'message' && activity.from.role === 'bot') {
-            setIsBotTyping(false);
-            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-          }
-        }
-        if (action.type === 'DIRECT_LINE/CONNECT_FULFILLED') {
-          dispatch({
-            type: 'WEB_CHAT/SEND_EVENT',
-            payload: { name: 'startConversation', type: 'event' },
-          });
-        }
-        return next(action);
-      }),
-    []
-  );
-
-  const styleOptions = useMemo(() => ({
-    accent: '#0078D4',
-    botAvatarInitials: null,
-    botAvatarImage: null,
-    userAvatarInitials: null,
-    userAvatarImage: null,
-    bubbleBackground: '#f1f5f9',
-    bubbleBorderRadius: 20,
-    bubbleFromUserBackground: '#0078D4',
-    bubbleFromUserBorderRadius: 20,
-    bubbleFromUserTextColor: 'White',
-    rootHeight: '100%',
-    rootWidth: '100%',
-    backgroundColor: 'transparent',
-    hideUploadButton: true,
-    hideTypingIndicator: true,
-  }), []);
 
   return (
     <div
@@ -135,20 +88,15 @@ const ChatWidgetPanel = ({ onClose }) => {
         aria-label="채팅 대화 영역"
         className="flex-1 bg-white/40 overflow-y-auto relative p-0"
       >
-        {directLine ? (
-          <>
-            <ReactWebChat
-              directLine={directLine}
-              store={store}
-              styleOptions={styleOptions}
-              locale="ko-KR"
-            />
-            {isBotTyping && (
-              <div className="absolute bottom-20 left-5 z-50">
-                <LoadingSpinner />
-              </div>
-            )}
-          </>
+        {token ? (
+          <Suspense fallback={
+            <div className="flex flex-col items-center justify-center h-full space-y-4 bg-white/40 backdrop-blur-sm">
+              <LoadingSpinner />
+              <p className="text-sm font-medium text-[#0078D4]/80 animate-pulse">채팅 모듈 로딩 중...</p>
+            </div>
+          }>
+            <ChatWidgetWebChat token={token} />
+          </Suspense>
         ) : hasError ? (
           <div className="flex flex-col items-center justify-center h-full space-y-4 bg-white/40 backdrop-blur-sm px-6 text-center">
             <span className="text-3xl">⚠️</span>
@@ -172,4 +120,3 @@ const ChatWidgetPanel = ({ onClose }) => {
 };
 
 export default ChatWidgetPanel;
-

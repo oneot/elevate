@@ -7,14 +7,15 @@
  */
 import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getThumbnailUrl } from '../../api/posts';
+import { getImageLoadingProps, getThumbnailImageProps } from '../../utils/postImages';
 import { formatDateKo } from '../../utils/url';
 
 const PostCard = ({ post, priority = false }) => {
   const { slug, title, excerpt, thumbnail, publishedAt, category, tags = [] } = post;
   const safeCategory = category || 'all';
   const to = `/${safeCategory}/${slug}`;
-  const imageUrl = getThumbnailUrl(thumbnail);
+  const imageProps = getThumbnailImageProps(thumbnail);
+  const loadingProps = getImageLoadingProps(priority);
   const [showAllTags, setShowAllTags] = useState(false);
   const moreRef = useRef(null);
   const cardRef = useRef(null);
@@ -29,13 +30,11 @@ const PostCard = ({ post, priority = false }) => {
       <Link to={to} aria-label={`Open post ${title}`} className="card-link block h-full rounded-[1.5rem] ">
         <div className="flex flex-col h-full">
           <div className="w-full rounded-xl overflow-hidden bg-white/70 border border-white/60" style={{height: 150}}>
-            {imageUrl ? (
+            {imageProps ? (
               <img
-                src={imageUrl}
+                {...imageProps}
+                {...loadingProps}
                 alt={title}
-                loading={priority ? 'eager' : 'lazy'}
-                decoding="async"
-                fetchPriority={priority ? 'high' : 'low'}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
               />
             ) : (

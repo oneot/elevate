@@ -7,6 +7,7 @@
  * 클라이언트에서 별도 프록시 없이 직접 이미지를 렌더링할 수 있다.
  */
 import { apiFetch } from './client';
+import { getThumbnailUrl as resolveThumbnailUrl } from '../utils/postImages';
 
 /**
  * thumbnail 필드에서 이미지 URL을 추출한다.
@@ -18,8 +19,7 @@ import { apiFetch } from './client';
  * @returns {string|null} 이미지 URL, 없으면 null
  */
 export function getThumbnailUrl(thumbnail) {
-  if (typeof thumbnail === 'string') return thumbnail || null;
-  return thumbnail?.signedUrl || thumbnail?.url || null;
+  return resolveThumbnailUrl(thumbnail);
 }
 
 /**

@@ -28,7 +28,30 @@ function decodeCursor(cursor) {
 function normalizeThumbnail(thumbnail) {
   if (!thumbnail) return null;
   if (typeof thumbnail === 'string') return { url: thumbnail };
-  if (thumbnail && typeof thumbnail.url === 'string') return { url: thumbnail.url };
+  if (thumbnail && typeof thumbnail.url === 'string') {
+    const normalized = { url: thumbnail.url };
+    if (Number.isFinite(Number(thumbnail.width)) && Number(thumbnail.width) > 0) normalized.width = Number(thumbnail.width);
+    if (Number.isFinite(Number(thumbnail.height)) && Number(thumbnail.height) > 0) normalized.height = Number(thumbnail.height);
+    if (typeof thumbnail.mimeType === 'string') normalized.mimeType = thumbnail.mimeType;
+    if (Number.isFinite(Number(thumbnail.sizeBytes)) && Number(thumbnail.sizeBytes) >= 0) normalized.sizeBytes = Number(thumbnail.sizeBytes);
+
+    if (thumbnail.variants && typeof thumbnail.variants === 'object') {
+      const variants = {};
+      for (const [key, variant] of Object.entries(thumbnail.variants)) {
+        if (!variant || typeof variant.url !== 'string') continue;
+        const safeKey = key.replace(/[^a-zA-Z0-9_-]/g, '');
+        if (!safeKey) continue;
+        variants[safeKey] = { url: variant.url };
+        if (Number.isFinite(Number(variant.width)) && Number(variant.width) > 0) variants[safeKey].width = Number(variant.width);
+        if (Number.isFinite(Number(variant.height)) && Number(variant.height) > 0) variants[safeKey].height = Number(variant.height);
+        if (typeof variant.type === 'string') variants[safeKey].type = variant.type;
+        if (Number.isFinite(Number(variant.sizeBytes)) && Number(variant.sizeBytes) >= 0) variants[safeKey].sizeBytes = Number(variant.sizeBytes);
+      }
+      if (Object.keys(variants).length > 0) normalized.variants = variants;
+    }
+
+    return normalized;
+  }
   return null;
 }
 
@@ -40,10 +63,23 @@ function isBlobUrl(url) {
 }
 
 async function enrichThumbnailWithSas(thumbnail) {
-  if (!thumbnail || !isBlobUrl(thumbnail.url)) return thumbnail;
-  const signedUrl = await getBlobReadSasUrl(thumbnail.url);
-  if (!signedUrl) return thumbnail;
-  return Object.assign({}, thumbnail, { signedUrl });
+  if (!thumbnail) return thumbnail;
+  const enriched = Object.assign({}, thumbnail);
+  if (isBlobUrl(thumbnail.url)) {
+    const signedUrl = await getBlobReadSasUrl(thumbnail.url);
+    if (signedUrl) enriched.signedUrl = signedUrl;
+  }
+
+  if (thumbnail.variants && typeof thumbnail.variants === 'object') {
+    const entries = await Promise.all(Object.entries(thumbnail.variants).map(async ([key, variant]) => {
+      if (!variant || !isBlobUrl(variant.url)) return [key, variant];
+      const signedUrl = await getBlobReadSasUrl(variant.url);
+      return [key, signedUrl ? Object.assign({}, variant, { signedUrl }) : variant];
+    }));
+    enriched.variants = Object.fromEntries(entries);
+  }
+
+  return enriched;
 }
 
 async function enrichContentWithSas(content) {
@@ -344,4 +380,8 @@ exports.getTagList = async (req, res) => {
     console.error('[getTagList] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
   }
+};
+
+exports._test = {
+  normalizeThumbnail
 };
