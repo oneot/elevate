@@ -26,7 +26,7 @@ function getAssetsContainerName() {
 }
 
 function getCalendarEventsContainerName() {
-  return process.env.COSMOS_CALENDAR_EVENTS_CONTAINER_NAME || 'calendarEvents';
+  return process.env.COSMOS_CALENDAR_EVENTS_CONTAINER_NAME || getPostsContainerName();
 }
 
 function getClient() {

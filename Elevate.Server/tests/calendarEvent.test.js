@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 let lastQuerySpec = null;
+let lastCreatedDoc = null;
 
 // cosmosClient 모킹 — require.cache 국소 스텁 (전역 Module._load 패치 없음)
 const mockContainer = {
@@ -10,7 +11,10 @@ const mockContainer = {
       lastQuerySpec = querySpec;
       return { fetchAll: async () => ({ resources: [] }) };
     },
-    create: async (doc) => ({ resource: doc }),
+    create: async (doc) => {
+      lastCreatedDoc = doc;
+      return { resource: doc };
+    },
     upsert: async (doc) => ({ resource: doc }),
   },
   item: (id, pk) => ({
@@ -79,11 +83,13 @@ test('createCalendarEvent — end < start이면 400', async () => {
 });
 
 test('createCalendarEvent — 정상 생성 시 201', async () => {
+  lastCreatedDoc = null;
   const req = { body: { title: '테스트 이벤트', eventDates: [{ start: '2026-06-01', end: '2026-06-02' }] }, correlationId: 'x', params: {}, query: {} };
   const res = makeRes();
   await ctrl.createCalendarEvent(req, res);
   assert.equal(res.getStatus(), 201);
   assert.equal(res.getBody().title, '테스트 이벤트');
+  assert.equal(lastCreatedDoc.partitionKey, 'calendarEvent');
 });
 
 test('createCalendarEvent — 빈 eventDates 배열은 응답에서 유지', async () => {

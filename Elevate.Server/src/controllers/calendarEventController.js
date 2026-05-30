@@ -225,6 +225,7 @@ exports.createCalendarEvent = async (req, res) => {
     const doc = {
       id: createUuid(),
       type: PARTITION_KEY,
+      partitionKey: PARTITION_KEY,
       title: req.body.title.trim(),
       eventDates: normalizeEventDates(req.body.eventDates),
       eventLocation: normalizeOptionalString(req.body.eventLocation),

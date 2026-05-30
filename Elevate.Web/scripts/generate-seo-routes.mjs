@@ -88,6 +88,27 @@ function upsertTag(html, pattern, replacement) {
   return html.replace('</head>', `    ${replacement}\n  </head>`);
 }
 
+function toSafeRouteSegment(value) {
+  const segment = String(value || '').trim();
+  if (!/^[a-z0-9-]+$/i.test(segment)) return null;
+  if (segment === '.' || segment === '..') return null;
+  return segment;
+}
+
+function routePathToOutputStem(path) {
+  const segments = String(path || '')
+    .replace(/^\/+/, '')
+    .split('/')
+    .filter(Boolean);
+
+  if (!segments.length) return null;
+
+  const safeSegments = segments.map(toSafeRouteSegment);
+  if (safeSegments.some((segment) => !segment)) return null;
+
+  return safeSegments.join('/');
+}
+
 function renderRouteHtml(route) {
   const title = escapeHtml(route.title);
   const description = escapeHtml(route.description);
@@ -174,7 +195,10 @@ async function collectPostRoutes() {
 
       for (const post of items) {
         if (!post?.category || !post?.slug || !post?.title) continue;
-        const path = `/${post.category}/${post.slug}`;
+        const category = toSafeRouteSegment(post.category);
+        const slug = toSafeRouteSegment(post.slug);
+        if (!category || !slug) continue;
+        const path = `/${category}/${slug}`;
         postsByRoute.set(path, {
           path,
           title: `${post.title} | Microsoft Elevate`,
@@ -197,9 +221,14 @@ async function collectPostRoutes() {
 const allRoutes = [...routes, ...await collectPostRoutes()];
 
 for (const route of allRoutes) {
+  const outputStem = routePathToOutputStem(route.path);
+  if (!outputStem) {
+    console.warn(`[generate-seo-routes] Skipping unsafe route path: ${route.path}`);
+    continue;
+  }
   const routeHtml = renderRouteHtml(route);
-  const directoryIndexPath = join(distDir, route.path.replace(/^\//, ''), 'index.html');
-  const extensionlessPath = join(distDir, `${route.path.replace(/^\//, '')}.html`);
+  const directoryIndexPath = join(distDir, outputStem, 'index.html');
+  const extensionlessPath = join(distDir, `${outputStem}.html`);
   mkdirSync(dirname(directoryIndexPath), { recursive: true });
   mkdirSync(dirname(extensionlessPath), { recursive: true });
   writeFileSync(directoryIndexPath, routeHtml);

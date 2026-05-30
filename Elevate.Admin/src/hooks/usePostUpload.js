@@ -4,7 +4,9 @@ import { requestUploadSas, registerAsset } from '../services/assetsApi.js'
 import {
   buildVariantFileName,
   createImageVariantBlob,
+  imageBlobCacheControl,
   normalizeImageMimeType,
+  optimizeThumbnailForUpload,
   thumbnailVariantSpecs,
   uploadBlobWithSas,
   supportedImageMimeTypes,
@@ -44,7 +46,9 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
           sizeBytes: variant.blob.size,
         }, { msalInstance })
 
-        await uploadBlobWithSas(sas.uploadUrl, variant.blob, variant.type)
+        await uploadBlobWithSas(sas.uploadUrl, variant.blob, variant.type, {
+          cacheControl: imageBlobCacheControl,
+        })
 
         const asset = await registerAsset({
           postId: postId || null,
@@ -103,23 +107,28 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
     setMessage('')
 
     try {
+      const uploadFile = await optimizeThumbnailForUpload(selectedFile)
+      const uploadContentType = normalizeImageMimeType(uploadFile)
+
       // 1단계: SAS URL 발급
       const sas = await requestUploadSas({
-        fileName: selectedFile.name,
-        contentType,
-        sizeBytes: selectedFile.size,
+        fileName: uploadFile.name,
+        contentType: uploadContentType,
+        sizeBytes: uploadFile.size,
       }, { msalInstance })
 
       // 2단계: Azure Blob Storage에 직접 업로드
-      await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType)
+      await uploadBlobWithSas(sas.uploadUrl, uploadFile, uploadContentType, {
+        cacheControl: imageBlobCacheControl,
+      })
 
       // 3단계: 서버에 자산 등록 — CDN 서명 URL 또는 원본 URL을 응답으로 받는다
       const asset = await registerAsset({
         postId: postId || null,
         blobUrl: sas.blobUrl,
-        contentType,
-        sizeBytes: selectedFile.size,
-        fileName: selectedFile.name,
+        contentType: uploadContentType,
+        sizeBytes: uploadFile.size,
+        fileName: uploadFile.name,
       }, { msalInstance })
 
       const variants = await uploadThumbnailVariants(selectedFile)
@@ -129,8 +138,8 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
         alt: '',
         width: 0,
         height: 0,
-        mimeType: contentType,
-        sizeBytes: selectedFile.size,
+        mimeType: uploadContentType,
+        sizeBytes: uploadFile.size,
         ...(Object.keys(variants).length > 0 ? { variants } : {}),
       }
 
@@ -171,7 +180,9 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
       sizeBytes: selectedFile.size,
     }, { msalInstance })
 
-    await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType)
+    await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType, {
+      cacheControl: imageBlobCacheControl,
+    })
 
     const asset = await registerAsset({
       postId: postId || null,
