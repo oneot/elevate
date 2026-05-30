@@ -21,6 +21,7 @@
     "@azure/identity": "^4.13.0",
     "@azure/storage-blob": "^12.29.1",
     "dotenv": "^17.3.1",
-    "jose": "^5.9.6"
+    "jose": "^5.9.6",
+    "sharp": "^0.34.5"
   }
 }
