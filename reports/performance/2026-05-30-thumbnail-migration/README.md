@@ -29,6 +29,6 @@ Existing Azure Blob post thumbnails were migrated to responsive WebP variants.
 
 ## Notes
 
-- Cosmos DB public network access was temporarily enabled for IP `167.220.233.35`.
+- Cosmos DB public network access was temporarily enabled for the current operator IP.
 - The original Cosmos DB state before temporary access was `publicNetworkAccess: Disabled` with no IP rules.
 - The raw JSONL audit files are operational artifacts and are not committed.

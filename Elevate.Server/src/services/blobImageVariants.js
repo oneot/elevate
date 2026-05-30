@@ -44,7 +44,7 @@ function getVariantContentSettings() {
 async function downloadBlobBuffer(sourceUrl) {
   const response = await fetch(sourceUrl);
   if (!response.ok) {
-    throw new Error(`Download failed ${response.status} for ${sourceUrl}`);
+    throw new Error(`Download failed with status ${response.status}`);
   }
   return Buffer.from(await response.arrayBuffer());
 }
