@@ -471,11 +471,13 @@ body {
 }
 .prose .post-content-media {
   display: block;
+  background-color: rgba(241, 245, 249, 0.72);
 }
 .prose .post-content-iframe {
   display: block;
   width: 100%;
   max-width: 100%;
+  min-height: 220px;
   aspect-ratio: 16 / 9;
   border: 0;
   border-radius: 0.75rem;

@@ -131,6 +131,11 @@ function appendClassName(element, className) {
   element.className = Array.from(classes).join(' ');
 }
 
+function toPositiveInteger(value) {
+  const number = Number.parseInt(value, 10);
+  return Number.isFinite(number) && number > 0 ? number : null;
+}
+
 /**
  * 렌더링된 HTML 내 이미지와 iframe의 로딩 방식을 최적화한다.
  *
@@ -154,6 +159,11 @@ export function optimizeEmbeddedMedia(containerEl) {
     }
     if (!image.hasAttribute('sizes')) {
       image.setAttribute('sizes', '(min-width: 1024px) 768px, 100vw');
+    }
+    const width = toPositiveInteger(image.getAttribute('width'));
+    const height = toPositiveInteger(image.getAttribute('height'));
+    if (width && height && !image.style.aspectRatio) {
+      image.style.aspectRatio = `${width} / ${height}`;
     }
     appendClassName(image, 'post-content-media');
   });
