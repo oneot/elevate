@@ -232,7 +232,10 @@ export async function createImageVariantBlob(file, spec) {
     throw new Error('createImageBitmap is not supported')
   }
 
-  const bitmap = await createImageBitmap(file)
+  const bitmap = await createImageBitmapWithOrientation(file)
+  if (!bitmap) {
+    throw new Error('Image bitmap creation failed')
+  }
   try {
     const scale = Math.min(1, spec.maxWidth / bitmap.width)
     const width = Math.max(1, Math.round(bitmap.width * scale))
