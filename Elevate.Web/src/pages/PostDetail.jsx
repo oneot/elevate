@@ -258,9 +258,15 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
                 crumbs={crumbs}
                 leftAside={leftAside}
                 rightAside={rightAside}
+                reserveLeftAside
+                reserveRightAside
                 footer={footer}
             >
-                {(loading || loadingLatest) && <div className="text-center py-8 text-slate-500">로딩 중...</div>}
+                {(loading || loadingLatest) && (
+                    <div className="min-h-[520px] py-8 text-center text-slate-500">
+                        로딩 중...
+                    </div>
+                )}
 
                 {!loading && !loadingLatest && post && (
                     <>

@@ -15,7 +15,7 @@ const PostCard = ({ post, priority = false }) => {
   const safeCategory = category || 'all';
   const to = `/${safeCategory}/${slug}`;
   const imageProps = getThumbnailImageProps(thumbnail);
-  const loadingProps = getImageLoadingProps(priority);
+  const loadingProps = getImageLoadingProps(priority && imageProps);
   const [showAllTags, setShowAllTags] = useState(false);
   const moreRef = useRef(null);
   const cardRef = useRef(null);
@@ -38,7 +38,9 @@ const PostCard = ({ post, priority = false }) => {
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-500 text-sm bg-slate-50/70">No image</div>
+              <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_30%_20%,rgba(0,120,212,0.16),transparent_38%),linear-gradient(135deg,rgba(255,255,255,0.92),rgba(226,232,240,0.82))] px-4 text-center text-sm font-semibold text-slate-500">
+                {safeCategory.toUpperCase()}
+              </div>
             )}
           </div>
 

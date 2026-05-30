@@ -5,7 +5,7 @@
  * '파트너 신청하기' 및 '파트너 찾아보기' 외부 링크와 GTP 이미지 카드로 구성된다.
  */
 import React from 'react';
-import gtpImage from '../../assets/GTP2.png'; 
+import gtpImage from '../../assets/GTP2-720.jpg';
 
 const GlobalTrainingPartner = () => {
     return (
@@ -70,6 +70,8 @@ const GlobalTrainingPartner = () => {
                                         group">
                             <img src={gtpImage}
                                  alt="Global Training Partner"
+                                 width="720"
+                                 height="717"
                                  loading="lazy"
                                  decoding="async"
                                  className="w-full h-auto object-cover rounded-[2.5rem] border-4 border-white

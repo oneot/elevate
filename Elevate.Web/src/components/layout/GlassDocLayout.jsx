@@ -25,6 +25,8 @@ import { Link } from "react-router-dom";
  * @param {React.ReactNode} [props.footer] - 본문 하단 구분선 아래 표시할 콘텐츠
  * @param {React.ReactNode} [props.leftAside] - 좌측 사이드바 콘텐츠 (지정 시 좌측 컬럼 추가)
  * @param {React.ReactNode} [props.rightAside] - 우측 사이드바 콘텐츠 (지정 시 우측 컬럼 추가)
+ * @param {boolean} [props.reserveLeftAside] - 콘텐츠가 로드되기 전에도 좌측 컬럼 폭을 예약한다
+ * @param {boolean} [props.reserveRightAside] - 콘텐츠가 로드되기 전에도 우측 컬럼 폭을 예약한다
  * @returns {JSX.Element}
  */
 export default function GlassDocLayout({
@@ -33,15 +35,20 @@ export default function GlassDocLayout({
   footer,
   leftAside,
   rightAside,
+  reserveLeftAside = false,
+  reserveRightAside = false,
 }) {
   // 사이드바 유무에 따라 그리드 컬럼 구성을 결정한다.
   // leftAside/rightAside 둘 다 없는 경우 단순 1컬럼으로 유지한다.
   let gridClass = "grid grid-cols-1";
-  if (leftAside && rightAside) {
+  const hasLeftColumn = Boolean(leftAside) || reserveLeftAside;
+  const hasRightColumn = Boolean(rightAside) || reserveRightAside;
+
+  if (hasLeftColumn && hasRightColumn) {
     gridClass = "grid grid-cols-1 items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)_280px]";
-  } else if (rightAside) {
+  } else if (hasRightColumn) {
     gridClass = "grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]";
-  } else if (leftAside) {
+  } else if (hasLeftColumn) {
     gridClass = "grid grid-cols-1 items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)]";
   }
 
@@ -93,7 +100,7 @@ export default function GlassDocLayout({
 
         <div className={gridClass}>
           {/* 좌측 사이드바 (목차 등) — lg 이상에서만 표시 */}
-          {leftAside && (
+          {hasLeftColumn && (
             <aside className="hidden min-w-0 self-start lg:sticky lg:top-6 lg:block">
               {leftAside}
             </aside>
@@ -117,7 +124,7 @@ export default function GlassDocLayout({
           </div>
 
           {/* 우측 사이드바 (시리즈 내비게이터, TOC 등) — lg 이상에서만 표시 */}
-          {rightAside && (
+          {hasRightColumn && (
             <aside className="hidden min-w-0 self-start lg:sticky lg:top-6 lg:block">
               {rightAside}
             </aside>

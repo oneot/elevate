@@ -38,6 +38,17 @@ import {
 
 {
   const props = getThumbnailImageProps({
+    url: 'https://account.blob.core.windows.net/images/uploads/legacy-original.jpg',
+    signedUrl: 'https://account.blob.core.windows.net/images/uploads/legacy-original.jpg?sig=abc',
+    width: 3200,
+    height: 1800,
+  });
+
+  assert.equal(props, null);
+}
+
+{
+  const props = getThumbnailImageProps({
     signedUrl: 'https://signed.example.com/original.jpg',
     width: 1600,
     height: 900,
@@ -59,10 +70,10 @@ import {
     },
   });
 
-  assert.equal(props.src, 'https://signed.example.com/original.jpg');
-  assert.equal(props.srcSet, 'https://example.com/thumb.webp 480w, https://signed.example.com/hero.webp 1440w, https://signed.example.com/original.jpg 1600w');
-  assert.equal(props.width, 1600);
-  assert.equal(props.height, 900);
+  assert.equal(props.src, 'https://signed.example.com/hero.webp');
+  assert.equal(props.srcSet, 'https://example.com/thumb.webp 480w, https://signed.example.com/hero.webp 1440w');
+  assert.equal(props.width, 1440);
+  assert.equal(props.height, 810);
 }
 
 {
@@ -82,7 +93,7 @@ import {
     },
   });
 
-  assert.equal(props.src, 'https://signed.example.com/original.jpg');
+  assert.equal(props.src, 'https://signed.example.com/hero.webp');
   assert.equal(props.width, 1440);
   assert.equal(props.height, 810);
   assert.equal(props.srcSet, 'https://signed.example.com/thumb.webp 480w, https://signed.example.com/hero.webp 1440w');
