@@ -6,7 +6,8 @@
   "scripts": {
     "start": "func start",
     "test": "node --test",
-    "test:azure": "RUN_AZURE_TESTS=true node --test tests/azure.connectivity.test.js"
+    "test:azure": "RUN_AZURE_TESTS=true node --test tests/azure.connectivity.test.js",
+    "migrate:thumbnail-variants": "node scripts/migrate-thumbnail-variants.js"
   },
   "keywords": [],
   "author": "",

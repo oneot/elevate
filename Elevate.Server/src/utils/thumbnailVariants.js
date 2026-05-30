@@ -40,10 +40,19 @@ function buildThumbnailVariantPatch({ variants }) {
   ];
 }
 
+function shouldMigrateThumbnail(post, { force = false } = {}) {
+  const thumbnail = post?.thumbnail;
+  if (!thumbnail || typeof thumbnail !== 'object') return false;
+  if (!isAzureBlobUrl(thumbnail.url)) return false;
+  if (force) return true;
+  return !hasCompleteThumbnailVariants(thumbnail);
+}
+
 module.exports = {
   requiredThumbnailVariantSpecs,
   isAzureBlobUrl,
   hasCompleteThumbnailVariants,
   buildVariantBlobPath,
   buildThumbnailVariantPatch,
+  shouldMigrateThumbnail,
 };

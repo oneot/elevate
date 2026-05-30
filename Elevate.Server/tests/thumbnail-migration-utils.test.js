@@ -7,6 +7,7 @@ const {
   hasCompleteThumbnailVariants,
   buildVariantBlobPath,
   buildThumbnailVariantPatch,
+  shouldMigrateThumbnail,
 } = require('../src/utils/thumbnailVariants');
 
 test('requiredThumbnailVariantSpecs matches web card needs', () => {
@@ -82,4 +83,28 @@ test('buildThumbnailVariantPatch only updates thumbnail variant fields', () => {
       },
     },
   ]);
+});
+
+test('shouldMigrateThumbnail selects legacy Azure Blob thumbnails without complete variants', () => {
+  assert.equal(shouldMigrateThumbnail({
+    thumbnail: {
+      url: 'https://acct.blob.core.windows.net/images/uploads/source.jpg',
+    },
+  }), true);
+});
+
+test('shouldMigrateThumbnail skips complete variants unless force is true', () => {
+  const post = {
+    thumbnail: {
+      url: 'https://acct.blob.core.windows.net/images/uploads/source.jpg',
+      variants: {
+        thumb: { url: 'https://example.com/thumb.webp' },
+        card: { url: 'https://example.com/card.webp' },
+        hero: { url: 'https://example.com/hero.webp' },
+      },
+    },
+  };
+
+  assert.equal(shouldMigrateThumbnail(post), false);
+  assert.equal(shouldMigrateThumbnail(post, { force: true }), true);
 });
