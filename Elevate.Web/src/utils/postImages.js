@@ -10,6 +10,15 @@ function toPositiveNumber(value) {
   return Number.isFinite(number) && number > 0 ? number : undefined;
 }
 
+function isAzureBlobImageUrl(url) {
+  if (!url) return false;
+  try {
+    return new URL(url).hostname.endsWith('.blob.core.windows.net');
+  } catch {
+    return false;
+  }
+}
+
 function collectVariantCandidates(thumbnail) {
   if (!thumbnail || typeof thumbnail !== 'object' || !thumbnail.variants) return [];
   return Object.values(thumbnail.variants)
@@ -27,6 +36,7 @@ export function getThumbnailImageProps(thumbnail, { sizes = POST_CARD_IMAGE_SIZE
   const fallbackSrc = getImageUrl(thumbnail);
 
   if (!variants.length && !fallbackSrc) return null;
+  if (!variants.length && typeof thumbnail === 'object' && isAzureBlobImageUrl(fallbackSrc)) return null;
 
   const largestVariant = variants.at(-1);
   const fallbackDimensions = {
@@ -34,18 +44,12 @@ export function getThumbnailImageProps(thumbnail, { sizes = POST_CARD_IMAGE_SIZE
     width: toPositiveNumber(thumbnail?.width) || largestVariant?.width,
     height: toPositiveNumber(thumbnail?.height) || largestVariant?.height,
   };
-  const selected = fallbackSrc ? fallbackDimensions : largestVariant || fallbackDimensions;
+  const selected = largestVariant || fallbackDimensions;
 
   return {
     src: selected.src,
     srcSet: variants.length
-      ? [
-        ...variants,
-        ...(fallbackSrc && fallbackDimensions.width
-          && !variants.some((variant) => variant.src === fallbackSrc || variant.width >= fallbackDimensions.width)
-          ? [fallbackDimensions]
-          : []),
-      ].map((variant) => `${variant.src} ${variant.width}w`).join(', ')
+      ? variants.map((variant) => `${variant.src} ${variant.width}w`).join(', ')
       : undefined,
     sizes,
     width: selected.width,

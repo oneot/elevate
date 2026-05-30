@@ -7,7 +7,7 @@
  */
 import React from 'react';
 import { Link } from 'react-router-dom';
-import meeImage from '../../assets/mee-image.png'; 
+import meeImage from '../../assets/mee-image-720.jpg';
 
 const MEESection = () => {
     return (
@@ -27,6 +27,8 @@ const MEESection = () => {
                             
                             <img src={meeImage}
                                  alt="Microsoft Elevate Educator"
+                                 width="687"
+                                 height="720"
                                  loading="lazy"
                                  decoding="async"
                                  className="w-full h-auto object-cover rounded-[2.5rem] border-4 border-white
