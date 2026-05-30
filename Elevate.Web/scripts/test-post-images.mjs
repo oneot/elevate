@@ -66,6 +66,28 @@ import {
 }
 
 {
+  const props = getThumbnailImageProps({
+    signedUrl: 'https://signed.example.com/original.jpg',
+    variants: {
+      hero: {
+        signedUrl: 'https://signed.example.com/hero.webp',
+        width: 1440,
+        height: 810,
+      },
+      thumb: {
+        signedUrl: 'https://signed.example.com/thumb.webp',
+        width: 480,
+        height: 270,
+      },
+    },
+  });
+
+  assert.equal(props.src, 'https://signed.example.com/original.jpg');
+  assert.equal(props.width, 1440);
+  assert.equal(props.height, 810);
+}
+
+{
   assert.deepEqual(getImageLoadingProps(true), {
     loading: 'eager',
     decoding: 'async',

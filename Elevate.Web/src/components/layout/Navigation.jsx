@@ -90,15 +90,13 @@ const ChevronIcon = ({ open }) => (
  *
  * @returns {JSX.Element}
  */
-const Navigation = () => {
+const NavigationContent = () => {
     // 현재 열린 데스크톱 드롭다운 메뉴의 label (null이면 모두 닫힘)
     const [openMenu, setOpenMenu] = useState(null);
     // 모바일 오버레이 열림 여부
     const [mobileOpen, setMobileOpen] = useState(false);
     // 모바일 아코디언에서 현재 펼쳐진 메뉴의 label
     const [expandedMobile, setExpandedMobile] = useState(null);
-
-    const location = useLocation();
 
     /**
      * 드롭다운 닫힘 지연 타이머 ref.
@@ -136,17 +134,6 @@ const Navigation = () => {
             if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
         };
     }, []);
-
-    // 라우트 이동 시 모든 드롭다운/오버레이 닫기
-    useEffect(() => {
-        if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-        const resetTimer = window.setTimeout(() => {
-            setOpenMenu(null);
-            setMobileOpen(false);
-            setExpandedMobile(null);
-        }, 0);
-        return () => window.clearTimeout(resetTimer);
-    }, [location.pathname]);
 
     // Escape 키로 드롭다운/오버레이 닫기
     useEffect(() => {
@@ -370,6 +357,11 @@ const Navigation = () => {
             )}
         </>
     );
+};
+
+const Navigation = () => {
+    const location = useLocation();
+    return <NavigationContent key={location.pathname} />;
 };
 
 export default Navigation;

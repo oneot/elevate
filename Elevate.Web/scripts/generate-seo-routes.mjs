@@ -166,6 +166,8 @@ function renderRouteHtml(route) {
 
 function getStablePostImage(thumbnail) {
   const imageUrl = typeof thumbnail === 'string' ? thumbnail : thumbnail?.url;
+  // Azure Blob containers are private and build-time SAS URLs expire, so prerendered
+  // social metadata intentionally falls back to the stable site-level OG image.
   if (!imageUrl || imageUrl.includes('blob.core.windows.net')) return defaultImage;
   return imageUrl;
 }
@@ -175,7 +177,7 @@ async function fetchPublicPostsPage(page) {
   const url = new URL(`${apiBaseUrl}/posts`);
   url.searchParams.set('limit', '100');
   url.searchParams.set('page', String(page));
-  const response = await fetch(url);
+  const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
   if (!response.ok) throw new Error(`HTTP ${response.status} from ${url}`);
   return response.json();
 }

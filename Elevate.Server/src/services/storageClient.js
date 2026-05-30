@@ -154,9 +154,8 @@ async function getBlobReadSasUrl(blobUrl, validHours) {
 }
 
 function getReadSasWindow(validHours, now = new Date(), containerName = storageContainerName) {
-  return validHours == null && containerName === storageContainerName
-    ? getStableReadSasWindow(now)
-    : getRollingReadSasWindow(validHours, now);
+  void containerName;
+  return getRollingReadSasWindow(validHours, now);
 }
 
 function getRollingReadSasWindow(validHours, now = new Date()) {

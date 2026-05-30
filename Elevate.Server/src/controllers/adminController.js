@@ -99,10 +99,14 @@ function normalizeThumbnailForStorage(thumbnail) {
   if (typeof thumbnail === 'string') return { url: stripBlobSas(thumbnail) };
   if (!thumbnail.url || typeof thumbnail.url !== 'string') return null;
 
-  var normalized = Object.assign({}, thumbnail, {
+  var normalized = {
     url: stripBlobSas(thumbnail.url)
-  });
-  delete normalized.signedUrl;
+  };
+  if (typeof thumbnail.alt === 'string') normalized.alt = thumbnail.alt;
+  if (Number.isFinite(Number(thumbnail.width)) && Number(thumbnail.width) > 0) normalized.width = Number(thumbnail.width);
+  if (Number.isFinite(Number(thumbnail.height)) && Number(thumbnail.height) > 0) normalized.height = Number(thumbnail.height);
+  if (typeof thumbnail.mimeType === 'string') normalized.mimeType = thumbnail.mimeType;
+  if (Number.isFinite(Number(thumbnail.sizeBytes)) && Number(thumbnail.sizeBytes) >= 0) normalized.sizeBytes = Number(thumbnail.sizeBytes);
 
   if (thumbnail.variants && typeof thumbnail.variants === 'object') {
     var variants = {};
@@ -112,16 +116,24 @@ function normalizeThumbnailForStorage(thumbnail) {
       if (!variant || !variant.url || typeof variant.url !== 'string') return;
       var safeKey = key.replace(/[^a-zA-Z0-9_-]/g, '');
       if (!safeKey) return;
-      variants[safeKey] = Object.assign({}, variant, {
-        url: stripBlobSas(variant.url)
-      });
-      delete variants[safeKey].signedUrl;
+      variants[safeKey] = { url: stripBlobSas(variant.url) };
+      if (Number.isFinite(Number(variant.width)) && Number(variant.width) > 0) variants[safeKey].width = Number(variant.width);
+      if (Number.isFinite(Number(variant.height)) && Number(variant.height) > 0) variants[safeKey].height = Number(variant.height);
+      if (typeof variant.type === 'string') variants[safeKey].type = variant.type;
+      if (Number.isFinite(Number(variant.sizeBytes)) && Number(variant.sizeBytes) >= 0) variants[safeKey].sizeBytes = Number(variant.sizeBytes);
     });
     if (Object.keys(variants).length > 0) normalized.variants = variants;
     else delete normalized.variants;
   }
 
   return normalized;
+}
+
+function collectThumbnailUrls(thumbnail) {
+  return Array.from(new Set([
+    thumbnail?.url,
+    ...Object.values(thumbnail?.variants || {}).map(function(variant) { return variant?.url; })
+  ].filter(Boolean)));
 }
 
 function encodeAdminCursor(post) {
@@ -590,10 +602,7 @@ exports.deletePost = async (req, res) => {
     }));
 
     // 썸네일 블롭 삭제 (best-effort)
-    const thumbnailUrls = [
-      existing.thumbnail?.url,
-      ...Object.values(existing.thumbnail?.variants || {}).map(function(variant) { return variant?.url; })
-    ].filter(Boolean);
+    const thumbnailUrls = collectThumbnailUrls(existing.thumbnail);
     for (const thumbnailUrl of thumbnailUrls) {
       try {
         await deleteBlobByUrl(thumbnailUrl);
@@ -923,4 +932,9 @@ exports.getAnalyticsSummary = async (req, res) => {
     console.error('[getAnalyticsSummary] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
   }
+};
+
+exports._test = {
+  normalizeThumbnailForStorage,
+  collectThumbnailUrls
 };

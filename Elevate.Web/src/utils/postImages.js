@@ -28,12 +28,13 @@ export function getThumbnailImageProps(thumbnail, { sizes = POST_CARD_IMAGE_SIZE
 
   if (!variants.length && !fallbackSrc) return null;
 
+  const largestVariant = variants.at(-1);
   const fallbackDimensions = {
     src: fallbackSrc,
-    width: toPositiveNumber(thumbnail?.width),
-    height: toPositiveNumber(thumbnail?.height),
+    width: toPositiveNumber(thumbnail?.width) || largestVariant?.width,
+    height: toPositiveNumber(thumbnail?.height) || largestVariant?.height,
   };
-  const selected = fallbackSrc ? fallbackDimensions : variants.at(-1) || fallbackDimensions;
+  const selected = fallbackSrc ? fallbackDimensions : largestVariant || fallbackDimensions;
 
   return {
     src: selected.src,

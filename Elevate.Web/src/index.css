@@ -677,7 +677,7 @@ body {
 }
 
 #webchat-container .webchat__basic-transcript__text {
-  font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif !important;
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif !important;
 }
 
 /* 아바타 숨김 */
@@ -750,7 +750,7 @@ body {
 
 .rbc-calendar {
   background: transparent;
-  font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
 }
 
 /* ── 년월 레이블 (달력 상단, 별도 div) ── */

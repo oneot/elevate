@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const routes = ['/', '/update', '/m365', '/program-news'];
 const environments = {
@@ -25,17 +26,21 @@ if (!baseUrl) {
 }
 
 const date = new Date().toISOString().slice(0, 10);
-const outputDir = join(process.cwd(), '..', 'reports', 'performance', `${date}-${envName}`);
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(scriptDir, '..', '..');
+const outputDir = join(repoRoot, 'reports', 'performance', `${date}-${envName}`);
 mkdirSync(outputDir, { recursive: true });
 
 const plannedRuns = selectedRoutes.map((route) => {
   const url = new URL(route, baseUrl).toString();
   const safeRoute = route === '/' ? 'root' : route.replace(/^\//, '').replace(/[^\w.-]+/g, '-');
+  const outputBasePath = join(outputDir, safeRoute);
   return {
     route,
     url,
-    jsonPath: join(outputDir, `${safeRoute}.json`),
-    htmlPath: join(outputDir, `${safeRoute}.html`),
+    outputBasePath,
+    jsonPath: `${outputBasePath}.report.json`,
+    htmlPath: `${outputBasePath}.report.html`,
   };
 });
 
@@ -55,7 +60,7 @@ for (const run of plannedRuns) {
     '--chrome-flags=--headless',
     '--output=json',
     '--output=html',
-    `--output-path=${run.jsonPath}`,
+    `--output-path=${run.outputBasePath}`,
     '--quiet',
   ], {
     stdio: 'inherit',

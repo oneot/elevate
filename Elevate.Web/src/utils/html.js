@@ -134,24 +134,23 @@ function appendClassName(element, className) {
 /**
  * 렌더링된 HTML 내 이미지와 iframe의 로딩 방식을 최적화한다.
  *
- * 첫 번째 이미지는 상세 본문의 LCP 후보일 수 있으므로 eager/high로 유지하고,
- * 그 외 미디어는 lazy load한다. dangerouslySetInnerHTML 이후 실제 DOM에 적용되므로
- * 기존 sanitize 정책을 넓히지 않아도 된다.
+ * 게시글 본문 안의 이미지가 실제 LCP 후보인지 판단할 수 없으므로, 본문 미디어는
+ * 기본적으로 lazy load한다. 상세 대표 이미지는 별도 컴포넌트에서 우선순위를 제어한다.
  *
  * @param {Element} containerEl - 미디어를 탐색할 DOM 컨테이너 요소
  */
 export function optimizeEmbeddedMedia(containerEl) {
   if (!containerEl) return;
 
-  containerEl.querySelectorAll('img').forEach((image, index) => {
+  containerEl.querySelectorAll('img').forEach((image) => {
     if (!image.hasAttribute('loading')) {
-      image.setAttribute('loading', index === 0 ? 'eager' : 'lazy');
+      image.setAttribute('loading', 'lazy');
     }
     if (!image.hasAttribute('decoding')) {
       image.setAttribute('decoding', 'async');
     }
     if (!image.hasAttribute('fetchpriority')) {
-      image.setAttribute('fetchpriority', index === 0 ? 'high' : 'auto');
+      image.setAttribute('fetchpriority', 'auto');
     }
     if (!image.hasAttribute('sizes')) {
       image.setAttribute('sizes', '(min-width: 1024px) 768px, 100vw');

@@ -68,9 +68,9 @@ const optimizeEmbeddedMedia = loadOptimizeEmbeddedMedia();
 
   optimizeEmbeddedMedia(container);
 
-  assert.equal(firstImage.getAttribute('loading'), 'eager');
+  assert.equal(firstImage.getAttribute('loading'), 'lazy');
   assert.equal(firstImage.getAttribute('decoding'), 'async');
-  assert.equal(firstImage.getAttribute('fetchpriority'), 'high');
+  assert.equal(firstImage.getAttribute('fetchpriority'), 'auto');
   assert.equal(firstImage.getAttribute('sizes'), '(min-width: 1024px) 768px, 100vw');
   assert.match(firstImage.className, /post-content-media/);
 
