@@ -11,7 +11,7 @@ import {
   uploadBlobWithSas,
   supportedImageMimeTypes,
 } from '../utils/imageUpload.js'
-import { assertCompleteThumbnailVariants } from '../utils/thumbnailVariants.js'
+import { assertCompleteThumbnailVariants, canCreateThumbnailVariants } from '../utils/thumbnailVariants.js'
 
 /**
  * 게시글 편집기에서 썸네일 및 본문 이미지 업로드를 담당하는 훅.
@@ -35,40 +35,44 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
   }, [])
 
   const uploadThumbnailVariants = async (selectedFile) => {
-    const variants = {}
+    if (!canCreateThumbnailVariants(selectedFile)) return {}
 
-    for (const spec of thumbnailVariantSpecs) {
-      const variant = await createImageVariantBlob(selectedFile, spec)
-      const fileName = buildVariantFileName(selectedFile.name, spec.key)
-      const sas = await requestUploadSas({
-        fileName,
-        contentType: variant.type,
-        sizeBytes: variant.blob.size,
-      }, { msalInstance })
+    try {
+      const entries = await Promise.all(thumbnailVariantSpecs.map(async (spec) => {
+        const variant = await createImageVariantBlob(selectedFile, spec)
+        const fileName = buildVariantFileName(selectedFile.name, spec.key)
+        const sas = await requestUploadSas({
+          fileName,
+          contentType: variant.type,
+          sizeBytes: variant.blob.size,
+        }, { msalInstance })
 
-      await uploadBlobWithSas(sas.uploadUrl, variant.blob, variant.type, {
-        cacheControl: imageBlobCacheControl,
-      })
+        await uploadBlobWithSas(sas.uploadUrl, variant.blob, variant.type, {
+          cacheControl: imageBlobCacheControl,
+        })
 
-      const asset = await registerAsset({
-        postId: postId || null,
-        blobUrl: sas.blobUrl,
-        contentType: variant.type,
-        sizeBytes: variant.blob.size,
-        fileName,
-      }, { msalInstance })
+        const asset = await registerAsset({
+          postId: postId || null,
+          blobUrl: sas.blobUrl,
+          contentType: variant.type,
+          sizeBytes: variant.blob.size,
+          fileName,
+        }, { msalInstance })
 
-      variants[spec.key] = {
-        url: asset?.blobUrl || asset?.url || sas.blobUrl,
-        signedUrl: asset?.signedUrl || null,
-        width: variant.width,
-        height: variant.height,
-        type: variant.type,
-        sizeBytes: variant.blob.size,
-      }
+        return [spec.key, {
+          url: asset?.blobUrl || asset?.url || sas.blobUrl,
+          signedUrl: asset?.signedUrl || null,
+          width: variant.width,
+          height: variant.height,
+          type: variant.type,
+          sizeBytes: variant.blob.size,
+        }]
+      }))
+      return assertCompleteThumbnailVariants(Object.fromEntries(entries))
+    } catch (error) {
+      console.warn('[usePostUpload] thumbnail variants skipped', error)
+      return {}
     }
-
-    return assertCompleteThumbnailVariants(variants)
   }
 
   /**

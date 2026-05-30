@@ -37,23 +37,21 @@ export default function AttachUploader({ postId }) {
 
   useEffect(() => {
     let cancelled = false
-    const resetTimer = window.setTimeout(() => {
-      setFiles([])
-      setConfirmDeleteId(null)
-      setError(null)
-      if (!postId) {
-        setLoadingFiles(false)
-        return
-      }
-      setLoadingFiles(true)
-      getFiles(postId, { msalInstance })
-        .then(data => { if (!cancelled) setFiles(data.map(f => ({ ...f, isDeleting: false }))) })
-        .catch(() => {})
-        .finally(() => { if (!cancelled) setLoadingFiles(false) })
-    }, 0)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFiles([])
+    setConfirmDeleteId(null)
+    setError(null)
+    if (!postId) {
+      setLoadingFiles(false)
+      return () => { cancelled = true }
+    }
+    setLoadingFiles(true)
+    getFiles(postId, { msalInstance })
+      .then(data => { if (!cancelled) setFiles(data.map(f => ({ ...f, isDeleting: false }))) })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoadingFiles(false) })
     return () => {
       cancelled = true
-      window.clearTimeout(resetTimer)
     }
   }, [postId, msalInstance])
 

@@ -8,6 +8,7 @@ const template = readFileSync(templatePath, 'utf8');
 const defaultImage = `${siteUrl}/og-image.png`;
 const rawApiBaseUrl = process.env.VITE_API_BASE_URL;
 const apiBaseUrl = rawApiBaseUrl?.replace(/\/$/, '');
+const requireApiRoutes = process.env.REQUIRE_API_ROUTES === 'true';
 
 const routes = [
   {
@@ -183,7 +184,12 @@ async function fetchPublicPostsPage(page) {
 }
 
 async function collectPostRoutes() {
-  if (!apiBaseUrl) return [];
+  if (!apiBaseUrl) {
+    if (requireApiRoutes) {
+      throw new Error('VITE_API_BASE_URL is required when REQUIRE_API_ROUTES=true');
+    }
+    return [];
+  }
 
   const postsByRoute = new Map();
   let page = 1;

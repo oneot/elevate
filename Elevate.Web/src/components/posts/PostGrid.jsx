@@ -39,7 +39,7 @@ const PostGrid = ({ posts = [], activeQuery = '' }) => {
     <div className="grid w-full mx-auto gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 justify-items-stretch xl:max-w-400 2xl:max-w-440">
       {posts.map((p, index) => (
         <div key={p.id || p.slug} className="h-full">
-          <PostCard post={p} priority={index < 4} />
+          <PostCard post={p} priority={index === 0} />
         </div>
       ))}
     </div>

@@ -153,8 +153,7 @@ async function getBlobReadSasUrl(blobUrl, validHours) {
   }
 }
 
-function getReadSasWindow(validHours, now = new Date(), containerName = storageContainerName) {
-  void containerName;
+function getReadSasWindow(validHours, now = new Date()) {
   return getRollingReadSasWindow(validHours, now);
 }
 
@@ -163,16 +162,6 @@ function getRollingReadSasWindow(validHours, now = new Date()) {
   return {
     startsOn: new Date(now.getTime() - READ_SAS_CLOCK_SKEW_MS),
     expiresOn: new Date(now.getTime() + hours * 60 * 60 * 1000)
-  };
-}
-
-function getStableReadSasWindow(now = new Date()) {
-  const dayStartMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  const nextDayStartMs = dayStartMs + 24 * 60 * 60 * 1000;
-
-  return {
-    startsOn: new Date(dayStartMs - READ_SAS_CLOCK_SKEW_MS),
-    expiresOn: new Date(nextDayStartMs + READ_SAS_CLOCK_SKEW_MS)
   };
 }
 
@@ -205,6 +194,5 @@ module.exports = {
   issueBlobAttachSas,
   getBlobReadSasUrl,
   getReadSasWindow,
-  getStableReadSasWindow,
   deleteBlobByUrl
 };

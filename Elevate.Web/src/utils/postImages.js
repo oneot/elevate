@@ -39,7 +39,13 @@ export function getThumbnailImageProps(thumbnail, { sizes = POST_CARD_IMAGE_SIZE
   return {
     src: selected.src,
     srcSet: variants.length
-      ? variants.map((variant) => `${variant.src} ${variant.width}w`).join(', ')
+      ? [
+        ...variants,
+        ...(fallbackSrc && fallbackDimensions.width
+          && !variants.some((variant) => variant.src === fallbackSrc || variant.width >= fallbackDimensions.width)
+          ? [fallbackDimensions]
+          : []),
+      ].map((variant) => `${variant.src} ${variant.width}w`).join(', ')
       : undefined,
     sizes,
     width: selected.width,

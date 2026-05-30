@@ -60,7 +60,7 @@ import {
   });
 
   assert.equal(props.src, 'https://signed.example.com/original.jpg');
-  assert.equal(props.srcSet, 'https://example.com/thumb.webp 480w, https://signed.example.com/hero.webp 1440w');
+  assert.equal(props.srcSet, 'https://example.com/thumb.webp 480w, https://signed.example.com/hero.webp 1440w, https://signed.example.com/original.jpg 1600w');
   assert.equal(props.width, 1600);
   assert.equal(props.height, 900);
 }
@@ -85,6 +85,7 @@ import {
   assert.equal(props.src, 'https://signed.example.com/original.jpg');
   assert.equal(props.width, 1440);
   assert.equal(props.height, 810);
+  assert.equal(props.srcSet, 'https://signed.example.com/thumb.webp 480w, https://signed.example.com/hero.webp 1440w');
 }
 
 {
