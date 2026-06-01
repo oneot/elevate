@@ -31,6 +31,19 @@ export function startClarity() {
   started = true;
 }
 
+export function startClarityWhenIdle() {
+  if (!enabled || !projectId || started) {
+    return;
+  }
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(() => startClarity(), { timeout: 3000 });
+    return;
+  }
+
+  window.setTimeout(() => startClarity(), 2000);
+}
+
 /**
  * Clarity 세션에 커스텀 태그(key-value)를 설정한다.
  *

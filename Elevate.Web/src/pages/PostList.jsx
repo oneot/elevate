@@ -20,7 +20,7 @@ import { POST_LIST_CATEGORIES, BASE_CATEGORIES, CATEGORY_DISPLAY_NAMES } from '.
 import { DEFAULT_OG_IMAGE, SITE_NAME, canonicalUrl } from '../constants/seo';
 
 const VALID_CATEGORIES = POST_LIST_CATEGORIES;
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 8;
 
 export default function PostList() {
   const { category } = useParams();
@@ -34,7 +34,7 @@ export default function PostList() {
   const [posts, setPosts] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [allTags, setAllTags] = useState([]);
   const [seriesOptions, setSeriesOptions] = useState([]);
