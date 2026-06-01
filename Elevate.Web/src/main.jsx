@@ -11,12 +11,14 @@ import { BrowserRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import './index.css'
 import App from './App.jsx'
-import { startClarity } from './services/clarity'
+import { startClarityWhenIdle } from './services/clarity'
+import { startInpMeasurement } from './services/webVitals'
 import ErrorBoundary from './components/common/ErrorBoundary'
 
-// 페이지 로드 즉시 Clarity 세션을 시작한다.
+// LCP 경로의 네트워크 경쟁을 줄이기 위해 Clarity는 유휴 시점에 시작한다.
 // VITE_CLARITY_ENABLED=true 이고 VITE_CLARITY_PROJECT_ID가 설정된 경우에만 실제로 초기화된다.
-startClarity()
+startClarityWhenIdle()
+startInpMeasurement()
 
 createRoot(document.getElementById('root')).render(
     <ErrorBoundary>

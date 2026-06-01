@@ -8,6 +8,33 @@
 import React from 'react';
 import PostCard from './PostCard';
 
+export const POST_GRID_SKELETON_COUNT = 4;
+
+export function PostGridSkeleton({ count = POST_GRID_SKELETON_COUNT }) {
+  return (
+    <div className="grid w-full mx-auto gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 justify-items-stretch xl:max-w-400 2xl:max-w-440" aria-hidden="true">
+      {Array.from({ length: count }).map((_, index) => (
+        <article
+          key={index}
+          className="post-card clean-card rounded-[2rem] p-5 sm:p-6 h-[360px] w-full max-w-full animate-pulse"
+        >
+          <div className="h-[150px] w-full rounded-xl bg-white/70 border border-white/60" />
+          <div className="mt-4 space-y-3">
+            <div className="h-5 w-5/6 rounded bg-white/75" />
+            <div className="h-5 w-2/3 rounded bg-white/70" />
+            <div className="h-4 w-full rounded bg-white/60" />
+            <div className="h-4 w-4/5 rounded bg-white/60" />
+          </div>
+          <div className="mt-8 flex gap-2">
+            <div className="h-6 w-16 rounded-full bg-white/65" />
+            <div className="h-6 w-20 rounded-full bg-white/65" />
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 /**
  * 게시글 목록을 반응형 그리드로 렌더링한다.
  *

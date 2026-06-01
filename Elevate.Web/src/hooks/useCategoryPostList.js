@@ -62,7 +62,7 @@ export function useCategoryPostList(category, { sortEventPosts = true } = {}) {
 
   const [allPosts, setAllPosts] = useState([]);
   const [allTags, setAllTags] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // 카테고리 게시글을 최대 100개 fetch한다.
