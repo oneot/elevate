@@ -8,6 +8,19 @@ function getRoutePath() {
   return window.location.pathname || '/';
 }
 
+function createInpCandidate(entry) {
+  return {
+    route: getRoutePath(),
+    name: entry.name,
+    interactionId: entry.interactionId,
+    startTime: Math.round(entry.startTime),
+    duration: entry.duration,
+    inputDelay: entry.processingStart - entry.startTime,
+    processingDuration: entry.processingEnd - entry.processingStart,
+    presentationDelay: entry.startTime + entry.duration - entry.processingEnd,
+  };
+}
+
 function reportInpMeasurement(measurement) {
   window.__elevateInpMeasurements = window.__elevateInpMeasurements || [];
   window.__elevateInpMeasurements.push(measurement);
@@ -58,7 +71,7 @@ export function startInpMeasurement() {
 
       const current = interactions.get(entry.interactionId);
       if (!current || entry.duration > current.duration) {
-        interactions.set(entry.interactionId, entry);
+        interactions.set(entry.interactionId, createInpCandidate(entry));
       }
     }
 
@@ -67,16 +80,7 @@ export function startInpMeasurement() {
     const now = performance.now();
     if (best && now - lastReport > INP_REPORT_INTERVAL_MS) {
       lastReport = now;
-      reportInpMeasurement({
-        route: getRoutePath(),
-        name: best.name,
-        interactionId: best.interactionId,
-        startTime: Math.round(best.startTime),
-        duration: best.duration,
-        inputDelay: best.processingStart - best.startTime,
-        processingDuration: best.processingEnd - best.processingStart,
-        presentationDelay: best.startTime + best.duration - best.processingEnd,
-      });
+      reportInpMeasurement(best);
     }
   });
 

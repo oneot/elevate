@@ -12,7 +12,7 @@ export const POST_GRID_SKELETON_COUNT = 4;
 
 export function PostGridSkeleton({ count = POST_GRID_SKELETON_COUNT }) {
   return (
-    <div className="grid w-full mx-auto gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 justify-items-stretch xl:max-w-400 2xl:max-w-440" aria-hidden="true">
+    <div className="grid w-full mx-auto gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 justify-items-stretch xl:max-w-[100rem] 2xl:max-w-[110rem]" aria-hidden="true">
       {Array.from({ length: count }).map((_, index) => (
         <article
           key={index}
@@ -63,7 +63,7 @@ const PostGrid = ({ posts = [], activeQuery = '' }) => {
   }
 
   return (
-    <div className="grid w-full mx-auto gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 justify-items-stretch xl:max-w-400 2xl:max-w-440">
+    <div className="grid w-full mx-auto gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 justify-items-stretch xl:max-w-[100rem] 2xl:max-w-[110rem]">
       {posts.map((p, index) => (
         <div key={p.id || p.slug} className="h-full">
           <PostCard post={p} priority={index === 0} />
