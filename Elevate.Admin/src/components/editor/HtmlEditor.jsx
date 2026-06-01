@@ -31,7 +31,7 @@ import {
   Redo,
   RemoveFormatting,
 } from 'lucide-react'
-import { getClipboardImageFiles } from './clipboardImages.js'
+import { getClipboardImageFiles, shouldUploadClipboardImages } from './clipboardImages.js'
 
 // lowlight 인스턴스에 지원할 언어를 등록한다.
 // 같은 언어에 여러 별칭(js/javascript, ts/typescript 등)을 등록해
@@ -273,8 +273,8 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
           'min-h-80 rounded-lg px-4 py-3 text-base focus:outline-none',
       },
       handlePaste: (_view, event) => {
+        if (!shouldUploadClipboardImages(event.clipboardData, onUploadImage)) return false
         const imageFiles = getClipboardImageFiles(event.clipboardData)
-        if (imageFiles.length === 0) return false
 
         event.preventDefault()
         void uploadFiles(imageFiles)
@@ -283,9 +283,7 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
     },
   })
 
-  useEffect(() => {
-    editorRef.current = editor
-  }, [editor])
+  editorRef.current = editor
 
   useEffect(() => {
     if (!editor) return
