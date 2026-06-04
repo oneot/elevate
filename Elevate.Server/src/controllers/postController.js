@@ -1,6 +1,7 @@
 const { getPostsContainer, getAssetsContainer } = require('../services/cosmosClient');
 const { getBlobReadSasUrl } = require('../services/storageClient');
 const { parsePositiveInt, sendError } = require('../utils/http');
+const storageAttachContainerName = process.env.STORAGE_ATTACH_CONTAINER_NAME || 'attachments';
 
 function encodeCursor(post) {
   const payload = {
@@ -99,10 +100,9 @@ function buildAttachmentFileNameByBlobUrlMap(files) {
   return fileNameByBlobUrl;
 }
 
-function hasBlobUrlReference(content) {
+function hasAttachmentBlobUrlReference(content) {
   if (typeof content !== 'string' || content.length === 0) return false;
-  BLOB_BARE_PATTERN.lastIndex = 0;
-  return BLOB_BARE_PATTERN.test(content);
+  return content.includes(`/${storageAttachContainerName}/attach/`);
 }
 
 async function getAttachmentFileNameByBlobUrlMap(postId, correlationId) {
@@ -295,7 +295,7 @@ exports.getPostDetail = async (req, res) => {
     }
 
     const post = toPostDetail(resources[0]);
-    const attachmentFileNameByBlobUrl = hasBlobUrlReference(post.contentMarkdown)
+    const attachmentFileNameByBlobUrl = hasAttachmentBlobUrlReference(post.contentMarkdown)
       ? await getAttachmentFileNameByBlobUrlMap(post.id, correlationId)
       : new Map();
     const [thumbnail, contentMarkdown] = await Promise.all([
@@ -435,5 +435,5 @@ exports.getTagList = async (req, res) => {
 exports._test = {
   normalizeThumbnail,
   buildAttachmentFileNameByBlobUrlMap,
-  hasBlobUrlReference
+  hasAttachmentBlobUrlReference
 };
