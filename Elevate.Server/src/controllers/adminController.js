@@ -701,7 +701,7 @@ exports.createAssetMetadata = async (req, res) => {
 
     await container.items.create(assetDocument);
 
-    const signedUrl = await getBlobReadSasUrl(blobUrl);
+    const signedUrl = await getBlobReadSasUrl(blobUrl, undefined, { downloadFileName: fileName });
     return res.status(201).json({
       assetId,
       url: blobUrl,
@@ -820,7 +820,7 @@ exports.createFileMetadata = async (req, res) => {
 
     await container.items.create(fileDocument);
 
-    const signedUrl = await getBlobReadSasUrl(blobUrl);
+    const signedUrl = await getBlobReadSasUrl(blobUrl, undefined, { downloadFileName: fileName });
     return res.status(201).json({
       fileId,
       url: blobUrl,
@@ -883,7 +883,7 @@ exports.getFiles = async (req, res) => {
       resources.map(async (file) => {
         let signedUrl = null;
         try {
-          signedUrl = await getBlobReadSasUrl(file.blobUrl);
+          signedUrl = await getBlobReadSasUrl(file.blobUrl, undefined, { downloadFileName: file.fileName });
         } catch (err) {
           console.warn(`[getFiles] signedUrl generation failed for file ${file.id} (${file.blobUrl}) correlationId=${correlationId}`, err.message);
         }
