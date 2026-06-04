@@ -1,4 +1,5 @@
 export const POST_CARD_IMAGE_SIZES = '(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw';
+export const POST_CARD_MAX_VARIANT_WIDTH = 960;
 
 function getImageUrl(image) {
   if (typeof image === 'string') return image || null;
@@ -31,14 +32,21 @@ function collectVariantCandidates(thumbnail) {
     .sort((a, b) => a.width - b.width);
 }
 
-export function getThumbnailImageProps(thumbnail, { sizes = POST_CARD_IMAGE_SIZES } = {}) {
+export function getThumbnailImageProps(
+  thumbnail,
+  { sizes = POST_CARD_IMAGE_SIZES, maxVariantWidth = POST_CARD_MAX_VARIANT_WIDTH } = {}
+) {
   const variants = collectVariantCandidates(thumbnail);
   const fallbackSrc = getImageUrl(thumbnail);
 
   if (!variants.length && !fallbackSrc) return null;
   if (!variants.length && typeof thumbnail === 'object' && isAzureBlobImageUrl(fallbackSrc)) return null;
 
-  const largestVariant = variants.at(-1);
+  const displayVariants = variants.length
+    ? variants.filter((variant) => !maxVariantWidth || variant.width <= maxVariantWidth)
+    : [];
+  const usableVariants = displayVariants.length ? displayVariants : variants.slice(0, 1);
+  const largestVariant = usableVariants.at(-1);
   const fallbackDimensions = {
     src: fallbackSrc,
     width: toPositiveNumber(thumbnail?.width) || largestVariant?.width,
@@ -48,8 +56,8 @@ export function getThumbnailImageProps(thumbnail, { sizes = POST_CARD_IMAGE_SIZE
 
   return {
     src: selected.src,
-    srcSet: variants.length
-      ? variants.map((variant) => `${variant.src} ${variant.width}w`).join(', ')
+    srcSet: usableVariants.length
+      ? usableVariants.map((variant) => `${variant.src} ${variant.width}w`).join(', ')
       : undefined,
     sizes,
     width: selected.width,

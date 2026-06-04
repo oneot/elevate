@@ -182,6 +182,7 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
       error={error}
       countLabel={!loading && selectedTags.length > 0 ? `${eventFilteredPosts.length}개의 게시글이 일치합니다.` : undefined}
       activeQuery={qParam}
+      skeletonCount={POST_LIST_PAGE_SIZE}
       currentPage={activeTab === 'event' && selectedCalendarEvent?.linkedPostId ? 1 : (activeTab === 'event' ? eventCurrentPage : currentPage)}
       totalPages={activeTab === 'event' && selectedCalendarEvent?.linkedPostId ? 1 : (activeTab === 'event' ? eventTotalPages : totalPages)}
       onPageChange={handlePageChange}

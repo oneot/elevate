@@ -63,6 +63,11 @@ import {
         width: 480,
         height: 270,
       },
+      card: {
+        url: 'https://example.com/card.webp',
+        width: 960,
+        height: 540,
+      },
       invalid: {
         signedUrl: '',
         width: 320,
@@ -70,10 +75,10 @@ import {
     },
   });
 
-  assert.equal(props.src, 'https://signed.example.com/hero.webp');
-  assert.equal(props.srcSet, 'https://example.com/thumb.webp 480w, https://signed.example.com/hero.webp 1440w');
-  assert.equal(props.width, 1440);
-  assert.equal(props.height, 810);
+  assert.equal(props.src, 'https://example.com/card.webp');
+  assert.equal(props.srcSet, 'https://example.com/thumb.webp 480w, https://example.com/card.webp 960w');
+  assert.equal(props.width, 960);
+  assert.equal(props.height, 540);
 }
 
 {
@@ -93,10 +98,33 @@ import {
     },
   });
 
-  assert.equal(props.src, 'https://signed.example.com/hero.webp');
-  assert.equal(props.width, 1440);
-  assert.equal(props.height, 810);
-  assert.equal(props.srcSet, 'https://signed.example.com/thumb.webp 480w, https://signed.example.com/hero.webp 1440w');
+  assert.equal(props.src, 'https://signed.example.com/thumb.webp');
+  assert.equal(props.width, 480);
+  assert.equal(props.height, 270);
+  assert.equal(props.srcSet, 'https://signed.example.com/thumb.webp 480w');
+}
+
+{
+  const props = getThumbnailImageProps({
+    signedUrl: 'https://signed.example.com/original.jpg',
+    variants: {
+      hero: {
+        signedUrl: 'https://signed.example.com/hero.webp',
+        width: 1440,
+        height: 810,
+      },
+      card: {
+        signedUrl: 'https://signed.example.com/card.webp',
+        width: 960,
+        height: 540,
+      },
+    },
+  }, { maxVariantWidth: 960 });
+
+  assert.equal(props.src, 'https://signed.example.com/card.webp');
+  assert.equal(props.width, 960);
+  assert.equal(props.height, 540);
+  assert.equal(props.srcSet, 'https://signed.example.com/card.webp 960w');
 }
 
 {

@@ -89,6 +89,11 @@ function CalendarEventEditor() {
       return
     }
 
+    if (!Array.isArray(event.eventDates) || event.eventDates.length === 0) {
+      setError('행사 일정을 입력해주세요.')
+      return
+    }
+
     const payload = {
       title: event.title.trim(),
       eventDates: event.eventDates,

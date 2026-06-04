@@ -1,5 +1,5 @@
 import React from 'react';
-import PostGrid from './PostGrid';
+import PostGrid, { PostGridSkeleton } from './PostGrid';
 import Pagination from './Pagination';
 import TagFilter from './TagFilter';
 import SeriesNavigator from './SeriesNavigator';
@@ -19,6 +19,7 @@ const PostListLayout = ({
   seriesNavigatorProps,
   activeQuery,
   calendarSlot,
+  skeletonCount,
 }) => {
   const hasSeriesSidebar = Boolean(seriesNavigatorProps);
 
@@ -48,14 +49,20 @@ const PostListLayout = ({
         )}
 
         <div className={`flex flex-col lg:grid gap-6 ${hasSeriesSidebar ? 'lg:grid-cols-12' : 'lg:grid-cols-10'}`}>
-          <aside className="w-full lg:col-span-2 lg:sticky lg:top-4 lg:self-start">
+          <aside className="order-2 w-full lg:order-none lg:col-span-2 lg:sticky lg:top-4 lg:self-start">
             {/* 게시글 카운트 라벨 높이만큼 상단 정렬 */}
             <div className="mb-4 min-h-6 hidden lg:block" aria-hidden="true" />
             <TagFilter {...tagFilterProps} />
           </aside>
 
-          <section className={`w-full ${hasSeriesSidebar ? 'lg:col-span-7 xl:col-span-8' : 'lg:col-span-8'}`}>
-            {loading && <div className="text-center py-8">로딩 중...</div>}
+          <section className={`order-1 w-full lg:order-none ${hasSeriesSidebar ? 'lg:col-span-7 xl:col-span-8' : 'lg:col-span-8'}`}>
+            {loading && (
+              <>
+                <span className="sr-only">로딩 중...</span>
+                <div className="mb-4 min-h-6" aria-hidden="true" />
+                <PostGridSkeleton count={skeletonCount} />
+              </>
+            )}
             {!loading && error && (
               <div className="flex flex-col items-center gap-3 py-12 text-center">
                 <span className="text-4xl">⚠️</span>
@@ -77,7 +84,7 @@ const PostListLayout = ({
           </section>
 
           {hasSeriesSidebar && (
-            <aside className="w-full lg:col-span-3 xl:col-span-2 hidden lg:block lg:sticky lg:top-4 lg:self-start">
+            <aside className="order-3 w-full lg:order-none lg:col-span-3 xl:col-span-2 hidden lg:block lg:sticky lg:top-4 lg:self-start">
               <SeriesNavigator {...seriesNavigatorProps} />
             </aside>
           )}

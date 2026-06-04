@@ -15,6 +15,20 @@ const projectId = import.meta.env.VITE_CLARITY_PROJECT_ID;
 
 // 초기화 여부 추적: startClarity가 여러 번 호출되어도 한 번만 init되도록 한다.
 let started = false;
+const pendingClarityTags = new Map();
+const pendingClarityEvents = [];
+
+function flushPendingClarityCalls() {
+  for (const [key, value] of pendingClarityTags) {
+    Clarity.setTag(key, value);
+  }
+  pendingClarityTags.clear();
+
+  for (const eventName of pendingClarityEvents) {
+    Clarity.event(eventName);
+  }
+  pendingClarityEvents.length = 0;
+}
 
 /**
  * Clarity 세션을 초기화한다.
@@ -29,6 +43,20 @@ export function startClarity() {
 
   Clarity.init(projectId);
   started = true;
+  flushPendingClarityCalls();
+}
+
+export function startClarityWhenIdle() {
+  if (!enabled || !projectId || started) {
+    return;
+  }
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(() => startClarity(), { timeout: 3000 });
+    return;
+  }
+
+  window.setTimeout(() => startClarity(), 2000);
 }
 
 /**
@@ -40,7 +68,12 @@ export function startClarity() {
  * @param {string} value - 태그 값
  */
 export function setClarityTag(key, value) {
-  if (!started || !key || typeof value === 'undefined') {
+  if (!key || typeof value === 'undefined') {
+    return;
+  }
+
+  if (!started) {
+    if (enabled && projectId) pendingClarityTags.set(key, value);
     return;
   }
 
@@ -53,7 +86,12 @@ export function setClarityTag(key, value) {
  * @param {string} eventName - 이벤트 이름 (예: 'page_view')
  */
 export function trackClarityEvent(eventName) {
-  if (!started || !eventName) {
+  if (!eventName) {
+    return;
+  }
+
+  if (!started) {
+    if (enabled && projectId) pendingClarityEvents.push(eventName);
     return;
   }
 

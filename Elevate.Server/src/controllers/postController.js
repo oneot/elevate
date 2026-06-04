@@ -1,6 +1,7 @@
-const { getPostsContainer } = require('../services/cosmosClient');
+const { getPostsContainer, getAssetsContainer } = require('../services/cosmosClient');
 const { getBlobReadSasUrl } = require('../services/storageClient');
 const { parsePositiveInt, sendError } = require('../utils/http');
+const storageAttachContainerName = process.env.STORAGE_ATTACH_CONTAINER_NAME || 'attachments';
 
 function encodeCursor(post) {
   const payload = {
@@ -82,7 +83,43 @@ async function enrichThumbnailWithSas(thumbnail) {
   return enriched;
 }
 
-async function enrichContentWithSas(content) {
+function buildAttachmentFileNameByBlobUrlMap(files) {
+  const fileNameByBlobUrl = new Map();
+  if (!Array.isArray(files)) return fileNameByBlobUrl;
+
+  for (const file of files) {
+    if (!file || typeof file.blobUrl !== 'string') continue;
+    if (typeof file.fileName !== 'string' || file.fileName.trim().length === 0) continue;
+    fileNameByBlobUrl.set(file.blobUrl, file.fileName.trim());
+  }
+
+  return fileNameByBlobUrl;
+}
+
+function hasAttachmentBlobUrlReference(content) {
+  if (typeof content !== 'string' || content.length === 0) return false;
+  return content.includes('.blob.core.windows.net/') && content.includes(`/${storageAttachContainerName}/attach/`);
+}
+
+async function getAttachmentFileNameByBlobUrlMap(postId, correlationId) {
+  if (!postId) return new Map();
+
+  const querySpec = {
+    query: 'SELECT c.blobUrl, c.fileName FROM c WHERE c.postId = @postId AND c.documentType = "attach"',
+    parameters: [{ name: '@postId', value: postId }]
+  };
+
+  try {
+    const container = getAssetsContainer();
+    const { resources } = await container.items.query(querySpec, { partitionKey: '_attach' }).fetchAll();
+    return buildAttachmentFileNameByBlobUrlMap(resources);
+  } catch (error) {
+    console.warn(`[getAttachmentFileNameByBlobUrlMap] failed correlationId=${correlationId}`, error?.message || error);
+    return new Map();
+  }
+}
+
+async function enrichContentWithAttachDisposition(content, attachmentFileNameByBlobUrl) {
   if (!content) return content;
   // strip existing SAS tokens first
   BLOB_SAS_PATTERN.lastIndex = 0;
@@ -90,8 +127,14 @@ async function enrichContentWithSas(content) {
   BLOB_BARE_PATTERN.lastIndex = 0;
   const matches = normalized.match(BLOB_BARE_PATTERN);
   if (!matches || matches.length === 0) return normalized;
+
   const uniqueUrls = matches.filter((v, i, a) => a.indexOf(v) === i);
-  const signed = await Promise.all(uniqueUrls.map((u) => getBlobReadSasUrl(u)));
+  const signed = await Promise.all(
+    uniqueUrls.map((blobUrl) => getBlobReadSasUrl(blobUrl, undefined, {
+      downloadFileName: attachmentFileNameByBlobUrl?.get(blobUrl)
+    }))
+  );
+
   let result = normalized;
   uniqueUrls.forEach((url, i) => {
     if (signed[i]) result = result.split(url).join(signed[i]);
@@ -248,9 +291,12 @@ exports.getPostDetail = async (req, res) => {
     }
 
     const post = toPostDetail(resources[0]);
+    const attachmentFileNameByBlobUrl = hasAttachmentBlobUrlReference(post.contentMarkdown)
+      ? await getAttachmentFileNameByBlobUrlMap(post.id, correlationId)
+      : new Map();
     const [thumbnail, contentMarkdown] = await Promise.all([
       enrichThumbnailWithSas(post.thumbnail),
-      enrichContentWithSas(post.contentMarkdown)
+      enrichContentWithAttachDisposition(post.contentMarkdown, attachmentFileNameByBlobUrl)
     ]);
 
     return res.json({ ...post, thumbnail, contentMarkdown });
@@ -383,5 +429,7 @@ exports.getTagList = async (req, res) => {
 };
 
 exports._test = {
-  normalizeThumbnail
+  normalizeThumbnail,
+  buildAttachmentFileNameByBlobUrlMap,
+  hasAttachmentBlobUrlReference
 };

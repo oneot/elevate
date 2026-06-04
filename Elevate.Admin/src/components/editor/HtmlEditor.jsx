@@ -31,6 +31,7 @@ import {
   Redo,
   RemoveFormatting,
 } from 'lucide-react'
+import { getClipboardImageFiles, shouldUploadClipboardImages } from './clipboardImages.js'
 
 // lowlight 인스턴스에 지원할 언어를 등록한다.
 // 같은 언어에 여러 별칭(js/javascript, ts/typescript 등)을 등록해
@@ -162,6 +163,7 @@ function ColorPicker({ editor }) {
 
 function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
   const [isDragging, setIsDragging] = useState(false)
+  const editorRef = useRef(null)
   const isUploadingRef = useRef(false)
   const autoSaveTimerRef = useRef(null)
   const [showRestoreBanner, setShowRestoreBanner] = useState(() => {
@@ -212,6 +214,34 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
     }
   }, [storageKey, value])
 
+  const uploadFiles = async (files) => {
+    if (!onUploadImage) return
+    const currentEditor = editorRef.current
+    if (!currentEditor) return
+    if (isUploadingRef.current) return
+    isUploadingRef.current = true
+    try {
+      const imageFiles = Array.from(files).filter((f) => f.type.startsWith('image/'))
+      const MAX_SIZE = 10 * 1024 * 1024 // 10MB
+      for (const file of imageFiles) {
+        if (file.size > MAX_SIZE) {
+          alert(`${file.name} 파일이 너무 큽니다. (최대 10MB)`)
+          continue
+        }
+        try {
+          const url = await onUploadImage(file)
+          if (url) {
+            currentEditor.chain().focus().setImage({ src: url }).run()
+          }
+        } catch {
+          alert(`${file.name} 이미지 업로드에 실패했습니다.`)
+        }
+      }
+    } finally {
+      isUploadingRef.current = false
+    }
+  }
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -242,8 +272,18 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
         class:
           'min-h-80 rounded-lg px-4 py-3 text-base focus:outline-none',
       },
+      handlePaste: (_view, event) => {
+        if (!shouldUploadClipboardImages(event.clipboardData, onUploadImage)) return false
+        const imageFiles = getClipboardImageFiles(event.clipboardData)
+
+        event.preventDefault()
+        void uploadFiles(imageFiles)
+        return true
+      },
     },
   })
+
+  editorRef.current = editor
 
   useEffect(() => {
     if (!editor) return
@@ -324,32 +364,6 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
     input.click()
   }
 
-  const uploadFiles = async (files) => {
-    if (!onUploadImage) return
-    if (isUploadingRef.current) return
-    isUploadingRef.current = true
-    try {
-      const imageFiles = Array.from(files).filter((f) => f.type.startsWith('image/'))
-      const MAX_SIZE = 10 * 1024 * 1024 // 10MB
-      for (const file of imageFiles) {
-        if (file.size > MAX_SIZE) {
-          alert(`${file.name} 파일이 너무 큽니다. (최대 10MB)`)
-          continue
-        }
-        try {
-          const url = await onUploadImage(file)
-          if (url) {
-            editor.chain().focus().setImage({ src: url }).run()
-          }
-        } catch {
-          alert(`${file.name} 이미지 업로드에 실패했습니다.`)
-        }
-      }
-    } finally {
-      isUploadingRef.current = false
-    }
-  }
-
   const handleDragEnter = (e) => {
     e.preventDefault()
     if (Array.from(e.dataTransfer.items).some((item) => item.kind === 'file' && item.type.startsWith('image/'))) {
@@ -371,17 +385,6 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
     e.preventDefault()
     setIsDragging(false)
     await uploadFiles(e.dataTransfer.files)
-  }
-
-  const handlePaste = async (e) => {
-    const files = e.clipboardData?.files
-    if (files && files.length > 0) {
-      const hasImage = Array.from(files).some((f) => f.type.startsWith('image/'))
-      if (hasImage) {
-        e.preventDefault()
-        await uploadFiles(files)
-      }
-    }
   }
 
   const handleRestore = () => {
@@ -590,7 +593,6 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            onPaste={handlePaste}
           >
             {isDragging && (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-blue-500 text-sm font-medium bg-blue-50 bg-opacity-80 rounded">
