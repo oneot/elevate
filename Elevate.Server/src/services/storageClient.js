@@ -159,7 +159,7 @@ async function getBlobReadSasUrl(blobUrl, validHours, options = {}) {
   }
 }
 
-function getReadSasWindow(validHours, now = new Date()) {
+function getReadSasWindow(validHours, now = new Date(), _containerName) {
   return getRollingReadSasWindow(validHours, now);
 }
 

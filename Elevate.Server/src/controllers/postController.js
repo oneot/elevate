@@ -83,10 +83,6 @@ async function enrichThumbnailWithSas(thumbnail) {
   return enriched;
 }
 
-async function enrichContentWithSas(content) {
-  return enrichContentWithAttachDisposition(content);
-}
-
 function buildAttachmentFileNameByBlobUrlMap(files) {
   const fileNameByBlobUrl = new Map();
   if (!Array.isArray(files)) return fileNameByBlobUrl;
