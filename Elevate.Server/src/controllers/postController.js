@@ -98,7 +98,7 @@ function buildAttachmentFileNameByBlobUrlMap(files) {
 
 function hasAttachmentBlobUrlReference(content) {
   if (typeof content !== 'string' || content.length === 0) return false;
-  return content.includes(`/${storageAttachContainerName}/attach/`);
+  return content.includes('.blob.core.windows.net/') && content.includes(`/${storageAttachContainerName}/attach/`);
 }
 
 async function getAttachmentFileNameByBlobUrlMap(postId, correlationId) {
