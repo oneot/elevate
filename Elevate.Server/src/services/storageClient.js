@@ -119,7 +119,7 @@ async function issueBlobAttachSas({ fileName }) {
   };
 }
 
-async function getBlobReadSasUrl(blobUrl, validHours) {
+async function getBlobReadSasUrl(blobUrl, validHours, options = {}) {
   if (!blobUrl) return null;
   try {
     const serviceClient = getBlobServiceClient();
@@ -133,15 +133,21 @@ async function getBlobReadSasUrl(blobUrl, validHours) {
     const { startsOn, expiresOn } = getReadSasWindow(validHours, new Date(), containerName);
 
     const userDelegationKey = await serviceClient.getUserDelegationKey(startsOn, expiresOn);
+    const sasOptions = {
+      containerName: containerName,
+      blobName: blobName,
+      permissions: BlobSASPermissions.parse('r'),
+      startsOn: startsOn,
+      expiresOn: expiresOn,
+      protocol: SASProtocol.Https,
+    };
+    const contentDisposition = buildDownloadContentDisposition(options.downloadFileName);
+    if (contentDisposition) {
+      sasOptions.contentDisposition = contentDisposition;
+    }
+
     const sasToken = generateBlobSASQueryParameters(
-      {
-        containerName: containerName,
-        blobName: blobName,
-        permissions: BlobSASPermissions.parse('r'),
-        startsOn: startsOn,
-        expiresOn: expiresOn,
-        protocol: SASProtocol.Https,
-      },
+      sasOptions,
       userDelegationKey,
       storageAccountName
     ).toString();
@@ -163,6 +169,18 @@ function getRollingReadSasWindow(validHours, now = new Date()) {
     startsOn: new Date(now.getTime() - READ_SAS_CLOCK_SKEW_MS),
     expiresOn: new Date(now.getTime() + hours * 60 * 60 * 1000)
   };
+}
+
+function buildDownloadContentDisposition(fileName) {
+  if (typeof fileName !== 'string') return null;
+  const normalized = fileName
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/["\\]/g, '_')
+    .trim();
+  if (!normalized) return null;
+
+  const asciiFallback = normalized.replace(/[^\x20-\x7e]/g, '_') || 'download';
+  return `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encodeURIComponent(normalized)}`;
 }
 
 async function deleteBlobByUrl(blobUrl) {
@@ -194,5 +212,8 @@ module.exports = {
   issueBlobAttachSas,
   getBlobReadSasUrl,
   getReadSasWindow,
-  deleteBlobByUrl
+  deleteBlobByUrl,
+  _test: {
+    buildDownloadContentDisposition
+  }
 };
