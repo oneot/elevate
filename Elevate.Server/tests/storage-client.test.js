@@ -41,3 +41,12 @@ test('download content disposition percent-encodes RFC 5987 reserved characters'
     "attachment; filename=\"O'Reilly (final).pdf\"; filename*=UTF-8''O%27Reilly%20%28final%29.pdf"
   );
 });
+
+test('download content disposition sanitizes path separators in fallback filename', () => {
+  const disposition = _test.buildDownloadContentDisposition('folder/report.pdf');
+
+  assert.equal(
+    disposition,
+    "attachment; filename=\"folder_report.pdf\"; filename*=UTF-8''folder_report.pdf"
+  );
+});

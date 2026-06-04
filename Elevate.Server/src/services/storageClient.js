@@ -175,7 +175,7 @@ function buildDownloadContentDisposition(fileName) {
   if (typeof fileName !== 'string') return null;
   const normalized = fileName
     .replace(/[\u0000-\u001f\u007f]/g, '')
-    .replace(/["\\]/g, '_')
+    .replace(/[/"\\]/g, '_')
     .trim();
   if (!normalized) return null;
 
