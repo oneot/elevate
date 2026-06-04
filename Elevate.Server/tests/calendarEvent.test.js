@@ -82,6 +82,13 @@ test('createCalendarEvent — end < start이면 400', async () => {
   assert.equal(res.getStatus(), 400);
 });
 
+test('createCalendarEvent — eventDates가 없으면 400', async () => {
+  const req = { body: { title: '테스트 이벤트' }, correlationId: 'x', params: {}, query: {} };
+  const res = makeRes();
+  await ctrl.createCalendarEvent(req, res);
+  assert.equal(res.getStatus(), 400);
+});
+
 test('createCalendarEvent — 정상 생성 시 201', async () => {
   lastCreatedDoc = null;
   const req = { body: { title: '테스트 이벤트', eventDates: [{ start: '2026-06-01', end: '2026-06-02' }] }, correlationId: 'x', params: {}, query: {} };
@@ -92,12 +99,11 @@ test('createCalendarEvent — 정상 생성 시 201', async () => {
   assert.equal(lastCreatedDoc.partitionKey, 'calendarEvent');
 });
 
-test('createCalendarEvent — 빈 eventDates 배열은 응답에서 유지', async () => {
+test('createCalendarEvent — 빈 eventDates 배열이면 400', async () => {
   const req = { body: { title: '테스트 이벤트', eventDates: [] }, correlationId: 'x', params: {}, query: {} };
   const res = makeRes();
   await ctrl.createCalendarEvent(req, res);
-  assert.equal(res.getStatus(), 201);
-  assert.deepEqual(res.getBody().eventDates, []);
+  assert.equal(res.getStatus(), 400);
 });
 
 test('createCalendarEvent — linkedPostId가 문자열/null이 아니면 400', async () => {
@@ -108,13 +114,13 @@ test('createCalendarEvent — linkedPostId가 문자열/null이 아니면 400', 
 });
 
 test('createCalendarEvent — linkedPostId는 trim하고 빈 문자열은 null로 저장', async () => {
-  const req = { body: { title: '테스트 이벤트', linkedPostId: '  post-1  ' }, correlationId: 'x', params: {}, query: {} };
+  const req = { body: { title: '테스트 이벤트', eventDates: [{ start: '2026-06-01' }], linkedPostId: '  post-1  ' }, correlationId: 'x', params: {}, query: {} };
   const res = makeRes();
   await ctrl.createCalendarEvent(req, res);
   assert.equal(res.getStatus(), 201);
   assert.equal(res.getBody().linkedPostId, 'post-1');
 
-  const emptyReq = { body: { title: '테스트 이벤트', linkedPostId: '   ' }, correlationId: 'x', params: {}, query: {} };
+  const emptyReq = { body: { title: '테스트 이벤트', eventDates: [{ start: '2026-06-01' }], linkedPostId: '   ' }, correlationId: 'x', params: {}, query: {} };
   const emptyRes = makeRes();
   await ctrl.createCalendarEvent(emptyReq, emptyRes);
   assert.equal(emptyRes.getStatus(), 201);
@@ -135,7 +141,7 @@ test('createCalendarEvent — eventLocation/eventTarget이 문자열/null이 아
 
 test('createCalendarEvent — eventLocation/eventTarget은 trim하고 빈 문자열은 null로 저장', async () => {
   const req = {
-    body: { title: '테스트 이벤트', eventLocation: '  서울  ', eventTarget: '   ' },
+    body: { title: '테스트 이벤트', eventDates: [{ start: '2026-06-01' }], eventLocation: '  서울  ', eventTarget: '   ' },
     correlationId: 'x',
     params: {},
     query: {},
@@ -205,6 +211,20 @@ test('updateCalendarEvent — body가 객체가 아니면 400', async () => {
 
 test('updateCalendarEvent — 잘못된 eventDates면 400', async () => {
   const req = { body: { eventDates: [{ start: '2026-06-05', end: '2026-06-01' }] }, correlationId: 'x', params: { eventId: 'abc' }, query: {} };
+  const res = makeRes();
+  await ctrl.updateCalendarEvent(req, res);
+  assert.equal(res.getStatus(), 400);
+});
+
+test('updateCalendarEvent — eventDates가 null이면 400', async () => {
+  const req = { body: { eventDates: null }, correlationId: 'x', params: { eventId: 'abc' }, query: {} };
+  const res = makeRes();
+  await ctrl.updateCalendarEvent(req, res);
+  assert.equal(res.getStatus(), 400);
+});
+
+test('updateCalendarEvent — 빈 eventDates 배열이면 400', async () => {
+  const req = { body: { eventDates: [] }, correlationId: 'x', params: { eventId: 'abc' }, query: {} };
   const res = makeRes();
   await ctrl.updateCalendarEvent(req, res);
   assert.equal(res.getStatus(), 400);
