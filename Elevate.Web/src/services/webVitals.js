@@ -61,6 +61,9 @@ function getWorstInteraction(interactions) {
 export function startInpMeasurement() {
   if (typeof PerformanceObserver === 'undefined') return;
   if (!PerformanceObserver.supportedEntryTypes?.includes('event')) return;
+  if (window.__elevateInpMeasurementStarted) return;
+
+  window.__elevateInpMeasurementStarted = true;
 
   const interactions = new Map();
   let lastReport = 0;
