@@ -32,3 +32,9 @@ test('download content disposition encodes UTF-8 filename for attachment downloa
     "attachment; filename=\"____ 2026_ 6_.xlsx\"; filename*=UTF-8''%ED%9A%8C%EC%9D%98%EC%9E%90%EB%A3%8C%202026%EB%85%84%206%EC%9B%94.xlsx"
   );
 });
+
+test('download content disposition percent-encodes RFC 5987 reserved characters', () => {
+  const disposition = _test.buildDownloadContentDisposition("O'Reilly (final).pdf");
+
+  assert.match(disposition, /filename\*=UTF-8''O%27Reilly%20%28final%29\.pdf$/);
+});

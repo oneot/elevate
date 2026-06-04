@@ -66,3 +66,8 @@ test('buildAttachmentFileNameByBlobUrlMap maps blob url to original file name', 
     false
   );
 });
+
+test('hasBlobUrlReference detects blob urls in content markdown', () => {
+  assert.equal(_test.hasBlobUrlReference('plain text only'), false);
+  assert.equal(_test.hasBlobUrlReference('![file](https://account.blob.core.windows.net/attachments/a.pdf)'), true);
+});

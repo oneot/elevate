@@ -99,6 +99,12 @@ function buildAttachmentFileNameByBlobUrlMap(files) {
   return fileNameByBlobUrl;
 }
 
+function hasBlobUrlReference(content) {
+  if (typeof content !== 'string' || content.length === 0) return false;
+  BLOB_BARE_PATTERN.lastIndex = 0;
+  return BLOB_BARE_PATTERN.test(content);
+}
+
 async function getAttachmentFileNameByBlobUrlMap(postId, correlationId) {
   if (!postId) return new Map();
 
@@ -289,7 +295,9 @@ exports.getPostDetail = async (req, res) => {
     }
 
     const post = toPostDetail(resources[0]);
-    const attachmentFileNameByBlobUrl = await getAttachmentFileNameByBlobUrlMap(post.id, correlationId);
+    const attachmentFileNameByBlobUrl = hasBlobUrlReference(post.contentMarkdown)
+      ? await getAttachmentFileNameByBlobUrlMap(post.id, correlationId)
+      : new Map();
     const [thumbnail, contentMarkdown] = await Promise.all([
       enrichThumbnailWithSas(post.thumbnail),
       enrichContentWithAttachDisposition(post.contentMarkdown, attachmentFileNameByBlobUrl)
@@ -426,5 +434,6 @@ exports.getTagList = async (req, res) => {
 
 exports._test = {
   normalizeThumbnail,
-  buildAttachmentFileNameByBlobUrlMap
+  buildAttachmentFileNameByBlobUrlMap,
+  hasBlobUrlReference
 };

@@ -180,7 +180,14 @@ function buildDownloadContentDisposition(fileName) {
   if (!normalized) return null;
 
   const asciiFallback = normalized.replace(/[^\x20-\x7e]/g, '_') || 'download';
-  return `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encodeURIComponent(normalized)}`;
+  const encoded = encodeRfc5987ValueChars(normalized);
+  return `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encoded}`;
+}
+
+function encodeRfc5987ValueChars(value) {
+  return encodeURIComponent(value)
+    .replace(/['()]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`)
+    .replace(/\*/g, '%2A');
 }
 
 async function deleteBlobByUrl(blobUrl) {
@@ -214,6 +221,7 @@ module.exports = {
   getReadSasWindow,
   deleteBlobByUrl,
   _test: {
-    buildDownloadContentDisposition
+    buildDownloadContentDisposition,
+    encodeRfc5987ValueChars
   }
 };
