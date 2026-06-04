@@ -84,7 +84,13 @@ function validateCreatePayload(body) {
   if (typeof body.title !== 'string' || !body.title.trim()) {
     return 'title is required';
   }
-  if (!Array.isArray(body.eventDates) || body.eventDates.length === 0) {
+  if (body.eventDates === undefined || body.eventDates === null) {
+    return 'eventDates is required';
+  }
+  if (!Array.isArray(body.eventDates)) {
+    return 'eventDates must be an array';
+  }
+  if (body.eventDates.length === 0) {
     return 'eventDates must contain at least one date';
   }
   for (const d of body.eventDates) {
@@ -102,7 +108,10 @@ function validateUpdatePayload(body) {
     return 'title must be a non-empty string';
   }
   if (body.eventDates !== undefined) {
-    if (!Array.isArray(body.eventDates) || body.eventDates.length === 0) {
+    if (!Array.isArray(body.eventDates)) {
+      return 'eventDates must be an array';
+    }
+    if (body.eventDates.length === 0) {
       return 'eventDates must contain at least one date';
     }
     for (const d of body.eventDates) {
