@@ -50,3 +50,12 @@ test('download content disposition sanitizes path separators in fallback filenam
     "attachment; filename=\"folder_report.pdf\"; filename*=UTF-8''folder_report.pdf"
   );
 });
+
+test('download content disposition sanitizes Windows reserved filename characters', () => {
+  const disposition = _test.buildDownloadContentDisposition('meeting:final*draft?<v1>|.pdf');
+
+  assert.equal(
+    disposition,
+    "attachment; filename=\"meeting_final_draft__v1__.pdf\"; filename*=UTF-8''meeting_final_draft__v1__.pdf"
+  );
+});

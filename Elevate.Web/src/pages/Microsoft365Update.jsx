@@ -11,7 +11,7 @@ import PostListLayout from '../components/posts/PostListLayout';
 import SearchBar from '../components/posts/SearchBar';
 import Logo from '../components/common/Logo';
 import Footer from '../components/layout/Footer';
-import { useCategoryPostList } from '../hooks/useCategoryPostList';
+import { POST_LIST_PAGE_SIZE, useCategoryPostList } from '../hooks/useCategoryPostList';
 import { DEFAULT_OG_IMAGE, SITE_NAME, canonicalUrl } from '../constants/seo';
 
 const CATEGORY = 'update';
@@ -75,6 +75,7 @@ export default function Microsoft365Update() {
         error={error}
         countLabel={!loading && selectedTags.length > 0 ? `${filteredPosts.length}개의 게시글이 일치합니다.` : undefined}
         activeQuery={qParam}
+        skeletonCount={POST_LIST_PAGE_SIZE}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}

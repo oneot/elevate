@@ -19,6 +19,7 @@ const PostListLayout = ({
   seriesNavigatorProps,
   activeQuery,
   calendarSlot,
+  skeletonCount,
 }) => {
   const hasSeriesSidebar = Boolean(seriesNavigatorProps);
 
@@ -59,7 +60,7 @@ const PostListLayout = ({
               <>
                 <span className="sr-only">로딩 중...</span>
                 <div className="mb-4 min-h-6" aria-hidden="true" />
-                <PostGridSkeleton />
+                <PostGridSkeleton count={skeletonCount} />
               </>
             )}
             {!loading && error && (
