@@ -44,3 +44,31 @@ test('normalizeThumbnail keeps string thumbnails backward compatible', () => {
     url: 'https://example.com/original.jpg',
   });
 });
+
+test('buildAttachmentFileNameByBlobUrlMap maps blob url to original file name', () => {
+  const map = _test.buildAttachmentFileNameByBlobUrlMap([
+    {
+      blobUrl: 'https://account.blob.core.windows.net/attachments/attach/2026/06/a.docx',
+      fileName: '회의자료.docx',
+    },
+    {
+      blobUrl: 'https://account.blob.core.windows.net/attachments/attach/2026/06/b.pdf',
+      fileName: '  ',
+    },
+  ]);
+
+  assert.equal(
+    map.get('https://account.blob.core.windows.net/attachments/attach/2026/06/a.docx'),
+    '회의자료.docx'
+  );
+  assert.equal(
+    map.has('https://account.blob.core.windows.net/attachments/attach/2026/06/b.pdf'),
+    false
+  );
+});
+
+test('hasAttachmentBlobUrlReference detects only attachment blob urls', () => {
+  assert.equal(_test.hasAttachmentBlobUrlReference('plain text only'), false);
+  assert.equal(_test.hasAttachmentBlobUrlReference('![image](https://account.blob.core.windows.net/images/a.jpg)'), false);
+  assert.equal(_test.hasAttachmentBlobUrlReference('![file](https://account.blob.core.windows.net/attachments/attach/2026/06/a.pdf)'), true);
+});
