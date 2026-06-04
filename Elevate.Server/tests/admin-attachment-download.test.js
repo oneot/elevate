@@ -79,7 +79,7 @@ function makeRes() {
   };
 }
 
-test('createFileMetadata passes original fileName to attachment signed URL', async () => {
+test('createFileMetadata trims fileName before storage and signed URL generation', async () => {
   lastSignedUrlArgs = [];
   lastCreatedDoc = null;
 
@@ -89,7 +89,7 @@ test('createFileMetadata passes original fileName to attachment signed URL', asy
       blobUrl: 'https://account.blob.core.windows.net/attachments/attach/2026/06/file.pdf',
       contentType: 'application/pdf',
       sizeBytes: 1234,
-      fileName: "O'Reilly (final).pdf",
+      fileName: "  O'Reilly (final).pdf  ",
     },
     correlationId: 'x',
     params: {},
@@ -104,6 +104,7 @@ test('createFileMetadata passes original fileName to attachment signed URL', asy
   assert.deepEqual(lastSignedUrlArgs[0].options, {
     downloadFileName: "O'Reilly (final).pdf",
   });
+  assert.equal(res.getBody().fileName, "O'Reilly (final).pdf");
 });
 
 test('createAssetMetadata keeps image signed URL inline without download filename', async () => {

@@ -798,6 +798,7 @@ exports.createFileMetadata = async (req, res) => {
   if (typeof fileName !== 'string' || fileName.trim().length === 0) {
     return sendError(res, 400, 'BadRequest', 'fileName is required', correlationId);
   }
+  const trimmedFileName = fileName.trim();
 
   try {
     const container = getAssetsContainer();
@@ -813,19 +814,19 @@ exports.createFileMetadata = async (req, res) => {
       blobUrl,
       contentType,
       sizeBytes,
-      fileName,
+      fileName: trimmedFileName,
       createdAt: now,
       updatedAt: now
     };
 
     await container.items.create(fileDocument);
 
-    const signedUrl = await getBlobReadSasUrl(blobUrl, undefined, { downloadFileName: fileName });
+    const signedUrl = await getBlobReadSasUrl(blobUrl, undefined, { downloadFileName: trimmedFileName });
     return res.status(201).json({
       fileId,
       url: blobUrl,
       signedUrl: signedUrl || null,
-      fileName,
+      fileName: trimmedFileName,
       contentType,
       sizeBytes
     });
