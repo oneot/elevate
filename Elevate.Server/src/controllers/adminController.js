@@ -701,7 +701,7 @@ exports.createAssetMetadata = async (req, res) => {
 
     await container.items.create(assetDocument);
 
-    const signedUrl = await getBlobReadSasUrl(blobUrl, undefined, { downloadFileName: fileName });
+    const signedUrl = await getBlobReadSasUrl(blobUrl);
     return res.status(201).json({
       assetId,
       url: blobUrl,

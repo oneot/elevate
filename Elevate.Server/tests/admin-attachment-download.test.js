@@ -106,6 +106,35 @@ test('createFileMetadata passes original fileName to attachment signed URL', asy
   });
 });
 
+test('createAssetMetadata keeps image signed URL inline without download filename', async () => {
+  lastSignedUrlArgs = [];
+  lastCreatedDoc = null;
+
+  const req = {
+    body: {
+      postId: 'post-1',
+      blobUrl: 'https://account.blob.core.windows.net/images/assets/2026/06/banner.png',
+      contentType: 'image/png',
+      sizeBytes: 1234,
+      fileName: '배너.png',
+    },
+    correlationId: 'x',
+    params: {},
+    query: {},
+  };
+  const res = makeRes();
+
+  await ctrl.createAssetMetadata(req, res);
+
+  assert.equal(res.getStatus(), 201);
+  assert.equal(lastCreatedDoc.fileName, '배너.png');
+  assert.deepEqual(lastSignedUrlArgs[0], {
+    blobUrl: 'https://account.blob.core.windows.net/images/assets/2026/06/banner.png',
+    validHours: undefined,
+    options: {},
+  });
+});
+
 test('getFiles passes each attachment fileName to signed URL generation', async () => {
   lastSignedUrlArgs = [];
   mockFiles = [
