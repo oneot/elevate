@@ -237,6 +237,14 @@ test('updateCalendarEvent — eventDates가 null이면 400', async () => {
   assert.equal(res.getBody().message, 'eventDates must be an array');
 });
 
+test('updateCalendarEvent — eventDates가 배열이 아니면 400', async () => {
+  const req = { body: { eventDates: '2026-06-01' }, correlationId: 'x', params: { eventId: 'abc' }, query: {} };
+  const res = makeRes();
+  await ctrl.updateCalendarEvent(req, res);
+  assert.equal(res.getStatus(), 400);
+  assert.equal(res.getBody().message, 'eventDates must be an array');
+});
+
 test('updateCalendarEvent — 빈 eventDates 배열이면 400', async () => {
   const req = { body: { eventDates: [] }, correlationId: 'x', params: { eventId: 'abc' }, query: {} };
   const res = makeRes();
