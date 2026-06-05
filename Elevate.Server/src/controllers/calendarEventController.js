@@ -110,6 +110,13 @@ async function fetchCalendarEventPage(container, queryText, parameters, offset, 
   return resources;
 }
 
+function createCalendarEventQueryIterator(container, queryText, parameters, limit) {
+  return container.items.query(
+    { query: `${queryText} ORDER BY c.createdAt DESC`, parameters },
+    { partitionKey: PARTITION_KEY, maxItemCount: limit }
+  );
+}
+
 function validateCreatePayload(body) {
   if (!isPlainObject(body)) return 'request body must be an object';
   if (typeof body.title !== 'string' || !body.title.trim()) {
@@ -187,13 +194,24 @@ exports.listCalendarEvents = async (req, res) => {
     }
 
     const hasRangeFilter = Boolean(start || end);
+    if (!hasRangeFilter) {
+      const resources = await fetchCalendarEventPage(container, queryText, parameters, 0, limit);
+      return res.json({
+        items: resources.map(toCalendarEventResponse),
+        limit,
+        rangeFilterScanLimitReached: false,
+      });
+    }
+
     const pageSize = hasRangeFilter ? RANGE_FILTER_SCAN_PAGE_SIZE : limit;
     const filteredResources = [];
-    let offset = 0;
+    let scannedDocs = 0;
     let rangeFilterScanLimitReached = false;
+    const queryIterator = createCalendarEventQueryIterator(container, queryText, parameters, pageSize);
 
     do {
-      const resources = await fetchCalendarEventPage(container, queryText, parameters, offset, pageSize);
+      const page = await queryIterator.fetchNext();
+      const resources = page.resources || [];
       for (const resource of resources) {
         if (filteredResources.length >= limit) break;
         if (calendarEventOverlapsRange(resource, { start, end })) {
@@ -201,14 +219,17 @@ exports.listCalendarEvents = async (req, res) => {
         }
       }
 
-      offset += pageSize;
-      const reachedScanLimit = hasRangeFilter && offset >= MAX_RANGE_FILTER_SCAN_DOCS;
-      rangeFilterScanLimitReached = reachedScanLimit && filteredResources.length < limit && resources.length === pageSize;
+      scannedDocs += resources.length;
+      const reachedScanLimit = scannedDocs >= MAX_RANGE_FILTER_SCAN_DOCS;
+      rangeFilterScanLimitReached = reachedScanLimit
+        && Boolean(page.hasMoreResults)
+        && filteredResources.length < limit
+        && resources.length === pageSize;
 
       if (rangeFilterScanLimitReached) {
         console.warn('[listCalendarEvents] range filter scan limit reached', {
           correlationId,
-          scannedDocs: offset,
+          scannedDocs,
           limit,
           start,
           end,
@@ -217,10 +238,10 @@ exports.listCalendarEvents = async (req, res) => {
       }
 
       if (
-        !hasRangeFilter
-        || filteredResources.length >= limit
+        filteredResources.length >= limit
         || resources.length < pageSize
         || reachedScanLimit
+        || !page.hasMoreResults
       ) {
         break;
       }

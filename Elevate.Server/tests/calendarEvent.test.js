@@ -5,13 +5,17 @@ let lastQuerySpec = null;
 let lastCreatedDoc = null;
 let mockQueryResources = [];
 let querySpecs = [];
+let queryOptions = [];
+let fetchNextCalls = 0;
 
 // cosmosClient 모킹 — require.cache 국소 스텁 (전역 Module._load 패치 없음)
 const mockContainer = {
   items: {
-    query: (querySpec) => {
+    query: (querySpec, options = {}) => {
       lastQuerySpec = querySpec;
       querySpecs.push(querySpec);
+      queryOptions.push(options);
+      let cursor = 0;
       return {
         fetchAll: async () => {
           const [, offset, limit] = querySpec.query.match(/OFFSET (\d+) LIMIT (\d+)/) || [];
@@ -19,6 +23,13 @@ const mockContainer = {
             return { resources: mockQueryResources.slice(Number(offset), Number(offset) + Number(limit)) };
           }
           return { resources: mockQueryResources };
+        },
+        fetchNext: async () => {
+          fetchNextCalls += 1;
+          const pageSize = options.maxItemCount || mockQueryResources.length;
+          const resources = mockQueryResources.slice(cursor, cursor + pageSize);
+          cursor += pageSize;
+          return { resources, hasMoreResults: cursor < mockQueryResources.length };
         },
       };
     },
@@ -39,6 +50,8 @@ test.beforeEach(() => {
   lastCreatedDoc = null;
   mockQueryResources = [];
   querySpecs = [];
+  queryOptions = [];
+  fetchNextCalls = 0;
 });
 
 const cosmosClientPath = require.resolve('../src/services/cosmosClient');
@@ -205,7 +218,7 @@ test('listCalendarEvents — 잘못된 기간 필터이면 400', async () => {
   assert.equal(res.getStatus(), 400);
 });
 
-test('listCalendarEvents — 기간 필터는 응답 필터링에 사용하고 Cosmos query에는 limit만 반영', async () => {
+test('listCalendarEvents — 기간 필터는 응답 필터링에 사용하고 Cosmos query에는 array predicate를 만들지 않는다', async () => {
   const req = {
     correlationId: 'x',
     params: {},
@@ -216,7 +229,9 @@ test('listCalendarEvents — 기간 필터는 응답 필터링에 사용하고 C
   assert.equal(res.getStatus(), 200);
   assert.doesNotMatch(lastQuerySpec.query, /EXISTS/);
   assert.doesNotMatch(lastQuerySpec.query, /IS_DEFINED/);
-  assert.match(lastQuerySpec.query, /LIMIT 500/);
+  assert.doesNotMatch(lastQuerySpec.query, /OFFSET/);
+  assert.doesNotMatch(lastQuerySpec.query, /LIMIT/);
+  assert.equal(queryOptions[0].maxItemCount, 500);
   assert.deepEqual(
     lastQuerySpec.parameters.filter((p) => p.name === '@start' || p.name === '@end'),
     []
@@ -310,7 +325,9 @@ test('listCalendarEvents — start/end 기간 필터는 Cosmos array EXISTS 쿼�
   assert.doesNotMatch(lastQuerySpec.query, /EXISTS/);
   assert.doesNotMatch(lastQuerySpec.query, /IS_DEFINED/);
   assert.match(lastQuerySpec.query, /WHERE c\.type = @type/);
-  assert.match(lastQuerySpec.query, /LIMIT 500/);
+  assert.doesNotMatch(lastQuerySpec.query, /OFFSET/);
+  assert.doesNotMatch(lastQuerySpec.query, /LIMIT/);
+  assert.equal(queryOptions[0].maxItemCount, 500);
 });
 
 test('listCalendarEvents — 기간 필터 적용 후 limit만큼 결과를 반환한다', async () => {
@@ -351,9 +368,10 @@ test('listCalendarEvents — 기간 필터 적용 후 limit만큼 결과를 반�
 
   assert.equal(res.getStatus(), 200);
   assert.deepEqual(res.getBody().items.map((item) => item.id), ['older-inside', 'oldest-inside']);
-  assert.deepEqual(querySpecs.map((querySpec) => querySpec.query.match(/OFFSET (\d+) LIMIT (\d+)/).slice(1)), [
-    ['0', '500'],
-  ]);
+  assert.equal(querySpecs.length, 1);
+  assert.equal(fetchNextCalls, 1);
+  assert.equal(queryOptions[0].maxItemCount, 500);
+  assert.doesNotMatch(querySpecs[0].query, /OFFSET/);
 });
 
 test('listCalendarEvents — 기간 필터가 있으면 최대 스캔 문서 수에서 조회를 중단한다', async () => {
@@ -384,8 +402,9 @@ test('listCalendarEvents — 기간 필터가 있으면 최대 스캔 문서 수
   assert.equal(res.getStatus(), 200);
   assert.deepEqual(res.getBody().items, []);
   assert.equal(res.getBody().rangeFilterScanLimitReached, true);
-  assert.equal(querySpecs.length, 10);
-  assert.equal(querySpecs.at(-1).query.match(/OFFSET (\d+) LIMIT (\d+)/)[1], '4500');
+  assert.equal(querySpecs.length, 1);
+  assert.equal(fetchNextCalls, 10);
+  assert.equal(queryOptions[0].maxItemCount, 500);
   assert.equal(warnCalls.length, 1);
   assert.match(warnCalls[0][0], /range filter scan limit reached/);
   assert.deepEqual(warnCalls[0][1], {
@@ -428,9 +447,9 @@ test('listCalendarEvents — 응답 limit이 작아도 기간 필터 스캔 page
 
   assert.equal(res.getStatus(), 200);
   assert.deepEqual(res.getBody().items.map((item) => item.id), ['inside']);
-  assert.deepEqual(querySpecs.map((querySpec) => querySpec.query.match(/OFFSET (\d+) LIMIT (\d+)/).slice(1)), [
-    ['0', '500'],
-  ]);
+  assert.equal(querySpecs.length, 1);
+  assert.equal(fetchNextCalls, 1);
+  assert.equal(queryOptions[0].maxItemCount, 500);
 });
 
 test('listCalendarEvents — 기간 필터 마지막 페이지 판별은 스캔 page size를 사용한다', async () => {
@@ -463,9 +482,9 @@ test('listCalendarEvents — 기간 필터 마지막 페이지 판별은 스캔 
 
   assert.equal(res.getStatus(), 200);
   assert.deepEqual(res.getBody().items, []);
-  assert.deepEqual(querySpecs.map((querySpec) => querySpec.query.match(/OFFSET (\d+) LIMIT (\d+)/).slice(1)), [
-    ['0', '500'],
-  ]);
+  assert.equal(querySpecs.length, 1);
+  assert.equal(fetchNextCalls, 1);
+  assert.equal(queryOptions[0].maxItemCount, 500);
 });
 
 test('listCalendarEvents — 기간 필터는 page 안에서도 응답 limit을 채우면 매칭 검사를 중단한다', async () => {
