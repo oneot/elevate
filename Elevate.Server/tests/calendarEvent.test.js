@@ -269,6 +269,7 @@ test('listCalendarEvents — start/end 기간과 겹치는 이벤트만 반환',
 
   assert.equal(res.getStatus(), 200);
   assert.deepEqual(res.getBody().items.map((item) => item.id), ['inside', 'overlap']);
+  assert.equal(res.getBody().rangeFilterScanLimitReached, false);
 });
 
 test('listCalendarEvents — 잘못된 end 값은 기간 겹침 비교에 사용하지 않는다', async () => {
@@ -382,6 +383,7 @@ test('listCalendarEvents — 기간 필터가 있으면 최대 스캔 문서 수
 
   assert.equal(res.getStatus(), 200);
   assert.deepEqual(res.getBody().items, []);
+  assert.equal(res.getBody().rangeFilterScanLimitReached, true);
   assert.equal(querySpecs.length, 10);
   assert.equal(querySpecs.at(-1).query.match(/OFFSET (\d+) LIMIT (\d+)/)[1], '4500');
   assert.equal(warnCalls.length, 1);

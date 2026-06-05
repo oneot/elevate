@@ -190,6 +190,7 @@ exports.listCalendarEvents = async (req, res) => {
     const pageSize = hasRangeFilter ? RANGE_FILTER_SCAN_PAGE_SIZE : limit;
     const filteredResources = [];
     let offset = 0;
+    let rangeFilterScanLimitReached = false;
 
     do {
       const resources = await fetchCalendarEventPage(container, queryText, parameters, offset, pageSize);
@@ -202,8 +203,9 @@ exports.listCalendarEvents = async (req, res) => {
 
       offset += pageSize;
       const reachedScanLimit = hasRangeFilter && offset >= MAX_RANGE_FILTER_SCAN_DOCS;
+      rangeFilterScanLimitReached = reachedScanLimit && filteredResources.length < limit && resources.length === pageSize;
 
-      if (reachedScanLimit && filteredResources.length < limit && resources.length === pageSize) {
+      if (rangeFilterScanLimitReached) {
         console.warn('[listCalendarEvents] range filter scan limit reached', {
           correlationId,
           scannedDocs: offset,
@@ -224,7 +226,11 @@ exports.listCalendarEvents = async (req, res) => {
       }
     } while (true);
 
-    return res.json({ items: filteredResources.slice(0, limit).map(toCalendarEventResponse), limit });
+    return res.json({
+      items: filteredResources.slice(0, limit).map(toCalendarEventResponse),
+      limit,
+      rangeFilterScanLimitReached,
+    });
   } catch (error) {
     console.error('[listCalendarEvents] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
