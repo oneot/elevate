@@ -414,6 +414,41 @@ test('listCalendarEvents — 응답 limit이 작아도 기간 필터 스캔 page
   ]);
 });
 
+test('listCalendarEvents — 기간 필터 마지막 페이지 판별은 스캔 page size를 사용한다', async () => {
+  mockQueryResources = [
+    {
+      id: 'outside-1',
+      type: 'calendarEvent',
+      title: 'Outside 1',
+      eventDates: [{ start: '2027-01-01' }],
+      createdAt: '2026-01-02T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+    },
+    {
+      id: 'outside-2',
+      type: 'calendarEvent',
+      title: 'Outside 2',
+      eventDates: [{ start: '2027-02-01' }],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ];
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { start: '2026-01-01', end: '2026-12-31', limit: '1' },
+  };
+  const res = makeRes();
+
+  await ctrl.listCalendarEvents(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items, []);
+  assert.deepEqual(querySpecs.map((querySpec) => querySpec.query.match(/OFFSET (\d+) LIMIT (\d+)/).slice(1)), [
+    ['0', '500'],
+  ]);
+});
+
 test('updateCalendarEvent — body 없으면 400', async () => {
   const req = { body: null, correlationId: 'x', params: { id: 'abc' }, query: {} };
   const res = makeRes();

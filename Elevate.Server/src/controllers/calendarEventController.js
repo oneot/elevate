@@ -203,7 +203,7 @@ exports.listCalendarEvents = async (req, res) => {
       if (
         !hasRangeFilter
         || filteredResources.length >= limit
-        || resources.length < limit
+        || resources.length < pageSize
         || offset >= MAX_RANGE_FILTER_SCAN_DOCS
       ) {
         break;
