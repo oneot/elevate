@@ -79,6 +79,27 @@ function toCalendarEventResponse(doc) {
   };
 }
 
+function eventDateOverlapsRange(eventDate, { start, end }) {
+  if (!isPlainObject(eventDate) || !isValidIsoDateString(eventDate.start)) {
+    return false;
+  }
+
+  const eventStart = eventDate.start.trim();
+  const eventEnd = typeof eventDate.end === 'string' && eventDate.end.trim()
+    ? eventDate.end.trim()
+    : eventStart;
+
+  if (start && eventEnd < start) return false;
+  if (end && eventStart > end) return false;
+  return true;
+}
+
+function calendarEventOverlapsRange(calendarEvent, { start, end }) {
+  if (!start && !end) return true;
+  if (!Array.isArray(calendarEvent.eventDates)) return false;
+  return calendarEvent.eventDates.some((eventDate) => eventDateOverlapsRange(eventDate, { start, end }));
+}
+
 function validateCreatePayload(body) {
   if (!isPlainObject(body)) return 'request body must be an object';
   if (typeof body.title !== 'string' || !body.title.trim()) {
@@ -155,41 +176,17 @@ exports.listCalendarEvents = async (req, res) => {
       parameters.push({ name: '@linkedPostId', value: linkedPostId });
     }
 
-    if (start && end) {
-      queryText += ` AND EXISTS(
-        SELECT VALUE d FROM d IN c.eventDates
-        WHERE d.start <= @end
-        AND (
-          (IS_DEFINED(d.end) AND NOT IS_NULL(d.end) AND d.end >= @start)
-          OR ((NOT IS_DEFINED(d.end) OR IS_NULL(d.end)) AND d.start >= @start)
-        )
-      )`;
-      parameters.push({ name: '@start', value: start });
-      parameters.push({ name: '@end', value: end });
-    } else if (start) {
-      queryText += ` AND EXISTS(
-        SELECT VALUE d FROM d IN c.eventDates
-        WHERE (
-          (IS_DEFINED(d.end) AND NOT IS_NULL(d.end) AND d.end >= @start)
-          OR ((NOT IS_DEFINED(d.end) OR IS_NULL(d.end)) AND d.start >= @start)
-        )
-      )`;
-      parameters.push({ name: '@start', value: start });
-    } else if (end) {
-      queryText += ` AND EXISTS(
-        SELECT VALUE d FROM d IN c.eventDates
-        WHERE d.start <= @end
-      )`;
-      parameters.push({ name: '@end', value: end });
-    }
-
     queryText += ` ORDER BY c.createdAt DESC OFFSET 0 LIMIT ${limit}`;
 
     const { resources } = await container.items
       .query({ query: queryText, parameters }, { partitionKey: PARTITION_KEY })
       .fetchAll();
 
-    return res.json({ items: resources.map(toCalendarEventResponse), limit });
+    const filteredResources = resources.filter((resource) => (
+      calendarEventOverlapsRange(resource, { start, end })
+    ));
+
+    return res.json({ items: filteredResources.map(toCalendarEventResponse), limit });
   } catch (error) {
     console.error('[listCalendarEvents] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
