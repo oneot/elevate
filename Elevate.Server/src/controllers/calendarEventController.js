@@ -6,6 +6,7 @@ const { parsePositiveInt, sendError } = require('../utils/http');
 
 const PARTITION_KEY = 'calendarEvent';
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_RANGE_FILTER_SCAN_DOCS = 5000;
 
 function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -85,7 +86,7 @@ function eventDateOverlapsRange(eventDate, { start, end }) {
   }
 
   const eventStart = eventDate.start.trim();
-  const eventEnd = typeof eventDate.end === 'string' && eventDate.end.trim()
+  const eventEnd = isValidIsoDateString(eventDate.end)
     ? eventDate.end.trim()
     : eventStart;
 
@@ -197,7 +198,12 @@ exports.listCalendarEvents = async (req, res) => {
       filteredResources.push(...matchingResources);
       offset += limit;
 
-      if (!hasRangeFilter || filteredResources.length >= limit || resources.length < limit) {
+      if (
+        !hasRangeFilter
+        || filteredResources.length >= limit
+        || resources.length < limit
+        || offset >= MAX_RANGE_FILTER_SCAN_DOCS
+      ) {
         break;
       }
     } while (true);
