@@ -4,13 +4,23 @@ const assert = require('node:assert/strict');
 let lastQuerySpec = null;
 let lastCreatedDoc = null;
 let mockQueryResources = [];
+let querySpecs = [];
 
 // cosmosClient 모킹 — require.cache 국소 스텁 (전역 Module._load 패치 없음)
 const mockContainer = {
   items: {
     query: (querySpec) => {
       lastQuerySpec = querySpec;
-      return { fetchAll: async () => ({ resources: mockQueryResources }) };
+      querySpecs.push(querySpec);
+      return {
+        fetchAll: async () => {
+          const [, offset, limit] = querySpec.query.match(/OFFSET (\d+) LIMIT (\d+)/) || [];
+          if (offset !== undefined && limit !== undefined) {
+            return { resources: mockQueryResources.slice(Number(offset), Number(offset) + Number(limit)) };
+          }
+          return { resources: mockQueryResources };
+        },
+      };
     },
     create: async (doc) => {
       lastCreatedDoc = doc;
@@ -28,6 +38,7 @@ test.beforeEach(() => {
   lastQuerySpec = null;
   lastCreatedDoc = null;
   mockQueryResources = [];
+  querySpecs = [];
 });
 
 const cosmosClientPath = require.resolve('../src/services/cosmosClient');
@@ -260,7 +271,7 @@ test('listCalendarEvents — start/end 기간과 겹치는 이벤트만 반환',
   assert.deepEqual(res.getBody().items.map((item) => item.id), ['inside', 'overlap']);
 });
 
-test('listCalendarEvents — start 필터는 Cosmos array EXISTS 쿼리를 만들지 않는다', async () => {
+test('listCalendarEvents — start/end 기간 필터는 Cosmos array EXISTS 쿼리를 만들지 않는다', async () => {
   const req = {
     correlationId: 'x',
     params: {},
@@ -275,6 +286,50 @@ test('listCalendarEvents — start 필터는 Cosmos array EXISTS 쿼리를 만�
   assert.doesNotMatch(lastQuerySpec.query, /IS_DEFINED/);
   assert.match(lastQuerySpec.query, /WHERE c\.type = @type/);
   assert.match(lastQuerySpec.query, /LIMIT 500/);
+});
+
+test('listCalendarEvents — 기간 필터가 있으면 limit을 채울 때까지 다음 페이지를 조회한다', async () => {
+  mockQueryResources = [
+    {
+      id: 'newer-outside',
+      type: 'calendarEvent',
+      title: 'Newer Outside',
+      eventDates: [{ start: '2027-01-01' }],
+      createdAt: '2026-01-03T00:00:00.000Z',
+      updatedAt: '2026-01-03T00:00:00.000Z',
+    },
+    {
+      id: 'older-inside',
+      type: 'calendarEvent',
+      title: 'Older Inside',
+      eventDates: [{ start: '2026-06-01' }],
+      createdAt: '2026-01-02T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+    },
+    {
+      id: 'oldest-inside',
+      type: 'calendarEvent',
+      title: 'Oldest Inside',
+      eventDates: [{ start: '2026-07-01' }],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ];
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { start: '2026-01-01', end: '2026-12-31', limit: '2' },
+  };
+  const res = makeRes();
+
+  await ctrl.listCalendarEvents(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items.map((item) => item.id), ['older-inside', 'oldest-inside']);
+  assert.deepEqual(querySpecs.map((querySpec) => querySpec.query.match(/OFFSET (\d+) LIMIT (\d+)/).slice(1)), [
+    ['0', '2'],
+    ['2', '2'],
+  ]);
 });
 
 test('updateCalendarEvent — body 없으면 400', async () => {

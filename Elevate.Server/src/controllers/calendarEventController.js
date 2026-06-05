@@ -100,6 +100,14 @@ function calendarEventOverlapsRange(calendarEvent, { start, end }) {
   return calendarEvent.eventDates.some((eventDate) => eventDateOverlapsRange(eventDate, { start, end }));
 }
 
+async function fetchCalendarEventPage(container, queryText, parameters, offset, limit) {
+  const pagedQueryText = `${queryText} ORDER BY c.createdAt DESC OFFSET ${offset} LIMIT ${limit}`;
+  const { resources } = await container.items
+    .query({ query: pagedQueryText, parameters }, { partitionKey: PARTITION_KEY })
+    .fetchAll();
+  return resources;
+}
+
 function validateCreatePayload(body) {
   if (!isPlainObject(body)) return 'request body must be an object';
   if (typeof body.title !== 'string' || !body.title.trim()) {
@@ -176,17 +184,25 @@ exports.listCalendarEvents = async (req, res) => {
       parameters.push({ name: '@linkedPostId', value: linkedPostId });
     }
 
-    queryText += ` ORDER BY c.createdAt DESC OFFSET 0 LIMIT ${limit}`;
+    const hasRangeFilter = Boolean(start || end);
+    const filteredResources = [];
+    let offset = 0;
 
-    const { resources } = await container.items
-      .query({ query: queryText, parameters }, { partitionKey: PARTITION_KEY })
-      .fetchAll();
+    do {
+      const resources = await fetchCalendarEventPage(container, queryText, parameters, offset, limit);
+      const matchingResources = resources.filter((resource) => (
+        calendarEventOverlapsRange(resource, { start, end })
+      ));
 
-    const filteredResources = resources.filter((resource) => (
-      calendarEventOverlapsRange(resource, { start, end })
-    ));
+      filteredResources.push(...matchingResources);
+      offset += limit;
 
-    return res.json({ items: filteredResources.map(toCalendarEventResponse), limit });
+      if (!hasRangeFilter || filteredResources.length >= limit || resources.length < limit) {
+        break;
+      }
+    } while (true);
+
+    return res.json({ items: filteredResources.slice(0, limit).map(toCalendarEventResponse), limit });
   } catch (error) {
     console.error('[listCalendarEvents] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
