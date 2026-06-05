@@ -193,18 +193,32 @@ exports.listCalendarEvents = async (req, res) => {
 
     do {
       const resources = await fetchCalendarEventPage(container, queryText, parameters, offset, pageSize);
-      const matchingResources = resources.filter((resource) => (
-        calendarEventOverlapsRange(resource, { start, end })
-      ));
+      for (const resource of resources) {
+        if (filteredResources.length >= limit) break;
+        if (calendarEventOverlapsRange(resource, { start, end })) {
+          filteredResources.push(resource);
+        }
+      }
 
-      filteredResources.push(...matchingResources);
       offset += pageSize;
+      const reachedScanLimit = hasRangeFilter && offset >= MAX_RANGE_FILTER_SCAN_DOCS;
+
+      if (reachedScanLimit && filteredResources.length < limit && resources.length === pageSize) {
+        console.warn('[listCalendarEvents] range filter scan limit reached', {
+          correlationId,
+          scannedDocs: offset,
+          limit,
+          start,
+          end,
+          linkedPostId,
+        });
+      }
 
       if (
         !hasRangeFilter
         || filteredResources.length >= limit
         || resources.length < pageSize
-        || offset >= MAX_RANGE_FILTER_SCAN_DOCS
+        || reachedScanLimit
       ) {
         break;
       }
