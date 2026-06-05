@@ -7,6 +7,7 @@ const { parsePositiveInt, sendError } = require('../utils/http');
 const PARTITION_KEY = 'calendarEvent';
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_RANGE_FILTER_SCAN_DOCS = 5000;
+const RANGE_FILTER_SCAN_PAGE_SIZE = 500;
 
 function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -186,17 +187,18 @@ exports.listCalendarEvents = async (req, res) => {
     }
 
     const hasRangeFilter = Boolean(start || end);
+    const pageSize = hasRangeFilter ? RANGE_FILTER_SCAN_PAGE_SIZE : limit;
     const filteredResources = [];
     let offset = 0;
 
     do {
-      const resources = await fetchCalendarEventPage(container, queryText, parameters, offset, limit);
+      const resources = await fetchCalendarEventPage(container, queryText, parameters, offset, pageSize);
       const matchingResources = resources.filter((resource) => (
         calendarEventOverlapsRange(resource, { start, end })
       ));
 
       filteredResources.push(...matchingResources);
-      offset += limit;
+      offset += pageSize;
 
       if (
         !hasRangeFilter
