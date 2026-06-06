@@ -203,7 +203,7 @@ exports.listCalendarEvents = async (req, res) => {
       });
     }
 
-    const pageSize = hasRangeFilter ? RANGE_FILTER_SCAN_PAGE_SIZE : limit;
+    const pageSize = RANGE_FILTER_SCAN_PAGE_SIZE;
     const filteredResources = [];
     let scannedDocs = 0;
     let rangeFilterScanLimitReached = false;
