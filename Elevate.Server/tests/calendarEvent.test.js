@@ -19,7 +19,7 @@ const mockContainer = {
       let cursor = 0;
       let pageIndex = 0;
       return {
-        hasMoreResults: () => {
+        get hasMoreResults() {
           if (Array.isArray(mockQueryPages)) {
             return pageIndex < mockQueryPages.length;
           }

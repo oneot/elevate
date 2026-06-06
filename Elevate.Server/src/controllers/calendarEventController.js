@@ -110,11 +110,18 @@ async function fetchCalendarEventPage(container, queryText, parameters, offset, 
   return resources;
 }
 
-function createCalendarEventQueryIterator(container, queryText, parameters, limit) {
+function createCalendarEventQueryIterator(container, queryText, parameters, pageSize) {
   return container.items.query(
     { query: `${queryText} ORDER BY c.createdAt DESC`, parameters },
-    { partitionKey: PARTITION_KEY, maxItemCount: limit }
+    { partitionKey: PARTITION_KEY, maxItemCount: pageSize }
   );
+}
+
+function queryIteratorHasMoreResults(queryIterator) {
+  if (typeof queryIterator.hasMoreResults === 'function') {
+    return queryIterator.hasMoreResults();
+  }
+  return Boolean(queryIterator.hasMoreResults);
 }
 
 function validateCreatePayload(body) {
@@ -221,7 +228,7 @@ exports.listCalendarEvents = async (req, res) => {
 
       scannedDocs += resources.length;
       const reachedScanLimit = scannedDocs >= MAX_RANGE_FILTER_SCAN_DOCS;
-      const hasMoreResults = queryIterator.hasMoreResults();
+      const hasMoreResults = queryIteratorHasMoreResults(queryIterator);
       rangeFilterScanLimitReached = reachedScanLimit
         && hasMoreResults
         && filteredResources.length < limit
