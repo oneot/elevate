@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 let lastQuerySpec = null;
 let lastCreatedDoc = null;
 let mockQueryResources = [];
+let mockQueryPages = null;
 let querySpecs = [];
 let queryOptions = [];
 let fetchNextCalls = 0;
@@ -16,7 +17,14 @@ const mockContainer = {
       querySpecs.push(querySpec);
       queryOptions.push(options);
       let cursor = 0;
+      let pageIndex = 0;
       return {
+        hasMoreResults: () => {
+          if (Array.isArray(mockQueryPages)) {
+            return pageIndex < mockQueryPages.length;
+          }
+          return cursor < mockQueryResources.length;
+        },
         fetchAll: async () => {
           const [, offset, limit] = querySpec.query.match(/OFFSET (\d+) LIMIT (\d+)/) || [];
           if (offset !== undefined && limit !== undefined) {
@@ -26,10 +34,15 @@ const mockContainer = {
         },
         fetchNext: async () => {
           fetchNextCalls += 1;
+          if (Array.isArray(mockQueryPages)) {
+            const resources = mockQueryPages[pageIndex] || [];
+            pageIndex += 1;
+            return { resources };
+          }
           const pageSize = options.maxItemCount || mockQueryResources.length;
           const resources = mockQueryResources.slice(cursor, cursor + pageSize);
           cursor += pageSize;
-          return { resources, hasMoreResults: cursor < mockQueryResources.length };
+          return { resources };
         },
       };
     },
@@ -49,6 +62,7 @@ test.beforeEach(() => {
   lastQuerySpec = null;
   lastCreatedDoc = null;
   mockQueryResources = [];
+  mockQueryPages = null;
   querySpecs = [];
   queryOptions = [];
   fetchNextCalls = 0;
@@ -452,7 +466,7 @@ test('listCalendarEvents — 응답 limit이 작아도 기간 필터 스캔 page
   assert.equal(queryOptions[0].maxItemCount, 500);
 });
 
-test('listCalendarEvents — 기간 필터 마지막 페이지 판별은 스캔 page size를 사용한다', async () => {
+test('listCalendarEvents — 기간 필터 마지막 페이지 판별은 iterator 상태를 사용한다', async () => {
   mockQueryResources = [
     {
       id: 'outside-1',
@@ -485,6 +499,43 @@ test('listCalendarEvents — 기간 필터 마지막 페이지 판별은 스캔 
   assert.equal(querySpecs.length, 1);
   assert.equal(fetchNextCalls, 1);
   assert.equal(queryOptions[0].maxItemCount, 500);
+});
+
+test('listCalendarEvents — 기간 필터는 작은 중간 page 뒤에도 iterator가 남아 있으면 계속 조회한다', async () => {
+  mockQueryPages = [
+    [
+      {
+        id: 'outside',
+        type: 'calendarEvent',
+        title: 'Outside',
+        eventDates: [{ start: '2027-01-01' }],
+        createdAt: '2026-01-03T00:00:00.000Z',
+        updatedAt: '2026-01-03T00:00:00.000Z',
+      },
+    ],
+    [
+      {
+        id: 'inside',
+        type: 'calendarEvent',
+        title: 'Inside',
+        eventDates: [{ start: '2026-06-01' }],
+        createdAt: '2026-01-02T00:00:00.000Z',
+        updatedAt: '2026-01-02T00:00:00.000Z',
+      },
+    ],
+  ];
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { start: '2026-01-01', end: '2026-12-31', limit: '1' },
+  };
+  const res = makeRes();
+
+  await ctrl.listCalendarEvents(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items.map((item) => item.id), ['inside']);
+  assert.equal(fetchNextCalls, 2);
 });
 
 test('listCalendarEvents — 기간 필터는 page 안에서도 응답 limit을 채우면 매칭 검사를 중단한다', async () => {

@@ -221,10 +221,11 @@ exports.listCalendarEvents = async (req, res) => {
 
       scannedDocs += resources.length;
       const reachedScanLimit = scannedDocs >= MAX_RANGE_FILTER_SCAN_DOCS;
+      const hasMoreResults = queryIterator.hasMoreResults();
       rangeFilterScanLimitReached = reachedScanLimit
-        && Boolean(page.hasMoreResults)
+        && hasMoreResults
         && filteredResources.length < limit
-        && resources.length === pageSize;
+        && resources.length > 0;
 
       if (rangeFilterScanLimitReached) {
         console.warn('[listCalendarEvents] range filter scan limit reached', {
@@ -239,9 +240,9 @@ exports.listCalendarEvents = async (req, res) => {
 
       if (
         filteredResources.length >= limit
-        || resources.length < pageSize
         || reachedScanLimit
-        || !page.hasMoreResults
+        || !hasMoreResults
+        || resources.length === 0
       ) {
         break;
       }
