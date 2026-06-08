@@ -198,9 +198,7 @@ function readEntries(source, centralDirectoryOffset, centralDirectoryEnd) {
       return null
     }
 
-    const fileName = hasNonAsciiFileName
-      ? decodeUtf8(fileNameBytes)
-      : decodeUtf8(fileNameBytes)
+    const fileName = decodeUtf8(fileNameBytes)
     const normalizedFileName = fileName.normalize('NFC')
     const normalizedFileNameBytes = textEncoder.encode(normalizedFileName)
 
