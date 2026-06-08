@@ -29,6 +29,10 @@ function getCalendarEventsContainerName() {
   return process.env.COSMOS_CALENDAR_EVENTS_CONTAINER_NAME || getPostsContainerName();
 }
 
+function getActivityVideosContainerName() {
+  return process.env.COSMOS_ACTIVITY_VIDEOS_CONTAINER_NAME || getPostsContainerName();
+}
+
 function getClient() {
   if (!client) {
     const endpoint = getEndpoint();
@@ -63,10 +67,15 @@ function getCalendarEventsContainer() {
   return getDatabase().container(getCalendarEventsContainerName());
 }
 
+function getActivityVideosContainer() {
+  return getDatabase().container(getActivityVideosContainerName());
+}
+
 module.exports = {
   getClient,
   getDatabase,
   getPostsContainer,
   getAssetsContainer,
-  getCalendarEventsContainer
+  getCalendarEventsContainer,
+  getActivityVideosContainer
 };
