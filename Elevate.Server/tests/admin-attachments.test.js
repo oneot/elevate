@@ -17,3 +17,15 @@ test('normalizeDraftSessionId rejects unsafe or empty values', () => {
   assert.equal(_test.normalizeDraftSessionId('draft-abc<script>'), null);
   assert.equal(_test.normalizeDraftSessionId('draft-' + 'a'.repeat(90)), null);
 });
+
+test('buildDraftAttachmentQuery scopes by draftSessionId and attach type', () => {
+  const query = _test.buildDraftAttachmentQuery('draft-123e4567-e89b-12d3-a456-426614174000');
+
+  assert.equal(
+    query.query,
+    'SELECT * FROM c WHERE c.draftSessionId = @draftSessionId AND c.documentType = "attach"'
+  );
+  assert.deepEqual(query.parameters, [
+    { name: '@draftSessionId', value: 'draft-123e4567-e89b-12d3-a456-426614174000' }
+  ]);
+});

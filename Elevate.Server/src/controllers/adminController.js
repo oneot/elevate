@@ -175,6 +175,13 @@ function normalizeDraftSessionId(value) {
   return trimmed;
 }
 
+function buildDraftAttachmentQuery(draftSessionId) {
+  return {
+    query: 'SELECT * FROM c WHERE c.draftSessionId = @draftSessionId AND c.documentType = "attach"',
+    parameters: [{ name: '@draftSessionId', value: draftSessionId }]
+  };
+}
+
 function validatePostCreatePayload(body) {
   if (!body || typeof body !== 'object') {
     return 'Invalid request payload';
@@ -779,7 +786,7 @@ exports.issueAttachUploadSas = async (req, res) => {
 
 exports.createFileMetadata = async (req, res) => {
   const correlationId = req.correlationId;
-  const { postId, blobUrl, contentType, sizeBytes, fileName } = req.body || {};
+  const { postId, draftSessionId, blobUrl, contentType, sizeBytes, fileName } = req.body || {};
 
   if (!blobUrl || !contentType || !sizeBytes || !fileName) {
     return sendError(res, 400, 'BadRequest', 'Invalid request payload', correlationId);
@@ -807,6 +814,10 @@ exports.createFileMetadata = async (req, res) => {
     return sendError(res, 400, 'BadRequest', 'fileName is required', correlationId);
   }
   const trimmedFileName = fileName.trim();
+  const normalizedDraftSessionId = normalizeDraftSessionId(draftSessionId);
+  if (draftSessionId && !normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'Invalid draftSessionId', correlationId);
+  }
 
   try {
     const container = getAssetsContainer();
@@ -819,6 +830,7 @@ exports.createFileMetadata = async (req, res) => {
       category: attachCategoryPartition,
       partitionKey: attachCategoryPartition,
       postId: postId || null,
+      draftSessionId: postId ? null : normalizedDraftSessionId,
       blobUrl,
       contentType,
       sizeBytes,
@@ -840,6 +852,44 @@ exports.createFileMetadata = async (req, res) => {
     });
   } catch (error) {
     console.error('[createFileMetadata] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.linkDraftAttachmentsToPost = async (req, res) => {
+  const correlationId = req.correlationId;
+  const { draftSessionId, postId } = req.body || {};
+  const normalizedDraftSessionId = normalizeDraftSessionId(draftSessionId);
+
+  if (!normalizedDraftSessionId || !postId || typeof postId !== 'string') {
+    return sendError(res, 400, 'BadRequest', 'draftSessionId and postId are required', correlationId);
+  }
+
+  try {
+    const postsContainer = getPostsContainer();
+    const post = await findPostById(postsContainer, postId);
+    if (!post) {
+      return sendError(res, 404, 'NotFound', 'Post not found', correlationId);
+    }
+
+    const container = getAssetsContainer();
+    const { resources } = await container.items
+      .query(buildDraftAttachmentQuery(normalizedDraftSessionId), { partitionKey: attachCategoryPartition })
+      .fetchAll();
+
+    await Promise.all(resources.map(async (file) => {
+      const updated = {
+        ...file,
+        postId,
+        draftSessionId: null,
+        updatedAt: new Date().toISOString()
+      };
+      await container.item(file.id, file.category || file.partitionKey || attachCategoryPartition).replace(updated);
+    }));
+
+    return res.json({ linked: resources.length });
+  } catch (error) {
+    console.error('[linkDraftAttachmentsToPost] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
   }
 };
@@ -946,5 +996,6 @@ exports.getAnalyticsSummary = async (req, res) => {
 exports._test = {
   normalizeThumbnailForStorage,
   collectThumbnailUrls,
-  normalizeDraftSessionId
+  normalizeDraftSessionId,
+  buildDraftAttachmentQuery
 };
