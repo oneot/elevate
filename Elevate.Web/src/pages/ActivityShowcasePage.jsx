@@ -1,14 +1,33 @@
-import React, { useLayoutEffect } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import ShowcaseLayout from "../components/layout/ShowcaseLayout";
 import ActivityShowcaseCarousel from "../components/common/ActivityShowcaseCarousel";
-import activityVideos from "../data/activityVideos.json";
+import fallbackActivityVideos from "../data/activityVideos.json";
+import { listActivityVideos } from "../api/activityVideos";
 import { DEFAULT_OG_IMAGE, SITE_NAME, canonicalUrl } from "../constants/seo";
 
 const PAGE_TITLE = "활동사례 알아보기 | Microsoft Elevate";
 const PAGE_DESCRIPTION = "Microsoft Elevate for Educators 커뮤니티의 교육 혁신 활동 사례와 인사이트를 영상으로 확인하세요.";
 
 export default function ActivityShowcasePage() {
+  const [items, setItems] = useState(fallbackActivityVideos);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    listActivityVideos({ signal: controller.signal })
+      .then((data) => {
+        const apiItems = Array.isArray(data?.items) ? data.items : [];
+        if (apiItems.length > 0) setItems(apiItems);
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") {
+          setItems(fallbackActivityVideos);
+        }
+      });
+
+    return () => controller.abort();
+  }, []);
+
   useLayoutEffect(() => {
     const style = document.createElement("style");
     style.textContent =
@@ -45,7 +64,7 @@ export default function ActivityShowcasePage() {
         title="활동사례 알아보기"
         subtitle="Microsoft Elevate for Educators (MEE) 커뮤니티에서 교육 혁신 인사이트를 나누며 함께 성장해 보세요."
       >
-        <ActivityShowcaseCarousel items={activityVideos} />
+        <ActivityShowcaseCarousel items={items} />
       </ShowcaseLayout>
     </>
   );
