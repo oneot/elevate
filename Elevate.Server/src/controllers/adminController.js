@@ -814,8 +814,9 @@ exports.createFileMetadata = async (req, res) => {
     return sendError(res, 400, 'BadRequest', 'fileName is required', correlationId);
   }
   const trimmedFileName = fileName.trim();
+  const hasDraftSessionId = draftSessionId !== undefined && draftSessionId !== null;
   const normalizedDraftSessionId = normalizeDraftSessionId(draftSessionId);
-  if (draftSessionId && !normalizedDraftSessionId) {
+  if (hasDraftSessionId && !normalizedDraftSessionId) {
     return sendError(res, 400, 'BadRequest', 'Invalid draftSessionId', correlationId);
   }
 
