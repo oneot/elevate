@@ -814,10 +814,18 @@ exports.createFileMetadata = async (req, res) => {
     return sendError(res, 400, 'BadRequest', 'fileName is required', correlationId);
   }
   const trimmedFileName = fileName.trim();
+  const hasPostId = postId !== undefined && postId !== null;
+  if (hasPostId && (typeof postId !== 'string' || postId.trim().length === 0)) {
+    return sendError(res, 400, 'BadRequest', 'postId must be a non-empty string', correlationId);
+  }
+  const normalizedPostId = hasPostId ? postId.trim() : null;
   const hasDraftSessionId = draftSessionId !== undefined && draftSessionId !== null;
   const normalizedDraftSessionId = normalizeDraftSessionId(draftSessionId);
   if (hasDraftSessionId && !normalizedDraftSessionId) {
     return sendError(res, 400, 'BadRequest', 'Invalid draftSessionId', correlationId);
+  }
+  if (!normalizedPostId && !normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'postId or draftSessionId is required', correlationId);
   }
 
   try {
@@ -830,8 +838,8 @@ exports.createFileMetadata = async (req, res) => {
       documentType: 'attach',
       category: attachCategoryPartition,
       partitionKey: attachCategoryPartition,
-      postId: postId || null,
-      draftSessionId: postId ? null : normalizedDraftSessionId,
+      postId: normalizedPostId,
+      draftSessionId: normalizedPostId ? null : normalizedDraftSessionId,
       blobUrl,
       contentType,
       sizeBytes,

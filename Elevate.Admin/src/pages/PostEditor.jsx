@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Card, Button, ConfirmModal, FormField } from '../components/ui/index.js'
 import { HtmlEditor, PostMetaSidebar } from '../components/editor/index.js'
@@ -88,6 +88,9 @@ function PostEditor() {
   const navigate = useNavigate()
   const location = useLocation()
   const flashMessage = location.state?.message
+  const pendingDraftSessionId = location.state?.draftAttachmentLink?.draftSessionId || ''
+  const pendingDraftAttachmentStorageKey = location.state?.draftAttachmentLink?.draftAttachmentStorageKey || ''
+  const flashRetryKeyRef = useRef('')
   const [post, setPost] = useState(() => ({
     ...emptyPost,
     category: isNew ? (searchParams.get('category') || '') : '',
@@ -114,10 +117,58 @@ function PostEditor() {
   })
 
   useEffect(() => {
-    if (!flashMessage) return
-    setMessage(flashMessage)
-    navigate(location.pathname, { replace: true, state: null })
-  }, [flashMessage, location.pathname, navigate])
+    if (!flashMessage && !pendingDraftSessionId) return
+
+    let cancelled = false
+    const retryKey = pendingDraftSessionId && postId
+      ? `${postId}:${pendingDraftSessionId}`
+      : ''
+
+    if (retryKey && flashRetryKeyRef.current === retryKey) return
+    if (retryKey) flashRetryKeyRef.current = retryKey
+
+    const clearNavigationState = () => {
+      navigate(location.pathname, { replace: true, state: null })
+    }
+
+    const applyFlashState = async () => {
+      if (flashMessage) setMessage(flashMessage)
+
+      if (!pendingDraftSessionId || !postId) {
+        clearNavigationState()
+        return
+      }
+
+      try {
+        await linkDraftFilesToPost({ draftSessionId: pendingDraftSessionId, postId }, { msalInstance })
+        try {
+          if (pendingDraftAttachmentStorageKey) sessionStorage.removeItem(pendingDraftAttachmentStorageKey)
+        } catch { /* storage blocked — non-fatal */ }
+        if (!cancelled) {
+          setMessage(`${flashMessage || '저장되었습니다.'} 첨부파일 연결을 다시 완료했습니다.`)
+          clearNavigationState()
+        }
+      } catch (retryError) {
+        console.error('[PostEditor] draft attachment retry failed', retryError)
+        if (!cancelled) {
+          setError('첨부파일 연결 재시도에 실패했습니다. 잠시 후 저장된 게시글을 다시 열어 확인해 주세요.')
+        }
+      }
+    }
+
+    applyFlashState()
+    return () => {
+      cancelled = true
+    }
+  }, [
+    flashMessage,
+    location.pathname,
+    msalInstance,
+    navigate,
+    pendingDraftAttachmentStorageKey,
+    pendingDraftSessionId,
+    postId,
+  ])
 
   useEffect(() => {
     if (!isApiConfigured) {
@@ -268,6 +319,7 @@ function PostEditor() {
         const created = await createPost(payload, { msalInstance })
         const newId = created?.id || created?.postId
         const warnings = []
+        let draftAttachmentLinkState = null
         if (newId && draftSessionId) {
           try {
             await linkDraftFilesToPost({ draftSessionId, postId: newId }, { msalInstance })
@@ -275,6 +327,10 @@ function PostEditor() {
           } catch (linkError) {
             console.error('[PostEditor] draft attachment link failed', linkError)
             warnings.push('첨부파일 연결에 실패했습니다. 저장된 게시글에서 다시 확인해 주세요.')
+            draftAttachmentLinkState = {
+              draftSessionId,
+              draftAttachmentStorageKey,
+            }
           }
         }
         if (post.category === 'event' && newId) {
@@ -290,7 +346,12 @@ function PostEditor() {
           : '저장되었습니다.'
         if (newId) {
           try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
-          navigate(`/posts/${newId}`, { state: { message: successMessage } })
+          navigate(`/posts/${newId}`, {
+            state: {
+              message: successMessage,
+              ...(draftAttachmentLinkState ? { draftAttachmentLink: draftAttachmentLinkState } : {}),
+            },
+          })
         } else {
           setMessage(successMessage)
         }
