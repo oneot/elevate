@@ -9,6 +9,7 @@ import {
   getPost,
   updatePost,
 } from '../services/postsApi.js'
+import { linkDraftFilesToPost } from '../services/assetsApi.js'
 import { listCalendarEvents, updateCalendarEvent } from '../services/calendarEventsApi.js'
 import { slugify, extractYoutubeId } from '../utils/formatters.js'
 import { CATEGORIES } from '../constants/categories.js'
@@ -44,12 +45,46 @@ function getCalendarEventRange(today = new Date()) {
   }
 }
 
+function createDraftSessionId() {
+  if (globalThis.crypto?.randomUUID) {
+    return `draft-${globalThis.crypto.randomUUID()}`
+  }
+
+  const bytes = new Uint8Array(16)
+  if (globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(bytes)
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256)
+    }
+  }
+
+  bytes[6] = (bytes[6] & 0x0f) | 0x40
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0'))
+  return `draft-${hex.slice(0, 4).join('')}-${hex.slice(4, 6).join('')}-${hex.slice(6, 8).join('')}-${hex.slice(8, 10).join('')}-${hex.slice(10, 16).join('')}`
+}
+
 function PostEditor() {
   const { msalInstance } = useAuth()
   const { postId } = useParams()
   const [searchParams] = useSearchParams()
   const isNew = !postId
   const storageKey = isNew ? 'post-draft-new' : `post-draft-${postId}`
+  const draftAttachmentStorageKey = `${storageKey}:attachments`
+  const [draftSessionId] = useState(() => {
+    if (!isNew) return ''
+    try {
+      const existing = sessionStorage.getItem(draftAttachmentStorageKey)
+      if (existing) return existing
+      const next = createDraftSessionId()
+      sessionStorage.setItem(draftAttachmentStorageKey, next)
+      return next
+    } catch {
+      return createDraftSessionId()
+    }
+  })
   const navigate = useNavigate()
   const [post, setPost] = useState(() => ({
     ...emptyPost,
@@ -224,10 +259,20 @@ function PostEditor() {
       if (isNew) {
         const created = await createPost(payload, { msalInstance })
         const newId = created?.id || created?.postId
+        let attachmentLinkWarning = ''
+        if (newId && draftSessionId) {
+          try {
+            await linkDraftFilesToPost({ draftSessionId, postId: newId }, { msalInstance })
+            try { sessionStorage.removeItem(draftAttachmentStorageKey) } catch { /* storage blocked — non-fatal */ }
+          } catch (linkError) {
+            console.error('[PostEditor] draft attachment link failed', linkError)
+            attachmentLinkWarning = ' 첨부파일 연결에 실패했습니다. 저장된 게시글에서 다시 확인해 주세요.'
+          }
+        }
         if (post.category === 'event' && newId) {
           await syncCalendarEventLink(newId)
         }
-        setMessage('저장되었습니다.')
+        setMessage(`저장되었습니다.${attachmentLinkWarning}`)
         if (newId) {
           try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
           navigate(`/posts/${newId}`)
@@ -423,6 +468,7 @@ function PostEditor() {
             calendarEvents={calendarEvents}
             onLinkedCalendarEventChange={setLinkedCalendarEventId}
             postId={postId}
+            draftSessionId={draftSessionId}
             categories={CATEGORIES}
           />
         </aside>
