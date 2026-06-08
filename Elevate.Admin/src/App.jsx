@@ -4,6 +4,8 @@ import NotFound from './pages/NotFound.jsx'
 import PostEditor from './pages/PostEditor.jsx'
 import CategoryPosts from './pages/CategoryPosts.jsx'
 import CalendarEventEditor from './pages/CalendarEventEditor.jsx'
+import ActivityVideos from './pages/ActivityVideos.jsx'
+import ActivityVideoEditor from './pages/ActivityVideoEditor.jsx'
 
 /**
  * 앱 라우팅 구조.
@@ -23,6 +25,9 @@ function App() {
         <Route path="/posts/:postId" element={<PostEditor />} />
         <Route path="/calendar-events/new" element={<CalendarEventEditor />} />
         <Route path="/calendar-events/:eventId" element={<CalendarEventEditor />} />
+        <Route path="/activity-videos" element={<ActivityVideos />} />
+        <Route path="/activity-videos/new" element={<ActivityVideoEditor />} />
+        <Route path="/activity-videos/:activityVideoId" element={<ActivityVideoEditor />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutGrid, Bot, BotMessageSquare, Users, Box, Table2, NotebookPen,
-  Trophy, RefreshCw, GraduationCap, Newspaper,
+  Trophy, RefreshCw, GraduationCap, Newspaper, Video,
 } from 'lucide-react'
 import { CATEGORIES } from '../../constants/categories.js'
 
@@ -70,6 +70,26 @@ function Sidebar() {
             </div>
           </div>
         ))}
+        <div>
+          <p className="px-3 mb-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+            Management
+          </p>
+          <div className="space-y-1">
+            <NavLink
+              to="/activity-videos"
+              className={({ isActive }) =>
+                `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
+                  isActive
+                    ? 'bg-black/5 text-neutral-900 font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:bg-ms-blue before:rounded-r-md'
+                    : 'text-neutral-600 hover:bg-black/5 hover:text-neutral-900'
+                }`
+              }
+            >
+              <Video className="w-5 h-5" />
+              활동 영상
+            </NavLink>
+          </div>
+        </div>
       </nav>
     </aside>
   )
