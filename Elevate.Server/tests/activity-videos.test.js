@@ -3,13 +3,23 @@ const assert = require('node:assert/strict');
 
 let docs = [];
 let lastQuerySpec = null;
+let lastQueryOptions = null;
 let deletedItem = null;
 
 const mockContainer = {
   items: {
-    query: (querySpec) => {
+    query: (querySpec, options) => {
       lastQuerySpec = querySpec;
-      return { fetchAll: async () => ({ resources: docs }) };
+      lastQueryOptions = options;
+      return {
+        fetchAll: async () => {
+          const statusParam = querySpec.parameters?.find((param) => param.name === '@status');
+          const resources = statusParam
+            ? docs.filter((doc) => doc.status === statusParam.value)
+            : docs;
+          return { resources };
+        },
+      };
     },
     create: async (doc) => {
       docs.push(doc);
@@ -59,6 +69,7 @@ test.after(() => {
 test.beforeEach(() => {
   docs = [];
   lastQuerySpec = null;
+  lastQueryOptions = null;
   deletedItem = null;
 });
 
@@ -77,6 +88,7 @@ function makeRes() {
 test('listPublicActivityVideos returns only published videos query ordered by sortOrder', async () => {
   docs = [
     { id: '1', type: 'activityVideo', partitionKey: 'activityVideo', videoId: 'SfK1hajr5qY', title: 'A', category: '행사', year: '2026', channel: 'Microsoft Korea', sortOrder: 20, status: 'published', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+    { id: '2', type: 'activityVideo', partitionKey: 'activityVideo', videoId: 'aaK1hajr5qY', title: 'B', category: '행사', year: '2026', channel: 'Microsoft Korea', sortOrder: 10, status: 'draft', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
   ];
   const res = makeRes();
 
@@ -86,6 +98,23 @@ test('listPublicActivityVideos returns only published videos query ordered by so
   assert.deepEqual(res.getBody().items.map((item) => item.id), ['1']);
   assert.match(lastQuerySpec.query, /c.status = @status/);
   assert.match(lastQuerySpec.query, /ORDER BY c.sortOrder ASC, c.createdAt DESC/);
+  assert.deepEqual(lastQuerySpec.parameters.find((param) => param.name === '@status'), { name: '@status', value: 'published' });
+  assert.deepEqual(lastQueryOptions, { partitionKey: 'activityVideo' });
+});
+
+test('listAdminActivityVideos filters valid status using activityVideo partition', async () => {
+  docs = [
+    { id: '1', type: 'activityVideo', partitionKey: 'activityVideo', videoId: 'SfK1hajr5qY', title: 'A', category: '행사', year: '2026', channel: 'Microsoft Korea', sortOrder: 20, status: 'published', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+    { id: '2', type: 'activityVideo', partitionKey: 'activityVideo', videoId: 'aaK1hajr5qY', title: 'B', category: '행사', year: '2026', channel: 'Microsoft Korea', sortOrder: 10, status: 'draft', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+  ];
+  const res = makeRes();
+
+  await ctrl.listAdminActivityVideos({ query: { status: 'draft' }, params: {}, correlationId: 'x' }, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items.map((item) => item.id), ['2']);
+  assert.match(lastQuerySpec.query, /AND c.status = @status/);
+  assert.deepEqual(lastQueryOptions, { partitionKey: 'activityVideo' });
 });
 
 test('createActivityVideo rejects invalid YouTube videoId', async () => {
@@ -100,6 +129,20 @@ test('createActivityVideo rejects invalid YouTube videoId', async () => {
 
   assert.equal(res.getStatus(), 400);
   assert.equal(res.getBody().message, 'videoId must be an 11-character YouTube ID');
+});
+
+test('createActivityVideo rejects non-string optional fields', async () => {
+  const res = makeRes();
+
+  await ctrl.createActivityVideo({
+    body: { videoId: 'SfK1hajr5qY', title: 'Title', description: 123, category: '행사', year: '2026' },
+    params: {},
+    query: {},
+    correlationId: 'x',
+  }, res);
+
+  assert.equal(res.getStatus(), 400);
+  assert.equal(res.getBody().message, 'description must be a string or null');
 });
 
 test('createActivityVideo creates normalized draft video', async () => {
@@ -148,6 +191,73 @@ test('updateActivityVideo clears description and publishes video', async () => {
   assert.equal(res.getStatus(), 200);
   assert.equal(res.getBody().description, null);
   assert.equal(res.getBody().status, 'published');
+});
+
+test('updateActivityVideo rejects provided null or empty status', async () => {
+  docs = [{
+    id: 'video-1',
+    type: 'activityVideo',
+    partitionKey: 'activityVideo',
+    videoId: 'SfK1hajr5qY',
+    title: 'Old',
+    category: '행사',
+    year: '2026',
+    channel: 'Microsoft Korea',
+    sortOrder: 1,
+    status: 'draft',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+  }];
+  const res = makeRes();
+
+  await ctrl.updateActivityVideo({
+    body: { status: null },
+    params: { activityVideoId: 'video-1' },
+    query: {},
+    correlationId: 'x',
+  }, res);
+
+  assert.equal(res.getStatus(), 400);
+  assert.equal(res.getBody().message, 'status must be draft, published, or archived');
+
+  const emptyRes = makeRes();
+  await ctrl.updateActivityVideo({
+    body: { status: '' },
+    params: { activityVideoId: 'video-1' },
+    query: {},
+    correlationId: 'x',
+  }, emptyRes);
+
+  assert.equal(emptyRes.getStatus(), 400);
+  assert.equal(emptyRes.getBody().message, 'status must be draft, published, or archived');
+});
+
+test('updateActivityVideo rejects non-string optional fields', async () => {
+  docs = [{
+    id: 'video-1',
+    type: 'activityVideo',
+    partitionKey: 'activityVideo',
+    videoId: 'SfK1hajr5qY',
+    title: 'Old',
+    category: '행사',
+    year: '2026',
+    channel: 'Microsoft Korea',
+    sortOrder: 1,
+    status: 'draft',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+  }];
+  const res = makeRes();
+
+  await ctrl.updateActivityVideo({
+    body: { channel: [] },
+    params: { activityVideoId: 'video-1' },
+    query: {},
+    correlationId: 'x',
+  }, res);
+
+  assert.equal(res.getStatus(), 400);
+  assert.equal(res.getBody().message, 'channel must be a string or null');
 });
 
 test('deleteActivityVideo returns 204', async () => {

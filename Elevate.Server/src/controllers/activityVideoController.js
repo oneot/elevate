@@ -44,7 +44,7 @@ function toActivityVideoResponse(doc) {
 }
 
 function validateStatus(status) {
-  if (status === undefined || status === null || status === '') return null;
+  if (status === undefined) return null;
   return VALID_STATUSES.has(status) ? null : 'status must be draft, published, or archived';
 }
 
@@ -64,6 +64,10 @@ function validateCreatePayload(body) {
     const err = validateRequiredString(body, fieldName);
     if (err) return err;
   }
+  for (const fieldName of ['description', 'channel']) {
+    const err = validateOptionalString(body[fieldName], fieldName);
+    if (err) return err;
+  }
   return validateStatus(body.status);
 }
 
@@ -77,7 +81,17 @@ function validateUpdatePayload(body) {
       return `${fieldName} must be a non-empty string`;
     }
   }
+  for (const fieldName of ['description', 'channel']) {
+    const err = validateOptionalString(body[fieldName], fieldName);
+    if (err) return err;
+  }
   return validateStatus(body.status);
+}
+
+function validateOptionalString(value, fieldName) {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'string') return `${fieldName} must be a string or null`;
+  return null;
 }
 
 async function readActivityVideo(container, id, correlationId, res) {
