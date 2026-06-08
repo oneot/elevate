@@ -1,12 +1,16 @@
 'use strict';
 
-const { v4: createUuid } = require('uuid');
+const crypto = require('node:crypto');
 const { getActivityVideosContainer } = require('../services/cosmosClient');
 const { sendError } = require('../utils/http');
 
 const PARTITION_KEY = 'activityVideo';
 const YOUTUBE_ID_RE = /^[a-zA-Z0-9_-]{11}$/;
 const VALID_STATUSES = new Set(['draft', 'published', 'archived']);
+
+function createUuid() {
+  return crypto.randomUUID();
+}
 
 function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
