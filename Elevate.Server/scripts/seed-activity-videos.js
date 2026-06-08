@@ -79,8 +79,8 @@ function isNotFound(error) {
   return error && (error.code === 404 || error.statusCode === 404);
 }
 
-async function seedActivityVideos({ force = false, dryRun = false } = {}) {
-  const docs = buildActivityVideoSeedDocs(loadSourceVideos());
+async function seedActivityVideos({ force = false, dryRun = false, sourcePath = DEFAULT_SOURCE_PATH } = {}) {
+  const docs = buildActivityVideoSeedDocs(loadSourceVideos(sourcePath));
 
   if (dryRun) {
     console.log(`planned documents: ${docs.length}`);
@@ -120,12 +120,26 @@ async function seedActivityVideos({ force = false, dryRun = false } = {}) {
 }
 
 function parseArgs(argv) {
-  const options = { dryRun: false, force: false };
-  for (const arg of argv) {
+  const options = { dryRun: false, force: false, sourcePath: DEFAULT_SOURCE_PATH };
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
     if (arg === '--dry-run') {
       options.dryRun = true;
     } else if (arg === '--force') {
       options.force = true;
+    } else if (arg === '--source') {
+      const value = argv[i + 1];
+      if (!value || value.startsWith('--')) {
+        throw new Error('--source requires a file path');
+      }
+      options.sourcePath = value;
+      i += 1;
+    } else if (arg.startsWith('--source=')) {
+      const value = arg.slice('--source='.length);
+      if (!value) {
+        throw new Error('--source requires a file path');
+      }
+      options.sourcePath = value;
     } else {
       throw new Error(`Unknown argument: ${arg}`);
     }
@@ -147,5 +161,7 @@ if (require.main === module) {
 
 module.exports = {
   buildActivityVideoSeedDocs,
+  loadSourceVideos,
+  parseArgs,
   seedActivityVideos,
 };
