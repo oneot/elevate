@@ -39,10 +39,10 @@ export default function AttachUploader({ postId, draftSessionId, onUploadingChan
 
   useEffect(() => {
     let cancelled = false
-    const fileQuery = postId
-      ? { postId }
-      : draftSessionId
-        ? { draftSessionId }
+    const fileQuery = draftSessionId
+      ? { draftSessionId }
+      : postId
+        ? { postId }
         : null
     setFiles([])
     setConfirmDeleteId(null)
