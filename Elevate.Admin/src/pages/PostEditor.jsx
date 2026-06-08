@@ -67,6 +67,18 @@ function createDraftSessionId() {
   return `draft-${hex.slice(0, 4).join('')}-${hex.slice(4, 6).join('')}-${hex.slice(6, 8).join('')}-${hex.slice(8, 10).join('')}-${hex.slice(10, 16).join('')}`
 }
 
+function getDraftSessionId(storageKey) {
+  try {
+    const existing = sessionStorage.getItem(storageKey)
+    if (existing) return existing
+    const next = createDraftSessionId()
+    sessionStorage.setItem(storageKey, next)
+    return next
+  } catch {
+    return createDraftSessionId()
+  }
+}
+
 function PostEditor() {
   const { msalInstance } = useAuth()
   const { postId } = useParams()
@@ -74,18 +86,9 @@ function PostEditor() {
   const isNew = !postId
   const storageKey = isNew ? 'post-draft-new' : `post-draft-${postId}`
   const draftAttachmentStorageKey = `${storageKey}:attachments`
-  const [draftSessionId] = useState(() => {
-    if (!isNew) return ''
-    try {
-      const existing = sessionStorage.getItem(draftAttachmentStorageKey)
-      if (existing) return existing
-      const next = createDraftSessionId()
-      sessionStorage.setItem(draftAttachmentStorageKey, next)
-      return next
-    } catch {
-      return createDraftSessionId()
-    }
-  })
+  const [draftSessionId, setDraftSessionId] = useState(() => (
+    isNew ? getDraftSessionId(draftAttachmentStorageKey) : ''
+  ))
   const navigate = useNavigate()
   const location = useLocation()
   const flashMessage = location.state?.message
@@ -116,6 +119,10 @@ function PostEditor() {
     setError,
     setMessage,
   })
+
+  useEffect(() => {
+    setDraftSessionId(isNew ? getDraftSessionId(draftAttachmentStorageKey) : '')
+  }, [draftAttachmentStorageKey, isNew])
 
   useEffect(() => {
     if (!flashMessage && !pendingDraftSessionId) return
