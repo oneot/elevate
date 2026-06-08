@@ -183,6 +183,14 @@ const macosxPatched = new Uint8Array(await macosxOutput.arrayBuffer())
 
 assert.deepEqual(readCentralFileNames(macosxPatched), ['Files/05_사고사례.pdf'])
 
+const dotUnderscoreDirectoryZip = createZipWithEntries([
+  'Files/._not-metadata/report.pdf'.normalize('NFD'),
+])
+const dotUnderscoreDirectoryInput = new File([dotUnderscoreDirectoryZip], 'attach.zip', { type: 'application/zip' })
+const dotUnderscoreDirectoryOutput = await ensureWindowsCompatibleZipFile(dotUnderscoreDirectoryInput)
+const dotUnderscoreDirectoryPatched = new Uint8Array(await dotUnderscoreDirectoryOutput.arrayBuffer())
+assert.deepEqual(readCentralFileNames(dotUnderscoreDirectoryPatched), ['Files/._not-metadata/report.pdf'])
+
 const commentedZip = createZipWithEocdComment()
 const commentedInput = new File([commentedZip], 'attach.zip', { type: 'application/zip' })
 const commentedOutput = await ensureWindowsCompatibleZipFile(commentedInput)

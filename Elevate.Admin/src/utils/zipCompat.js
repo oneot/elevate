@@ -59,10 +59,12 @@ function decodeUtf8(bytes) {
 }
 
 function isMacosxMetadataEntry(fileName) {
+  const fileNameParts = fileName.split('/')
+  const baseName = fileNameParts[fileNameParts.length - 1]
   return fileName === '__MACOSX' ||
     fileName === '__MACOSX/' ||
     fileName.startsWith('__MACOSX/') ||
-    fileName.split('/').some(part => part.startsWith('._'))
+    baseName.startsWith('._')
 }
 
 function findEndOfCentralDirectory(bytes) {
@@ -198,7 +200,7 @@ function readEntries(source, centralDirectoryOffset, centralDirectoryEnd) {
 
     const fileName = hasNonAsciiFileName
       ? decodeUtf8(fileNameBytes)
-      : new TextDecoder().decode(fileNameBytes)
+      : decodeUtf8(fileNameBytes)
     const normalizedFileName = fileName.normalize('NFC')
     const normalizedFileNameBytes = textEncoder.encode(normalizedFileName)
 
