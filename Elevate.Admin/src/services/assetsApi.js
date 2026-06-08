@@ -43,11 +43,24 @@ export function requestAttachUploadSas(payload, options = {}) {
 
 /**
  * Blob 업로드가 완료된 첨부파일을 서버에 등록한다.
- * @param {{ postId: string|null, blobUrl: string, fileName: string, contentType: string, sizeBytes: number }} payload
+ * @param {{ postId: string|null, draftSessionId?: string|null, blobUrl: string, fileName: string, contentType: string, sizeBytes: number }} payload
  * @param {{ msalInstance }} options
  */
 export function registerFile(payload, options = {}) {
   return apiFetch('/files', {
+    ...options,
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+/**
+ * 신규 게시글 저장 후 임시 첨부파일을 실제 postId에 연결한다.
+ * @param {{ draftSessionId: string, postId: string }} payload
+ * @param {{ msalInstance }} options
+ */
+export function linkDraftFilesToPost(payload, options = {}) {
+  return apiFetch('/files/link-draft', {
     ...options,
     method: 'POST',
     body: JSON.stringify(payload),
