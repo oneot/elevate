@@ -147,6 +147,7 @@ function buildEndOfCentralDirectory(entryCount, centralDirectorySize, centralDir
 
 function readEntries(source, centralDirectoryOffset, centralDirectoryEnd) {
   const entries = []
+  const normalizedFileNames = new Set()
   let originalEntryCount = 0
   let offset = centralDirectoryOffset
 
@@ -202,6 +203,11 @@ function readEntries(source, centralDirectoryOffset, centralDirectoryEnd) {
     const normalizedFileNameBytes = textEncoder.encode(normalizedFileName)
 
     if (!isMacosxMetadataEntry(normalizedFileName)) {
+      if (normalizedFileNames.has(normalizedFileName)) {
+        return null
+      }
+      normalizedFileNames.add(normalizedFileName)
+
       entries.push({
         centralHeader: source.subarray(offset, offset + ZIP_CENTRAL_HEADER_SIZE),
         localHeader: source.subarray(localHeaderOffset, localHeaderOffset + ZIP_LOCAL_HEADER_SIZE),

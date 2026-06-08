@@ -67,32 +67,38 @@ function concat(...parts) {
   return output
 }
 
-function createZipWithMacosxMetadata() {
-  const first = createStoredZipWithMissingUtf8Flag('Files/05_사고사례.pdf'.normalize('NFD'))
-  const second = createStoredZipWithMissingUtf8Flag('__MACOSX/Files/._05_사고사례.pdf'.normalize('NFD'))
-  const third = createStoredZipWithMissingUtf8Flag('__MACOSX')
-  const firstLocalSize = findCentralHeaderOffset(first)
-  const secondLocalSize = findCentralHeaderOffset(second)
-  const thirdLocalSize = findCentralHeaderOffset(third)
-  const localParts = [
-    first.subarray(0, firstLocalSize),
-    second.subarray(0, secondLocalSize),
-    third.subarray(0, thirdLocalSize),
-  ]
+function createZipWithEntries(fileNames) {
+  const zips = fileNames.map(fileName => createStoredZipWithMissingUtf8Flag(fileName))
+  const localSizes = zips.map(zip => findCentralHeaderOffset(zip))
+  const localOffsets = []
+  let nextLocalOffset = 0
+  for (const localSize of localSizes) {
+    localOffsets.push(nextLocalOffset)
+    nextLocalOffset += localSize
+  }
+  const localParts = zips.map((zip, index) => zip.subarray(0, localSizes[index]))
   const centralOffset = localParts.reduce((sum, part) => sum + part.length, 0)
-  const firstCentral = first.subarray(firstLocalSize, first.length - 22)
-  const secondCentral = new Uint8Array(second.subarray(secondLocalSize, second.length - 22))
-  const thirdCentral = new Uint8Array(third.subarray(thirdLocalSize, third.length - 22))
-  writeUInt32LE(secondCentral, 42, firstLocalSize)
-  writeUInt32LE(thirdCentral, 42, firstLocalSize + secondLocalSize)
-  const centralDirectory = concat(firstCentral, secondCentral, thirdCentral)
+  const centralParts = zips.map((zip, index) => {
+    const central = new Uint8Array(zip.subarray(localSizes[index], zip.length - 22))
+    writeUInt32LE(central, 42, localOffsets[index])
+    return central
+  })
+  const centralDirectory = concat(...centralParts)
   const eocd = new Uint8Array(22)
   writeUInt32LE(eocd, 0, 0x06054b50)
-  writeUInt16LE(eocd, 8, 3)
-  writeUInt16LE(eocd, 10, 3)
+  writeUInt16LE(eocd, 8, zips.length)
+  writeUInt16LE(eocd, 10, zips.length)
   writeUInt32LE(eocd, 12, centralDirectory.length)
   writeUInt32LE(eocd, 16, centralOffset)
   return concat(...localParts, centralDirectory, eocd)
+}
+
+function createZipWithMacosxMetadata() {
+  return createZipWithEntries([
+    'Files/05_사고사례.pdf'.normalize('NFD'),
+    '__MACOSX/Files/._05_사고사례.pdf'.normalize('NFD'),
+    '__MACOSX',
+  ])
 }
 
 function createZipWithEocdComment() {
@@ -186,3 +192,11 @@ const multiDiskZip = createMultiDiskZipMarker()
 const multiDiskInput = new File([multiDiskZip], 'attach.zip', { type: 'application/zip' })
 const multiDiskOutput = await ensureWindowsCompatibleZipFile(multiDiskInput)
 assert.equal(multiDiskOutput, multiDiskInput)
+
+const duplicateNormalizedNameZip = createZipWithEntries([
+  'Files/05_사고사례.pdf',
+  'Files/05_사고사례.pdf'.normalize('NFD'),
+])
+const duplicateNormalizedNameInput = new File([duplicateNormalizedNameZip], 'attach.zip', { type: 'application/zip' })
+const duplicateNormalizedNameOutput = await ensureWindowsCompatibleZipFile(duplicateNormalizedNameInput)
+assert.equal(duplicateNormalizedNameOutput, duplicateNormalizedNameInput)
