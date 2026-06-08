@@ -27,34 +27,39 @@ function getContentType(file) {
   return ATTACH_MIME_MAP[ext] || file.type || 'application/octet-stream'
 }
 
-export default function AttachUploader({ postId }) {
+export default function AttachUploader({ postId, draftSessionId, onUploadingChange }) {
   const { msalInstance } = useAuth()
   const inputRef = useRef(null)
   const [status, setStatus] = useState(null) // null | 'uploading' | 'done' | 'error'
-  const [files, setFiles] = useState([])      // [{ id, fileName, blobUrl, isDeleting }]
+  const [files, setFiles] = useState([])      // [{ id, fileName, blobUrl, signedUrl, isDeleting }]
   const [loadingFiles, setLoadingFiles] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const [error, setError] = useState(null)
+  const canUpload = Boolean(postId || draftSessionId)
 
   useEffect(() => {
     let cancelled = false
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    const fileQuery = postId
+      ? { postId }
+      : draftSessionId
+        ? { draftSessionId }
+        : null
     setFiles([])
     setConfirmDeleteId(null)
     setError(null)
-    if (!postId) {
+    if (!fileQuery) {
       setLoadingFiles(false)
       return () => { cancelled = true }
     }
     setLoadingFiles(true)
-    getFiles(postId, { msalInstance })
+    getFiles(fileQuery, { msalInstance })
       .then(data => { if (!cancelled) setFiles(data.map(f => ({ ...f, isDeleting: false }))) })
       .catch(() => {})
       .finally(() => { if (!cancelled) setLoadingFiles(false) })
     return () => {
       cancelled = true
     }
-  }, [postId, msalInstance])
+  }, [postId, draftSessionId, msalInstance])
 
   async function handleFileChange(event) {
     const file = event.target.files?.[0]
@@ -76,6 +81,7 @@ export default function AttachUploader({ postId }) {
     }
 
     setStatus('uploading')
+    onUploadingChange?.(true)
     try {
       const uploadFile = await ensureWindowsCompatibleZipFile(file)
       const sas = await requestAttachUploadSas(
@@ -86,6 +92,7 @@ export default function AttachUploader({ postId }) {
       const result = await registerFile(
         {
           postId: postId || null,
+          draftSessionId: postId ? null : draftSessionId,
           blobUrl: sas.blobUrl,
           fileName: uploadFile.name,
           contentType,
@@ -100,6 +107,8 @@ export default function AttachUploader({ postId }) {
     } catch {
       setError('업로드에 실패했습니다.')
       setStatus('error')
+    } finally {
+      onUploadingChange?.(false)
     }
   }
 
@@ -137,16 +146,16 @@ export default function AttachUploader({ postId }) {
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          disabled={status === 'uploading' || !postId}
-          title={!postId ? '게시글 저장 후 첨부파일을 추가할 수 있습니다' : undefined}
+          disabled={status === 'uploading' || !canUpload}
+          title={!canUpload ? '첨부파일 업로드 준비 중입니다' : undefined}
           className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {status === 'uploading' ? '업로드 중...' : '파일 선택'}
         </button>
       <span className="text-xs text-neutral-400">
-          {!postId
-            ? '게시글 저장 후 첨부파일을 추가할 수 있습니다'
-            : 'docx · xlsx · pptx · pdf · csv · zip · xls · doc (최대 50MB)'}
+          {canUpload
+            ? 'docx · xlsx · pptx · pdf · csv · zip · xls · doc (최대 50MB)'
+            : '첨부파일 업로드 준비 중입니다'}
         </span>
       </div>
 

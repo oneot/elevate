@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 let lastSignedUrlArgs = [];
 let lastCreatedDoc = null;
 let mockFiles = [];
+let lastQuerySpec = null;
 
 const mockAssetsContainer = {
   items: {
@@ -11,9 +12,12 @@ const mockAssetsContainer = {
       lastCreatedDoc = doc;
       return { resource: doc };
     },
-    query: () => ({
-      fetchAll: async () => ({ resources: mockFiles }),
-    }),
+    query: (querySpec) => {
+      lastQuerySpec = querySpec;
+      return {
+        fetchAll: async () => ({ resources: mockFiles }),
+      };
+    },
   },
 };
 
@@ -138,6 +142,7 @@ test('createAssetMetadata keeps image signed URL inline without download filenam
 
 test('getFiles passes each attachment fileName to signed URL generation', async () => {
   lastSignedUrlArgs = [];
+  lastQuerySpec = null;
   mockFiles = [
     {
       id: '1',
@@ -154,8 +159,40 @@ test('getFiles passes each attachment fileName to signed URL generation', async 
   await ctrl.getFiles(req, res);
 
   assert.equal(res.getStatus(), 200);
+  assert.equal(lastQuerySpec.query, 'SELECT c.id, c.fileName, c.blobUrl, c.contentType, c.sizeBytes FROM c WHERE c.postId = @postId AND c.documentType = "attach"');
+  assert.deepEqual(lastQuerySpec.parameters, [{ name: '@postId', value: 'post-1' }]);
   assert.deepEqual(lastSignedUrlArgs[0].options, {
     downloadFileName: '회의자료 2026년 6월.xlsx',
   });
   assert.equal(res.getBody()[0].signedUrl, 'https://account.blob.core.windows.net/attachments/attach/2026/06/a.xlsx?signed=1');
+});
+
+test('getFiles can list draft attachments by draftSessionId', async () => {
+  lastSignedUrlArgs = [];
+  lastQuerySpec = null;
+  mockFiles = [
+    {
+      id: 'draft-file-1',
+      fileName: 'draft.pdf',
+      blobUrl: 'https://account.blob.core.windows.net/attachments/attach/2026/06/draft.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: 1024,
+    },
+  ];
+
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { draftSessionId: 'draft-123e4567-e89b-42d3-a456-426614174000' },
+  };
+  const res = makeRes();
+
+  await ctrl.getFiles(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.equal(lastQuerySpec.query, 'SELECT c.id, c.fileName, c.blobUrl, c.contentType, c.sizeBytes FROM c WHERE c.draftSessionId = @draftSessionId AND c.documentType = "attach"');
+  assert.deepEqual(lastQuerySpec.parameters, [
+    { name: '@draftSessionId', value: 'draft-123e4567-e89b-42d3-a456-426614174000' },
+  ]);
+  assert.equal(res.getBody()[0].id, 'draft-file-1');
 });
