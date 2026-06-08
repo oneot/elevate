@@ -87,9 +87,11 @@ function eventDateOverlapsRange(eventDate, { start, end }) {
   }
 
   const eventStart = eventDate.start.trim();
-  const eventEnd = isValidIsoDateString(eventDate.end)
-    ? eventDate.end.trim()
-    : eventStart;
+  const hasEnd = eventDate.end !== undefined && eventDate.end !== null;
+  if (hasEnd && !isValidIsoDateString(eventDate.end)) {
+    return false;
+  }
+  const eventEnd = hasEnd ? eventDate.end.trim() : eventStart;
 
   if (start && eventEnd < start) return false;
   if (end && eventStart > end) return false;

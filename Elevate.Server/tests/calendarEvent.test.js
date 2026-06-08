@@ -307,7 +307,7 @@ test('listCalendarEvents — 잘못된 end 값은 기간 겹침 비교에 사용
       id: 'invalid-end',
       type: 'calendarEvent',
       title: 'Invalid End',
-      eventDates: [{ start: '2025-12-20', end: 'not-a-date' }],
+      eventDates: [{ start: '2026-06-01', end: 'not-a-date' }],
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     },
@@ -323,6 +323,104 @@ test('listCalendarEvents — 잘못된 end 값은 기간 겹침 비교에 사용
 
   assert.equal(res.getStatus(), 200);
   assert.deepEqual(res.getBody().items, []);
+});
+
+test('listCalendarEvents — start-only 기간 필터도 Cosmos array predicate 없이 겹침 이벤트만 반환한다', async () => {
+  mockQueryResources = [
+    {
+      id: 'before',
+      type: 'calendarEvent',
+      title: 'Before',
+      eventDates: [{ start: '2025-12-20', end: '2025-12-21' }],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 'overlap',
+      type: 'calendarEvent',
+      title: 'Overlap',
+      eventDates: [{ start: '2025-12-31', end: '2026-01-02' }],
+      createdAt: '2026-01-02T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+    },
+    {
+      id: 'inside',
+      type: 'calendarEvent',
+      title: 'Inside',
+      eventDates: [{ start: '2026-06-01' }],
+      createdAt: '2026-01-03T00:00:00.000Z',
+      updatedAt: '2026-01-03T00:00:00.000Z',
+    },
+  ];
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { start: '2026-01-01', limit: '500' },
+  };
+  const res = makeRes();
+
+  await ctrl.listCalendarEvents(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items.map((item) => item.id), ['overlap', 'inside']);
+  assert.doesNotMatch(lastQuerySpec.query, /EXISTS/);
+  assert.doesNotMatch(lastQuerySpec.query, /IS_DEFINED/);
+  assert.doesNotMatch(lastQuerySpec.query, /OFFSET/);
+  assert.doesNotMatch(lastQuerySpec.query, /LIMIT/);
+  assert.equal(queryOptions[0].maxItemCount, 500);
+  assert.deepEqual(
+    lastQuerySpec.parameters.filter((p) => p.name === '@start' || p.name === '@end'),
+    []
+  );
+});
+
+test('listCalendarEvents — end-only 기간 필터도 Cosmos array predicate 없이 겹침 이벤트만 반환한다', async () => {
+  mockQueryResources = [
+    {
+      id: 'inside',
+      type: 'calendarEvent',
+      title: 'Inside',
+      eventDates: [{ start: '2026-06-01' }],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 'overlap',
+      type: 'calendarEvent',
+      title: 'Overlap',
+      eventDates: [{ start: '2026-12-31', end: '2027-01-02' }],
+      createdAt: '2026-01-02T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+    },
+    {
+      id: 'after',
+      type: 'calendarEvent',
+      title: 'After',
+      eventDates: [{ start: '2027-01-02' }],
+      createdAt: '2026-01-03T00:00:00.000Z',
+      updatedAt: '2026-01-03T00:00:00.000Z',
+    },
+  ];
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { end: '2026-12-31', limit: '500' },
+  };
+  const res = makeRes();
+
+  await ctrl.listCalendarEvents(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items.map((item) => item.id), ['inside', 'overlap']);
+  assert.doesNotMatch(lastQuerySpec.query, /EXISTS/);
+  assert.doesNotMatch(lastQuerySpec.query, /IS_DEFINED/);
+  assert.doesNotMatch(lastQuerySpec.query, /OFFSET/);
+  assert.doesNotMatch(lastQuerySpec.query, /LIMIT/);
+  assert.equal(queryOptions[0].maxItemCount, 500);
+  assert.deepEqual(
+    lastQuerySpec.parameters.filter((p) => p.name === '@start' || p.name === '@end'),
+    []
+  );
 });
 
 test('listCalendarEvents — start/end 기간 필터는 Cosmos array EXISTS 쿼리를 만들지 않는다', async () => {
