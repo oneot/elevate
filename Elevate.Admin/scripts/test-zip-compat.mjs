@@ -87,6 +87,20 @@ function createZipWithMacosxMetadata() {
   return concat(...localParts, centralDirectory, eocd)
 }
 
+function createZipWithEocdComment() {
+  const zip = createStoredZipWithMissingUtf8Flag('Files/05_사고사례.pdf'.normalize('NFD'))
+  const comment = new TextEncoder().encode('comment')
+  const output = concat(zip, comment)
+  writeUInt16LE(output, zip.length - 2, comment.length)
+  return output
+}
+
+function createMultiDiskZipMarker() {
+  const zip = createStoredZipWithMissingUtf8Flag('Files/05_사고사례.pdf'.normalize('NFD'))
+  writeUInt16LE(zip, zip.length - 22 + 4, 1)
+  return zip
+}
+
 function readUInt16LE(buffer, offset) {
   return buffer[offset] | (buffer[offset + 1] << 8)
 }
@@ -153,3 +167,13 @@ const macosxOutput = await ensureWindowsCompatibleZipFile(macosxInput)
 const macosxPatched = new Uint8Array(await macosxOutput.arrayBuffer())
 
 assert.deepEqual(readCentralFileNames(macosxPatched), ['Files/05_사고사례.pdf'])
+
+const commentedZip = createZipWithEocdComment()
+const commentedInput = new File([commentedZip], 'attach.zip', { type: 'application/zip' })
+const commentedOutput = await ensureWindowsCompatibleZipFile(commentedInput)
+assert.equal(commentedOutput, commentedInput)
+
+const multiDiskZip = createMultiDiskZipMarker()
+const multiDiskInput = new File([multiDiskZip], 'attach.zip', { type: 'application/zip' })
+const multiDiskOutput = await ensureWindowsCompatibleZipFile(multiDiskInput)
+assert.equal(multiDiskOutput, multiDiskInput)

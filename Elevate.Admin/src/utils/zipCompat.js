@@ -8,6 +8,11 @@ const ZIP_MAX_COMMENT_SIZE = 0xffff
 const ZIP_LOCAL_HEADER_SIZE = 30
 const ZIP_CENTRAL_HEADER_SIZE = 46
 const ZIP_EOCD_SIZE = 22
+const ZIP_FIRST_DISK_NUMBER_OFFSET = 4
+const ZIP_CENTRAL_DIRECTORY_DISK_OFFSET = 6
+const ZIP_DISK_ENTRY_COUNT_OFFSET = 8
+const ZIP_TOTAL_ENTRY_COUNT_OFFSET = 10
+const ZIP_COMMENT_LENGTH_OFFSET = 20
 const textDecoder = new TextDecoder('utf-8', { fatal: true })
 const textEncoder = new TextEncoder()
 
@@ -67,6 +72,20 @@ function findEndOfCentralDirectory(bytes) {
     }
   }
   return -1
+}
+
+function isSupportedEndOfCentralDirectory(bytes, eocdOffset) {
+  const firstDiskNumber = readUInt16LE(bytes, eocdOffset + ZIP_FIRST_DISK_NUMBER_OFFSET)
+  const centralDirectoryDisk = readUInt16LE(bytes, eocdOffset + ZIP_CENTRAL_DIRECTORY_DISK_OFFSET)
+  const diskEntryCount = readUInt16LE(bytes, eocdOffset + ZIP_DISK_ENTRY_COUNT_OFFSET)
+  const totalEntryCount = readUInt16LE(bytes, eocdOffset + ZIP_TOTAL_ENTRY_COUNT_OFFSET)
+  const commentLength = readUInt16LE(bytes, eocdOffset + ZIP_COMMENT_LENGTH_OFFSET)
+
+  return firstDiskNumber === 0 &&
+    centralDirectoryDisk === 0 &&
+    diskEntryCount === totalEntryCount &&
+    commentLength === 0 &&
+    eocdOffset + ZIP_EOCD_SIZE === bytes.length
 }
 
 function concatParts(parts, totalSize) {
@@ -170,11 +189,12 @@ function readEntries(source, centralDirectoryOffset, centralDirectoryEnd) {
     }
 
     const fileNameBytes = source.subarray(fileNameStart, fileNameEnd)
-    if (hasNonAsciiByte(fileNameBytes) && !isValidUtf8(fileNameBytes)) {
+    const hasNonAsciiFileName = hasNonAsciiByte(fileNameBytes)
+    if (hasNonAsciiFileName && !isValidUtf8(fileNameBytes)) {
       return null
     }
 
-    const fileName = hasNonAsciiByte(fileNameBytes)
+    const fileName = hasNonAsciiFileName
       ? decodeUtf8(fileNameBytes)
       : new TextDecoder().decode(fileNameBytes)
     const normalizedFileName = fileName.normalize('NFC')
@@ -246,6 +266,10 @@ export async function ensureWindowsCompatibleZipFile(file) {
   const source = new Uint8Array(await file.arrayBuffer())
   const eocdOffset = findEndOfCentralDirectory(source)
   if (eocdOffset < 0) {
+    return file
+  }
+
+  if (!isSupportedEndOfCentralDirectory(source, eocdOffset)) {
     return file
   }
 
