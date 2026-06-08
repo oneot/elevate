@@ -30,6 +30,7 @@ const allowedAttachMimeTypes = new Set([
 ]);
 const maxAttachSizeBytes = 50 * 1024 * 1024;
 const attachCategoryPartition = '_attach';
+const draftAttachTtlMs = 24 * 60 * 60 * 1000;
 
 var BLOB_SAS_PATTERN = /(https?:\/\/[^"'\s]*\.blob\.core\.windows\.net\/[^"'\s?]*)\?[^"'\s]*/g;
 var BLOB_BARE_PATTERN = /https?:\/\/[^"'\s]*\.blob\.core\.windows\.net\/[^"'\s?]*/g;
@@ -171,7 +172,7 @@ function normalizeDraftSessionId(value) {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   if (!trimmed || trimmed.length > 80) return null;
-  if (!/^draft-[a-f0-9-]{8,}$/i.test(trimmed)) return null;
+  if (!/^draft-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(trimmed)) return null;
   return trimmed;
 }
 
@@ -180,6 +181,40 @@ function buildDraftAttachmentQuery(draftSessionId) {
     query: 'SELECT * FROM c WHERE c.draftSessionId = @draftSessionId AND c.documentType = "attach"',
     parameters: [{ name: '@draftSessionId', value: draftSessionId }]
   };
+}
+
+function buildExpiredDraftAttachmentQuery(nowIso) {
+  return {
+    query: 'SELECT * FROM c WHERE c.documentType = "attach" AND IS_DEFINED(c.draftSessionId) AND c.draftSessionId != null AND c.expiresAt < @now',
+    parameters: [{ name: '@now', value: nowIso }]
+  };
+}
+
+function getDraftAttachmentExpiresAt(now = new Date()) {
+  return new Date(now.getTime() + draftAttachTtlMs).toISOString();
+}
+
+async function cleanupExpiredDraftAttachments(container, now = new Date()) {
+  try {
+    const { resources } = await container.items
+      .query(buildExpiredDraftAttachmentQuery(now.toISOString()), { partitionKey: attachCategoryPartition })
+      .fetchAll();
+
+    await Promise.all(resources.map(async (file) => {
+      try {
+        await deleteBlobByUrl(file.blobUrl);
+      } catch (err) {
+        console.error(`[cleanupExpiredDraftAttachments] blob deletion failed for file ${file.id}`, err);
+      }
+      try {
+        await container.item(file.id, file.category || file.partitionKey || attachCategoryPartition).delete();
+      } catch (err) {
+        console.error(`[cleanupExpiredDraftAttachments] cosmos deletion failed for file ${file.id}`, err);
+      }
+    }));
+  } catch (err) {
+    console.error('[cleanupExpiredDraftAttachments] failed', err);
+  }
 }
 
 function validatePostCreatePayload(body) {
@@ -830,8 +865,10 @@ exports.createFileMetadata = async (req, res) => {
 
   try {
     const container = getAssetsContainer();
+    await cleanupExpiredDraftAttachments(container);
     const fileId = createUuid();
     const now = new Date().toISOString();
+    const isDraftAttachment = !normalizedPostId && normalizedDraftSessionId;
 
     const fileDocument = {
       id: fileId,
@@ -844,6 +881,8 @@ exports.createFileMetadata = async (req, res) => {
       contentType,
       sizeBytes,
       fileName: trimmedFileName,
+      expiresAt: isDraftAttachment ? getDraftAttachmentExpiresAt(new Date(now)) : null,
+      ttl: isDraftAttachment ? Math.floor(draftAttachTtlMs / 1000) : null,
       createdAt: now,
       updatedAt: now
     };
@@ -883,6 +922,7 @@ exports.linkDraftAttachmentsToPost = async (req, res) => {
     }
 
     const container = getAssetsContainer();
+    await cleanupExpiredDraftAttachments(container);
     const { resources } = await container.items
       .query(buildDraftAttachmentQuery(normalizedDraftSessionId), { partitionKey: attachCategoryPartition })
       .fetchAll();
@@ -892,6 +932,8 @@ exports.linkDraftAttachmentsToPost = async (req, res) => {
         ...file,
         postId: normalizedPostId,
         draftSessionId: null,
+        expiresAt: null,
+        ttl: null,
         updatedAt: new Date().toISOString()
       };
       await container.item(file.id, file.category || file.partitionKey || attachCategoryPartition).replace(updated);
@@ -1007,5 +1049,7 @@ exports._test = {
   normalizeThumbnailForStorage,
   collectThumbnailUrls,
   normalizeDraftSessionId,
-  buildDraftAttachmentQuery
+  buildDraftAttachmentQuery,
+  buildExpiredDraftAttachmentQuery,
+  getDraftAttachmentExpiresAt
 };

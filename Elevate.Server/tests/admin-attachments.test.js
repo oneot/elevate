@@ -4,7 +4,10 @@ const assert = require('node:assert/strict');
 let createdFileDocument = null;
 let mockPostResources = [];
 let mockDraftAttachmentResources = [];
+let mockExpiredDraftAttachmentResources = [];
 let replacedFileDocuments = [];
+let deletedFileDocuments = [];
+let deletedBlobUrls = [];
 
 const mockAssetsContainer = {
   items: {
@@ -12,14 +15,21 @@ const mockAssetsContainer = {
       createdFileDocument = doc;
       return { resource: doc };
     },
-    query: () => ({
-      fetchAll: async () => ({ resources: mockDraftAttachmentResources })
+    query: (querySpec) => ({
+      fetchAll: async () => ({
+        resources: querySpec.query.includes('c.expiresAt < @now')
+          ? mockExpiredDraftAttachmentResources
+          : mockDraftAttachmentResources
+      })
     })
   },
   item: (id, partitionKey) => ({
     replace: async (doc) => {
       replacedFileDocuments.push({ id, partitionKey, doc });
       return { resource: doc };
+    },
+    delete: async () => {
+      deletedFileDocuments.push({ id, partitionKey });
     }
   })
 };
@@ -54,7 +64,9 @@ require.cache[storageClientPath] = {
     issueBlobUploadSas: async () => ({}),
     issueBlobAttachSas: async () => ({}),
     getBlobReadSasUrl: async (blobUrl) => `${blobUrl}?signed=1`,
-    deleteBlobByUrl: async () => {}
+    deleteBlobByUrl: async (blobUrl) => {
+      deletedBlobUrls.push(blobUrl);
+    }
   }
 };
 
@@ -93,8 +105,8 @@ function makeRes() {
 
 test('normalizeDraftSessionId accepts generated draft ids', () => {
   assert.equal(
-    _test.normalizeDraftSessionId('draft-123e4567-e89b-12d3-a456-426614174000'),
-    'draft-123e4567-e89b-12d3-a456-426614174000'
+    _test.normalizeDraftSessionId('draft-123e4567-e89b-42d3-a456-426614174000'),
+    'draft-123e4567-e89b-42d3-a456-426614174000'
   );
 });
 
@@ -103,19 +115,32 @@ test('normalizeDraftSessionId rejects unsafe or empty values', () => {
   assert.equal(_test.normalizeDraftSessionId(null), null);
   assert.equal(_test.normalizeDraftSessionId(0), null);
   assert.equal(_test.normalizeDraftSessionId('../draft-123'), null);
+  assert.equal(_test.normalizeDraftSessionId('draft--------'), null);
   assert.equal(_test.normalizeDraftSessionId('draft-abc<script>'), null);
   assert.equal(_test.normalizeDraftSessionId('draft-' + 'a'.repeat(90)), null);
 });
 
 test('buildDraftAttachmentQuery scopes by draftSessionId and attach type', () => {
-  const query = _test.buildDraftAttachmentQuery('draft-123e4567-e89b-12d3-a456-426614174000');
+  const query = _test.buildDraftAttachmentQuery('draft-123e4567-e89b-42d3-a456-426614174000');
 
   assert.equal(
     query.query,
     'SELECT * FROM c WHERE c.draftSessionId = @draftSessionId AND c.documentType = "attach"'
   );
   assert.deepEqual(query.parameters, [
-    { name: '@draftSessionId', value: 'draft-123e4567-e89b-12d3-a456-426614174000' }
+    { name: '@draftSessionId', value: 'draft-123e4567-e89b-42d3-a456-426614174000' }
+  ]);
+});
+
+test('buildExpiredDraftAttachmentQuery scopes stale draft attachments', () => {
+  const query = _test.buildExpiredDraftAttachmentQuery('2026-06-08T00:00:00.000Z');
+
+  assert.equal(
+    query.query,
+    'SELECT * FROM c WHERE c.documentType = "attach" AND IS_DEFINED(c.draftSessionId) AND c.draftSessionId != null AND c.expiresAt < @now'
+  );
+  assert.deepEqual(query.parameters, [
+    { name: '@now', value: '2026-06-08T00:00:00.000Z' }
   ]);
 });
 
@@ -204,12 +229,58 @@ test('createFileMetadata stores trimmed postId and clears draftSessionId for sav
   assert.equal(createdFileDocument.draftSessionId, null);
 });
 
+test('createFileMetadata stores expiry and removes stale draft attachments', async () => {
+  createdFileDocument = null;
+  mockExpiredDraftAttachmentResources = [
+    {
+      id: 'expired-file',
+      documentType: 'attach',
+      category: '_attach',
+      partitionKey: '_attach',
+      draftSessionId: 'draft-123e4567-e89b-42d3-a456-426614174000',
+      blobUrl: 'https://account.blob.core.windows.net/attachments/attach/2026/06/expired.pdf',
+      fileName: 'expired.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: 100,
+      expiresAt: '2026-06-01T00:00:00.000Z'
+    }
+  ];
+  deletedFileDocuments = [];
+  deletedBlobUrls = [];
+  const res = makeRes();
+
+  await createFileMetadata({
+    body: {
+      draftSessionId: 'draft-123e4567-e89b-42d3-a456-426614174000',
+      blobUrl: 'https://account.blob.core.windows.net/attachments/attach/2026/06/file.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: 1234,
+      fileName: 'file.pdf'
+    },
+    correlationId: 'x'
+  }, res);
+
+  assert.equal(res.getStatus(), 201);
+  assert.equal(createdFileDocument.postId, null);
+  assert.equal(createdFileDocument.draftSessionId, 'draft-123e4567-e89b-42d3-a456-426614174000');
+  assert.match(createdFileDocument.expiresAt, /^\d{4}-\d{2}-\d{2}T/);
+  assert.equal(createdFileDocument.ttl, 86400);
+  assert.deepEqual(deletedBlobUrls, [
+    'https://account.blob.core.windows.net/attachments/attach/2026/06/expired.pdf'
+  ]);
+  assert.deepEqual(deletedFileDocuments, [
+    { id: 'expired-file', partitionKey: '_attach' }
+  ]);
+
+  mockExpiredDraftAttachmentResources = [];
+});
+
 test('linkDraftAttachmentsToPost rejects missing postId or draftSessionId', async () => {
   const res = makeRes();
 
   await linkDraftAttachmentsToPost({
     body: {
-      draftSessionId: 'draft-123e4567-e89b-12d3-a456-426614174000'
+      draftSessionId: 'draft-123e4567-e89b-42d3-a456-426614174000'
     },
     correlationId: 'x'
   }, res);
@@ -224,7 +295,7 @@ test('linkDraftAttachmentsToPost rejects empty postId values', async () => {
 
   await linkDraftAttachmentsToPost({
     body: {
-      draftSessionId: 'draft-123e4567-e89b-12d3-a456-426614174000',
+      draftSessionId: 'draft-123e4567-e89b-42d3-a456-426614174000',
       postId: '   '
     },
     correlationId: 'x'
@@ -241,7 +312,7 @@ test('linkDraftAttachmentsToPost returns 404 when post does not exist', async ()
 
   await linkDraftAttachmentsToPost({
     body: {
-      draftSessionId: 'draft-123e4567-e89b-12d3-a456-426614174000',
+      draftSessionId: 'draft-123e4567-e89b-42d3-a456-426614174000',
       postId: 'post-1'
     },
     correlationId: 'x'
@@ -261,7 +332,7 @@ test('linkDraftAttachmentsToPost links draft attachments and clears draftSession
       category: '_attach',
       partitionKey: '_attach',
       postId: null,
-      draftSessionId: 'draft-123e4567-e89b-12d3-a456-426614174000',
+      draftSessionId: 'draft-123e4567-e89b-42d3-a456-426614174000',
       blobUrl: 'https://account.blob.core.windows.net/attachments/attach/2026/06/file-1.pdf',
       fileName: 'file-1.pdf',
       contentType: 'application/pdf',
@@ -274,7 +345,7 @@ test('linkDraftAttachmentsToPost links draft attachments and clears draftSession
       category: '_attach',
       partitionKey: '_attach',
       postId: null,
-      draftSessionId: 'draft-123e4567-e89b-12d3-a456-426614174000',
+      draftSessionId: 'draft-123e4567-e89b-42d3-a456-426614174000',
       blobUrl: 'https://account.blob.core.windows.net/attachments/attach/2026/06/file-2.pdf',
       fileName: 'file-2.pdf',
       contentType: 'application/pdf',
@@ -287,7 +358,7 @@ test('linkDraftAttachmentsToPost links draft attachments and clears draftSession
 
   await linkDraftAttachmentsToPost({
     body: {
-      draftSessionId: 'draft-123e4567-e89b-12d3-a456-426614174000',
+      draftSessionId: 'draft-123e4567-e89b-42d3-a456-426614174000',
       postId: ' post-1 '
     },
     correlationId: 'x'
@@ -306,11 +377,12 @@ test('linkDraftAttachmentsToPost links draft attachments and clears draftSession
     replacedFileDocuments.map(({ doc }) => ({
       id: doc.id,
       postId: doc.postId,
-      draftSessionId: doc.draftSessionId
+      draftSessionId: doc.draftSessionId,
+      ttl: doc.ttl
     })),
     [
-      { id: 'file-1', postId: 'post-1', draftSessionId: null },
-      { id: 'file-2', postId: 'post-1', draftSessionId: null }
+      { id: 'file-1', postId: 'post-1', draftSessionId: null, ttl: null },
+      { id: 'file-2', postId: 'post-1', draftSessionId: null, ttl: null }
     ]
   );
   assert.match(replacedFileDocuments[0].doc.updatedAt, /^\d{4}-\d{2}-\d{2}T/);
