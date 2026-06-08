@@ -15,6 +15,7 @@
  *  - onYoutubeChange             {function}
  *  - onThumbnailUpload           {function}
  *  - postId                      {string|undefined}
+ *  - draftSessionId              {string|undefined}
  *  - categories                  {Array<{value, label}>}
  *  - linkedCalendarEventId       {string}   event 카테고리: 선택된 calendarEvent id ('' = 없음)
  *  - calendarEvents              {Array}    event 카테고리: picker 옵션 목록
@@ -36,6 +37,7 @@ function PostMetaSidebar({
   onYoutubeChange,
   onThumbnailUpload,
   postId,
+  draftSessionId,
   categories,
   linkedCalendarEventId = '',
   calendarEvents = [],
@@ -144,7 +146,7 @@ function PostMetaSidebar({
         <p className="text-xs text-neutral-400">
           업로드 후 URL 복사 버튼으로 마크다운 콘텐츠에 붙여넣을 수 있습니다.
         </p>
-        <AttachUploader postId={postId} />
+        <AttachUploader postId={postId} draftSessionId={draftSessionId} />
       </Card>
     </div>
   )
