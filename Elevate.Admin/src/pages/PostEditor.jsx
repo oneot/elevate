@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Card, Button, ConfirmModal, FormField } from '../components/ui/index.js'
 import { HtmlEditor, PostMetaSidebar } from '../components/editor/index.js'
 import { isApiConfigured } from '../lib/apiClient.js'
@@ -86,6 +86,8 @@ function PostEditor() {
     }
   })
   const navigate = useNavigate()
+  const location = useLocation()
+  const flashMessage = location.state?.message
   const [post, setPost] = useState(() => ({
     ...emptyPost,
     category: isNew ? (searchParams.get('category') || '') : '',
@@ -110,6 +112,12 @@ function PostEditor() {
     setError,
     setMessage,
   })
+
+  useEffect(() => {
+    if (!flashMessage) return
+    setMessage(flashMessage)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [flashMessage, location.pathname, navigate])
 
   useEffect(() => {
     if (!isApiConfigured) {
@@ -259,23 +267,32 @@ function PostEditor() {
       if (isNew) {
         const created = await createPost(payload, { msalInstance })
         const newId = created?.id || created?.postId
-        let attachmentLinkWarning = ''
+        const warnings = []
         if (newId && draftSessionId) {
           try {
             await linkDraftFilesToPost({ draftSessionId, postId: newId }, { msalInstance })
             try { sessionStorage.removeItem(draftAttachmentStorageKey) } catch { /* storage blocked — non-fatal */ }
           } catch (linkError) {
             console.error('[PostEditor] draft attachment link failed', linkError)
-            attachmentLinkWarning = ' 첨부파일 연결에 실패했습니다. 저장된 게시글에서 다시 확인해 주세요.'
+            warnings.push('첨부파일 연결에 실패했습니다. 저장된 게시글에서 다시 확인해 주세요.')
           }
         }
         if (post.category === 'event' && newId) {
-          await syncCalendarEventLink(newId)
+          try {
+            await syncCalendarEventLink(newId)
+          } catch (calendarError) {
+            console.error('[PostEditor] calendar event link failed after post creation', calendarError)
+            warnings.push(calendarError.message || '달력 이벤트 연결에 실패했습니다.')
+          }
         }
-        setMessage(`저장되었습니다.${attachmentLinkWarning}`)
+        const successMessage = warnings.length > 0
+          ? `저장되었습니다. ${warnings.join(' ')}`
+          : '저장되었습니다.'
         if (newId) {
           try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
-          navigate(`/posts/${newId}`)
+          navigate(`/posts/${newId}`, { state: { message: successMessage } })
+        } else {
+          setMessage(successMessage)
         }
       } else {
         await updatePost(postId, payload, { msalInstance })
