@@ -209,6 +209,28 @@ test('createFileMetadata rejects empty postId values', async () => {
   assert.equal(createdFileDocument, null);
 });
 
+test('createFileMetadata rejects simultaneous postId and draftSessionId', async () => {
+  createdFileDocument = null;
+  const res = makeRes();
+
+  await createFileMetadata({
+    body: {
+      postId: 'post-1',
+      draftSessionId: 'draft-123e4567-e89b-42d3-a456-426614174000',
+      blobUrl: 'https://account.blob.core.windows.net/attachments/attach/2026/06/file.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: 1234,
+      fileName: 'file.pdf'
+    },
+    correlationId: 'x'
+  }, res);
+
+  assert.equal(res.getStatus(), 400);
+  assert.equal(res.getBody().code, 'BadRequest');
+  assert.equal(res.getBody().message, 'Provide either postId or draftSessionId, not both');
+  assert.equal(createdFileDocument, null);
+});
+
 test('createFileMetadata stores trimmed postId and clears draftSessionId for saved posts', async () => {
   createdFileDocument = null;
   const res = makeRes();

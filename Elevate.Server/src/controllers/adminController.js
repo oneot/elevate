@@ -873,6 +873,9 @@ exports.createFileMetadata = async (req, res) => {
   if (hasDraftSessionId && !normalizedDraftSessionId) {
     return sendError(res, 400, 'BadRequest', 'Invalid draftSessionId', correlationId);
   }
+  if (normalizedPostId && normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'Provide either postId or draftSessionId, not both', correlationId);
+  }
   if (!normalizedPostId && !normalizedDraftSessionId) {
     return sendError(res, 400, 'BadRequest', 'postId or draftSessionId is required', correlationId);
   }

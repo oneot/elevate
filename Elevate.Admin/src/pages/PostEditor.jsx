@@ -30,6 +30,7 @@ const emptyPost = {
 }
 
 const CALENDAR_EVENT_LIMIT = 500
+const ATTACHMENT_LINK_WARNING = '첨부파일 연결에 실패했습니다. 저장된 게시글에서 다시 확인해 주세요.'
 
 function toDateString(date) {
   const year = date.getFullYear()
@@ -145,7 +146,11 @@ function PostEditor() {
           if (pendingDraftAttachmentStorageKey) sessionStorage.removeItem(pendingDraftAttachmentStorageKey)
         } catch { /* storage blocked — non-fatal */ }
         if (!cancelled) {
-          setMessage(`${flashMessage || '저장되었습니다.'} 첨부파일 연결을 다시 완료했습니다.`)
+          const baseMessage = (flashMessage || '저장되었습니다.')
+            .replace(ATTACHMENT_LINK_WARNING, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+          setMessage(`${baseMessage || '저장되었습니다.'} 첨부파일 연결을 다시 완료했습니다.`)
           clearNavigationState()
         }
       } catch (retryError) {
@@ -326,7 +331,7 @@ function PostEditor() {
             try { sessionStorage.removeItem(draftAttachmentStorageKey) } catch { /* storage blocked — non-fatal */ }
           } catch (linkError) {
             console.error('[PostEditor] draft attachment link failed', linkError)
-            warnings.push('첨부파일 연결에 실패했습니다. 저장된 게시글에서 다시 확인해 주세요.')
+            warnings.push(ATTACHMENT_LINK_WARNING)
             draftAttachmentLinkState = {
               draftSessionId,
               draftAttachmentStorageKey,
