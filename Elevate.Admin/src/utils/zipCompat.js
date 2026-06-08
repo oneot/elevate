@@ -59,12 +59,9 @@ function decodeUtf8(bytes) {
 }
 
 function isMacosxMetadataEntry(fileName) {
-  const fileNameParts = fileName.split('/')
-  const baseName = fileNameParts[fileNameParts.length - 1]
   return fileName === '__MACOSX' ||
     fileName === '__MACOSX/' ||
-    fileName.startsWith('__MACOSX/') ||
-    baseName.startsWith('._')
+    fileName.startsWith('__MACOSX/')
 }
 
 function findEndOfCentralDirectory(bytes) {
@@ -262,8 +259,8 @@ function rebuildZipWithNormalizedNames(source, centralDirectoryOffset, centralDi
  * or unusable extracted folder. The payload is already valid; patching the
  * local and central directory flags is enough and avoids recompressing files.
  *
- * @param {File} file
- * @returns {Promise<File>}
+ * @param {File|null|undefined} file
+ * @returns {Promise<File|null|undefined>}
  */
 export async function ensureWindowsCompatibleZipFile(file) {
   if (!file || !String(file.name || '').toLowerCase().endsWith('.zip')) {

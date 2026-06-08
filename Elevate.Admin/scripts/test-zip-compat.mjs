@@ -191,6 +191,12 @@ const dotUnderscoreDirectoryOutput = await ensureWindowsCompatibleZipFile(dotUnd
 const dotUnderscoreDirectoryPatched = new Uint8Array(await dotUnderscoreDirectoryOutput.arrayBuffer())
 assert.deepEqual(readCentralFileNames(dotUnderscoreDirectoryPatched), ['Files/._not-metadata/report.pdf'])
 
+const intentionalDotUnderscoreZip = createZipWithEntries(['._custom'])
+const intentionalDotUnderscoreInput = new File([intentionalDotUnderscoreZip], 'attach.zip', { type: 'application/zip' })
+const intentionalDotUnderscoreOutput = await ensureWindowsCompatibleZipFile(intentionalDotUnderscoreInput)
+const intentionalDotUnderscorePatched = new Uint8Array(await intentionalDotUnderscoreOutput.arrayBuffer())
+assert.deepEqual(readCentralFileNames(intentionalDotUnderscorePatched), ['._custom'])
+
 const commentedZip = createZipWithEocdComment()
 const commentedInput = new File([commentedZip], 'attach.zip', { type: 'application/zip' })
 const commentedOutput = await ensureWindowsCompatibleZipFile(commentedInput)
