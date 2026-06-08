@@ -70,18 +70,26 @@ function concat(...parts) {
 function createZipWithMacosxMetadata() {
   const first = createStoredZipWithMissingUtf8Flag('Files/05_사고사례.pdf'.normalize('NFD'))
   const second = createStoredZipWithMissingUtf8Flag('__MACOSX/Files/._05_사고사례.pdf'.normalize('NFD'))
+  const third = createStoredZipWithMissingUtf8Flag('__MACOSX')
   const firstLocalSize = findCentralHeaderOffset(first)
   const secondLocalSize = findCentralHeaderOffset(second)
-  const localParts = [first.subarray(0, firstLocalSize), second.subarray(0, secondLocalSize)]
+  const thirdLocalSize = findCentralHeaderOffset(third)
+  const localParts = [
+    first.subarray(0, firstLocalSize),
+    second.subarray(0, secondLocalSize),
+    third.subarray(0, thirdLocalSize),
+  ]
   const centralOffset = localParts.reduce((sum, part) => sum + part.length, 0)
   const firstCentral = first.subarray(firstLocalSize, first.length - 22)
   const secondCentral = new Uint8Array(second.subarray(secondLocalSize, second.length - 22))
+  const thirdCentral = new Uint8Array(third.subarray(thirdLocalSize, third.length - 22))
   writeUInt32LE(secondCentral, 42, firstLocalSize)
-  const centralDirectory = concat(firstCentral, secondCentral)
+  writeUInt32LE(thirdCentral, 42, firstLocalSize + secondLocalSize)
+  const centralDirectory = concat(firstCentral, secondCentral, thirdCentral)
   const eocd = new Uint8Array(22)
   writeUInt32LE(eocd, 0, 0x06054b50)
-  writeUInt16LE(eocd, 8, 2)
-  writeUInt16LE(eocd, 10, 2)
+  writeUInt16LE(eocd, 8, 3)
+  writeUInt16LE(eocd, 10, 3)
   writeUInt32LE(eocd, 12, centralDirectory.length)
   writeUInt32LE(eocd, 16, centralOffset)
   return concat(...localParts, centralDirectory, eocd)
@@ -149,7 +157,7 @@ assert.equal(readFirstCentralFileName(incompatibleZip), 'Files/05_사고사례.p
 const centralHeaderOffset = findCentralHeaderOffset(incompatibleZip)
 assert.notEqual(centralHeaderOffset, -1)
 
-const input = new File([incompatibleZip], 'attach.zip', { type: 'application/zip' })
+const input = new File([incompatibleZip], 'attach.zip', { type: 'application/zip', lastModified: 0 })
 const output = await ensureWindowsCompatibleZipFile(input)
 const patched = new Uint8Array(await output.arrayBuffer())
 const patchedCentralHeaderOffset = findCentralHeaderOffset(patched)
@@ -157,6 +165,7 @@ const patchedCentralHeaderOffset = findCentralHeaderOffset(patched)
 assert.notEqual(output, input)
 assert.equal(output.name, 'attach.zip')
 assert.equal(output.type, 'application/zip')
+assert.equal(output.lastModified, 0)
 assert.equal(readUInt16LE(patched, 6) & 0x0800, 0x0800)
 assert.equal(readUInt16LE(patched, patchedCentralHeaderOffset + 8) & 0x0800, 0x0800)
 assert.equal(readFirstCentralFileName(patched), 'Files/05_사고사례.pdf')

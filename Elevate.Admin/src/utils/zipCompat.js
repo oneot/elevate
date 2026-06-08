@@ -59,7 +59,8 @@ function decodeUtf8(bytes) {
 }
 
 function isMacosxMetadataEntry(fileName) {
-  return fileName === '__MACOSX/' ||
+  return fileName === '__MACOSX' ||
+    fileName === '__MACOSX/' ||
     fileName.startsWith('__MACOSX/') ||
     fileName.split('/').some(part => part.startsWith('._'))
 }
@@ -288,6 +289,6 @@ export async function ensureWindowsCompatibleZipFile(file) {
 
   return new File([rebuilt], file.name, {
     type: file.type || 'application/zip',
-    lastModified: file.lastModified || Date.now(),
+    lastModified: file.lastModified ?? Date.now(),
   })
 }
