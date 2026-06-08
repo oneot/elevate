@@ -148,11 +148,13 @@ function PostEditor() {
       }
 
       try {
+        setDraftSessionId(pendingDraftSessionId)
         await linkDraftFilesToPost({ draftSessionId: pendingDraftSessionId, postId }, { msalInstance })
         try {
           if (pendingDraftAttachmentStorageKey) sessionStorage.removeItem(pendingDraftAttachmentStorageKey)
         } catch { /* storage blocked — non-fatal */ }
         if (!cancelled) {
+          setDraftSessionId('')
           const baseMessage = (flashMessage || '저장되었습니다.')
             .replace(ATTACHMENT_LINK_WARNING, '')
             .replace(/\s+/g, ' ')

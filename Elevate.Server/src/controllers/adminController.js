@@ -199,7 +199,7 @@ function buildAttachmentListQuery({ postId, draftSessionId }) {
 
 function buildExpiredDraftAttachmentQuery(nowIso) {
   return {
-    query: 'SELECT * FROM c WHERE c.documentType = "attach" AND IS_DEFINED(c.draftSessionId) AND c.draftSessionId != null AND c.expiresAt < @now',
+    query: 'SELECT c.id, c.category, c.partitionKey, c.blobUrl FROM c WHERE c.documentType = "attach" AND IS_DEFINED(c.draftSessionId) AND c.draftSessionId != null AND IS_DEFINED(c.expiresAt) AND c.expiresAt < @now',
     parameters: [{ name: '@now', value: nowIso }]
   };
 }
