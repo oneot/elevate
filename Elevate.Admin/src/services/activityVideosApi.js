@@ -1,9 +1,8 @@
 import { apiFetch } from '../lib/apiClient.js'
 
-export function listActivityVideos({ msalInstance, status, limit } = {}) {
+export function listActivityVideos({ msalInstance, status } = {}) {
   const params = new URLSearchParams()
   if (status && status !== 'all') params.set('status', status)
-  if (limit) params.set('limit', String(limit))
   const qs = params.toString()
   return apiFetch(`/activity-videos${qs ? `?${qs}` : ''}`, { msalInstance })
 }

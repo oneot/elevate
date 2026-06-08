@@ -32,7 +32,7 @@ function ActivityVideoCard({ video, index }) {
             <div className="overflow-hidden rounded-md bg-neutral-100 aspect-video">
               <img
                 src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
-                alt=""
+                alt={video.title || '활동 영상 썸네일'}
                 className="h-full w-full object-cover"
                 loading="lazy"
               />
@@ -92,7 +92,6 @@ function ActivityVideos() {
         const data = await listActivityVideos({
           msalInstance,
           status: statusFilter,
-          limit: 500,
         })
         if (isMounted) setVideos(Array.isArray(data?.items) ? data.items : [])
       } catch {
