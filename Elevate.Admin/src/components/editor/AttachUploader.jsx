@@ -26,11 +26,11 @@ function getContentType(file) {
   return ATTACH_MIME_MAP[ext] || file.type || 'application/octet-stream'
 }
 
-export default function AttachUploader({ postId, draftSessionId }) {
+export default function AttachUploader({ postId, draftSessionId, onUploadingChange }) {
   const { msalInstance } = useAuth()
   const inputRef = useRef(null)
   const [status, setStatus] = useState(null) // null | 'uploading' | 'done' | 'error'
-  const [files, setFiles] = useState([])      // [{ id, fileName, blobUrl, isDeleting }]
+  const [files, setFiles] = useState([])      // [{ id, fileName, blobUrl, signedUrl, isDeleting }]
   const [loadingFiles, setLoadingFiles] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const [error, setError] = useState(null)
@@ -43,7 +43,6 @@ export default function AttachUploader({ postId, draftSessionId }) {
       : draftSessionId
         ? { draftSessionId }
         : null
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFiles([])
     setConfirmDeleteId(null)
     setError(null)
@@ -81,6 +80,7 @@ export default function AttachUploader({ postId, draftSessionId }) {
     }
 
     setStatus('uploading')
+    onUploadingChange?.(true)
     try {
       const sas = await requestAttachUploadSas(
         { fileName: file.name, contentType, sizeBytes: file.size },
@@ -105,6 +105,8 @@ export default function AttachUploader({ postId, draftSessionId }) {
     } catch {
       setError('업로드에 실패했습니다.')
       setStatus('error')
+    } finally {
+      onUploadingChange?.(false)
     }
   }
 

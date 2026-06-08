@@ -104,6 +104,7 @@ function PostEditor() {
   const [youtubeError, setYoutubeError] = useState('')
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
+  const [isAttachmentUploading, setIsAttachmentUploading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [error, setError] = useState('')
@@ -314,6 +315,11 @@ function PostEditor() {
       return
     }
 
+    if (isAttachmentUploading) {
+      setError('첨부파일 업로드가 완료된 뒤 저장해주세요.')
+      return
+    }
+
     // slug 입력값을 항상 정규화한다 (한글·특수문자 제거).
     // 정규화 후에도 빈 문자열이면 제목에서 생성하고,
     // 여전히 비어 있으면 서버가 자동 생성하도록 비워 둔다.
@@ -452,6 +458,8 @@ function PostEditor() {
     )
   }
 
+  const saveDisabled = saving || isAttachmentUploading
+
   return (
     <div className="space-y-10 animate-fadeIn">
       {!isApiConfigured ? (
@@ -477,8 +485,8 @@ function PostEditor() {
               삭제
             </Button>
           )}
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? '저장 중...' : '저장'}
+          <Button onClick={handleSave} disabled={saveDisabled}>
+            {saving ? '저장 중...' : isAttachmentUploading ? '첨부 업로드 중...' : '저장'}
           </Button>
         </div>
       </div>
@@ -556,6 +564,7 @@ function PostEditor() {
             onTagsChange={setTagsInput}
             onYoutubeChange={handleYoutubeChange}
             onThumbnailUpload={uploadThumbnail}
+            onAttachmentUploadingChange={setIsAttachmentUploading}
             linkedCalendarEventId={linkedCalendarEventId}
             calendarEvents={calendarEvents}
             onLinkedCalendarEventChange={setLinkedCalendarEventId}
