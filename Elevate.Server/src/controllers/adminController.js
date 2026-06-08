@@ -199,7 +199,7 @@ function buildAttachmentListQuery({ postId, draftSessionId }) {
 
 function buildExpiredDraftAttachmentQuery(nowIso) {
   return {
-    query: 'SELECT c.id, c.category, c.partitionKey, c.blobUrl FROM c WHERE c.documentType = "attach" AND IS_DEFINED(c.draftSessionId) AND c.draftSessionId != null AND IS_DEFINED(c.expiresAt) AND c.expiresAt < @now',
+    query: 'SELECT TOP 50 c.id, c.category, c.partitionKey, c.blobUrl FROM c WHERE c.documentType = "attach" AND IS_DEFINED(c.draftSessionId) AND c.draftSessionId != null AND IS_DEFINED(c.expiresAt) AND c.expiresAt < @now',
     parameters: [{ name: '@now', value: nowIso }]
   };
 }
@@ -214,7 +214,7 @@ async function cleanupExpiredDraftAttachments(container, now = new Date()) {
       .query(buildExpiredDraftAttachmentQuery(now.toISOString()), { partitionKey: attachCategoryPartition })
       .fetchAll();
 
-    await Promise.all(resources.map(async (file) => {
+    for (const file of resources) {
       try {
         await deleteBlobByUrl(file.blobUrl);
       } catch (err) {
@@ -225,7 +225,7 @@ async function cleanupExpiredDraftAttachments(container, now = new Date()) {
       } catch (err) {
         console.error(`[cleanupExpiredDraftAttachments] cosmos deletion failed for file ${file.id}`, err);
       }
-    }));
+    }
   } catch (err) {
     console.error('[cleanupExpiredDraftAttachments] failed', err);
   }
@@ -946,7 +946,7 @@ exports.linkDraftAttachmentsToPost = async (req, res) => {
       .query(buildDraftAttachmentQuery(normalizedDraftSessionId), { partitionKey: attachCategoryPartition })
       .fetchAll();
 
-    await Promise.all(resources.map(async (file) => {
+    for (const file of resources) {
       const updated = {
         ...file,
         postId: normalizedPostId,
@@ -956,7 +956,7 @@ exports.linkDraftAttachmentsToPost = async (req, res) => {
         updatedAt: new Date().toISOString()
       };
       await container.item(file.id, file.category || file.partitionKey || attachCategoryPartition).replace(updated);
-    }));
+    }
 
     return res.json({ linked: resources.length });
   } catch (error) {

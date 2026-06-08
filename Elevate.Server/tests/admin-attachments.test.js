@@ -137,7 +137,7 @@ test('buildExpiredDraftAttachmentQuery scopes stale draft attachments', () => {
 
   assert.equal(
     query.query,
-    'SELECT c.id, c.category, c.partitionKey, c.blobUrl FROM c WHERE c.documentType = "attach" AND IS_DEFINED(c.draftSessionId) AND c.draftSessionId != null AND IS_DEFINED(c.expiresAt) AND c.expiresAt < @now'
+    'SELECT TOP 50 c.id, c.category, c.partitionKey, c.blobUrl FROM c WHERE c.documentType = "attach" AND IS_DEFINED(c.draftSessionId) AND c.draftSessionId != null AND IS_DEFINED(c.expiresAt) AND c.expiresAt < @now'
   );
   assert.deepEqual(query.parameters, [
     { name: '@now', value: '2026-06-08T00:00:00.000Z' }
