@@ -16,8 +16,9 @@ export default function ActivityShowcasePage() {
     const controller = new AbortController();
     listActivityVideos({ signal: controller.signal })
       .then((data) => {
-        const apiItems = Array.isArray(data?.items) ? data.items : [];
-        if (apiItems.length > 0) setItems(apiItems);
+        if (Array.isArray(data?.items)) {
+          setItems(data.items);
+        }
       })
       .catch((error) => {
         if (error.name !== "AbortError") {
