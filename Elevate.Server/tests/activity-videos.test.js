@@ -102,6 +102,20 @@ test('listPublicActivityVideos returns only published videos query ordered by so
   assert.deepEqual(lastQueryOptions, { partitionKey: 'activityVideo' });
 });
 
+test('listPublicActivityVideos ignores requested status and always queries published', async () => {
+  docs = [
+    { id: '1', type: 'activityVideo', partitionKey: 'activityVideo', videoId: 'SfK1hajr5qY', title: 'A', category: '행사', year: '2026', channel: 'Microsoft Korea', sortOrder: 20, status: 'published', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+    { id: '2', type: 'activityVideo', partitionKey: 'activityVideo', videoId: 'aaK1hajr5qY', title: 'B', category: '행사', year: '2026', channel: 'Microsoft Korea', sortOrder: 10, status: 'draft', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+  ];
+  const res = makeRes();
+
+  await ctrl.listPublicActivityVideos({ query: { status: 'draft' }, params: {}, correlationId: 'x' }, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items.map((item) => item.id), ['1']);
+  assert.deepEqual(lastQuerySpec.parameters.find((param) => param.name === '@status'), { name: '@status', value: 'published' });
+});
+
 test('listAdminActivityVideos filters valid status using activityVideo partition', async () => {
   docs = [
     { id: '1', type: 'activityVideo', partitionKey: 'activityVideo', videoId: 'SfK1hajr5qY', title: 'A', category: '행사', year: '2026', channel: 'Microsoft Korea', sortOrder: 20, status: 'published', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
@@ -115,6 +129,59 @@ test('listAdminActivityVideos filters valid status using activityVideo partition
   assert.deepEqual(res.getBody().items.map((item) => item.id), ['2']);
   assert.match(lastQuerySpec.query, /AND c.status = @status/);
   assert.deepEqual(lastQueryOptions, { partitionKey: 'activityVideo' });
+});
+
+test('getAdminActivityVideoDetail returns activity video detail', async () => {
+  docs = [{
+    id: 'video-1',
+    type: 'activityVideo',
+    partitionKey: 'activityVideo',
+    videoId: 'SfK1hajr5qY',
+    title: 'Title',
+    description: 'Desc',
+    category: '행사',
+    year: '2026',
+    channel: 'Microsoft Korea',
+    sortOrder: 1,
+    status: 'published',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-02T00:00:00.000Z',
+  }];
+  const res = makeRes();
+
+  await ctrl.getAdminActivityVideoDetail({
+    params: { activityVideoId: 'video-1' },
+    query: {},
+    correlationId: 'x',
+  }, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody(), {
+    id: 'video-1',
+    videoId: 'SfK1hajr5qY',
+    title: 'Title',
+    description: 'Desc',
+    category: '행사',
+    year: '2026',
+    channel: 'Microsoft Korea',
+    sortOrder: 1,
+    status: 'published',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-02T00:00:00.000Z',
+  });
+});
+
+test('getAdminActivityVideoDetail returns 404 for missing activity video', async () => {
+  const res = makeRes();
+
+  await ctrl.getAdminActivityVideoDetail({
+    params: { activityVideoId: 'missing-video' },
+    query: {},
+    correlationId: 'x',
+  }, res);
+
+  assert.equal(res.getStatus(), 404);
+  assert.equal(res.getBody().message, 'Resource not found');
 });
 
 test('createActivityVideo rejects invalid YouTube videoId', async () => {
