@@ -183,6 +183,20 @@ function buildDraftAttachmentQuery(draftSessionId) {
   };
 }
 
+function buildAttachmentListQuery({ postId, draftSessionId }) {
+  if (postId) {
+    return {
+      query: 'SELECT c.id, c.fileName, c.blobUrl, c.contentType, c.sizeBytes FROM c WHERE c.postId = @postId AND c.documentType = "attach"',
+      parameters: [{ name: '@postId', value: postId }]
+    };
+  }
+
+  return {
+    query: 'SELECT c.id, c.fileName, c.blobUrl, c.contentType, c.sizeBytes FROM c WHERE c.draftSessionId = @draftSessionId AND c.documentType = "attach"',
+    parameters: [{ name: '@draftSessionId', value: draftSessionId }]
+  };
+}
+
 function buildExpiredDraftAttachmentQuery(nowIso) {
   return {
     query: 'SELECT * FROM c WHERE c.documentType = "attach" AND IS_DEFINED(c.draftSessionId) AND c.draftSessionId != null AND c.expiresAt < @now',
@@ -865,10 +879,12 @@ exports.createFileMetadata = async (req, res) => {
 
   try {
     const container = getAssetsContainer();
-    await cleanupExpiredDraftAttachments(container);
     const fileId = createUuid();
     const now = new Date().toISOString();
-    const isDraftAttachment = !normalizedPostId && normalizedDraftSessionId;
+    const isDraftAttachment = Boolean(!normalizedPostId && normalizedDraftSessionId);
+    if (isDraftAttachment) {
+      await cleanupExpiredDraftAttachments(container);
+    }
 
     const fileDocument = {
       id: fileId,
@@ -975,18 +991,33 @@ exports.deleteFile = async (req, res) => {
 
 exports.getFiles = async (req, res) => {
   const correlationId = req.correlationId;
-  const postId = req.query?.postId;
+  const rawPostId = req.query?.postId;
+  const rawDraftSessionId = req.query?.draftSessionId;
+  const normalizedPostId = typeof rawPostId === 'string' ? rawPostId.trim() : '';
+  const normalizedDraftSessionId = normalizeDraftSessionId(rawDraftSessionId);
 
-  if (!postId) {
-    return sendError(res, 400, 'BadRequest', 'postId query parameter is required', correlationId);
+  if (rawPostId !== undefined && !normalizedPostId) {
+    return sendError(res, 400, 'BadRequest', 'postId must be a non-empty string', correlationId);
+  }
+
+  if (rawDraftSessionId !== undefined && !normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'Invalid draftSessionId', correlationId);
+  }
+
+  if (!normalizedPostId && !normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'postId or draftSessionId query parameter is required', correlationId);
+  }
+
+  if (normalizedPostId && normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'Provide either postId or draftSessionId, not both', correlationId);
   }
 
   try {
     const container = getAssetsContainer();
-    const querySpec = {
-      query: 'SELECT c.id, c.fileName, c.blobUrl, c.contentType, c.sizeBytes FROM c WHERE c.postId = @postId AND c.documentType = "attach"',
-      parameters: [{ name: '@postId', value: postId }]
-    };
+    const querySpec = buildAttachmentListQuery({
+      postId: normalizedPostId,
+      draftSessionId: normalizedDraftSessionId
+    });
 
     const { resources } = await container.items.query(querySpec, { partitionKey: attachCategoryPartition }).fetchAll();
 
@@ -1050,6 +1081,7 @@ exports._test = {
   collectThumbnailUrls,
   normalizeDraftSessionId,
   buildDraftAttachmentQuery,
+  buildAttachmentListQuery,
   buildExpiredDraftAttachmentQuery,
   getDraftAttachmentExpiresAt
 };

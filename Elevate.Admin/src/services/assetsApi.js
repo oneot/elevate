@@ -68,13 +68,22 @@ export function linkDraftFilesToPost(payload, options = {}) {
 }
 
 /**
- * 게시글에 등록된 첨부파일 목록을 조회한다.
- * @param {string} postId
+ * 게시글 또는 임시 작성 세션에 등록된 첨부파일 목록을 조회한다.
+ * @param {string|{ postId?: string, draftSessionId?: string }} params
  * @param {{ msalInstance }} options
  * @returns {Promise<Array<{ id: string, fileName: string, blobUrl: string, signedUrl: string | null, contentType: string, sizeBytes: number }>>}
  */
-export function getFiles(postId, options = {}) {
-  return apiFetch(`/files?postId=${encodeURIComponent(postId)}`, {
+export function getFiles(params, options = {}) {
+  const query = new URLSearchParams()
+  if (typeof params === 'string') {
+    query.set('postId', params)
+  } else if (params?.postId) {
+    query.set('postId', params.postId)
+  } else if (params?.draftSessionId) {
+    query.set('draftSessionId', params.draftSessionId)
+  }
+
+  return apiFetch(`/files?${query.toString()}`, {
     ...options,
     method: 'GET',
   })
