@@ -37,7 +37,12 @@ function ActivityVideoEditor() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    if (!isApiConfigured || isNew) return
+    if (isNew) return
+    if (!isApiConfigured) {
+      setLoading(false)
+      setMessage('API가 연결되어 있지 않습니다.')
+      return
+    }
     let isMounted = true
     const load = async () => {
       setLoading(true)
