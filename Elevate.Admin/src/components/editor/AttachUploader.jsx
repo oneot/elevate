@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { requestAttachUploadSas, registerFile, getFiles, deleteFile } from '../../services/assetsApi.js'
 import { uploadBlobWithSas } from '../../utils/imageUpload.js'
+import { ensureWindowsCompatibleZipFile } from '../../utils/zipCompat.js'
 import { useAuth } from '../../hooks/useAuth.js'
 
 /**
@@ -76,24 +77,25 @@ export default function AttachUploader({ postId }) {
 
     setStatus('uploading')
     try {
+      const uploadFile = await ensureWindowsCompatibleZipFile(file)
       const sas = await requestAttachUploadSas(
-        { fileName: file.name, contentType, sizeBytes: file.size },
+        { fileName: uploadFile.name, contentType, sizeBytes: uploadFile.size },
         { msalInstance }
       )
-      await uploadBlobWithSas(sas.uploadUrl, file, contentType)
+      await uploadBlobWithSas(sas.uploadUrl, uploadFile, contentType)
       const result = await registerFile(
         {
           postId: postId || null,
           blobUrl: sas.blobUrl,
-          fileName: file.name,
+          fileName: uploadFile.name,
           contentType,
-          sizeBytes: file.size,
+          sizeBytes: uploadFile.size,
         },
         { msalInstance }
       )
       const blobUrl = result?.url || sas.blobUrl
       const signedUrl = result?.signedUrl || null
-      setFiles(prev => [...prev, { id: result.fileId, fileName: file.name, blobUrl, signedUrl, isDeleting: false }])
+      setFiles(prev => [...prev, { id: result.fileId, fileName: uploadFile.name, blobUrl, signedUrl, isDeleting: false }])
       setStatus('done')
     } catch {
       setError('업로드에 실패했습니다.')
