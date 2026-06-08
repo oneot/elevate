@@ -167,6 +167,14 @@ function createUuid() {
   return crypto.randomBytes(16).toString('hex');
 }
 
+function normalizeDraftSessionId(value) {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 80) return null;
+  if (!/^draft-[a-f0-9-]{8,}$/i.test(trimmed)) return null;
+  return trimmed;
+}
+
 function validatePostCreatePayload(body) {
   if (!body || typeof body !== 'object') {
     return 'Invalid request payload';
@@ -937,5 +945,6 @@ exports.getAnalyticsSummary = async (req, res) => {
 
 exports._test = {
   normalizeThumbnailForStorage,
-  collectThumbnailUrls
+  collectThumbnailUrls,
+  normalizeDraftSessionId
 };
