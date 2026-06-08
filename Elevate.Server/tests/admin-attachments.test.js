@@ -2,13 +2,33 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 let createdFileDocument = null;
+let mockPostResources = [];
+let mockDraftAttachmentResources = [];
+let replacedFileDocuments = [];
 
 const mockAssetsContainer = {
   items: {
     create: async (doc) => {
       createdFileDocument = doc;
       return { resource: doc };
+    },
+    query: () => ({
+      fetchAll: async () => ({ resources: mockDraftAttachmentResources })
+    })
+  },
+  item: (id, partitionKey) => ({
+    replace: async (doc) => {
+      replacedFileDocuments.push({ id, partitionKey, doc });
+      return { resource: doc };
     }
+  })
+};
+
+const mockPostsContainer = {
+  items: {
+    query: () => ({
+      fetchAll: async () => ({ resources: mockPostResources })
+    })
   }
 };
 
@@ -22,7 +42,7 @@ require.cache[cosmosClientPath] = {
   loaded: true,
   exports: {
     getAssetsContainer: () => mockAssetsContainer,
-    getPostsContainer: () => mockAssetsContainer
+    getPostsContainer: () => mockPostsContainer
   }
 };
 
@@ -39,7 +59,7 @@ require.cache[storageClientPath] = {
 };
 
 delete require.cache[controllerPath];
-const { _test, createFileMetadata } = require('../src/controllers/adminController');
+const { _test, createFileMetadata, linkDraftAttachmentsToPost } = require('../src/controllers/adminController');
 
 test.after(() => {
   delete require.cache[cosmosClientPath];
@@ -121,4 +141,100 @@ test('createFileMetadata rejects provided invalid draftSessionId values', async 
   assert.equal(res.getBody().code, 'BadRequest');
   assert.equal(res.getBody().message, 'Invalid draftSessionId');
   assert.equal(createdFileDocument, null);
+});
+
+test('linkDraftAttachmentsToPost rejects missing postId or draftSessionId', async () => {
+  const res = makeRes();
+
+  await linkDraftAttachmentsToPost({
+    body: {
+      draftSessionId: 'draft-123e4567-e89b-12d3-a456-426614174000'
+    },
+    correlationId: 'x'
+  }, res);
+
+  assert.equal(res.getStatus(), 400);
+  assert.equal(res.getBody().code, 'BadRequest');
+  assert.equal(res.getBody().message, 'draftSessionId and postId are required');
+});
+
+test('linkDraftAttachmentsToPost returns 404 when post does not exist', async () => {
+  mockPostResources = [];
+  const res = makeRes();
+
+  await linkDraftAttachmentsToPost({
+    body: {
+      draftSessionId: 'draft-123e4567-e89b-12d3-a456-426614174000',
+      postId: 'post-1'
+    },
+    correlationId: 'x'
+  }, res);
+
+  assert.equal(res.getStatus(), 404);
+  assert.equal(res.getBody().code, 'NotFound');
+  assert.equal(res.getBody().message, 'Post not found');
+});
+
+test('linkDraftAttachmentsToPost links draft attachments and clears draftSessionId', async () => {
+  mockPostResources = [{ id: 'post-1', documentType: 'post' }];
+  mockDraftAttachmentResources = [
+    {
+      id: 'file-1',
+      documentType: 'attach',
+      category: '_attach',
+      partitionKey: '_attach',
+      postId: null,
+      draftSessionId: 'draft-123e4567-e89b-12d3-a456-426614174000',
+      blobUrl: 'https://account.blob.core.windows.net/attachments/attach/2026/06/file-1.pdf',
+      fileName: 'file-1.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: 100,
+      updatedAt: '2026-06-01T00:00:00.000Z'
+    },
+    {
+      id: 'file-2',
+      documentType: 'attach',
+      category: '_attach',
+      partitionKey: '_attach',
+      postId: null,
+      draftSessionId: 'draft-123e4567-e89b-12d3-a456-426614174000',
+      blobUrl: 'https://account.blob.core.windows.net/attachments/attach/2026/06/file-2.pdf',
+      fileName: 'file-2.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: 200,
+      updatedAt: '2026-06-01T00:00:00.000Z'
+    }
+  ];
+  replacedFileDocuments = [];
+  const res = makeRes();
+
+  await linkDraftAttachmentsToPost({
+    body: {
+      draftSessionId: 'draft-123e4567-e89b-12d3-a456-426614174000',
+      postId: 'post-1'
+    },
+    correlationId: 'x'
+  }, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody(), { linked: 2 });
+  assert.deepEqual(
+    replacedFileDocuments.map(({ id, partitionKey }) => [id, partitionKey]),
+    [
+      ['file-1', '_attach'],
+      ['file-2', '_attach']
+    ]
+  );
+  assert.deepEqual(
+    replacedFileDocuments.map(({ doc }) => ({
+      id: doc.id,
+      postId: doc.postId,
+      draftSessionId: doc.draftSessionId
+    })),
+    [
+      { id: 'file-1', postId: 'post-1', draftSessionId: null },
+      { id: 'file-2', postId: 'post-1', draftSessionId: null }
+    ]
+  );
+  assert.match(replacedFileDocuments[0].doc.updatedAt, /^\d{4}-\d{2}-\d{2}T/);
 });
