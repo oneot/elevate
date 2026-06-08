@@ -869,14 +869,15 @@ exports.linkDraftAttachmentsToPost = async (req, res) => {
   const correlationId = req.correlationId;
   const { draftSessionId, postId } = req.body || {};
   const normalizedDraftSessionId = normalizeDraftSessionId(draftSessionId);
+  const normalizedPostId = typeof postId === 'string' ? postId.trim() : '';
 
-  if (!normalizedDraftSessionId || !postId || typeof postId !== 'string') {
+  if (!normalizedDraftSessionId || !normalizedPostId) {
     return sendError(res, 400, 'BadRequest', 'draftSessionId and postId are required', correlationId);
   }
 
   try {
     const postsContainer = getPostsContainer();
-    const post = await findPostById(postsContainer, postId);
+    const post = await findPostById(postsContainer, normalizedPostId);
     if (!post) {
       return sendError(res, 404, 'NotFound', 'Post not found', correlationId);
     }
@@ -889,7 +890,7 @@ exports.linkDraftAttachmentsToPost = async (req, res) => {
     await Promise.all(resources.map(async (file) => {
       const updated = {
         ...file,
-        postId,
+        postId: normalizedPostId,
         draftSessionId: null,
         updatedAt: new Date().toISOString()
       };

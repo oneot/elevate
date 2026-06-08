@@ -219,6 +219,22 @@ test('linkDraftAttachmentsToPost rejects missing postId or draftSessionId', asyn
   assert.equal(res.getBody().message, 'draftSessionId and postId are required');
 });
 
+test('linkDraftAttachmentsToPost rejects empty postId values', async () => {
+  const res = makeRes();
+
+  await linkDraftAttachmentsToPost({
+    body: {
+      draftSessionId: 'draft-123e4567-e89b-12d3-a456-426614174000',
+      postId: '   '
+    },
+    correlationId: 'x'
+  }, res);
+
+  assert.equal(res.getStatus(), 400);
+  assert.equal(res.getBody().code, 'BadRequest');
+  assert.equal(res.getBody().message, 'draftSessionId and postId are required');
+});
+
 test('linkDraftAttachmentsToPost returns 404 when post does not exist', async () => {
   mockPostResources = [];
   const res = makeRes();
@@ -272,7 +288,7 @@ test('linkDraftAttachmentsToPost links draft attachments and clears draftSession
   await linkDraftAttachmentsToPost({
     body: {
       draftSessionId: 'draft-123e4567-e89b-12d3-a456-426614174000',
-      postId: 'post-1'
+      postId: ' post-1 '
     },
     correlationId: 'x'
   }, res);
