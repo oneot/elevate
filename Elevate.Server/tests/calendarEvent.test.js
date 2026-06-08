@@ -3,13 +3,48 @@ const assert = require('node:assert/strict');
 
 let lastQuerySpec = null;
 let lastCreatedDoc = null;
+let mockQueryResources = [];
+let mockQueryPages = null;
+let querySpecs = [];
+let queryOptions = [];
+let fetchNextCalls = 0;
 
 // cosmosClient 모킹 — require.cache 국소 스텁 (전역 Module._load 패치 없음)
 const mockContainer = {
   items: {
-    query: (querySpec) => {
+    query: (querySpec, options = {}) => {
       lastQuerySpec = querySpec;
-      return { fetchAll: async () => ({ resources: [] }) };
+      querySpecs.push(querySpec);
+      queryOptions.push(options);
+      let cursor = 0;
+      let pageIndex = 0;
+      return {
+        get hasMoreResults() {
+          if (Array.isArray(mockQueryPages)) {
+            return pageIndex < mockQueryPages.length;
+          }
+          return cursor < mockQueryResources.length;
+        },
+        fetchAll: async () => {
+          const [, offset, limit] = querySpec.query.match(/OFFSET (\d+) LIMIT (\d+)/) || [];
+          if (offset !== undefined && limit !== undefined) {
+            return { resources: mockQueryResources.slice(Number(offset), Number(offset) + Number(limit)) };
+          }
+          return { resources: mockQueryResources };
+        },
+        fetchNext: async () => {
+          fetchNextCalls += 1;
+          if (Array.isArray(mockQueryPages)) {
+            const resources = mockQueryPages[pageIndex] || [];
+            pageIndex += 1;
+            return { resources };
+          }
+          const pageSize = options.maxItemCount || mockQueryResources.length;
+          const resources = mockQueryResources.slice(cursor, cursor + pageSize);
+          cursor += pageSize;
+          return { resources };
+        },
+      };
     },
     create: async (doc) => {
       lastCreatedDoc = doc;
@@ -22,6 +57,16 @@ const mockContainer = {
     delete: async () => ({}),
   }),
 };
+
+test.beforeEach(() => {
+  lastQuerySpec = null;
+  lastCreatedDoc = null;
+  mockQueryResources = [];
+  mockQueryPages = null;
+  querySpecs = [];
+  queryOptions = [];
+  fetchNextCalls = 0;
+});
 
 const cosmosClientPath = require.resolve('../src/services/cosmosClient');
 const ctrlPath = require.resolve('../src/controllers/calendarEventController');
@@ -187,8 +232,7 @@ test('listCalendarEvents — 잘못된 기간 필터이면 400', async () => {
   assert.equal(res.getStatus(), 400);
 });
 
-test('listCalendarEvents — 기간 필터와 최대 500개 limit을 query에 반영', async () => {
-  lastQuerySpec = null;
+test('listCalendarEvents — 기간 필터는 응답 필터링에 사용하고 Cosmos query에는 array predicate를 만들지 않는다', async () => {
   const req = {
     correlationId: 'x',
     params: {},
@@ -197,15 +241,433 @@ test('listCalendarEvents — 기간 필터와 최대 500개 limit을 query에 �
   const res = makeRes();
   await ctrl.listCalendarEvents(req, res);
   assert.equal(res.getStatus(), 200);
-  assert.match(lastQuerySpec.query, /EXISTS/);
-  assert.match(lastQuerySpec.query, /LIMIT 500/);
+  assert.doesNotMatch(lastQuerySpec.query, /EXISTS/);
+  assert.doesNotMatch(lastQuerySpec.query, /IS_DEFINED/);
+  assert.doesNotMatch(lastQuerySpec.query, /OFFSET/);
+  assert.doesNotMatch(lastQuerySpec.query, /LIMIT/);
+  assert.equal(queryOptions[0].maxItemCount, 500);
   assert.deepEqual(
     lastQuerySpec.parameters.filter((p) => p.name === '@start' || p.name === '@end'),
-    [
-      { name: '@start', value: '2026-01-01' },
-      { name: '@end', value: '2026-12-31' },
-    ]
+    []
   );
+});
+
+test('listCalendarEvents — start/end 기간과 겹치는 이벤트만 반환', async () => {
+  mockQueryResources = [
+    {
+      id: 'before',
+      type: 'calendarEvent',
+      title: 'Before',
+      eventDates: [{ start: '2025-12-20', end: '2025-12-21' }],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 'inside',
+      type: 'calendarEvent',
+      title: 'Inside',
+      eventDates: [{ start: '2026-06-01', end: '2026-06-01' }],
+      createdAt: '2026-01-02T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+    },
+    {
+      id: 'overlap',
+      type: 'calendarEvent',
+      title: 'Overlap',
+      eventDates: [{ start: '2025-12-31', end: '2026-01-02' }],
+      createdAt: '2026-01-03T00:00:00.000Z',
+      updatedAt: '2026-01-03T00:00:00.000Z',
+    },
+    {
+      id: 'after',
+      type: 'calendarEvent',
+      title: 'After',
+      eventDates: [{ start: '2027-01-01', end: '2027-01-01' }],
+      createdAt: '2026-01-04T00:00:00.000Z',
+      updatedAt: '2026-01-04T00:00:00.000Z',
+    },
+  ];
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { start: '2026-01-01', end: '2026-12-31', limit: '500' },
+  };
+  const res = makeRes();
+
+  await ctrl.listCalendarEvents(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items.map((item) => item.id), ['inside', 'overlap']);
+  assert.equal(res.getBody().rangeFilterScanLimitReached, false);
+});
+
+test('listCalendarEvents — 잘못된 end 값은 기간 겹침 비교에 사용하지 않는다', async () => {
+  mockQueryResources = [
+    {
+      id: 'invalid-end',
+      type: 'calendarEvent',
+      title: 'Invalid End',
+      eventDates: [{ start: '2026-06-01', end: 'not-a-date' }],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ];
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { start: '2026-01-01', end: '2026-12-31', limit: '500' },
+  };
+  const res = makeRes();
+
+  await ctrl.listCalendarEvents(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items, []);
+});
+
+test('listCalendarEvents — start-only 기간 필터도 Cosmos array predicate 없이 겹침 이벤트만 반환한다', async () => {
+  mockQueryResources = [
+    {
+      id: 'before',
+      type: 'calendarEvent',
+      title: 'Before',
+      eventDates: [{ start: '2025-12-20', end: '2025-12-21' }],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 'overlap',
+      type: 'calendarEvent',
+      title: 'Overlap',
+      eventDates: [{ start: '2025-12-31', end: '2026-01-02' }],
+      createdAt: '2026-01-02T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+    },
+    {
+      id: 'inside',
+      type: 'calendarEvent',
+      title: 'Inside',
+      eventDates: [{ start: '2026-06-01' }],
+      createdAt: '2026-01-03T00:00:00.000Z',
+      updatedAt: '2026-01-03T00:00:00.000Z',
+    },
+  ];
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { start: '2026-01-01', limit: '500' },
+  };
+  const res = makeRes();
+
+  await ctrl.listCalendarEvents(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items.map((item) => item.id), ['overlap', 'inside']);
+  assert.doesNotMatch(lastQuerySpec.query, /EXISTS/);
+  assert.doesNotMatch(lastQuerySpec.query, /IS_DEFINED/);
+  assert.doesNotMatch(lastQuerySpec.query, /OFFSET/);
+  assert.doesNotMatch(lastQuerySpec.query, /LIMIT/);
+  assert.equal(queryOptions[0].maxItemCount, 500);
+  assert.deepEqual(
+    lastQuerySpec.parameters.filter((p) => p.name === '@start' || p.name === '@end'),
+    []
+  );
+});
+
+test('listCalendarEvents — end-only 기간 필터도 Cosmos array predicate 없이 겹침 이벤트만 반환한다', async () => {
+  mockQueryResources = [
+    {
+      id: 'inside',
+      type: 'calendarEvent',
+      title: 'Inside',
+      eventDates: [{ start: '2026-06-01' }],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 'overlap',
+      type: 'calendarEvent',
+      title: 'Overlap',
+      eventDates: [{ start: '2026-12-31', end: '2027-01-02' }],
+      createdAt: '2026-01-02T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+    },
+    {
+      id: 'after',
+      type: 'calendarEvent',
+      title: 'After',
+      eventDates: [{ start: '2027-01-02' }],
+      createdAt: '2026-01-03T00:00:00.000Z',
+      updatedAt: '2026-01-03T00:00:00.000Z',
+    },
+  ];
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { end: '2026-12-31', limit: '500' },
+  };
+  const res = makeRes();
+
+  await ctrl.listCalendarEvents(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items.map((item) => item.id), ['inside', 'overlap']);
+  assert.doesNotMatch(lastQuerySpec.query, /EXISTS/);
+  assert.doesNotMatch(lastQuerySpec.query, /IS_DEFINED/);
+  assert.doesNotMatch(lastQuerySpec.query, /OFFSET/);
+  assert.doesNotMatch(lastQuerySpec.query, /LIMIT/);
+  assert.equal(queryOptions[0].maxItemCount, 500);
+  assert.deepEqual(
+    lastQuerySpec.parameters.filter((p) => p.name === '@start' || p.name === '@end'),
+    []
+  );
+});
+
+test('listCalendarEvents — start/end 기간 필터는 Cosmos array EXISTS 쿼리를 만들지 않는다', async () => {
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { start: '2026-01-01', end: '2026-12-31', limit: '500' },
+  };
+  const res = makeRes();
+
+  await ctrl.listCalendarEvents(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.doesNotMatch(lastQuerySpec.query, /EXISTS/);
+  assert.doesNotMatch(lastQuerySpec.query, /IS_DEFINED/);
+  assert.match(lastQuerySpec.query, /WHERE c\.type = @type/);
+  assert.doesNotMatch(lastQuerySpec.query, /OFFSET/);
+  assert.doesNotMatch(lastQuerySpec.query, /LIMIT/);
+  assert.equal(queryOptions[0].maxItemCount, 500);
+});
+
+test('listCalendarEvents — 기간 필터 적용 후 limit만큼 결과를 반환한다', async () => {
+  mockQueryResources = [
+    {
+      id: 'newer-outside',
+      type: 'calendarEvent',
+      title: 'Newer Outside',
+      eventDates: [{ start: '2027-01-01' }],
+      createdAt: '2026-01-03T00:00:00.000Z',
+      updatedAt: '2026-01-03T00:00:00.000Z',
+    },
+    {
+      id: 'older-inside',
+      type: 'calendarEvent',
+      title: 'Older Inside',
+      eventDates: [{ start: '2026-06-01' }],
+      createdAt: '2026-01-02T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+    },
+    {
+      id: 'oldest-inside',
+      type: 'calendarEvent',
+      title: 'Oldest Inside',
+      eventDates: [{ start: '2026-07-01' }],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ];
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { start: '2026-01-01', end: '2026-12-31', limit: '2' },
+  };
+  const res = makeRes();
+
+  await ctrl.listCalendarEvents(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items.map((item) => item.id), ['older-inside', 'oldest-inside']);
+  assert.equal(querySpecs.length, 1);
+  assert.equal(fetchNextCalls, 1);
+  assert.equal(queryOptions[0].maxItemCount, 500);
+  assert.doesNotMatch(querySpecs[0].query, /OFFSET/);
+});
+
+test('listCalendarEvents — 기간 필터가 있으면 최대 스캔 문서 수에서 조회를 중단한다', async () => {
+  mockQueryResources = Array.from({ length: 5500 }, (_, index) => ({
+    id: `outside-${index}`,
+    type: 'calendarEvent',
+    title: `Outside ${index}`,
+    eventDates: [{ start: '2027-01-01' }],
+    createdAt: `2026-01-01T00:00:${String(index % 60).padStart(2, '0')}.000Z`,
+    updatedAt: `2026-01-01T00:00:${String(index % 60).padStart(2, '0')}.000Z`,
+  }));
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { start: '2026-01-01', end: '2026-12-31', limit: '500' },
+  };
+  const res = makeRes();
+  const warnCalls = [];
+  const originalWarn = console.warn;
+  console.warn = (...args) => warnCalls.push(args);
+
+  try {
+    await ctrl.listCalendarEvents(req, res);
+  } finally {
+    console.warn = originalWarn;
+  }
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items, []);
+  assert.equal(res.getBody().rangeFilterScanLimitReached, true);
+  assert.equal(querySpecs.length, 1);
+  assert.equal(fetchNextCalls, 10);
+  assert.equal(queryOptions[0].maxItemCount, 500);
+  assert.equal(warnCalls.length, 1);
+  assert.match(warnCalls[0][0], /range filter scan limit reached/);
+  assert.deepEqual(warnCalls[0][1], {
+    correlationId: 'x',
+    scannedDocs: 5000,
+    limit: 500,
+    start: '2026-01-01',
+    end: '2026-12-31',
+    linkedPostId: undefined,
+  });
+});
+
+test('listCalendarEvents — 응답 limit이 작아도 기간 필터 스캔 page size는 고정한다', async () => {
+  mockQueryResources = [
+    {
+      id: 'outside',
+      type: 'calendarEvent',
+      title: 'Outside',
+      eventDates: [{ start: '2027-01-01' }],
+      createdAt: '2026-01-02T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+    },
+    {
+      id: 'inside',
+      type: 'calendarEvent',
+      title: 'Inside',
+      eventDates: [{ start: '2026-06-01' }],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ];
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { start: '2026-01-01', end: '2026-12-31', limit: '1' },
+  };
+  const res = makeRes();
+
+  await ctrl.listCalendarEvents(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items.map((item) => item.id), ['inside']);
+  assert.equal(querySpecs.length, 1);
+  assert.equal(fetchNextCalls, 1);
+  assert.equal(queryOptions[0].maxItemCount, 500);
+});
+
+test('listCalendarEvents — 기간 필터 마지막 페이지 판별은 iterator 상태를 사용한다', async () => {
+  mockQueryResources = [
+    {
+      id: 'outside-1',
+      type: 'calendarEvent',
+      title: 'Outside 1',
+      eventDates: [{ start: '2027-01-01' }],
+      createdAt: '2026-01-02T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+    },
+    {
+      id: 'outside-2',
+      type: 'calendarEvent',
+      title: 'Outside 2',
+      eventDates: [{ start: '2027-02-01' }],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ];
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { start: '2026-01-01', end: '2026-12-31', limit: '1' },
+  };
+  const res = makeRes();
+
+  await ctrl.listCalendarEvents(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items, []);
+  assert.equal(querySpecs.length, 1);
+  assert.equal(fetchNextCalls, 1);
+  assert.equal(queryOptions[0].maxItemCount, 500);
+});
+
+test('listCalendarEvents — 기간 필터는 작은 중간 page 뒤에도 iterator가 남아 있으면 계속 조회한다', async () => {
+  mockQueryPages = [
+    [
+      {
+        id: 'outside',
+        type: 'calendarEvent',
+        title: 'Outside',
+        eventDates: [{ start: '2027-01-01' }],
+        createdAt: '2026-01-03T00:00:00.000Z',
+        updatedAt: '2026-01-03T00:00:00.000Z',
+      },
+    ],
+    [
+      {
+        id: 'inside',
+        type: 'calendarEvent',
+        title: 'Inside',
+        eventDates: [{ start: '2026-06-01' }],
+        createdAt: '2026-01-02T00:00:00.000Z',
+        updatedAt: '2026-01-02T00:00:00.000Z',
+      },
+    ],
+  ];
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { start: '2026-01-01', end: '2026-12-31', limit: '1' },
+  };
+  const res = makeRes();
+
+  await ctrl.listCalendarEvents(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items.map((item) => item.id), ['inside']);
+  assert.equal(fetchNextCalls, 2);
+});
+
+test('listCalendarEvents — 기간 필터는 page 안에서도 응답 limit을 채우면 매칭 검사를 중단한다', async () => {
+  mockQueryResources = [
+    {
+      id: 'inside',
+      type: 'calendarEvent',
+      title: 'Inside',
+      eventDates: [{ start: '2026-06-01' }],
+      createdAt: '2026-01-02T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+    },
+    {
+      id: 'should-not-be-read',
+      type: 'calendarEvent',
+      title: 'Should Not Be Read',
+      get eventDates() {
+        throw new Error('eventDates should not be read after response limit is reached');
+      },
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ];
+  const req = {
+    correlationId: 'x',
+    params: {},
+    query: { start: '2026-01-01', end: '2026-12-31', limit: '1' },
+  };
+  const res = makeRes();
+
+  await ctrl.listCalendarEvents(req, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.deepEqual(res.getBody().items.map((item) => item.id), ['inside']);
 });
 
 test('updateCalendarEvent — body 없으면 400', async () => {
