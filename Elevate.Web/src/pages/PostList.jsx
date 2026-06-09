@@ -215,6 +215,7 @@ export default function PostList() {
       error={error}
       countLabel={countLabel}
       activeQuery={qParam}
+      skeletonCount={PAGE_SIZE}
       currentPage={seriesParam ? 1 : pageParam}
       totalPages={seriesParam ? 1 : totalPages}
       onPageChange={seriesParam ? undefined : handlePageChange}

@@ -8,7 +8,7 @@
 import React from 'react';
 import PostCard from './PostCard';
 
-export const POST_GRID_SKELETON_COUNT = 4;
+export const POST_GRID_SKELETON_COUNT = 8;
 
 export function PostGridSkeleton({ count = POST_GRID_SKELETON_COUNT }) {
   return (

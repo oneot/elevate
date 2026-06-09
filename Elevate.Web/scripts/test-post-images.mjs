@@ -63,6 +63,11 @@ import {
         width: 480,
         height: 270,
       },
+      card: {
+        url: 'https://example.com/card.webp',
+        width: 960,
+        height: 540,
+      },
       invalid: {
         signedUrl: '',
         width: 320,
@@ -70,10 +75,10 @@ import {
     },
   });
 
-  assert.equal(props.src, 'https://example.com/thumb.webp');
-  assert.equal(props.srcSet, 'https://example.com/thumb.webp 480w');
-  assert.equal(props.width, 480);
-  assert.equal(props.height, 270);
+  assert.equal(props.src, 'https://example.com/card.webp');
+  assert.equal(props.srcSet, 'https://example.com/thumb.webp 480w, https://example.com/card.webp 960w');
+  assert.equal(props.width, 960);
+  assert.equal(props.height, 540);
 }
 
 {

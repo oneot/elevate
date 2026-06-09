@@ -1,11 +1,17 @@
 'use strict';
 
-const { v4: createUuid } = require('uuid');
+const crypto = require('node:crypto');
 const { getCalendarEventsContainer } = require('../services/cosmosClient');
 const { parsePositiveInt, sendError } = require('../utils/http');
 
 const PARTITION_KEY = 'calendarEvent';
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_RANGE_FILTER_SCAN_DOCS = 5000;
+const RANGE_FILTER_SCAN_PAGE_SIZE = 500;
+
+function createUuid() {
+  return crypto.randomUUID();
+}
 
 function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -77,6 +83,51 @@ function toCalendarEventResponse(doc) {
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   };
+}
+
+function eventDateOverlapsRange(eventDate, { start, end }) {
+  if (!isPlainObject(eventDate) || !isValidIsoDateString(eventDate.start)) {
+    return false;
+  }
+
+  const eventStart = eventDate.start.trim();
+  const hasEnd = eventDate.end !== undefined && eventDate.end !== null;
+  if (hasEnd && !isValidIsoDateString(eventDate.end)) {
+    return false;
+  }
+  const eventEnd = hasEnd ? eventDate.end.trim() : eventStart;
+
+  if (start && eventEnd < start) return false;
+  if (end && eventStart > end) return false;
+  return true;
+}
+
+function calendarEventOverlapsRange(calendarEvent, { start, end }) {
+  if (!start && !end) return true;
+  if (!Array.isArray(calendarEvent.eventDates)) return false;
+  return calendarEvent.eventDates.some((eventDate) => eventDateOverlapsRange(eventDate, { start, end }));
+}
+
+async function fetchCalendarEventPage(container, queryText, parameters, offset, limit) {
+  const pagedQueryText = `${queryText} ORDER BY c.createdAt DESC OFFSET ${offset} LIMIT ${limit}`;
+  const { resources } = await container.items
+    .query({ query: pagedQueryText, parameters }, { partitionKey: PARTITION_KEY })
+    .fetchAll();
+  return resources;
+}
+
+function createCalendarEventQueryIterator(container, queryText, parameters, pageSize) {
+  return container.items.query(
+    { query: `${queryText} ORDER BY c.createdAt DESC`, parameters },
+    { partitionKey: PARTITION_KEY, maxItemCount: pageSize }
+  );
+}
+
+function queryIteratorHasMoreResults(queryIterator) {
+  if (typeof queryIterator.hasMoreResults === 'function') {
+    return queryIterator.hasMoreResults();
+  }
+  return Boolean(queryIterator.hasMoreResults);
 }
 
 function validateCreatePayload(body) {
@@ -155,41 +206,66 @@ exports.listCalendarEvents = async (req, res) => {
       parameters.push({ name: '@linkedPostId', value: linkedPostId });
     }
 
-    if (start && end) {
-      queryText += ` AND EXISTS(
-        SELECT VALUE d FROM d IN c.eventDates
-        WHERE d.start <= @end
-        AND (
-          (IS_DEFINED(d.end) AND NOT IS_NULL(d.end) AND d.end >= @start)
-          OR ((NOT IS_DEFINED(d.end) OR IS_NULL(d.end)) AND d.start >= @start)
-        )
-      )`;
-      parameters.push({ name: '@start', value: start });
-      parameters.push({ name: '@end', value: end });
-    } else if (start) {
-      queryText += ` AND EXISTS(
-        SELECT VALUE d FROM d IN c.eventDates
-        WHERE (
-          (IS_DEFINED(d.end) AND NOT IS_NULL(d.end) AND d.end >= @start)
-          OR ((NOT IS_DEFINED(d.end) OR IS_NULL(d.end)) AND d.start >= @start)
-        )
-      )`;
-      parameters.push({ name: '@start', value: start });
-    } else if (end) {
-      queryText += ` AND EXISTS(
-        SELECT VALUE d FROM d IN c.eventDates
-        WHERE d.start <= @end
-      )`;
-      parameters.push({ name: '@end', value: end });
+    const hasRangeFilter = Boolean(start || end);
+    if (!hasRangeFilter) {
+      const resources = await fetchCalendarEventPage(container, queryText, parameters, 0, limit);
+      return res.json({
+        items: resources.map(toCalendarEventResponse),
+        limit,
+        rangeFilterScanLimitReached: false,
+      });
     }
 
-    queryText += ` ORDER BY c.createdAt DESC OFFSET 0 LIMIT ${limit}`;
+    const pageSize = RANGE_FILTER_SCAN_PAGE_SIZE;
+    const filteredResources = [];
+    let scannedDocs = 0;
+    let rangeFilterScanLimitReached = false;
+    const queryIterator = createCalendarEventQueryIterator(container, queryText, parameters, pageSize);
 
-    const { resources } = await container.items
-      .query({ query: queryText, parameters }, { partitionKey: PARTITION_KEY })
-      .fetchAll();
+    do {
+      const page = await queryIterator.fetchNext();
+      const resources = page.resources || [];
+      for (const resource of resources) {
+        if (filteredResources.length >= limit) break;
+        if (calendarEventOverlapsRange(resource, { start, end })) {
+          filteredResources.push(resource);
+        }
+      }
 
-    return res.json({ items: resources.map(toCalendarEventResponse), limit });
+      scannedDocs += resources.length;
+      const reachedScanLimit = scannedDocs >= MAX_RANGE_FILTER_SCAN_DOCS;
+      const hasMoreResults = queryIteratorHasMoreResults(queryIterator);
+      rangeFilterScanLimitReached = reachedScanLimit
+        && hasMoreResults
+        && filteredResources.length < limit
+        && resources.length > 0;
+
+      if (rangeFilterScanLimitReached) {
+        console.warn('[listCalendarEvents] range filter scan limit reached', {
+          correlationId,
+          scannedDocs,
+          limit,
+          start,
+          end,
+          linkedPostId,
+        });
+      }
+
+      if (
+        filteredResources.length >= limit
+        || reachedScanLimit
+        || !hasMoreResults
+        || resources.length === 0
+      ) {
+        break;
+      }
+    } while (true);
+
+    return res.json({
+      items: filteredResources.slice(0, limit).map(toCalendarEventResponse),
+      limit,
+      rangeFilterScanLimitReached,
+    });
   } catch (error) {
     console.error('[listCalendarEvents] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);

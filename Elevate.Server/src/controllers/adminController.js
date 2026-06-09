@@ -30,6 +30,7 @@ const allowedAttachMimeTypes = new Set([
 ]);
 const maxAttachSizeBytes = 50 * 1024 * 1024;
 const attachCategoryPartition = '_attach';
+const draftAttachTtlMs = 24 * 60 * 60 * 1000;
 
 var BLOB_SAS_PATTERN = /(https?:\/\/[^"'\s]*\.blob\.core\.windows\.net\/[^"'\s?]*)\?[^"'\s]*/g;
 var BLOB_BARE_PATTERN = /https?:\/\/[^"'\s]*\.blob\.core\.windows\.net\/[^"'\s?]*/g;
@@ -165,6 +166,69 @@ function createUuid() {
   }
 
   return crypto.randomBytes(16).toString('hex');
+}
+
+function normalizeDraftSessionId(value) {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 80) return null;
+  if (!/^draft-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(trimmed)) return null;
+  return trimmed;
+}
+
+function buildDraftAttachmentQuery(draftSessionId) {
+  return {
+    query: 'SELECT * FROM c WHERE c.draftSessionId = @draftSessionId AND c.documentType = "attach"',
+    parameters: [{ name: '@draftSessionId', value: draftSessionId }]
+  };
+}
+
+function buildAttachmentListQuery({ postId, draftSessionId }) {
+  if (postId) {
+    return {
+      query: 'SELECT c.id, c.fileName, c.blobUrl, c.contentType, c.sizeBytes FROM c WHERE c.postId = @postId AND c.documentType = "attach"',
+      parameters: [{ name: '@postId', value: postId }]
+    };
+  }
+
+  return {
+    query: 'SELECT c.id, c.fileName, c.blobUrl, c.contentType, c.sizeBytes FROM c WHERE c.draftSessionId = @draftSessionId AND c.documentType = "attach"',
+    parameters: [{ name: '@draftSessionId', value: draftSessionId }]
+  };
+}
+
+function buildExpiredDraftAttachmentQuery(nowIso) {
+  return {
+    query: 'SELECT TOP 50 c.id, c.category, c.partitionKey, c.blobUrl FROM c WHERE c.documentType = "attach" AND IS_DEFINED(c.draftSessionId) AND c.draftSessionId != null AND IS_DEFINED(c.expiresAt) AND c.expiresAt < @now',
+    parameters: [{ name: '@now', value: nowIso }]
+  };
+}
+
+function getDraftAttachmentExpiresAt(now = new Date()) {
+  return new Date(now.getTime() + draftAttachTtlMs).toISOString();
+}
+
+async function cleanupExpiredDraftAttachments(container, now = new Date()) {
+  try {
+    const { resources } = await container.items
+      .query(buildExpiredDraftAttachmentQuery(now.toISOString()), { partitionKey: attachCategoryPartition })
+      .fetchAll();
+
+    for (const file of resources) {
+      try {
+        await deleteBlobByUrl(file.blobUrl);
+      } catch (err) {
+        console.error(`[cleanupExpiredDraftAttachments] blob deletion failed for file ${file.id}`, err);
+      }
+      try {
+        await container.item(file.id, file.category || file.partitionKey || attachCategoryPartition).delete();
+      } catch (err) {
+        console.error(`[cleanupExpiredDraftAttachments] cosmos deletion failed for file ${file.id}`, err);
+      }
+    }
+  } catch (err) {
+    console.error('[cleanupExpiredDraftAttachments] failed', err);
+  }
 }
 
 function validatePostCreatePayload(body) {
@@ -771,7 +835,7 @@ exports.issueAttachUploadSas = async (req, res) => {
 
 exports.createFileMetadata = async (req, res) => {
   const correlationId = req.correlationId;
-  const { postId, blobUrl, contentType, sizeBytes, fileName } = req.body || {};
+  const { postId, draftSessionId, blobUrl, contentType, sizeBytes, fileName } = req.body || {};
 
   if (!blobUrl || !contentType || !sizeBytes || !fileName) {
     return sendError(res, 400, 'BadRequest', 'Invalid request payload', correlationId);
@@ -799,22 +863,45 @@ exports.createFileMetadata = async (req, res) => {
     return sendError(res, 400, 'BadRequest', 'fileName is required', correlationId);
   }
   const trimmedFileName = fileName.trim();
+  const hasPostId = postId !== undefined && postId !== null;
+  if (hasPostId && (typeof postId !== 'string' || postId.trim().length === 0)) {
+    return sendError(res, 400, 'BadRequest', 'postId must be a non-empty string', correlationId);
+  }
+  const normalizedPostId = hasPostId ? postId.trim() : null;
+  const hasDraftSessionId = draftSessionId !== undefined && draftSessionId !== null;
+  const normalizedDraftSessionId = normalizeDraftSessionId(draftSessionId);
+  if (hasDraftSessionId && !normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'Invalid draftSessionId', correlationId);
+  }
+  if (normalizedPostId && normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'Provide either postId or draftSessionId, not both', correlationId);
+  }
+  if (!normalizedPostId && !normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'postId or draftSessionId is required', correlationId);
+  }
 
   try {
     const container = getAssetsContainer();
     const fileId = createUuid();
     const now = new Date().toISOString();
+    const isDraftAttachment = Boolean(!normalizedPostId && normalizedDraftSessionId);
+    if (isDraftAttachment) {
+      await cleanupExpiredDraftAttachments(container);
+    }
 
     const fileDocument = {
       id: fileId,
       documentType: 'attach',
       category: attachCategoryPartition,
       partitionKey: attachCategoryPartition,
-      postId: postId || null,
+      postId: normalizedPostId,
+      draftSessionId: normalizedPostId ? null : normalizedDraftSessionId,
       blobUrl,
       contentType,
       sizeBytes,
       fileName: trimmedFileName,
+      expiresAt: isDraftAttachment ? getDraftAttachmentExpiresAt(new Date(now)) : null,
+      ttl: isDraftAttachment ? Math.floor(draftAttachTtlMs / 1000) : null,
       createdAt: now,
       updatedAt: now
     };
@@ -832,6 +919,48 @@ exports.createFileMetadata = async (req, res) => {
     });
   } catch (error) {
     console.error('[createFileMetadata] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.linkDraftAttachmentsToPost = async (req, res) => {
+  const correlationId = req.correlationId;
+  const { draftSessionId, postId } = req.body || {};
+  const normalizedDraftSessionId = normalizeDraftSessionId(draftSessionId);
+  const normalizedPostId = typeof postId === 'string' ? postId.trim() : '';
+
+  if (!normalizedDraftSessionId || !normalizedPostId) {
+    return sendError(res, 400, 'BadRequest', 'draftSessionId and postId are required', correlationId);
+  }
+
+  try {
+    const postsContainer = getPostsContainer();
+    const post = await findPostById(postsContainer, normalizedPostId);
+    if (!post) {
+      return sendError(res, 404, 'NotFound', 'Post not found', correlationId);
+    }
+
+    const container = getAssetsContainer();
+    await cleanupExpiredDraftAttachments(container);
+    const { resources } = await container.items
+      .query(buildDraftAttachmentQuery(normalizedDraftSessionId), { partitionKey: attachCategoryPartition })
+      .fetchAll();
+
+    for (const file of resources) {
+      const updated = {
+        ...file,
+        postId: normalizedPostId,
+        draftSessionId: null,
+        expiresAt: null,
+        ttl: null,
+        updatedAt: new Date().toISOString()
+      };
+      await container.item(file.id, file.category || file.partitionKey || attachCategoryPartition).replace(updated);
+    }
+
+    return res.json({ linked: resources.length });
+  } catch (error) {
+    console.error('[linkDraftAttachmentsToPost] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
   }
 };
@@ -865,18 +994,33 @@ exports.deleteFile = async (req, res) => {
 
 exports.getFiles = async (req, res) => {
   const correlationId = req.correlationId;
-  const postId = req.query?.postId;
+  const rawPostId = req.query?.postId;
+  const rawDraftSessionId = req.query?.draftSessionId;
+  const normalizedPostId = typeof rawPostId === 'string' ? rawPostId.trim() : '';
+  const normalizedDraftSessionId = normalizeDraftSessionId(rawDraftSessionId);
 
-  if (!postId) {
-    return sendError(res, 400, 'BadRequest', 'postId query parameter is required', correlationId);
+  if (rawPostId !== undefined && !normalizedPostId) {
+    return sendError(res, 400, 'BadRequest', 'postId must be a non-empty string', correlationId);
+  }
+
+  if (rawDraftSessionId !== undefined && !normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'Invalid draftSessionId', correlationId);
+  }
+
+  if (!normalizedPostId && !normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'postId or draftSessionId query parameter is required', correlationId);
+  }
+
+  if (normalizedPostId && normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'Provide either postId or draftSessionId, not both', correlationId);
   }
 
   try {
     const container = getAssetsContainer();
-    const querySpec = {
-      query: 'SELECT c.id, c.fileName, c.blobUrl, c.contentType, c.sizeBytes FROM c WHERE c.postId = @postId AND c.documentType = "attach"',
-      parameters: [{ name: '@postId', value: postId }]
-    };
+    const querySpec = buildAttachmentListQuery({
+      postId: normalizedPostId,
+      draftSessionId: normalizedDraftSessionId
+    });
 
     const { resources } = await container.items.query(querySpec, { partitionKey: attachCategoryPartition }).fetchAll();
 
@@ -937,5 +1081,10 @@ exports.getAnalyticsSummary = async (req, res) => {
 
 exports._test = {
   normalizeThumbnailForStorage,
-  collectThumbnailUrls
+  collectThumbnailUrls,
+  normalizeDraftSessionId,
+  buildDraftAttachmentQuery,
+  buildAttachmentListQuery,
+  buildExpiredDraftAttachmentQuery,
+  getDraftAttachmentExpiresAt
 };

@@ -61,6 +61,9 @@ function getWorstInteraction(interactions) {
 export function startInpMeasurement() {
   if (typeof PerformanceObserver === 'undefined') return;
   if (!PerformanceObserver.supportedEntryTypes?.includes('event')) return;
+  if (window.__elevateInpMeasurementStarted) return;
+
+  window.__elevateInpMeasurementStarted = true;
 
   const interactions = new Map();
   let lastReport = 0;
@@ -76,11 +79,11 @@ export function startInpMeasurement() {
     }
 
     pruneOldestInteractions(interactions);
-    const best = getWorstInteraction(interactions);
+    const worst = getWorstInteraction(interactions);
     const now = performance.now();
-    if (best && now - lastReport > INP_REPORT_INTERVAL_MS) {
+    if (worst && now - lastReport > INP_REPORT_INTERVAL_MS) {
       lastReport = now;
-      reportInpMeasurement(best);
+      reportInpMeasurement(worst);
     }
   });
 

@@ -70,5 +70,7 @@ test('buildAttachmentFileNameByBlobUrlMap maps blob url to original file name', 
 test('hasAttachmentBlobUrlReference detects only attachment blob urls', () => {
   assert.equal(_test.hasAttachmentBlobUrlReference('plain text only'), false);
   assert.equal(_test.hasAttachmentBlobUrlReference('![image](https://account.blob.core.windows.net/images/a.jpg)'), false);
+  assert.equal(_test.hasAttachmentBlobUrlReference('mentions /attachments/attach/2026/06/a.pdf in plain text'), false);
+  assert.equal(_test.hasAttachmentBlobUrlReference('https://example.com/attachments/attach/2026/06/a.pdf'), false);
   assert.equal(_test.hasAttachmentBlobUrlReference('![file](https://account.blob.core.windows.net/attachments/attach/2026/06/a.pdf)'), true);
 });

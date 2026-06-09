@@ -1,5 +1,5 @@
 export const POST_CARD_IMAGE_SIZES = '(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw';
-export const POST_CARD_MAX_VARIANT_WIDTH = 480;
+export const POST_CARD_MAX_VARIANT_WIDTH = 960;
 
 function getImageUrl(image) {
   if (typeof image === 'string') return image || null;

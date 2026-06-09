@@ -41,8 +41,8 @@ export function requestAttachUploadSas(payload, options = {}) {
   })
 }
 
- /**
-  * Blob 업로드가 완료된 첨부파일을 서버에 등록한다.
+/**
+ * Blob 업로드가 완료된 첨부파일을 서버에 등록한다.
  * @param {{ postId: string|null, draftSessionId?: string|null, blobUrl: string, fileName: string, contentType: string, sizeBytes: number }} payload
  * @param {{ msalInstance }} options
  */
@@ -68,13 +68,27 @@ export function linkDraftFilesToPost(payload, options = {}) {
 }
 
 /**
- * 게시글에 등록된 첨부파일 목록을 조회한다.
- * @param {string} postId
+ * 게시글 또는 임시 작성 세션에 등록된 첨부파일 목록을 조회한다.
+ * @param {string|{ postId?: string, draftSessionId?: string }} params
  * @param {{ msalInstance }} options
  * @returns {Promise<Array<{ id: string, fileName: string, blobUrl: string, signedUrl: string | null, contentType: string, sizeBytes: number }>>}
  */
-export function getFiles(postId, options = {}) {
-  return apiFetch(`/files?postId=${encodeURIComponent(postId)}`, {
+export function getFiles(params, options = {}) {
+  const query = new URLSearchParams()
+  if (typeof params === 'string' && params.trim()) {
+    query.set('postId', params.trim())
+  } else if (params?.draftSessionId) {
+    query.set('draftSessionId', params.draftSessionId)
+  } else if (params?.postId) {
+    query.set('postId', params.postId)
+  }
+
+  const queryString = query.toString()
+  if (!queryString) {
+    throw new Error('postId or draftSessionId is required to list files')
+  }
+
+  return apiFetch(`/files?${queryString}`, {
     ...options,
     method: 'GET',
   })

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Card, Button, ConfirmModal, FormField } from '../components/ui/index.js'
 import { HtmlEditor, PostMetaSidebar } from '../components/editor/index.js'
 import { isApiConfigured } from '../lib/apiClient.js'
@@ -9,6 +9,7 @@ import {
   getPost,
   updatePost,
 } from '../services/postsApi.js'
+import { linkDraftFilesToPost } from '../services/assetsApi.js'
 import { listCalendarEvents, updateCalendarEvent } from '../services/calendarEventsApi.js'
 import { slugify, extractYoutubeId } from '../utils/formatters.js'
 import { CATEGORIES } from '../constants/categories.js'
@@ -29,6 +30,7 @@ const emptyPost = {
 }
 
 const CALENDAR_EVENT_LIMIT = 500
+const ATTACHMENT_LINK_WARNING = '첨부파일 연결에 실패했습니다. 저장된 게시글에서 다시 확인해 주세요.'
 
 function toDateString(date) {
   const year = date.getFullYear()
@@ -44,13 +46,55 @@ function getCalendarEventRange(today = new Date()) {
   }
 }
 
+function createDraftSessionId() {
+  if (globalThis.crypto?.randomUUID) {
+    return `draft-${globalThis.crypto.randomUUID()}`
+  }
+
+  const bytes = new Uint8Array(16)
+  if (globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(bytes)
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256)
+    }
+  }
+
+  bytes[6] = (bytes[6] & 0x0f) | 0x40
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0'))
+  return `draft-${hex.slice(0, 4).join('')}-${hex.slice(4, 6).join('')}-${hex.slice(6, 8).join('')}-${hex.slice(8, 10).join('')}-${hex.slice(10, 16).join('')}`
+}
+
+function getDraftSessionId(storageKey) {
+  try {
+    const existing = sessionStorage.getItem(storageKey)
+    if (existing) return existing
+    const next = createDraftSessionId()
+    sessionStorage.setItem(storageKey, next)
+    return next
+  } catch {
+    return createDraftSessionId()
+  }
+}
+
 function PostEditor() {
   const { msalInstance } = useAuth()
   const { postId } = useParams()
   const [searchParams] = useSearchParams()
   const isNew = !postId
   const storageKey = isNew ? 'post-draft-new' : `post-draft-${postId}`
+  const draftAttachmentStorageKey = `${storageKey}:attachments`
+  const [draftSessionId, setDraftSessionId] = useState(() => (
+    isNew ? getDraftSessionId(draftAttachmentStorageKey) : ''
+  ))
   const navigate = useNavigate()
+  const location = useLocation()
+  const flashMessage = location.state?.message
+  const pendingDraftSessionId = location.state?.draftAttachmentLink?.draftSessionId || ''
+  const pendingDraftAttachmentStorageKey = location.state?.draftAttachmentLink?.draftAttachmentStorageKey || ''
+  const flashRetryKeyRef = useRef('')
   const [post, setPost] = useState(() => ({
     ...emptyPost,
     category: isNew ? (searchParams.get('category') || '') : '',
@@ -60,6 +104,7 @@ function PostEditor() {
   const [youtubeError, setYoutubeError] = useState('')
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
+  const [isAttachmentUploading, setIsAttachmentUploading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [error, setError] = useState('')
@@ -75,6 +120,70 @@ function PostEditor() {
     setError,
     setMessage,
   })
+
+  useEffect(() => {
+    setDraftSessionId(isNew ? getDraftSessionId(draftAttachmentStorageKey) : '')
+  }, [draftAttachmentStorageKey, isNew])
+
+  useEffect(() => {
+    if (!flashMessage && !pendingDraftSessionId) return
+
+    let cancelled = false
+    const retryKey = pendingDraftSessionId && postId
+      ? `${postId}:${pendingDraftSessionId}`
+      : ''
+
+    if (retryKey && flashRetryKeyRef.current === retryKey) return
+    if (retryKey) flashRetryKeyRef.current = retryKey
+
+    const clearNavigationState = () => {
+      navigate(location.pathname, { replace: true, state: null })
+    }
+
+    const applyFlashState = async () => {
+      if (flashMessage) setMessage(flashMessage)
+
+      if (!pendingDraftSessionId || !postId) {
+        clearNavigationState()
+        return
+      }
+
+      try {
+        setDraftSessionId(pendingDraftSessionId)
+        await linkDraftFilesToPost({ draftSessionId: pendingDraftSessionId, postId }, { msalInstance })
+        try {
+          if (pendingDraftAttachmentStorageKey) sessionStorage.removeItem(pendingDraftAttachmentStorageKey)
+        } catch { /* storage blocked — non-fatal */ }
+        if (!cancelled) {
+          setDraftSessionId('')
+          const baseMessage = (flashMessage || '저장되었습니다.')
+            .replace(ATTACHMENT_LINK_WARNING, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+          setMessage(`${baseMessage || '저장되었습니다.'} 첨부파일 연결을 다시 완료했습니다.`)
+          clearNavigationState()
+        }
+      } catch (retryError) {
+        console.error('[PostEditor] draft attachment retry failed', retryError)
+        if (!cancelled) {
+          setError('첨부파일 연결 재시도에 실패했습니다. 잠시 후 저장된 게시글을 다시 열어 확인해 주세요.')
+        }
+      }
+    }
+
+    applyFlashState()
+    return () => {
+      cancelled = true
+    }
+  }, [
+    flashMessage,
+    location.pathname,
+    msalInstance,
+    navigate,
+    pendingDraftAttachmentStorageKey,
+    pendingDraftSessionId,
+    postId,
+  ])
 
   useEffect(() => {
     if (!isApiConfigured) {
@@ -206,6 +315,11 @@ function PostEditor() {
       return
     }
 
+    if (isAttachmentUploading) {
+      setError('첨부파일 업로드가 완료된 뒤 저장해주세요.')
+      return
+    }
+
     // slug 입력값을 항상 정규화한다 (한글·특수문자 제거).
     // 정규화 후에도 빈 문자열이면 제목에서 생성하고,
     // 여전히 비어 있으면 서버가 자동 생성하도록 비워 둔다.
@@ -224,13 +338,42 @@ function PostEditor() {
       if (isNew) {
         const created = await createPost(payload, { msalInstance })
         const newId = created?.id || created?.postId
-        if (post.category === 'event' && newId) {
-          await syncCalendarEventLink(newId)
+        const warnings = []
+        let draftAttachmentLinkState = null
+        if (newId && draftSessionId) {
+          try {
+            await linkDraftFilesToPost({ draftSessionId, postId: newId }, { msalInstance })
+            try { sessionStorage.removeItem(draftAttachmentStorageKey) } catch { /* storage blocked — non-fatal */ }
+          } catch (linkError) {
+            console.error('[PostEditor] draft attachment link failed', linkError)
+            warnings.push(ATTACHMENT_LINK_WARNING)
+            draftAttachmentLinkState = {
+              draftSessionId,
+              draftAttachmentStorageKey,
+            }
+          }
         }
-        setMessage('저장되었습니다.')
+        if (post.category === 'event' && newId) {
+          try {
+            await syncCalendarEventLink(newId)
+          } catch (calendarError) {
+            console.error('[PostEditor] calendar event link failed after post creation', calendarError)
+            warnings.push(calendarError.message || '달력 이벤트 연결에 실패했습니다.')
+          }
+        }
+        const successMessage = warnings.length > 0
+          ? `저장되었습니다. ${warnings.join(' ')}`
+          : '저장되었습니다.'
         if (newId) {
           try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
-          navigate(`/posts/${newId}`)
+          navigate(`/posts/${newId}`, {
+            state: {
+              message: successMessage,
+              ...(draftAttachmentLinkState ? { draftAttachmentLink: draftAttachmentLinkState } : {}),
+            },
+          })
+        } else {
+          setMessage(successMessage)
         }
       } else {
         await updatePost(postId, payload, { msalInstance })
@@ -315,6 +458,8 @@ function PostEditor() {
     )
   }
 
+  const saveDisabled = saving || isAttachmentUploading
+
   return (
     <div className="space-y-10 animate-fadeIn">
       {!isApiConfigured ? (
@@ -340,8 +485,8 @@ function PostEditor() {
               삭제
             </Button>
           )}
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? '저장 중...' : '저장'}
+          <Button onClick={handleSave} disabled={saveDisabled}>
+            {saving ? '저장 중...' : isAttachmentUploading ? '첨부 업로드 중...' : '저장'}
           </Button>
         </div>
       </div>
@@ -419,10 +564,12 @@ function PostEditor() {
             onTagsChange={setTagsInput}
             onYoutubeChange={handleYoutubeChange}
             onThumbnailUpload={uploadThumbnail}
+            onAttachmentUploadingChange={setIsAttachmentUploading}
             linkedCalendarEventId={linkedCalendarEventId}
             calendarEvents={calendarEvents}
             onLinkedCalendarEventChange={setLinkedCalendarEventId}
             postId={postId}
+            draftSessionId={draftSessionId}
             categories={CATEGORIES}
           />
         </aside>

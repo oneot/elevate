@@ -1,12 +1,16 @@
 'use strict';
 
-const { v4: createUuid } = require('uuid');
+const crypto = require('node:crypto');
 const { getActivityVideosContainer } = require('../services/cosmosClient');
 const { sendError } = require('../utils/http');
 
 const PARTITION_KEY = 'activityVideo';
 const YOUTUBE_ID_RE = /^[a-zA-Z0-9_-]{11}$/;
 const VALID_STATUSES = new Set(['draft', 'published', 'archived']);
+
+function createUuid() {
+  return crypto.randomUUID();
+}
 
 function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -25,6 +29,20 @@ function normalizeOptionalString(value) {
 function normalizeNumber(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function validateOptionalSortOrder(value) {
+  if (value === undefined) return null;
+  if (typeof value !== 'number' && typeof value !== 'string') {
+    return 'sortOrder must be a non-negative integer';
+  }
+  if (typeof value === 'string' && !value.trim()) {
+    return 'sortOrder must be a non-negative integer';
+  }
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0
+    ? null
+    : 'sortOrder must be a non-negative integer';
 }
 
 function toActivityVideoResponse(doc) {
@@ -68,6 +86,8 @@ function validateCreatePayload(body) {
     const err = validateOptionalString(body[fieldName], fieldName);
     if (err) return err;
   }
+  const sortOrderError = validateOptionalSortOrder(body.sortOrder);
+  if (sortOrderError) return sortOrderError;
   return validateStatus(body.status);
 }
 
@@ -85,6 +105,8 @@ function validateUpdatePayload(body) {
     const err = validateOptionalString(body[fieldName], fieldName);
     if (err) return err;
   }
+  const sortOrderError = validateOptionalSortOrder(body.sortOrder);
+  if (sortOrderError) return sortOrderError;
   return validateStatus(body.status);
 }
 
