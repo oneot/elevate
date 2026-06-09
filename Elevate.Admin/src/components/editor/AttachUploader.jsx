@@ -91,8 +91,8 @@ export default function AttachUploader({ postId, draftSessionId, onUploadingChan
       await uploadBlobWithSas(sas.uploadUrl, uploadFile, contentType)
       const result = await registerFile(
         {
-          postId: postId || null,
-          draftSessionId: postId ? null : draftSessionId,
+          postId: draftSessionId ? null : postId || null,
+          draftSessionId: draftSessionId || null,
           blobUrl: sas.blobUrl,
           fileName: uploadFile.name,
           contentType,
