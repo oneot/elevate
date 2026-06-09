@@ -212,6 +212,22 @@ test('createActivityVideo rejects non-string optional fields', async () => {
   assert.equal(res.getBody().message, 'description must be a string or null');
 });
 
+test('createActivityVideo rejects invalid sortOrder values', async () => {
+  for (const sortOrder of [{}, 'abc', '-1', '1.5', null]) {
+    const res = makeRes();
+
+    await ctrl.createActivityVideo({
+      body: { videoId: 'SfK1hajr5qY', title: 'Title', category: '행사', year: '2026', sortOrder },
+      params: {},
+      query: {},
+      correlationId: 'x',
+    }, res);
+
+    assert.equal(res.getStatus(), 400);
+    assert.equal(res.getBody().message, 'sortOrder must be a non-negative integer');
+  }
+});
+
 test('createActivityVideo creates normalized draft video', async () => {
   const res = makeRes();
 
@@ -325,6 +341,37 @@ test('updateActivityVideo rejects non-string optional fields', async () => {
 
   assert.equal(res.getStatus(), 400);
   assert.equal(res.getBody().message, 'channel must be a string or null');
+});
+
+test('updateActivityVideo rejects invalid sortOrder values', async () => {
+  docs = [{
+    id: 'video-1',
+    type: 'activityVideo',
+    partitionKey: 'activityVideo',
+    videoId: 'SfK1hajr5qY',
+    title: 'Old',
+    category: '행사',
+    year: '2026',
+    channel: 'Microsoft Korea',
+    sortOrder: 1,
+    status: 'draft',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+  }];
+
+  for (const sortOrder of [[], 'abc', '-1', '1.5', null]) {
+    const res = makeRes();
+
+    await ctrl.updateActivityVideo({
+      body: { sortOrder },
+      params: { activityVideoId: 'video-1' },
+      query: {},
+      correlationId: 'x',
+    }, res);
+
+    assert.equal(res.getStatus(), 400);
+    assert.equal(res.getBody().message, 'sortOrder must be a non-negative integer');
+  }
 });
 
 test('deleteActivityVideo returns 204', async () => {

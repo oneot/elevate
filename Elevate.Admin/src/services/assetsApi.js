@@ -75,12 +75,16 @@ export function linkDraftFilesToPost(payload, options = {}) {
  */
 export function getFiles(params, options = {}) {
   const query = new URLSearchParams()
-  if (typeof params === 'string') {
-    query.set('postId', params)
-  } else if (params?.postId) {
-    query.set('postId', params.postId)
+  if (typeof params === 'string' && params.trim()) {
+    query.set('postId', params.trim())
   } else if (params?.draftSessionId) {
     query.set('draftSessionId', params.draftSessionId)
+  } else if (params?.postId) {
+    query.set('postId', params.postId)
+  }
+
+  if (!query.size) {
+    throw new Error('postId or draftSessionId is required to list files')
   }
 
   return apiFetch(`/files?${query.toString()}`, {

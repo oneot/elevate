@@ -31,6 +31,20 @@ function normalizeNumber(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function validateOptionalSortOrder(value) {
+  if (value === undefined) return null;
+  if (typeof value !== 'number' && typeof value !== 'string') {
+    return 'sortOrder must be a non-negative integer';
+  }
+  if (typeof value === 'string' && !value.trim()) {
+    return 'sortOrder must be a non-negative integer';
+  }
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0
+    ? null
+    : 'sortOrder must be a non-negative integer';
+}
+
 function toActivityVideoResponse(doc) {
   return {
     id: doc.id,
@@ -72,6 +86,8 @@ function validateCreatePayload(body) {
     const err = validateOptionalString(body[fieldName], fieldName);
     if (err) return err;
   }
+  const sortOrderError = validateOptionalSortOrder(body.sortOrder);
+  if (sortOrderError) return sortOrderError;
   return validateStatus(body.status);
 }
 
@@ -89,6 +105,8 @@ function validateUpdatePayload(body) {
     const err = validateOptionalString(body[fieldName], fieldName);
     if (err) return err;
   }
+  const sortOrderError = validateOptionalSortOrder(body.sortOrder);
+  if (sortOrderError) return sortOrderError;
   return validateStatus(body.status);
 }
 
