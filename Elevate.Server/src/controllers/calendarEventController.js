@@ -1,6 +1,6 @@
 'use strict';
 
-const { v4: createUuid } = require('uuid');
+const crypto = require('node:crypto');
 const { getCalendarEventsContainer } = require('../services/cosmosClient');
 const { parsePositiveInt, sendError } = require('../utils/http');
 
@@ -8,6 +8,10 @@ const PARTITION_KEY = 'calendarEvent';
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_RANGE_FILTER_SCAN_DOCS = 5000;
 const RANGE_FILTER_SCAN_PAGE_SIZE = 500;
+
+function createUuid() {
+  return crypto.randomUUID();
+}
 
 function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);

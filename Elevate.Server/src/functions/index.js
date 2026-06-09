@@ -14,6 +14,12 @@ const { functionDefinition: adminCalendarEventDetail } = require('./adminCalenda
 const { functionDefinition: adminCalendarEventUpdate } = require('./adminCalendarEventUpdate');
 const { functionDefinition: adminCalendarEventDelete } = require('./adminCalendarEventDelete');
 const { functionDefinition: publicCalendarEventsList } = require('./publicCalendarEventsList');
+const { functionDefinition: publicActivityVideosList } = require('./publicActivityVideosList');
+const { functionDefinition: adminActivityVideosList } = require('./adminActivityVideosList');
+const { functionDefinition: adminActivityVideoCreate } = require('./adminActivityVideoCreate');
+const { functionDefinition: adminActivityVideoDetail } = require('./adminActivityVideoDetail');
+const { functionDefinition: adminActivityVideoUpdate } = require('./adminActivityVideoUpdate');
+const { functionDefinition: adminActivityVideoDelete } = require('./adminActivityVideoDelete');
 const { functionDefinition: adminPostsList } = require('./adminPostsList');
 const { functionDefinition: adminPostDetail } = require('./adminPostDetail');
 const { functionDefinition: adminCreatePost } = require('./adminCreatePost');
@@ -24,6 +30,7 @@ const { functionDefinition: adminCreateAsset } = require('./adminCreateAsset');
 const { functionDefinition: adminDeleteAsset } = require('./adminDeleteAsset');
 const { functionDefinition: adminAnalyticsSummary } = require('./adminAnalyticsSummary');
 const { functionDefinition: adminIssueFileSas } = require('./adminIssueFileSas');
+const { functionDefinition: adminLinkDraftFiles } = require('./adminLinkDraftFiles');
 const { functionDefinition: adminGetFiles } = require('./adminGetFiles');
 const { functionDefinition: adminCreateFile } = require('./adminCreateFile');
 const { functionDefinition: adminDeleteFile } = require('./adminDeleteFile');
@@ -36,6 +43,7 @@ const functionDefinitions = [
   publicSeriesPosts,
   publicTags,
   publicCalendarEventsList,       // literal route — before parameterized routes
+  publicActivityVideosList,
   adminPostsList,
   adminPostDetail,
   adminCreatePost,
@@ -46,10 +54,16 @@ const functionDefinitions = [
   adminCalendarEventDetail,       // parameterized route
   adminCalendarEventUpdate,       // parameterized route
   adminCalendarEventDelete,       // parameterized route
+  adminActivityVideosList,
+  adminActivityVideoCreate,
+  adminActivityVideoDetail,
+  adminActivityVideoUpdate,
+  adminActivityVideoDelete,
   adminIssueAssetSas,
   adminCreateAsset,
   adminDeleteAsset,
   adminIssueFileSas, // literal route (api/admin/files/sas) — must be before adminCreateFile and adminGetFiles
+  adminLinkDraftFiles, // literal route (api/admin/files/link-draft) — must be before adminCreateFile and adminGetFiles
   adminGetFiles,
   adminCreateFile,
   adminDeleteFile,
