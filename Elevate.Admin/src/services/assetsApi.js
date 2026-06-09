@@ -83,11 +83,12 @@ export function getFiles(params, options = {}) {
     query.set('postId', params.postId)
   }
 
-  if (!query.size) {
+  const queryString = query.toString()
+  if (!queryString) {
     throw new Error('postId or draftSessionId is required to list files')
   }
 
-  return apiFetch(`/files?${query.toString()}`, {
+  return apiFetch(`/files?${queryString}`, {
     ...options,
     method: 'GET',
   })
