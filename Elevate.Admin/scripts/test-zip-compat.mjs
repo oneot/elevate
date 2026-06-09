@@ -115,6 +115,14 @@ function createMultiDiskZipMarker() {
   return zip
 }
 
+function createZipWithDataDescriptorFlag() {
+  const zip = createStoredZipWithMissingUtf8Flag('Files/05_사고사례.pdf'.normalize('NFD'))
+  const centralHeaderOffset = findCentralHeaderOffset(zip)
+  writeUInt16LE(zip, 6, 0x0008)
+  writeUInt16LE(zip, centralHeaderOffset + 8, 0x0008)
+  return zip
+}
+
 function readUInt16LE(buffer, offset) {
   return buffer[offset] | (buffer[offset + 1] << 8)
 }
@@ -214,3 +222,8 @@ const duplicateNormalizedNameZip = createZipWithEntries([
 const duplicateNormalizedNameInput = new File([duplicateNormalizedNameZip], 'attach.zip', { type: 'application/zip' })
 const duplicateNormalizedNameOutput = await ensureWindowsCompatibleZipFile(duplicateNormalizedNameInput)
 assert.equal(duplicateNormalizedNameOutput, duplicateNormalizedNameInput)
+
+const dataDescriptorZip = createZipWithDataDescriptorFlag()
+const dataDescriptorInput = new File([dataDescriptorZip], 'attach.zip', { type: 'application/zip' })
+const dataDescriptorOutput = await ensureWindowsCompatibleZipFile(dataDescriptorInput)
+assert.equal(dataDescriptorOutput, dataDescriptorInput)

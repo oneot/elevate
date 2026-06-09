@@ -173,6 +173,7 @@ function readEntries(source, centralDirectoryOffset, centralDirectoryEnd) {
     }
 
     if (
+      (flags & ZIP_DATA_DESCRIPTOR_FLAG) !== 0 ||
       compressedSize === 0xffffffff ||
       uncompressedSize === 0xffffffff ||
       localHeaderOffset === 0xffffffff ||
@@ -214,7 +215,7 @@ function readEntries(source, centralDirectoryOffset, centralDirectoryEnd) {
         compressedData: source.subarray(dataStart, dataEnd),
         fileName,
         fileNameBytes: normalizedFileNameBytes,
-        flags: (flags | ZIP_UTF8_FILENAME_FLAG) & ~ZIP_DATA_DESCRIPTOR_FLAG,
+        flags: flags | ZIP_UTF8_FILENAME_FLAG,
         crc: readUInt32LE(source, offset + 16),
         compressedSize,
         uncompressedSize,
