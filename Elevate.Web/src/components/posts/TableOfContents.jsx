@@ -10,27 +10,7 @@
  * `post-title` id: 게시글 제목을 목차 최상단에 별도 스타일로 추가하기 위한 가상 항목
  */
 import { useEffect, useState, useRef } from 'react';
-
-/**
- * 게시글 본문(`article`) 내 h1~h3 요소에서 heading 목록을 추출한다.
- * @returns {{ id: string, text: string, level: number }[]}
- */
-const extractHeadingsFromDOM = () => {
-  const headings = [];
-  const headingElements = document.querySelectorAll('article h1, article h2, article h3');
-
-  headingElements.forEach((element) => {
-    if (element.id) {
-      headings.push({
-        id: element.id,
-        text: element.textContent || element.innerText,
-        level: parseInt(element.tagName[1], 10)
-      });
-    }
-  });
-
-  return headings;
-};
+import { getPostContentHeadings } from '../../utils/html';
 
 /**
  * 평탄한 heading 배열을 부모-자식 중첩 트리로 변환한다.
@@ -172,15 +152,13 @@ const TableOfContents = ({ contentMarkdown, postTitle, sticky = true }) => {
   const observerRef = useRef(null);
 
   // MutationObserver로 article DOM 변경을 감지하고 heading을 재추출한다.
-  // dangerouslySetInnerHTML 반영 후 DOM이 업데이트될 때까지 150ms 딜레이를 둔다.
+  // heading id는 렌더 후 주입되므로 attribute 변경도 감지한다.
   useEffect(() => {
-    // article 요소 찾기
-    const article = document.querySelector('article');
-    if (!article) return;
+    const contentRoot = document.querySelector('article .post-content');
+    if (!contentRoot) return;
 
-    // 초기 추출 (약간의 딜레이 포함)
-    const initialTimer = setTimeout(() => {
-      const flatHeadings = extractHeadingsFromDOM();
+    const updateHeadings = () => {
+      const flatHeadings = getPostContentHeadings(contentRoot);
       
       // 게시글 제목을 첫 번째 항목으로 추가
       if (postTitle) {
@@ -194,37 +172,23 @@ const TableOfContents = ({ contentMarkdown, postTitle, sticky = true }) => {
       if (flatHeadings.length > 0) {
         const nested = buildNestedHeadings(flatHeadings);
         setHeadings(nested);
-      }
-    }, 150);
-
-    // MutationObserver 설정 - article 내용 변경 감지
-    const handleMutation = () => {
-      const flatHeadings = extractHeadingsFromDOM();
-      
-      // 게시글 제목을 첫 번째 항목으로 추가
-      if (postTitle) {
-        flatHeadings.unshift({
-          id: 'post-title',
-          text: postTitle,
-          level: 1
-        });
-      }
-
-      if (flatHeadings.length > 0) {
-        const nested = buildNestedHeadings(flatHeadings);
-        setHeadings(nested);
+      } else {
+        setHeadings([]);
       }
     };
 
-    const observer = new MutationObserver(handleMutation);
-    observer.observe(article, {
+    updateHeadings();
+
+    const observer = new MutationObserver(updateHeadings);
+    observer.observe(contentRoot, {
+      attributes: true,
+      attributeFilter: ['id'],
       childList: true,
       subtree: true,
       characterData: false
     });
 
     return () => {
-      clearTimeout(initialTimer);
       observer.disconnect();
     };
   }, [contentMarkdown, postTitle]);
@@ -241,7 +205,7 @@ const TableOfContents = ({ contentMarkdown, postTitle, sticky = true }) => {
     }
 
     // 마크다운 렌더링된 제목 요소들 수집
-    const headingElements = document.querySelectorAll('article h1, article h2, article h3');
+    const headingElements = document.querySelectorAll('article .post-content h1, article .post-content h2, article .post-content h3');
 
     if (headingElements.length === 0) return;
 
@@ -277,7 +241,7 @@ const TableOfContents = ({ contentMarkdown, postTitle, sticky = true }) => {
     observerRef.current = observer;
 
     const handleScroll = () => {
-      const headingElements = document.querySelectorAll('article h1, article h2, article h3');
+      const headingElements = document.querySelectorAll('article .post-content h1, article .post-content h2, article .post-content h3');
       if (headingElements.length === 0) return;
 
       const scrollPosition = window.scrollY + window.innerHeight;

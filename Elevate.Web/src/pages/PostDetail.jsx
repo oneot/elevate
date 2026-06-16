@@ -12,7 +12,7 @@
  */
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import GlassDocLayout from '../components/layout/GlassDocLayout';
 import TableOfContents from '../components/posts/TableOfContents';
 import SeriesNavigator from '../components/posts/SeriesNavigator';
@@ -122,7 +122,7 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
 
     // HTML 콘텐츠 렌더링 후 heading ID 주입(TableOfContents용) + 링크 핸들러 주입(SPA 이동/외부 링크)
     // + data-collapsible="true" 코드 블록에 접이식 토글 버튼 주입
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!contentRef.current || !post?.contentMarkdown) return;
         optimizeEmbeddedMedia(contentRef.current);
         injectHeadingIds(contentRef.current);
