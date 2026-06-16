@@ -62,6 +62,27 @@ export function injectHeadingIds(containerEl) {
 }
 
 /**
+ * 게시글 본문 컨테이너 내 h1~h3 요소에서 목차 항목을 추출한다.
+ *
+ * PostDetail이 렌더 후 heading id를 주입하므로, 목차 컴포넌트는 전역 article 대신
+ * 실제 본문 컨테이너를 기준으로 이 함수를 호출한다.
+ *
+ * @param {Element} containerEl - 게시글 본문 DOM 컨테이너
+ * @returns {{ id: string, text: string, level: number }[]}
+ */
+export function getPostContentHeadings(containerEl) {
+  if (!containerEl) return [];
+
+  return Array.from(containerEl.querySelectorAll('h1, h2, h3'))
+    .filter((element) => element.id)
+    .map((element) => ({
+      id: element.id,
+      text: element.textContent || element.innerText || '',
+      level: parseInt(element.tagName[1], 10),
+    }));
+}
+
+/**
  * 렌더링된 HTML 내 `<a>` 링크 동작을 복원한다.
  *
  * dangerouslySetInnerHTML로 삽입된 콘텐츠는 React의 이벤트 시스템 밖에 있으므로
@@ -195,8 +216,13 @@ export function injectCollapsibleCodeBlocks(containerEl) {
 
   // data-collapsible-injected 속성으로 중복 주입 방지 (idempotency)
   containerEl.querySelectorAll('pre:not([data-collapsible-injected])').forEach((pre) => {
-    const code = pre.querySelector('code');
-    if (!code) return;
+    let code = pre.querySelector('code');
+    if (!code) {
+      code = document.createElement('code');
+      code.textContent = pre.textContent || '';
+      pre.textContent = '';
+      pre.appendChild(code);
+    }
 
     const lines = code.textContent.replace(/\n$/, '').split('\n');
     const isCollapsible = lines.length >= COLLAPSE_THRESHOLD && pre.getAttribute('data-collapsible') !== 'false';
