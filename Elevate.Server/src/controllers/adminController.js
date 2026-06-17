@@ -26,7 +26,12 @@ const allowedAttachMimeTypes = new Set([
   'text/csv',
   'application/zip',
   'application/vnd.ms-excel',
-  'application/msword'
+  'application/msword',
+  'application/vnd.ms-powerpoint',
+  'application/x-hwp',
+  'application/haansofthwp',
+  'application/vnd.hancom.hwp',
+  'application/vnd.hancom.hwpx'
 ]);
 const maxAttachSizeBytes = 50 * 1024 * 1024;
 const attachCategoryPartition = '_attach';
