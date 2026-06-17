@@ -249,6 +249,8 @@ test('createFileMetadata stores trimmed postId and clears draftSessionId for sav
   assert.equal(res.getStatus(), 201);
   assert.equal(createdFileDocument.postId, 'post-1');
   assert.equal(createdFileDocument.draftSessionId, null);
+  assert.equal(Object.hasOwn(createdFileDocument, 'ttl'), false);
+  assert.equal(Object.hasOwn(createdFileDocument, 'expiresAt'), false);
 });
 
 test('createFileMetadata accepts PowerPoint and Hangul attachment formats', async () => {
@@ -438,11 +440,12 @@ test('linkDraftAttachmentsToPost links draft attachments and clears draftSession
       id: doc.id,
       postId: doc.postId,
       draftSessionId: doc.draftSessionId,
-      ttl: doc.ttl
+      hasTtl: Object.hasOwn(doc, 'ttl'),
+      hasExpiresAt: Object.hasOwn(doc, 'expiresAt')
     })),
     [
-      { id: 'file-1', postId: 'post-1', draftSessionId: null, ttl: null },
-      { id: 'file-2', postId: 'post-1', draftSessionId: null, ttl: null }
+      { id: 'file-1', postId: 'post-1', draftSessionId: null, hasTtl: false, hasExpiresAt: false },
+      { id: 'file-2', postId: 'post-1', draftSessionId: null, hasTtl: false, hasExpiresAt: false }
     ]
   );
   assert.match(replacedFileDocuments[0].doc.updatedAt, /^\d{4}-\d{2}-\d{2}T/);

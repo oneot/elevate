@@ -905,11 +905,13 @@ exports.createFileMetadata = async (req, res) => {
       contentType,
       sizeBytes,
       fileName: trimmedFileName,
-      expiresAt: isDraftAttachment ? getDraftAttachmentExpiresAt(new Date(now)) : null,
-      ttl: isDraftAttachment ? Math.floor(draftAttachTtlMs / 1000) : null,
       createdAt: now,
       updatedAt: now
     };
+    if (isDraftAttachment) {
+      fileDocument.expiresAt = getDraftAttachmentExpiresAt(new Date(now));
+      fileDocument.ttl = Math.floor(draftAttachTtlMs / 1000);
+    }
 
     await container.items.create(fileDocument);
 
@@ -956,10 +958,10 @@ exports.linkDraftAttachmentsToPost = async (req, res) => {
         ...file,
         postId: normalizedPostId,
         draftSessionId: null,
-        expiresAt: null,
-        ttl: null,
         updatedAt: new Date().toISOString()
       };
+      delete updated.expiresAt;
+      delete updated.ttl;
       await container.item(file.id, file.category || file.partitionKey || attachCategoryPartition).replace(updated);
     }
 
