@@ -12,12 +12,12 @@
  */
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import GlassDocLayout from '../components/layout/GlassDocLayout';
 import TableOfContents from '../components/posts/TableOfContents';
 import SeriesNavigator from '../components/posts/SeriesNavigator';
 import { getPost, getLatestAgenthonPost } from '../api/posts';
-import { sanitizeHtml, injectHeadingIds, injectLinkHandlers, injectCollapsibleCodeBlocks, optimizeEmbeddedMedia } from '../utils/html';
+import { preparePostHtml, injectHeadingIds, injectLinkHandlers, injectCollapsibleCodeBlocks, optimizeEmbeddedMedia } from '../utils/html';
 import { formatDateKo } from '../utils/url';
 import { POST_DETAIL_VALID_CATEGORIES, CATEGORY_DISPLAY_NAMES, getCategoryListRoute } from '../constants/categories';
 import { DEFAULT_OG_IMAGE, SITE_NAME, canonicalUrl } from '../constants/seo';
@@ -92,6 +92,10 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
     }, [postIdParam, useLatest]);
 
     const postId = resolvedPostId;
+    const preparedContentHtml = useMemo(
+        () => preparePostHtml(post?.contentMarkdown || ''),
+        [post?.contentMarkdown]
+    );
 
     useEffect(() => {
         if (!normalizedCategory || !postId) return;
@@ -175,7 +179,7 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
 
     // 게시글 로드 완료 시 좌측 TOC를 표시한다.
     const leftAside = !loading && !loadingLatest && post
-        ? <TableOfContents contentMarkdown={post.contentMarkdown} postTitle={post.title} sticky={false} />
+        ? <TableOfContents contentMarkdown={preparedContentHtml} postTitle={post.title} sticky={false} />
         : null;
 
     // 시리즈가 있을 때만 우측 SeriesNavigator를 표시한다.
@@ -319,7 +323,7 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
                             <div
                                 ref={contentRef}
                                 className="prose prose-slate max-w-none post-content"
-                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.contentMarkdown || '') }}
+                                dangerouslySetInnerHTML={{ __html: preparedContentHtml }}
                             />
                         </article>
                     </>
