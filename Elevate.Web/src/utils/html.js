@@ -25,6 +25,26 @@ export function sanitizeHtml(html) {
 }
 
 /**
+ * 게시글 HTML을 렌더링 전에 소독하고 h1~h6 id를 주입한다.
+ *
+ * 렌더 후 DOM mutation에만 의존하면 React 재렌더나 effect 순서에 따라 기존 문서의
+ * heading id가 비어 있을 수 있다. 렌더 전에 HTML 문자열 자체를 안정화해 TOC와
+ * 실제 본문 앵커가 같은 id를 보게 한다.
+ *
+ * @param {string} html - API에서 받은 게시글 HTML 문자열
+ * @returns {string} sanitize + heading id 주입이 끝난 HTML 문자열
+ */
+export function preparePostHtml(html) {
+  const sanitized = sanitizeHtml(html);
+  if (!sanitized || typeof document === 'undefined') return sanitized;
+
+  const template = document.createElement('template');
+  template.innerHTML = sanitized;
+  injectHeadingIds(template.content);
+  return template.innerHTML;
+}
+
+/**
  * 컨테이너 내 모든 heading(h1~h6)에 id를 주입한다.
  *
  * 이미 id가 있는 heading은 건너뛰고, 텍스트 내용을 소문자 kebab-case로 변환해 id를 생성한다.
