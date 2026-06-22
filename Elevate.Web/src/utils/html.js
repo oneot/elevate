@@ -25,6 +25,26 @@ export function sanitizeHtml(html) {
 }
 
 /**
+ * 게시글 HTML을 렌더링 전에 소독하고 h1~h6 id를 주입한다.
+ *
+ * 렌더 후 DOM mutation에만 의존하면 React 재렌더나 effect 순서에 따라 기존 문서의
+ * heading id가 비어 있을 수 있다. 렌더 전에 HTML 문자열 자체를 안정화해 TOC와
+ * 실제 본문 앵커가 같은 id를 보게 한다.
+ *
+ * @param {string} html - API에서 받은 게시글 HTML 문자열
+ * @returns {string} sanitize + heading id 주입이 끝난 HTML 문자열
+ */
+export function preparePostHtml(html) {
+  const sanitized = sanitizeHtml(html);
+  if (!sanitized || typeof document === 'undefined') return sanitized;
+
+  const template = document.createElement('template');
+  template.innerHTML = sanitized;
+  injectHeadingIds(template.content);
+  return template.innerHTML;
+}
+
+/**
  * 컨테이너 내 모든 heading(h1~h6)에 id를 주입한다.
  *
  * 이미 id가 있는 heading은 건너뛰고, 텍스트 내용을 소문자 kebab-case로 변환해 id를 생성한다.
@@ -59,6 +79,27 @@ export function injectHeadingIds(containerEl) {
     usedIds.add(id);
     el.id = id;
   });
+}
+
+/**
+ * 게시글 본문 컨테이너 내 h1~h3 요소에서 목차 항목을 추출한다.
+ *
+ * PostDetail이 렌더 후 heading id를 주입하므로, 목차 컴포넌트는 전역 article 대신
+ * 실제 본문 컨테이너를 기준으로 이 함수를 호출한다.
+ *
+ * @param {Element} containerEl - 게시글 본문 DOM 컨테이너
+ * @returns {{ id: string, text: string, level: number }[]}
+ */
+export function getPostContentHeadings(containerEl) {
+  if (!containerEl) return [];
+
+  return Array.from(containerEl.querySelectorAll('h1, h2, h3'))
+    .filter((element) => element.id)
+    .map((element) => ({
+      id: element.id,
+      text: element.textContent || element.innerText || '',
+      level: parseInt(element.tagName[1], 10),
+    }));
 }
 
 /**
@@ -195,8 +236,13 @@ export function injectCollapsibleCodeBlocks(containerEl) {
 
   // data-collapsible-injected 속성으로 중복 주입 방지 (idempotency)
   containerEl.querySelectorAll('pre:not([data-collapsible-injected])').forEach((pre) => {
-    const code = pre.querySelector('code');
-    if (!code) return;
+    let code = pre.querySelector('code');
+    if (!code) {
+      code = document.createElement('code');
+      code.textContent = pre.textContent || '';
+      pre.textContent = '';
+      pre.appendChild(code);
+    }
 
     const lines = code.textContent.replace(/\n$/, '').split('\n');
     const isCollapsible = lines.length >= COLLAPSE_THRESHOLD && pre.getAttribute('data-collapsible') !== 'false';

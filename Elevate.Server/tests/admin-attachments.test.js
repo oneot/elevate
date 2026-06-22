@@ -249,6 +249,46 @@ test('createFileMetadata stores trimmed postId and clears draftSessionId for sav
   assert.equal(res.getStatus(), 201);
   assert.equal(createdFileDocument.postId, 'post-1');
   assert.equal(createdFileDocument.draftSessionId, null);
+  assert.equal(Object.hasOwn(createdFileDocument, 'ttl'), false);
+  assert.equal(Object.hasOwn(createdFileDocument, 'expiresAt'), false);
+});
+
+test('createFileMetadata accepts PowerPoint and Hangul attachment formats', async () => {
+  const cases = [
+    {
+      blobUrl: 'https://account.blob.core.windows.net/attachments/attach/2026/06/slides.ppt',
+      contentType: 'application/vnd.ms-powerpoint',
+      fileName: 'slides.ppt'
+    },
+    {
+      blobUrl: 'https://account.blob.core.windows.net/attachments/attach/2026/06/report.hwp',
+      contentType: 'application/x-hwp',
+      fileName: 'report.hwp'
+    },
+    {
+      blobUrl: 'https://account.blob.core.windows.net/attachments/attach/2026/06/report.hwpx',
+      contentType: 'application/vnd.hancom.hwpx',
+      fileName: 'report.hwpx'
+    }
+  ];
+
+  for (const attachment of cases) {
+    createdFileDocument = null;
+    const res = makeRes();
+
+    await createFileMetadata({
+      body: {
+        postId: 'post-1',
+        ...attachment,
+        sizeBytes: 1234
+      },
+      correlationId: 'x'
+    }, res);
+
+    assert.equal(res.getStatus(), 201);
+    assert.equal(createdFileDocument.contentType, attachment.contentType);
+    assert.equal(createdFileDocument.fileName, attachment.fileName);
+  }
 });
 
 test('createFileMetadata stores expiry and removes stale draft attachments', async () => {
@@ -400,11 +440,12 @@ test('linkDraftAttachmentsToPost links draft attachments and clears draftSession
       id: doc.id,
       postId: doc.postId,
       draftSessionId: doc.draftSessionId,
-      ttl: doc.ttl
+      hasTtl: Object.hasOwn(doc, 'ttl'),
+      hasExpiresAt: Object.hasOwn(doc, 'expiresAt')
     })),
     [
-      { id: 'file-1', postId: 'post-1', draftSessionId: null, ttl: null },
-      { id: 'file-2', postId: 'post-1', draftSessionId: null, ttl: null }
+      { id: 'file-1', postId: 'post-1', draftSessionId: null, hasTtl: false, hasExpiresAt: false },
+      { id: 'file-2', postId: 'post-1', draftSessionId: null, hasTtl: false, hasExpiresAt: false }
     ]
   );
   assert.match(replacedFileDocuments[0].doc.updatedAt, /^\d{4}-\d{2}-\d{2}T/);

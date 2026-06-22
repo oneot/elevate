@@ -17,7 +17,12 @@ const ATTACH_MIME_MAP = {
   '.zip': 'application/zip',
   '.xls': 'application/vnd.ms-excel',
   '.doc': 'application/msword',
+  '.ppt': 'application/vnd.ms-powerpoint',
+  '.hwp': 'application/x-hwp',
+  '.hwpx': 'application/vnd.hancom.hwpx',
 }
+
+const ATTACH_EXTENSIONS = Object.keys(ATTACH_MIME_MAP)
 
 /** 첨부파일 최대 크기: 50MB */
 const MAX_ATTACH_BYTES = 50 * 1024 * 1024
@@ -25,6 +30,13 @@ const MAX_ATTACH_BYTES = 50 * 1024 * 1024
 function getContentType(file) {
   const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
   return ATTACH_MIME_MAP[ext] || file.type || 'application/octet-stream'
+}
+
+function getUploadErrorMessage(error) {
+  const message = String(error?.message || '').trim()
+  if (!message) return '업로드에 실패했습니다.'
+  const trimmed = message.length > 180 ? `${message.slice(0, 180)}...` : message
+  return `업로드에 실패했습니다. (${trimmed})`
 }
 
 export default function AttachUploader({ postId, draftSessionId, onUploadingChange }) {
@@ -76,7 +88,7 @@ export default function AttachUploader({ postId, draftSessionId, onUploadingChan
 
     const contentType = getContentType(file)
     if (!Object.values(ATTACH_MIME_MAP).includes(contentType)) {
-      setError('지원하지 않는 파일 형식입니다. (.docx .xlsx .pptx .pdf .csv .zip .xls .doc)')
+      setError(`지원하지 않는 파일 형식입니다. (${ATTACH_EXTENSIONS.join(' ')})`)
       return
     }
 
@@ -104,8 +116,8 @@ export default function AttachUploader({ postId, draftSessionId, onUploadingChan
       const signedUrl = result?.signedUrl || null
       setFiles(prev => [...prev, { id: result.fileId, fileName: uploadFile.name, blobUrl, signedUrl, isDeleting: false }])
       setStatus('done')
-    } catch {
-      setError('업로드에 실패했습니다.')
+    } catch (err) {
+      setError(getUploadErrorMessage(err))
       setStatus('error')
     } finally {
       onUploadingChange?.(false)
@@ -139,7 +151,7 @@ export default function AttachUploader({ postId, draftSessionId, onUploadingChan
         <input
           ref={inputRef}
           type="file"
-          accept=".docx,.xlsx,.pptx,.pdf,.csv,.zip,.xls,.doc"
+          accept={ATTACH_EXTENSIONS.join(',')}
           onChange={handleFileChange}
           className="hidden"
         />
@@ -154,7 +166,7 @@ export default function AttachUploader({ postId, draftSessionId, onUploadingChan
         </button>
       <span className="text-xs text-neutral-400">
           {canUpload
-            ? 'docx · xlsx · pptx · pdf · csv · zip · xls · doc (최대 50MB)'
+            ? `${ATTACH_EXTENSIONS.map((ext) => ext.slice(1)).join(' · ')} (최대 50MB)`
             : '첨부파일 업로드 준비 중입니다'}
         </span>
       </div>
