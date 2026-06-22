@@ -171,6 +171,33 @@ test('getAdminActivityVideoDetail returns activity video detail', async () => {
   });
 });
 
+test('getAdminActivityVideoDetail accepts lowercased Azure route parameter name', async () => {
+  docs = [{
+    id: 'video-1',
+    type: 'activityVideo',
+    partitionKey: 'activityVideo',
+    videoId: 'SfK1hajr5qY',
+    title: 'Title',
+    category: '행사',
+    year: '2026',
+    channel: 'Microsoft Korea',
+    sortOrder: 1,
+    status: 'published',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-02T00:00:00.000Z',
+  }];
+  const res = makeRes();
+
+  await ctrl.getAdminActivityVideoDetail({
+    params: { activityvideoid: 'video-1' },
+    query: {},
+    correlationId: 'x',
+  }, res);
+
+  assert.equal(res.getStatus(), 200);
+  assert.equal(res.getBody().id, 'video-1');
+});
+
 test('getAdminActivityVideoDetail returns 404 for missing activity video', async () => {
   const res = makeRes();
 
@@ -244,6 +271,28 @@ test('createActivityVideo creates normalized draft video', async () => {
   assert.equal(res.getBody().channel, 'Microsoft Korea');
   assert.equal(res.getBody().sortOrder, 5);
   assert.equal(docs[0].partitionKey, 'activityVideo');
+});
+
+test('createActivityVideo preserves optional description and channel values', async () => {
+  const res = makeRes();
+
+  await ctrl.createActivityVideo({
+    body: {
+      videoId: 'SfK1hajr5qY',
+      title: 'Title',
+      description: '  Description  ',
+      category: '행사',
+      year: '2026',
+      channel: '  Custom Channel  ',
+    },
+    params: {},
+    query: {},
+    correlationId: 'x',
+  }, res);
+
+  assert.equal(res.getStatus(), 201);
+  assert.equal(res.getBody().description, 'Description');
+  assert.equal(res.getBody().channel, 'Custom Channel');
 });
 
 test('updateActivityVideo clears description and publishes video', async () => {
@@ -381,6 +430,21 @@ test('deleteActivityVideo returns 204', async () => {
   await ctrl.deleteActivityVideo({
     body: null,
     params: { activityVideoId: 'video-1' },
+    query: {},
+    correlationId: 'x',
+  }, res);
+
+  assert.equal(res.getStatus(), 204);
+  assert.deepEqual(deletedItem, { id: 'video-1', pk: 'activityVideo' });
+});
+
+test('deleteActivityVideo accepts lowercased Azure route parameter name', async () => {
+  docs = [{ id: 'video-1', type: 'activityVideo', partitionKey: 'activityVideo' }];
+  const res = makeRes();
+
+  await ctrl.deleteActivityVideo({
+    body: null,
+    params: { activityvideoid: 'video-1' },
     query: {},
     correlationId: 'x',
   }, res);
