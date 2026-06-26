@@ -17,7 +17,7 @@ function isPlainObject(value) {
 }
 
 function getActivityVideoId(req) {
-  return req.params.activityVideoId || req.params.id;
+  return req.params.activityVideoId || req.params.activityvideoid || req.params.id;
 }
 
 function normalizeOptionalString(value) {
