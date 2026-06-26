@@ -88,7 +88,12 @@ jobs:
           fetch_route() {
             local url="$1"
             local html_file="$2"
-            curl -sS -L -o "${html_file}" -w "%{http_code}" "${url}"
+            curl -sS -L -o "${html_file}" -w "%{http_code}" "${url}" || printf "000"
+          }
+
+          fetch_asset_status() {
+            local url="$1"
+            curl -sS -L -o /dev/null -w "%{http_code}" "${url}" || printf "000"
           }
 
           for route in "${routes[@]}"; do
@@ -116,7 +121,7 @@ jobs:
             fi
 
             for asset in "${assets[@]}"; do
-              asset_status="$(curl -sS -L -o /dev/null -w "%{http_code}" "${base_url}${asset}")"
+              asset_status="$(fetch_asset_status "${base_url}${asset}")"
               if [[ "${asset_status}" != "200" ]]; then
                 echo "::error::${url} references ${asset}, which returned HTTP ${asset_status}"
                 exit 1
