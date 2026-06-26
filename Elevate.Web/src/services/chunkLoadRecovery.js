@@ -37,8 +37,10 @@ function safeSessionStorageGet(key) {
 function safeSessionStorageSet(key, value) {
   try {
     window.sessionStorage.setItem(key, value);
+    return true;
   } catch {
     // If sessionStorage is unavailable, avoid reload loops by not recovering.
+    return false;
   }
 }
 
@@ -57,14 +59,18 @@ function handleChunkLoadFailure(eventLike) {
     return;
   }
 
-  const alreadyAttempted = safeSessionStorageGet(RECOVERY_SESSION_KEY) === 'true';
-  recordChunkFailure(message, !alreadyAttempted);
-
-  if (alreadyAttempted) {
+  if (safeSessionStorageGet(RECOVERY_SESSION_KEY) === 'true') {
+    recordChunkFailure(message, false);
     return;
   }
 
-  safeSessionStorageSet(RECOVERY_SESSION_KEY, 'true');
+  const recoveryMarked = safeSessionStorageSet(RECOVERY_SESSION_KEY, 'true');
+  recordChunkFailure(message, recoveryMarked);
+
+  if (!recoveryMarked) {
+    return;
+  }
+
   window.location.reload();
 }
 
