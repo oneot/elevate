@@ -13,6 +13,8 @@ assert.match(source, /normalizeErrorMessage\(value\)\.toLowerCase\(\)/);
 assert.match(source, /pattern\.toLowerCase\(\)/);
 assert.match(source, /chunk-recovery-attempted/);
 assert.match(source, /chunk-recovery-diagnostic/);
+assert.match(source, /__elevateChunkLoadRecoveryStarted/);
+assert.match(source, /window\[RECOVERY_STARTED_WINDOW_KEY\]/);
 assert.match(source, /sessionStorage\.getItem/);
 assert.match(source, /sessionStorage\.setItem/);
 assert.match(source, /sessionStorage\.removeItem/);

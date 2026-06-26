@@ -11,11 +11,16 @@ After deploy, verify these routes return `HTTP 200` and reference existing asset
 Manual command:
 
 ```bash
+base_url="${GITHUB_PAGES_PAGE_URL:-https://microsoft-elevate.com}"
+base_url="${base_url%/}"
+
 for route in / /m365 /program-news; do
-  curl -sS -L -D - -o /tmp/elevate-route.html "https://microsoft-elevate.com${route}" | sed -n '1,8p'
+  curl -sS -L -D - -o /tmp/elevate-route.html "${base_url}${route}" | sed -n '1,8p'
   grep -Eo '/assets/[^"]+\.(js|css)' /tmp/elevate-route.html | sort -u
 done
 ```
+
+Use the GitHub Pages deployment `page_url` as `GITHUB_PAGES_PAGE_URL` when validating a just-finished workflow run.
 
 ## Intermittent `/m365` Failure Capture
 

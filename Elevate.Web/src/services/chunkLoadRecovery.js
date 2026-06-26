@@ -2,6 +2,7 @@ import { trackClientDiagnostic } from './clarity';
 
 const RECOVERY_SESSION_KEY = 'chunk-recovery-attempted';
 const RECOVERY_DIAGNOSTIC_SESSION_KEY = 'chunk-recovery-diagnostic';
+const RECOVERY_STARTED_WINDOW_KEY = '__elevateChunkLoadRecoveryStarted';
 const CHUNK_LOAD_FAILURE_PATTERNS = [
   'Failed to fetch dynamically imported module',
   'Importing a module script failed',
@@ -117,6 +118,11 @@ function handleChunkLoadFailure(eventLike) {
 }
 
 export function startChunkLoadRecovery() {
+  if (window[RECOVERY_STARTED_WINDOW_KEY]) {
+    return;
+  }
+
+  window[RECOVERY_STARTED_WINDOW_KEY] = true;
   flushPendingRecoveryDiagnostic();
 
   window.addEventListener('error', (event) => {
