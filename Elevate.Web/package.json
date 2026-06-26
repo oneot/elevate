@@ -11,7 +11,9 @@
     "check:seo": "node scripts/check-seo.mjs",
     "perf:lighthouse": "node scripts/perf-lighthouse.mjs",
     "generate:seo-routes": "node scripts/generate-seo-routes.mjs",
-    "generate-posts": "node scripts/generate-posts.js"
+    "generate-posts": "node scripts/generate-posts.js",
+    "test:chunk-recovery": "node scripts/test-chunk-load-recovery-source.mjs",
+    "test:build-id": "node scripts/test-build-id-source.mjs"
   },
   "dependencies": {
     "@microsoft/clarity": "^1.0.2",
