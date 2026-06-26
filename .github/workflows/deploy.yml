@@ -82,7 +82,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          base_url="https://microsoft-elevate.com"
+          base_url="${{ steps.deployment.outputs.page_url }}"
+          base_url="${base_url%/}"
           routes=("/" "/m365" "/program-news")
 
           fetch_route() {

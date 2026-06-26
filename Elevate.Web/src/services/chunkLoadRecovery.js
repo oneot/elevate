@@ -1,6 +1,7 @@
 import { trackClientDiagnostic } from './clarity';
 
 const RECOVERY_SESSION_KEY = 'chunk-recovery-attempted';
+const RECOVERY_DIAGNOSTIC_SESSION_KEY = 'chunk-recovery-diagnostic';
 const CHUNK_LOAD_FAILURE_PATTERNS = [
   'Failed to fetch dynamically imported module',
   'Importing a module script failed',
@@ -44,6 +45,14 @@ function safeSessionStorageSet(key, value) {
   }
 }
 
+function safeSessionStorageRemove(key) {
+  try {
+    window.sessionStorage.removeItem(key);
+  } catch {
+    // Nothing to clean up if sessionStorage is unavailable.
+  }
+}
+
 function recordChunkFailure(message, recovered) {
   trackClientDiagnostic('chunk_load_failed', {
     route: `${window.location.pathname}${window.location.search}`,
@@ -51,6 +60,35 @@ function recordChunkFailure(message, recovered) {
     recovered: recovered ? 'true' : 'false',
     message,
   });
+}
+
+function queueRecoveryDiagnostic(message) {
+  return safeSessionStorageSet(RECOVERY_DIAGNOSTIC_SESSION_KEY, JSON.stringify({
+    route: `${window.location.pathname}${window.location.search}`,
+    build_id: getBuildId(),
+    recovered: 'true',
+    message,
+  }));
+}
+
+function flushPendingRecoveryDiagnostic() {
+  const pendingDiagnostic = safeSessionStorageGet(RECOVERY_DIAGNOSTIC_SESSION_KEY);
+  if (!pendingDiagnostic) {
+    return;
+  }
+
+  safeSessionStorageRemove(RECOVERY_DIAGNOSTIC_SESSION_KEY);
+
+  try {
+    trackClientDiagnostic('chunk_load_failed', JSON.parse(pendingDiagnostic));
+  } catch {
+    trackClientDiagnostic('chunk_load_failed', {
+      route: `${window.location.pathname}${window.location.search}`,
+      build_id: getBuildId(),
+      recovered: 'true',
+      message: 'pending diagnostic parse failed',
+    });
+  }
 }
 
 function handleChunkLoadFailure(eventLike) {
@@ -65,16 +103,22 @@ function handleChunkLoadFailure(eventLike) {
   }
 
   const recoveryMarked = safeSessionStorageSet(RECOVERY_SESSION_KEY, 'true');
-  recordChunkFailure(message, recoveryMarked);
 
   if (!recoveryMarked) {
+    recordChunkFailure(message, false);
     return;
+  }
+
+  if (!queueRecoveryDiagnostic(message)) {
+    recordChunkFailure(message, true);
   }
 
   window.location.reload();
 }
 
 export function startChunkLoadRecovery() {
+  flushPendingRecoveryDiagnostic();
+
   window.addEventListener('error', (event) => {
     handleChunkLoadFailure(event?.error || event?.message);
   });
