@@ -97,3 +97,16 @@ export function trackClarityEvent(eventName) {
 
   Clarity.event(eventName);
 }
+
+export function trackClientDiagnostic(eventName, tags = {}) {
+  if (!eventName) {
+    return;
+  }
+
+  for (const [key, value] of Object.entries(tags)) {
+    if (typeof value === 'undefined' || value === null) continue;
+    setClarityTag(key, String(value).slice(0, 200));
+  }
+
+  trackClarityEvent(eventName);
+}

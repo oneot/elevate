@@ -46,6 +46,7 @@ jobs:
           VITE_BOT_TOKEN_ENDPOINT: ${{ secrets.VITE_BOT_TOKEN_ENDPOINT }}
           VITE_CLARITY_ENABLED: ${{ vars.VITE_CLARITY_ENABLED || 'true' }}
           VITE_CLARITY_PROJECT_ID: ${{ secrets.VITE_CLARITY_PROJECT_ID }}
+          VITE_BUILD_ID: ${{ github.sha }}
 
       - name: Include CNAME
         run: cp ../CNAME dist/
@@ -75,3 +76,50 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Smoke test deployed pages and assets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          base_url="https://microsoft-elevate.com"
+          routes=("/" "/m365" "/program-news")
+
+          fetch_route() {
+            local url="$1"
+            local html_file="$2"
+            curl -sS -L -o "${html_file}" -w "%{http_code}" "${url}"
+          }
+
+          for route in "${routes[@]}"; do
+            url="${base_url}${route}"
+            html_file="$(mktemp)"
+            status=""
+
+            for attempt in 1 2 3; do
+              status="$(fetch_route "${url}" "${html_file}")"
+              if [[ "${status}" == "200" ]]; then
+                break
+              fi
+              sleep 10
+            done
+
+            if [[ "${status}" != "200" ]]; then
+              echo "::error::${url} returned HTTP ${status}"
+              exit 1
+            fi
+
+            mapfile -t assets < <(grep -Eo '/assets/[^"]+\.(js|css)' "${html_file}" | sort -u)
+            if [[ "${#assets[@]}" -eq 0 ]]; then
+              echo "::error::${url} did not reference built JS/CSS assets"
+              exit 1
+            fi
+
+            for asset in "${assets[@]}"; do
+              asset_status="$(curl -sS -L -o /dev/null -w "%{http_code}" "${base_url}${asset}")"
+              if [[ "${asset_status}" != "200" ]]; then
+                echo "::error::${url} references ${asset}, which returned HTTP ${asset_status}"
+                exit 1
+              fi
+            done
+          done

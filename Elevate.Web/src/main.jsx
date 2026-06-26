@@ -12,7 +12,8 @@ import { HelmetProvider } from 'react-helmet-async'
 import './index.css'
 import App from './App.jsx'
 import { API_BASE } from './api/client'
-import { startClarityWhenIdle } from './services/clarity'
+import { setClarityTag, startClarityWhenIdle } from './services/clarity'
+import { startChunkLoadRecovery } from './services/chunkLoadRecovery'
 import { startInpMeasurement } from './services/webVitals'
 import ErrorBoundary from './components/common/ErrorBoundary'
 
@@ -31,11 +32,13 @@ function preconnectToApiOrigin() {
   }
 }
 
+startChunkLoadRecovery()
 preconnectToApiOrigin()
 
 // LCP 경로의 네트워크 경쟁을 줄이기 위해 Clarity는 유휴 시점에 시작한다.
 // VITE_CLARITY_ENABLED=true 이고 VITE_CLARITY_PROJECT_ID가 설정된 경우에만 실제로 초기화된다.
 startClarityWhenIdle()
+setClarityTag('build_id', window.__BUILD_ID__ || 'unknown')
 startInpMeasurement()
 
 createRoot(document.getElementById('root')).render(

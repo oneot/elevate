@@ -11,6 +11,7 @@
  *   </ErrorBoundary>
  */
 import { Component } from 'react';
+import { trackClientDiagnostic } from '../../services/clarity';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -24,6 +25,11 @@ class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     console.error('[ErrorBoundary]', error, info.componentStack);
+    trackClientDiagnostic('render_error', {
+      route: `${window.location.pathname}${window.location.search}`,
+      build_id: window.__BUILD_ID__ || 'unknown',
+      message: error?.message || 'unknown',
+    });
   }
 
   render() {
@@ -33,6 +39,7 @@ class ErrorBoundary extends Component {
           <span className="text-5xl">💥</span>
           <h2 className="text-xl font-semibold text-slate-700">페이지를 표시할 수 없습니다</h2>
           <p className="text-sm text-slate-500 max-w-sm">{this.state.errorMessage}</p>
+          <p className="text-xs text-slate-400">Build {window.__BUILD_ID__ || 'unknown'}</p>
           <button
             type="button"
             onClick={() => window.location.reload()}
