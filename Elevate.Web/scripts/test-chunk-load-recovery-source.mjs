@@ -9,6 +9,8 @@ const mainSource = readFileSync(join(__dirname, '../src/main.jsx'), 'utf8');
 
 assert.match(source, /Failed to fetch dynamically imported module/);
 assert.match(source, /Importing a module script failed/);
+assert.match(source, /normalizeErrorMessage\(value\)\.toLowerCase\(\)/);
+assert.match(source, /pattern\.toLowerCase\(\)/);
 assert.match(source, /chunk-recovery-attempted/);
 assert.match(source, /sessionStorage\.getItem/);
 assert.match(source, /sessionStorage\.setItem/);

@@ -14,6 +14,8 @@ assert.match(viteSource, /VITE_BUILD_ID/);
 assert.match(viteSource, /GITHUB_SHA/);
 assert.match(viteSource, /__ELEVATE_BUILD_ID__/);
 assert.match(viteSource, /transformIndexHtml/);
+assert.match(viteSource, /replace\(\/\[\^a-zA-Z0-9\._-\]\/g, ''\)/);
+assert.match(viteSource, /\|\| 'dev'/);
 assert.match(indexSource, /window\.__BUILD_ID__ = "__ELEVATE_BUILD_ID__"/);
 assert.match(mainSource, /setClarityTag\('build_id'/);
 assert.match(claritySource, /trackClientDiagnostic/);

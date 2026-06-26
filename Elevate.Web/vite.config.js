@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 const rawBuildId = process.env.VITE_BUILD_ID || process.env.GITHUB_SHA || 'dev'
-const buildId = rawBuildId.slice(0, 12)
+const buildId = rawBuildId.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 12) || 'dev'
 
 function buildIdHtmlPlugin() {
   return {

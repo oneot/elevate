@@ -18,8 +18,8 @@ function normalizeErrorMessage(value) {
 }
 
 export function isChunkLoadFailure(value) {
-  const message = normalizeErrorMessage(value);
-  return CHUNK_LOAD_FAILURE_PATTERNS.some((pattern) => message.includes(pattern));
+  const message = normalizeErrorMessage(value).toLowerCase();
+  return CHUNK_LOAD_FAILURE_PATTERNS.some((pattern) => message.includes(pattern.toLowerCase()));
 }
 
 function getBuildId() {
