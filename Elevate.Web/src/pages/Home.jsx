@@ -200,7 +200,7 @@ const Home = () => {
                             </span>
                             <h3 className="text-xl font-bold text-orange-600 group-hover:text-orange-700 transition-colors">AI & M365 최신 정보</h3>
                         </div>
-                        <p className="text-slate-700/80 font-medium mb-4 text-[15px]">Microsoft 제품 업데이트 소식을 매주 수요일에 이곳에서 받아보세요.</p>
+                        <p className="text-slate-700/80 font-medium mb-4 text-[15px]">Microsoft 제품 업데이트 소식을 확인해보세요.</p>
                         <span className="text-orange-600 font-bold text-xs opacity-100 translate-x-0 sm:opacity-0 sm:translate-x-[-10px] sm:group-hover:opacity-100 sm:group-hover:translate-x-0 transition-all duration-300 flex items-center gap-1">더 알아보기 <span aria-hidden>→</span></span>
                     </a>
 
