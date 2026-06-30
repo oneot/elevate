@@ -118,7 +118,15 @@ function validateOptionalString(value, fieldName) {
 
 async function readActivityVideo(container, id, correlationId, res) {
   try {
-    const { resource } = await container.item(id, PARTITION_KEY).read();
+    const querySpec = {
+      query: 'SELECT TOP 1 * FROM c WHERE c.type = @type AND c.id = @id',
+      parameters: [
+        { name: '@type', value: PARTITION_KEY },
+        { name: '@id', value: id },
+      ],
+    };
+    const { resources } = await container.items.query(querySpec).fetchAll();
+    const resource = resources[0];
     if (!resource) {
       sendError(res, 404, 'NotFound', 'Resource not found', correlationId);
       return null;
@@ -133,6 +141,16 @@ async function readActivityVideo(container, id, correlationId, res) {
   }
 }
 
+async function getNextSortOrder(container) {
+  const querySpec = {
+    query: 'SELECT VALUE MAX(c.sortOrder) FROM c WHERE c.type = @type',
+    parameters: [{ name: '@type', value: PARTITION_KEY }],
+  };
+  const { resources } = await container.items.query(querySpec).fetchAll();
+  const maxSortOrder = resources[0];
+  return Number.isInteger(maxSortOrder) && maxSortOrder >= 0 ? maxSortOrder + 10 : 10;
+}
+
 exports.listPublicActivityVideos = async (req, res) => {
   const correlationId = req.correlationId;
   try {
@@ -140,14 +158,14 @@ exports.listPublicActivityVideos = async (req, res) => {
     const querySpec = {
       query: `SELECT * FROM c
 WHERE c.type = @type AND c.status = @status
-ORDER BY c.sortOrder ASC, c.createdAt DESC
+ORDER BY c.sortOrder ASC
 OFFSET 0 LIMIT 500`,
       parameters: [
         { name: '@type', value: PARTITION_KEY },
         { name: '@status', value: 'published' },
       ],
     };
-    const { resources } = await container.items.query(querySpec, { partitionKey: PARTITION_KEY }).fetchAll();
+    const { resources } = await container.items.query(querySpec).fetchAll();
     return res.json({ items: resources.map(toActivityVideoResponse) });
   } catch (error) {
     console.error('[listPublicActivityVideos] failed', error);
@@ -172,11 +190,11 @@ exports.listAdminActivityVideos = async (req, res) => {
       parameters.push({ name: '@status', value: status });
     }
 
-    queryText += ' ORDER BY c.sortOrder ASC, c.createdAt DESC OFFSET 0 LIMIT 500';
+    queryText += ' ORDER BY c.sortOrder ASC OFFSET 0 LIMIT 500';
 
     const container = getActivityVideosContainer();
     const { resources } = await container.items
-      .query({ query: queryText, parameters }, { partitionKey: PARTITION_KEY })
+      .query({ query: queryText, parameters })
       .fetchAll();
     return res.json({ items: resources.map(toActivityVideoResponse) });
   } catch (error) {
@@ -206,6 +224,10 @@ exports.createActivityVideo = async (req, res) => {
   }
 
   try {
+    const container = getActivityVideosContainer();
+    const sortOrder = req.body.sortOrder === undefined
+      ? await getNextSortOrder(container)
+      : normalizeNumber(req.body.sortOrder);
     const now = new Date().toISOString();
     const doc = {
       id: createUuid(),
@@ -217,12 +239,11 @@ exports.createActivityVideo = async (req, res) => {
       category: req.body.category.trim(),
       year: req.body.year.trim(),
       channel: normalizeOptionalString(req.body.channel) || 'Microsoft Korea',
-      sortOrder: normalizeNumber(req.body.sortOrder),
+      sortOrder,
       status: req.body.status || 'draft',
       createdAt: now,
       updatedAt: now,
     };
-    const container = getActivityVideosContainer();
     const { resource } = await container.items.create(doc);
     return res.status(201).json(toActivityVideoResponse(resource));
   } catch (error) {
@@ -260,7 +281,13 @@ exports.updateActivityVideo = async (req, res) => {
       updatedAt: new Date().toISOString(),
     };
 
-    const { resource } = await container.item(getActivityVideoId(req), PARTITION_KEY).replace(updated);
+    let resource;
+    if (updated.category !== existing.category) {
+      await container.item(getActivityVideoId(req), existing.category).delete();
+      ({ resource } = await container.items.create(updated));
+    } else {
+      ({ resource } = await container.item(getActivityVideoId(req), existing.category).replace(updated));
+    }
     return res.json(toActivityVideoResponse(resource));
   } catch (error) {
     console.error('[updateActivityVideo] failed', error);
@@ -273,7 +300,9 @@ exports.deleteActivityVideo = async (req, res) => {
   try {
     const container = getActivityVideosContainer();
     try {
-      await container.item(getActivityVideoId(req), PARTITION_KEY).delete();
+      const existing = await readActivityVideo(container, getActivityVideoId(req), correlationId, res);
+      if (!existing) return null;
+      await container.item(getActivityVideoId(req), existing.category).delete();
     } catch (error) {
       if (error.code === 404) {
         return sendError(res, 404, 'NotFound', 'Resource not found', correlationId);

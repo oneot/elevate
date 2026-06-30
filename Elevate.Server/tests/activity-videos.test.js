@@ -13,6 +13,16 @@ const mockContainer = {
       lastQueryOptions = options;
       return {
         fetchAll: async () => {
+          if (/VALUE MAX\(c\.sortOrder\)/.test(querySpec.query)) {
+            const sortOrders = docs
+              .filter((doc) => doc.type === 'activityVideo' && Number.isInteger(doc.sortOrder))
+              .map((doc) => doc.sortOrder);
+            return { resources: [sortOrders.length ? Math.max(...sortOrders) : 0] };
+          }
+          const idParam = querySpec.parameters?.find((param) => param.name === '@id');
+          if (idParam) {
+            return { resources: docs.filter((doc) => doc.type === 'activityVideo' && doc.id === idParam.value) };
+          }
           const statusParam = querySpec.parameters?.find((param) => param.name === '@status');
           const resources = statusParam
             ? docs.filter((doc) => doc.status === statusParam.value)
@@ -97,9 +107,10 @@ test('listPublicActivityVideos returns only published videos query ordered by so
   assert.equal(res.getStatus(), 200);
   assert.deepEqual(res.getBody().items.map((item) => item.id), ['1']);
   assert.match(lastQuerySpec.query, /c.status = @status/);
-  assert.match(lastQuerySpec.query, /ORDER BY c.sortOrder ASC, c.createdAt DESC/);
+  assert.match(lastQuerySpec.query, /ORDER BY c.sortOrder ASC/);
+  assert.doesNotMatch(lastQuerySpec.query, /c.createdAt DESC/);
   assert.deepEqual(lastQuerySpec.parameters.find((param) => param.name === '@status'), { name: '@status', value: 'published' });
-  assert.deepEqual(lastQueryOptions, { partitionKey: 'activityVideo' });
+  assert.equal(lastQueryOptions, undefined);
 });
 
 test('listPublicActivityVideos ignores requested status and always queries published', async () => {
@@ -128,7 +139,7 @@ test('listAdminActivityVideos filters valid status using activityVideo partition
   assert.equal(res.getStatus(), 200);
   assert.deepEqual(res.getBody().items.map((item) => item.id), ['2']);
   assert.match(lastQuerySpec.query, /AND c.status = @status/);
-  assert.deepEqual(lastQueryOptions, { partitionKey: 'activityVideo' });
+  assert.equal(lastQueryOptions, undefined);
 });
 
 test('getAdminActivityVideoDetail returns activity video detail', async () => {
@@ -255,7 +266,27 @@ test('createActivityVideo rejects invalid sortOrder values', async () => {
   }
 });
 
-test('createActivityVideo creates normalized draft video', async () => {
+test('createActivityVideo assigns next sortOrder when omitted', async () => {
+  docs = [
+    { id: 'old-1', type: 'activityVideo', partitionKey: 'activityVideo', sortOrder: 10 },
+    { id: 'old-2', type: 'activityVideo', partitionKey: 'activityVideo', sortOrder: 30 },
+  ];
+  const res = makeRes();
+
+  await ctrl.createActivityVideo({
+    body: { videoId: 'SfK1hajr5qY', title: 'Title', category: '행사', year: '2026' },
+    params: {},
+    query: {},
+    correlationId: 'x',
+  }, res);
+
+  assert.equal(res.getStatus(), 201);
+  assert.equal(res.getBody().sortOrder, 40);
+  assert.match(lastQuerySpec.query, /VALUE MAX\(c\.sortOrder\)/);
+  assert.equal(lastQueryOptions, undefined);
+});
+
+test('createActivityVideo respects explicit sortOrder override', async () => {
   const res = makeRes();
 
   await ctrl.createActivityVideo({
@@ -424,7 +455,7 @@ test('updateActivityVideo rejects invalid sortOrder values', async () => {
 });
 
 test('deleteActivityVideo returns 204', async () => {
-  docs = [{ id: 'video-1', type: 'activityVideo', partitionKey: 'activityVideo' }];
+  docs = [{ id: 'video-1', type: 'activityVideo', partitionKey: 'activityVideo', category: '행사' }];
   const res = makeRes();
 
   await ctrl.deleteActivityVideo({
@@ -435,7 +466,7 @@ test('deleteActivityVideo returns 204', async () => {
   }, res);
 
   assert.equal(res.getStatus(), 204);
-  assert.deepEqual(deletedItem, { id: 'video-1', pk: 'activityVideo' });
+  assert.deepEqual(deletedItem, { id: 'video-1', pk: '행사' });
 });
 
 test('deleteActivityVideo accepts lowercased Azure route parameter name', async () => {

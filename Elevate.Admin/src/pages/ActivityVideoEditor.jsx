@@ -18,7 +18,6 @@ const emptyVideo = {
   category: '',
   year: String(new Date().getFullYear()),
   channel: 'Microsoft Korea',
-  sortOrder: 0,
   status: 'draft',
 }
 
@@ -57,7 +56,6 @@ function ActivityVideoEditor() {
             category: data.category || '',
             year: data.year || '',
             channel: data.channel || 'Microsoft Korea',
-            sortOrder: data.sortOrder ?? 0,
             status: data.status || 'draft',
           })
         }
@@ -117,7 +115,6 @@ function ActivityVideoEditor() {
       category: video.category.trim(),
       year: video.year.trim(),
       channel: video.channel || 'Microsoft Korea',
-      sortOrder: Number(video.sortOrder) || 0,
       status: video.status,
     }
 
@@ -251,15 +248,6 @@ function ActivityVideoEditor() {
               value={video.channel}
               onChange={handleChange('channel')}
               placeholder="Microsoft Korea"
-            />
-          </FormField>
-
-          <FormField label="정렬 순서">
-            <input
-              type="number"
-              className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-              value={video.sortOrder}
-              onChange={handleChange('sortOrder')}
             />
           </FormField>
         </div>

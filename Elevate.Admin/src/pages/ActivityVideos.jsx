@@ -57,10 +57,6 @@ function ActivityVideoCard({ video, index }) {
                   <span className="block text-xs font-semibold uppercase text-neutral-400">Channel</span>
                   {video.channel || '-'}
                 </div>
-                <div>
-                  <span className="block text-xs font-semibold uppercase text-neutral-400">Sort</span>
-                  {video.sortOrder ?? 0}
-                </div>
               </div>
               <div className="flex items-center gap-2 pt-3 mt-2 border-t border-neutral-100">
                 <Edit className="w-4 h-4 text-ms-blue" />
