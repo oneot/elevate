@@ -9,9 +9,11 @@
  * - `getWrappedIndex`: 음수를 포함한 원형 인덱스를 `(index + length) % length`로 처리
  * - `orbitMotionMap`: offset -2~2에 대한 rotateY + translateX/Y + scale로 입체 배치 정의
  * - `orderedCards`: z-index 충돌 없이 DOM 렌더 순서를 결정하기 위해 |offset| 내림차순 정렬
- * - 카테고리 변경 시 `activeIndex`를 날짜 기반 인덱스(`getDailyIndex`)로 초기화하여 범위 초과를 방지
+ * - 카테고리 변경/초기 로딩 시 featured 영상(`QU0o1hRJP68`)을 우선 노출
  */
 import React, { useEffect, useMemo, useRef, useState } from "react";
+
+const FEATURED_VIDEO_ID = "QU0o1hRJP68";
 
 /**
  * YouTube 영상 ID로 hqdefault 썸네일 URL을 반환한다.
@@ -34,17 +36,6 @@ function getWrappedIndex(index, length) {
 }
 
 /**
- * Unix epoch(1970-01-01 UTC) 기준으로 오늘까지 경과한 일수를 length로 나눈 나머지를 반환한다.
- * 같은 날(UTC)에는 항상 동일한 값을 반환하며, 페이지 재진입·카테고리 변경·UTC 자정 도달 시 갱신된다.
- * @param {number} length
- * @returns {number}
- */
-function getDailyIndex(length) {
-  if (length === 0) return 0;
-  return Math.floor(Date.now() / 86_400_000) % length;
-}
-
-/**
  * 카테고리에 따라 items를 필터링한다. "전체"이면 전체 목록을 반환한다.
  * @param {Array} items
  * @param {string} category
@@ -63,7 +54,7 @@ function getFilteredItems(items, category) {
  * @returns {JSX.Element}
  */
 export default function ActivityShowcaseCarousel({ items = [] }) {
-  const [activeIndex, setActiveIndex] = useState(() => getDailyIndex(items.length));
+  const [activeIndex, setActiveIndex] = useState(0);
   const [playingId, setPlayingId] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [isAnimating, setIsAnimating] = useState(false);
@@ -109,9 +100,17 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
 
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
-    setActiveIndex(getDailyIndex(getFilteredItems(items, category).length));
+    const nextItems = getFilteredItems(items, category);
+    const featuredIndex = nextItems.findIndex((item) => item.videoId === FEATURED_VIDEO_ID);
+    setActiveIndex(featuredIndex >= 0 ? featuredIndex : 0);
     setPlayingId(null);
   };
+
+  useEffect(() => {
+    const featuredIndex = filteredItems.findIndex((item) => item.videoId === FEATURED_VIDEO_ID);
+    setActiveIndex(featuredIndex >= 0 ? featuredIndex : 0);
+    setPlayingId(null);
+  }, [selectedCategory, filteredItems.length]);
 
   useEffect(() => {
     const activeButton = listRefs.current[safeActiveIndex];
@@ -122,16 +121,6 @@ export default function ActivityShowcaseCarousel({ items = [] }) {
       });
     }
   }, [safeActiveIndex, selectedCategory]);
-
-  // UTC 자정에 activeIndex를 날짜 기반 인덱스로 자동 갱신한다.
-  useEffect(() => {
-    const msUntilMidnight =
-      (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 - Date.now();
-    const timer = window.setTimeout(() => {
-      setActiveIndex(getDailyIndex(filteredItems.length));
-    }, msUntilMidnight);
-    return () => window.clearTimeout(timer);
-  }, [filteredItems.length]);
 
   const visibleCards = useMemo(() => {
     if (filteredItems.length === 0) return [];

@@ -1,5 +1,86 @@
 [
   {
+    "id": "event-2026-01",
+    "videoId": "QU0o1hRJP68",
+    "title": "직업계고 Microsoft AI Skilling Workshop 스케치 영상",
+    "channel": "Microsoft Korea",
+    "category": "행사",
+    "year": "2026",
+    "description": "직업계고 AI Skilling Workshop 현장의 핵심 장면과 분위기를 한눈에 볼 수 있는 스케치 영상입니다."
+  },
+  {
+    "id": "event-2026-02",
+    "videoId": "ISxb84H5xGE",
+    "title": "직업계고 AI Skilling Workshop | 오프닝",
+    "channel": "Microsoft Korea",
+    "category": "행사",
+    "year": "2026",
+    "description": "직업계고 AI Skilling Workshop의 시작을 여는 오프닝 세션 영상입니다."
+  },
+  {
+    "id": "event-2026-03",
+    "videoId": "J64Z9DXn3Pw",
+    "title": "직업계고 AI Skilling Workshop | 키노트: 직업계고의 AI Transformation",
+    "channel": "Microsoft Korea",
+    "category": "행사",
+    "year": "2026",
+    "description": "직업계고 교육 현장에서의 AI 전환 방향과 실행 전략을 다룬 키노트 세션입니다."
+  },
+  {
+    "id": "event-2026-04",
+    "videoId": "aicdNU002w8",
+    "title": "직업계고 AI Skilling Workshop | 마이크로소프트 세션: 마이크로소프트 데이터센터 커뮤니티 프로그램",
+    "channel": "Microsoft Korea",
+    "category": "행사",
+    "year": "2026",
+    "description": "마이크로소프트 데이터센터 커뮤니티 프로그램과 교육 연계 사례를 소개하는 세션입니다."
+  },
+  {
+    "id": "event-2026-05",
+    "videoId": "WJz1liChILc",
+    "title": "직업계고 AI Skilling Workshop | 마이크로소프트 세션: 에이전트 보스, AI 시대의 새로운 리더십",
+    "channel": "Microsoft Korea",
+    "category": "행사",
+    "year": "2026",
+    "description": "AI 시대에 필요한 리더십 관점과 에이전트 기반 업무 방식의 변화를 다루는 세션입니다."
+  },
+  {
+    "id": "event-2026-06",
+    "videoId": "xZhDS80OcOo",
+    "title": "직업계고 AI Skilling Workshop | 사례 세션: 창의재단 기업 연계 AI Skilling 프로젝트 사례",
+    "channel": "Microsoft Korea",
+    "category": "행사",
+    "year": "2026",
+    "description": "창의재단과 기업이 함께한 AI Skilling 프로젝트의 실제 운영 사례를 공유하는 세션입니다."
+  },
+  {
+    "id": "event-2026-07",
+    "videoId": "3WN-aDSYnEk",
+    "title": "직업계고 AI Skilling Workshop | 사례 세션: 업무에 바로 적용하는 네 가지 멀티 에이전트 패턴",
+    "channel": "Microsoft Korea",
+    "category": "행사",
+    "year": "2026",
+    "description": "현업에 즉시 적용 가능한 멀티 에이전트 패턴 네 가지를 중심으로 실전 활용법을 소개합니다."
+  },
+  {
+    "id": "event-2026-08",
+    "videoId": "IgLzhnXwUZY",
+    "title": "직업계고 AI Skilling Workshop | Fireside Chat: 요즘 대기업, 이런 AI 인재를 원한다",
+    "channel": "Microsoft Korea",
+    "category": "행사",
+    "year": "2026",
+    "description": "기업이 기대하는 AI 인재상과 필요한 역량을 대화 형식으로 풀어낸 Fireside Chat 세션입니다."
+  },
+  {
+    "id": "event-2026-09",
+    "videoId": "uJ94apY3XRQ",
+    "title": "직업계고 AI Skilling Workshop | 사례 세션: 특성화고 Microsoft Elevate School 도입 사례",
+    "channel": "Microsoft Korea",
+    "category": "행사",
+    "year": "2026",
+    "description": "특성화고 현장에 Microsoft Elevate School을 도입한 실제 사례와 성과를 공유하는 세션입니다."
+  },
+  {
     "id": "1",
     "videoId": "SfK1hajr5qY",
     "title": "2025 대한민국 AI교육 페스티벌 하이라이트",

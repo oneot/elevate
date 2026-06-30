@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import ShowcaseLayout from "../components/layout/ShowcaseLayout";
 import ActivityShowcaseCarousel from "../components/common/ActivityShowcaseCarousel";
@@ -11,8 +11,17 @@ const PAGE_DESCRIPTION = "Microsoft Elevate for Educators 커뮤니티의 교육
 
 export default function ActivityShowcasePage() {
   const [items, setItems] = useState(fallbackActivityVideos);
+  const useLocalPreview = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return new URLSearchParams(window.location.search).get("preview") === "local";
+  }, []);
 
   useEffect(() => {
+    if (useLocalPreview) {
+      setItems(fallbackActivityVideos);
+      return;
+    }
+
     const controller = new AbortController();
     listActivityVideos({ signal: controller.signal })
       .then((data) => {
@@ -27,7 +36,7 @@ export default function ActivityShowcasePage() {
       });
 
     return () => controller.abort();
-  }, []);
+  }, [useLocalPreview]);
 
   useLayoutEffect(() => {
     const style = document.createElement("style");
