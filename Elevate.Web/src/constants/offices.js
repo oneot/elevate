@@ -21,7 +21,7 @@ export const offices = {
     Gyeongbuk: "https://365.gyo6.net",
     Daegu: "https://o365.dge.go.kr",
     Ulsan: "https://o365.use.go.kr",
-    Busan: "https://o365.pen.go.kr",
+    Busan: "https://m365.pen.go.kr",
     Gyeongnam: "https://sw-ms.gne.go.kr",
     Jeonbuk: "https://getsw-s.jbe.go.kr",
     Jeonnam: "https://o365.jne.go.kr",
