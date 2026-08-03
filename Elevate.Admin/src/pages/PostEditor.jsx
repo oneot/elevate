@@ -7,6 +7,7 @@ import {
   createPost,
   deletePost,
   getPost,
+  listSeriesByCategory,
   updatePost,
 } from '../services/postsApi.js'
 import { linkDraftFilesToPost } from '../services/assetsApi.js'
@@ -24,6 +25,8 @@ const emptyPost = {
   category: '',
   tags: [],
   excerpt: '',
+  series: '',
+  seriesOrder: null,
   thumbnailUrl: '',
   htmlBody: '',
   youtube: '',
@@ -102,6 +105,9 @@ function PostEditor() {
   const [tagsInput, setTagsInput] = useState('')
   const [youtubeInput, setYoutubeInput] = useState('')
   const [youtubeError, setYoutubeError] = useState('')
+  const [seriesOptions, setSeriesOptions] = useState([])
+  const [isCreatingNewSeries, setIsCreatingNewSeries] = useState(false)
+  const [newSeriesName, setNewSeriesName] = useState('')
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
   const [isAttachmentUploading, setIsAttachmentUploading] = useState(false)
@@ -258,9 +264,100 @@ function PostEditor() {
     return () => { isMounted = false }
   }, [post.category, isNew, postId, msalInstance])
 
+  useEffect(() => {
+    if (!isApiConfigured || !post.category) {
+      setSeriesOptions([])
+      return
+    }
+
+    let isMounted = true
+
+    listSeriesByCategory(post.category, { msalInstance })
+      .then((data) => {
+        if (!isMounted) return
+        const names = Array.from(new Set(
+          (data?.items || [])
+            .map((item) => (typeof item?.name === 'string' ? item.name.trim() : ''))
+            .filter(Boolean)
+        )).sort((a, b) => a.localeCompare(b, 'ko'))
+        setSeriesOptions(names)
+      })
+      .catch(() => {
+        if (isMounted) setSeriesOptions([])
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [post.category, msalInstance])
+
+  useEffect(() => {
+    const currentSeries = (post.series || '').trim()
+    if (!currentSeries) {
+      setIsCreatingNewSeries(false)
+      setNewSeriesName('')
+      return
+    }
+
+    const existsInOptions = seriesOptions.includes(currentSeries)
+    if (existsInOptions) {
+      setIsCreatingNewSeries(false)
+      setNewSeriesName('')
+      return
+    }
+
+    setIsCreatingNewSeries(true)
+    setNewSeriesName(currentSeries)
+  }, [post.series, seriesOptions])
+
 
   const handleChange = (field) => (event) => {
     setPost((prev) => ({ ...prev, [field]: event.target.value }))
+  }
+
+  const handleSeriesSelectChange = (event) => {
+    const value = event.target.value
+    setIsCreatingNewSeries(false)
+    setNewSeriesName('')
+    setPost((prev) => ({
+      ...prev,
+      series: value,
+      ...(value.trim() ? {} : { seriesOrder: null }),
+    }))
+  }
+
+  const handleStartNewSeries = () => {
+    setIsCreatingNewSeries(true)
+    setNewSeriesName(post.series || '')
+  }
+
+  const handleCancelNewSeries = () => {
+    const fallbackSeries = seriesOptions.includes(post.series || '') ? (post.series || '') : ''
+    setIsCreatingNewSeries(false)
+    setNewSeriesName('')
+    setPost((prev) => ({
+      ...prev,
+      series: fallbackSeries,
+      ...(fallbackSeries ? {} : { seriesOrder: null }),
+    }))
+  }
+
+  const handleNewSeriesNameChange = (event) => {
+    const value = event.target.value
+    setNewSeriesName(value)
+    setPost((prev) => ({
+      ...prev,
+      series: value,
+      ...(value.trim() ? {} : { seriesOrder: null }),
+    }))
+  }
+
+  const handleSeriesOrderChange = (event) => {
+    const rawValue = event.target.value.trim()
+    setPost((prev) => ({
+      ...prev,
+      seriesOrder: rawValue ? Number.parseInt(rawValue, 10) : null,
+    }))
   }
 
   const handleYoutubeChange = (event) => {
@@ -561,6 +658,14 @@ function PostEditor() {
             isUploading={isUploading}
             isNew={isNew}
             onChange={handleChange}
+            seriesOptions={seriesOptions}
+            isCreatingNewSeries={isCreatingNewSeries}
+            newSeriesName={newSeriesName}
+            onSeriesSelectChange={handleSeriesSelectChange}
+            onStartNewSeries={handleStartNewSeries}
+            onCancelNewSeries={handleCancelNewSeries}
+            onNewSeriesNameChange={handleNewSeriesNameChange}
+            onSeriesOrderChange={handleSeriesOrderChange}
             onTagsChange={setTagsInput}
             onYoutubeChange={handleYoutubeChange}
             onThumbnailUpload={uploadThumbnail}

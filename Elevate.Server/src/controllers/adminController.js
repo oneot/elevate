@@ -261,6 +261,16 @@ function validatePostCreatePayload(body) {
     return 'status must be one of draft, published, archived';
   }
 
+  if (body.series !== undefined && body.series !== null && typeof body.series !== 'string') {
+    return 'series must be a string or null';
+  }
+
+  if (body.seriesOrder !== undefined && body.seriesOrder !== null) {
+    if (!Number.isInteger(body.seriesOrder) || body.seriesOrder < 1) {
+      return 'seriesOrder must be a positive integer or null';
+    }
+  }
+
   // eventDates validation (optional, only for event category)
   if (body.eventDates !== undefined && body.eventDates !== null) {
     if (!Array.isArray(body.eventDates)) {
@@ -298,6 +308,16 @@ function validatePostUpdatePayload(body) {
 
   if (body.youtube !== undefined && body.youtube !== null && typeof body.youtube !== 'string') {
     return 'youtube must be a string or null';
+  }
+
+  if (body.series !== undefined && body.series !== null && typeof body.series !== 'string') {
+    return 'series must be a string or null';
+  }
+
+  if (body.seriesOrder !== undefined && body.seriesOrder !== null) {
+    if (!Number.isInteger(body.seriesOrder) || body.seriesOrder < 1) {
+      return 'seriesOrder must be a positive integer or null';
+    }
   }
 
   // eventDates validation (optional, only for event category)
@@ -367,6 +387,7 @@ function toPostResponse(post) {
     publishedAt: post.publishedAt || null,
     updatedAt: post.updatedAt,
     series: post.series || null,
+    seriesOrder: post.seriesOrder ?? null,
     thumbnail: post.thumbnail || null,
     youtube: post.youtube || null,
     eventDates: Array.isArray(post.eventDates) ? post.eventDates : null,
@@ -538,6 +559,7 @@ exports.createPost = async (req, res) => {
       contentMarkdown: stripBlobSasFromHtml(req.body.contentMarkdown),
       tags: req.body.tags,
       series: req.body.series || null,
+      seriesOrder: req.body.seriesOrder ?? null,
       thumbnail: normalizeThumbnailForStorage(req.body.thumbnail),
       youtube: req.body.youtube || null,
       eventDates: Array.isArray(req.body.eventDates) ? req.body.eventDates : null,
@@ -606,7 +628,8 @@ exports.updatePost = async (req, res) => {
       excerpt: req.body.excerpt !== undefined ? req.body.excerpt : existing.excerpt,
       contentMarkdown: stripBlobSasFromHtml(incomingContent),
       tags: req.body.tags !== undefined ? req.body.tags : existing.tags,
-      series: req.body.series !== undefined ? req.body.series : existing.series,
+      series: req.body.series !== undefined ? (req.body.series || null) : existing.series,
+      seriesOrder: req.body.seriesOrder !== undefined ? (req.body.seriesOrder ?? null) : (existing.seriesOrder ?? null),
       thumbnail: normalizedThumbnail,
       youtube: req.body.youtube !== undefined ? (req.body.youtube || null) : (existing.youtube || null),
       eventDates: req.body.eventDates !== undefined ? (Array.isArray(req.body.eventDates) ? req.body.eventDates : null) : existing.eventDates,

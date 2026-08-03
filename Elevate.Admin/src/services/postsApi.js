@@ -20,6 +20,8 @@ function toEditorPost(apiPost) {
     tags: Array.isArray(apiPost.tags) ? apiPost.tags : [],
     excerpt: apiPost.excerpt || '',
     htmlBody: apiPost.contentMarkdown || '',
+    series: apiPost.series || '',
+    seriesOrder: apiPost.seriesOrder ?? null,
     thumbnailUrl: apiPost.thumbnail?.signedUrl || apiPost.thumbnail?.url || '',
     thumbnail: apiPost.thumbnail || null,
     youtube: apiPost.youtube || '',
@@ -42,6 +44,11 @@ function toEditorPost(apiPost) {
  * @param {object} post 에디터 상태 객체
  */
 function toApiPayload(post) {
+  const normalizedSeries = typeof post.series === 'string' ? post.series.trim() : post.series
+  const normalizedSeriesOrder = Number.isInteger(post.seriesOrder) && post.seriesOrder > 0
+    ? post.seriesOrder
+    : null
+
   const payload = {
     title: post.title,
     category: post.category,
@@ -55,8 +62,12 @@ function toApiPayload(post) {
     payload.slug = post.slug
   }
 
-  if (typeof post.series === 'string') {
-    payload.series = post.series || null
+  if (typeof normalizedSeries === 'string') {
+    payload.series = normalizedSeries || null
+  }
+
+  if (post.seriesOrder !== undefined) {
+    payload.seriesOrder = normalizedSeries ? normalizedSeriesOrder : null
   }
 
   if (post.thumbnail?.url) {
@@ -93,6 +104,19 @@ function toApiPayload(post) {
 
 export const _test = {
   toApiPayload,
+}
+
+/**
+ * 카테고리별 기존 시리즈 목록을 조회한다.
+ * 관리자 앱의 API base(/api/admin)를 기준으로 public series 경로로 상대 이동한다.
+ * @param {string} category
+ * @param {{ msalInstance?: object }} options
+ */
+export function listSeriesByCategory(category, options = {}) {
+  const params = new URLSearchParams()
+  if (category) params.set('category', category)
+  const qs = params.toString()
+  return apiFetch(`/../public/series${qs ? `?${qs}` : ''}`, options)
 }
 
 /**

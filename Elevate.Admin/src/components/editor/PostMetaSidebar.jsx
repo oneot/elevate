@@ -11,6 +11,14 @@
  *  - isUploading                 {boolean}
  *  - isNew                       {boolean}
  *  - onChange                    {function}
+ *  - seriesOptions               {string[]}
+ *  - isCreatingNewSeries         {boolean}
+ *  - newSeriesName               {string}
+ *  - onSeriesSelectChange        {function}
+ *  - onStartNewSeries            {function}
+ *  - onCancelNewSeries           {function}
+ *  - onNewSeriesNameChange       {function}
+ *  - onSeriesOrderChange         {function}
  *  - onTagsChange                {function}
  *  - onYoutubeChange             {function}
  *  - onThumbnailUpload           {function}
@@ -34,6 +42,14 @@ function PostMetaSidebar({
   isUploading,
   isNew,
   onChange,
+  seriesOptions = [],
+  isCreatingNewSeries = false,
+  newSeriesName = '',
+  onSeriesSelectChange,
+  onStartNewSeries,
+  onCancelNewSeries,
+  onNewSeriesNameChange,
+  onSeriesOrderChange,
   onTagsChange,
   onYoutubeChange,
   onThumbnailUpload,
@@ -85,6 +101,59 @@ function PostMetaSidebar({
             value={tagsInput}
             onChange={(event) => onTagsChange(event.target.value)}
             placeholder="Azure, CosmosDB"
+          />
+        </FormField>
+
+        <FormField label="시리즈" hint="같은 시리즈명을 가진 게시글끼리 우측 시리즈 내비게이션으로 묶입니다.">
+          {!isCreatingNewSeries ? (
+            <div className="flex items-center gap-2">
+              <select
+                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+                value={post.series || ''}
+                onChange={onSeriesSelectChange}
+              >
+                <option value="">시리즈 선택 안함</option>
+                {seriesOptions.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={onStartNewSeries}
+                className="shrink-0 rounded-md border border-ms-blue/30 bg-ms-blue/5 px-3 py-2 text-xs font-semibold text-ms-blue transition-colors hover:bg-ms-blue/10"
+              >
+                새 시리즈
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <input
+                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+                value={newSeriesName}
+                onChange={onNewSeriesNameChange}
+                placeholder="새 시리즈 이름 입력"
+              />
+              <button
+                type="button"
+                onClick={onCancelNewSeries}
+                className="rounded-md border border-neutral-300 bg-neutral-50 px-3 py-1.5 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-100"
+              >
+                기존 시리즈 선택
+              </button>
+            </div>
+          )}
+        </FormField>
+
+        <FormField label="시리즈 순서" hint="시리즈를 입력한 경우에만 사용합니다. 1 이상의 숫자만 허용됩니다.">
+          <input
+            type="number"
+            min="1"
+            step="1"
+            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed"
+            value={post.seriesOrder ?? ''}
+            onChange={onSeriesOrderChange}
+            placeholder="1"
+            disabled={!post.series?.trim()}
           />
         </FormField>
 
