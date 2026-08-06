@@ -6,9 +6,9 @@
  * 본문 영역은 반투명 glass 패널로 처리된다.
  *
  * 사이드바 prop 조합에 따라 컬럼 레이아웃이 달라진다:
- * - leftAside + rightAside → 3컬럼 [280px | 1fr | 280px]
- * - rightAside만            → 2컬럼 [1fr | 280px]
- * - leftAside만             → 2컬럼 [280px | 1fr]
+ * - leftAside + rightAside → 3컬럼 [240px | 1fr | 240px]
+ * - rightAside만            → 2컬럼 [1fr | 240px]
+ * - leftAside만             → 2컬럼 [240px | 1fr]
  * - 없음                    → 1컬럼
  *
  * `crumbs` 배열 형식: `{ label, to }` 링크 | `{ type: 'sep' }` 구분자
@@ -45,11 +45,11 @@ export default function GlassDocLayout({
   const hasRightColumn = Boolean(rightAside) || reserveRightAside;
 
   if (hasLeftColumn && hasRightColumn) {
-    gridClass = "grid grid-cols-1 items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)_280px]";
+    gridClass = "grid grid-cols-1 items-start gap-5 xl:grid-cols-[240px_minmax(0,1fr)_240px]";
   } else if (hasRightColumn) {
-    gridClass = "grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]";
+    gridClass = "grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_240px]";
   } else if (hasLeftColumn) {
-    gridClass = "grid grid-cols-1 items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)]";
+    gridClass = "grid grid-cols-1 items-start gap-5 xl:grid-cols-[240px_minmax(0,1fr)]";
   }
 
   return (
@@ -64,7 +64,7 @@ export default function GlassDocLayout({
         <div className="absolute bottom-0 left-1/3 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
       </div>
 
-      <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
+      <div className="mx-auto w-full max-w-[1600px] px-4 py-10 sm:px-6 lg:px-8">
         {/* breadcrumb pill */}
         <nav className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/12 px-4 py-2 text-sm text-slate-700 shadow-sm backdrop-blur-2xl">
           {crumbs?.map((c, idx) => {
@@ -99,9 +99,9 @@ export default function GlassDocLayout({
         </nav>
 
         <div className={gridClass}>
-          {/* 좌측 사이드바 (목차 등) — lg 이상에서만 표시 */}
+          {/* 좌측 사이드바 (목차 등) — xl 이상에서만 표시 */}
           {hasLeftColumn && (
-            <aside className="hidden min-w-0 self-start lg:sticky lg:top-6 lg:block">
+            <aside className="hidden min-w-0 self-start xl:sticky xl:top-6 xl:block">
               {leftAside}
             </aside>
           )}
@@ -123,9 +123,9 @@ export default function GlassDocLayout({
             </div>
           </div>
 
-          {/* 우측 사이드바 (시리즈 내비게이터, TOC 등) — lg 이상에서만 표시 */}
+          {/* 우측 사이드바 (시리즈 내비게이터, TOC 등) — xl 이상에서만 표시 */}
           {hasRightColumn && (
-            <aside className="hidden min-w-0 self-start lg:sticky lg:top-6 lg:block">
+            <aside className="hidden min-w-0 self-start xl:sticky xl:top-6 xl:block">
               {rightAside}
             </aside>
           )}
