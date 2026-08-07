@@ -12,7 +12,7 @@
  */
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import GlassDocLayout from '../components/layout/GlassDocLayout';
 import TableOfContents from '../components/posts/TableOfContents';
 import SeriesNavigator from '../components/posts/SeriesNavigator';
@@ -34,6 +34,32 @@ function getStableOgImage(thumbnail) {
     return imageUrl;
 }
 
+const PostContent = memo(function PostContent({ html, navigate }) {
+    const contentRef = useRef(null);
+
+    useLayoutEffect(() => {
+        if (!contentRef.current || !html) return;
+        optimizeEmbeddedMedia(contentRef.current);
+        injectHeadingIds(contentRef.current);
+        const cleanupLinks = injectLinkHandlers(contentRef.current, navigate);
+        const cleanupCollapsible = injectCollapsibleCodeBlocks(contentRef.current);
+        return () => {
+            cleanupLinks();
+            cleanupCollapsible();
+        };
+    }, [html, navigate]);
+
+    return (
+        <article>
+            <div
+                ref={contentRef}
+                className="prose prose-slate max-w-none post-content"
+                dangerouslySetInnerHTML={{ __html: html }}
+            />
+        </article>
+    );
+});
+
 /**
  * @param {object}  props
  * @param {string}  [props.categoryProp]  URL 파라미터 대신 사용할 카테고리 (예: "agenthon")
@@ -53,7 +79,6 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
     const [post, setPost] = useState(null);
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
-    const contentRef = useRef(null);
 
     useEffect(() => {
         // useLatest 모드는 현재 agenthon 카테고리에서만 지원한다.
@@ -123,20 +148,6 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
         load();
         return () => controller.abort();
     }, [normalizedCategory, postId]);
-
-    // HTML 콘텐츠 렌더링 후 heading ID 주입(TableOfContents용) + 링크 핸들러 주입(SPA 이동/외부 링크)
-    // + data-collapsible="true" 코드 블록에 접이식 토글 버튼 주입
-    useLayoutEffect(() => {
-        if (!contentRef.current || !post?.contentMarkdown) return;
-        optimizeEmbeddedMedia(contentRef.current);
-        injectHeadingIds(contentRef.current);
-        const cleanupLinks = injectLinkHandlers(contentRef.current, navigate);
-        const cleanupCollapsible = injectCollapsibleCodeBlocks(contentRef.current);
-        return () => {
-            cleanupLinks();
-            cleanupCollapsible();
-        };
-    }, [post?.contentMarkdown, navigate]);
 
     const {
         availableSeriesOptions,
@@ -318,14 +329,7 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
                             </div>
                         )}
 
-                        {/* Post Body */}
-                        <article>
-                            <div
-                                ref={contentRef}
-                                className="prose prose-slate max-w-none post-content"
-                                dangerouslySetInnerHTML={{ __html: preparedContentHtml }}
-                            />
-                        </article>
+                        <PostContent html={preparedContentHtml} navigate={navigate} />
                     </>
                 )}
             </GlassDocLayout>
