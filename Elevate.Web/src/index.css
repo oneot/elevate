@@ -658,7 +658,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 20px;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.52), rgba(248, 250, 252, 0.28));
+    linear-gradient(145deg, rgba(255, 255, 255, 0.74), rgba(248, 250, 252, 0.6));
   box-shadow:
     0 24px 70px rgba(15, 23, 42, 0.18),
     0 8px 24px rgba(71, 85, 105, 0.08),
@@ -683,7 +683,7 @@ body {
 .chat-panel-header {
   height: 76px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.42);
 }
 
 .chat-agent-mark,

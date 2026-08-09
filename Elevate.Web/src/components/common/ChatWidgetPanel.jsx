@@ -60,7 +60,7 @@ const ChatWidgetPanel = ({ onClose, getToken }) => {
             <h2 className="truncate text-[15px] font-semibold text-slate-900">Elevate Agent</h2>
             <div className="mt-0.5 flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
               <span className="chat-online-dot" aria-hidden="true" />
-              <span>온라인 · 무엇이든 물어보세요</span>
+              <span>online</span>
             </div>
           </div>
         </div>
@@ -112,7 +112,7 @@ const ChatWidgetPanel = ({ onClose, getToken }) => {
       </div>
       <div className="chat-privacy-note shrink-0">
         <ShieldCheck size={12} />
-        <span>AI가 생성한 답변은 중요한 정보를 확인해 주세요.</span>
+        <span>AI 생성 콘텐츠는 정확하지 않을 수 있습니다</span>
       </div>
     </div>
   );
