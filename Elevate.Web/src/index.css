@@ -652,7 +652,6 @@ body {
   transform: translateY(10px) scale(0.985);
   transform-origin: bottom right;
   pointer-events: none;
-  transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
 }
 
 .chat-glass-panel {
