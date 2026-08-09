@@ -27,6 +27,11 @@ const routes = [
     description: 'Microsoft Elevate for Educators 커뮤니티의 교육 혁신 활동 사례와 인사이트를 영상으로 확인하세요.',
   },
   {
+    path: '/elevathon',
+    title: 'Microsoft Elevathon | Ideas into impact',
+    description: 'Microsoft AI로 업무와 교육 현장의 변화를 만드는 한 달간의 팀 경진대회, Microsoft Elevathon에 참여하세요.',
+  },
+  {
     path: '/agenthon',
     title: 'Agenthon | Microsoft Elevate',
     description: 'Microsoft Copilot Studio와 AI 에이전트 실습 콘텐츠를 확인하세요.',

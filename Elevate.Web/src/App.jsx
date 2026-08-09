@@ -18,6 +18,7 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const ActivityShowcasePage = lazy(() => import('./pages/ActivityShowcasePage'));
 const Microsoft365Update = lazy(() => import('./pages/Microsoft365Update'));
 const ProgramNews = lazy(() => import('./pages/ProgramNews'));
+const Elevathon = lazy(() => import('./pages/Elevathon'));
 
 function App() {
   const location = useLocation();
@@ -49,13 +50,14 @@ function App() {
           <Route path="/program-news" element={<ProgramNews />} />
           <Route path="/agenthon" element={<PostDetail categoryProp="agenthon" useLatest={true} />} />
           <Route path="/activity" element={<ActivityShowcasePage />} />
+          <Route path="/elevathon" element={<Elevathon />} />
           <Route path="/" element={<Home />} />
           <Route path="/:category" element={<PostList />} />
           <Route path="/:category/:postId" element={<PostDetail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-      <ChatWidget />
+      {location.pathname !== '/elevathon' && <ChatWidget />}
     </>
   );
 }
