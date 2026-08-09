@@ -79,7 +79,13 @@ const ChatWidget = () => {
       right-4 sm:right-6 bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)]">
 
       <div
-        className={`chat-panel-stage ${isOpen ? 'is-open' : ''}`}
+        className="chat-panel-stage"
+        style={{
+          visibility: isOpen ? 'visible' : 'hidden',
+          opacity: isOpen ? 1 : 0,
+          transform: isOpen ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.985)',
+          pointerEvents: isOpen ? 'auto' : 'none',
+        }}
         aria-hidden={!isOpen}
         inert={!isOpen}
       >

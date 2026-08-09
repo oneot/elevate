@@ -655,13 +655,6 @@ body {
   transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
 }
 
-.chat-panel-stage.is-open {
-  visibility: visible;
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
-}
-
 .chat-glass-panel {
   border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 20px;
