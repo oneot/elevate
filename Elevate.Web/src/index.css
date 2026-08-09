@@ -645,41 +645,258 @@ body {
 }
 
 
-/* --- Chat Widget Custom Styles --- */
-
-/* 1. 버튼 둥둥 떠다니는 애니메이션 */
-@keyframes float-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+/* --- Chat Widget: layered glass interface --- */
+.chat-panel-stage {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(10px) scale(0.985);
+  transform-origin: bottom right;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
 }
-.animate-float-slow {
-  animation: float-slow 3s ease-in-out infinite;
+
+.chat-panel-stage.is-open {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
 }
 
-/* 2. WebChat SDK 내부 스타일 강제 적용 */
+.chat-glass-panel {
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.52), rgba(248, 250, 252, 0.28));
+  box-shadow:
+    0 24px 70px rgba(15, 23, 42, 0.18),
+    0 8px 24px rgba(71, 85, 105, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(24px) saturate(135%);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+}
+
+.chat-glass-panel::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.95), transparent 35%),
+    radial-gradient(circle at 100% 24%, rgba(219, 234, 254, 0.18), transparent 32%);
+  content: '';
+  pointer-events: none;
+}
+
+.chat-panel-header {
+  height: 76px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.chat-agent-mark,
+.chat-state-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.94);
+  border-radius: 12px;
+  color: #475569;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.82), rgba(241, 245, 249, 0.48));
+  box-shadow:
+    0 9px 22px rgba(71, 85, 105, 0.13),
+    0 0 0 1px rgba(148, 163, 184, 0.08),
+    inset 0 1px 0 white;
+}
+
+.chat-state-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+}
+
+.chat-online-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+}
+
+.chat-icon-button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #64748b;
+  cursor: pointer;
+  transition: 160ms ease;
+}
+
+.chat-icon-button:hover {
+  border-color: rgba(148, 163, 184, 0.18);
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.chat-icon-button:focus-visible,
+.chat-toggle:focus-visible,
+.chat-retry-button:focus-visible {
+  outline: 3px solid rgba(71, 85, 105, 0.2);
+  outline-offset: 2px;
+}
+
+.chat-toggle {
+  position: relative;
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 18px;
+  color: #334155;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.82), rgba(241, 245, 249, 0.58));
+  box-shadow:
+    0 22px 52px rgba(15, 23, 42, 0.3),
+    0 6px 16px rgba(15, 23, 42, 0.16),
+    0 0 0 5px rgba(255, 255, 255, 0.38),
+    inset 0 1px 0 white;
+  backdrop-filter: blur(24px) saturate(125%);
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.chat-toggle:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.7));
+  box-shadow:
+    0 26px 60px rgba(15, 23, 42, 0.36),
+    0 8px 20px rgba(15, 23, 42, 0.18),
+    0 0 0 6px rgba(255, 255, 255, 0.48),
+    inset 0 1px 0 white;
+}
+
+.chat-toggle:active { transform: translateY(0) scale(0.96); }
+.chat-toggle.is-open { color: white; background: rgba(30, 41, 59, 0.78); }
+
+.chat-toggle-status {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 13px;
+  height: 13px;
+  border: 3px solid white;
+  border-radius: 999px;
+  background: #10b981;
+}
+
+.chat-retry-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 15px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 10px;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.52);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chat-privacy-note {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-top: 1px solid rgba(148, 163, 184, 0.13);
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 10px;
+}
+
 #webchat-container .webchat__send-box {
-  background: rgba(255,255,255,0.8) !important;
-  backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(0,0,0,0.05);
+  background: rgba(255, 255, 255, 0.22) !important;
+  backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
   margin: 0 !important;
-  padding: 10px !important;
+  padding: 12px !important;
 }
 
 #webchat-container .webchat__send-box__main {
-  border-radius: 999px !important;
-  background: #f1f5f9 !important;
-  border: 1px solid transparent !important;
-  transition: all 0.2s;
+  min-height: 46px;
+  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.58) !important;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05), inset 0 1px 0 white;
+  transition: 160ms ease;
 }
 
 #webchat-container .webchat__send-box__main:focus-within {
-  background: white !important;
-  border-color: #0078D4 !important;
-  box-shadow: 0 0 0 3px rgba(0,120,212,0.1);
+  background: rgba(255, 255, 255, 0.82) !important;
+  border-color: rgba(71, 85, 105, 0.42) !important;
+  box-shadow: 0 0 0 3px rgba(71, 85, 105, 0.08), 0 8px 20px rgba(15, 23, 42, 0.07);
 }
 
 #webchat-container .webchat__basic-transcript__text {
   font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif !important;
+}
+
+#webchat-container .webchat__basic-transcript {
+  background: transparent !important;
+}
+
+#webchat-container .webchat__bubble__content {
+  border-color: rgba(255, 255, 255, 0.82) !important;
+  box-shadow:
+    0 6px 18px rgba(15, 23, 42, 0.075),
+    0 0 0 1px rgba(148, 163, 184, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  line-height: 1.55;
+}
+
+.chat-greeting-loader {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 14px;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.26);
+  backdrop-filter: blur(18px) saturate(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+}
+
+.chat-greeting-loader-mark {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  border-radius: 15px;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 12px 30px rgba(71, 85, 105, 0.12),
+    inset 0 1px 0 white;
+}
+
+.chat-greeting-loader p {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 /* 아바타 숨김 */
@@ -699,15 +916,13 @@ body {
 #webchat-container .webchat__render-markdown ol { list-style-type: decimal !important; }
 #webchat-container .webchat__render-markdown ul { list-style-type: disc !important; }
 
-/* --- Loading Animation (Bouncing Blue Dots) --- */
-
 @keyframes bounce-loading {
   0%, 100% { transform: translateY(0); opacity: 0.7; }
   50% { transform: translateY(-8px); opacity: 1; }
 }
 
 .loading-dot {
-  @apply w-2.5 h-2.5 rounded-full bg-[#0078D4]; /* 점 크기 살짝 줄임 */
+  @apply w-2 h-2 rounded-full bg-teal-600;
   animation: bounce-loading 0.6s infinite ease-in-out alternate;
 }
 
@@ -718,6 +933,16 @@ body {
 /* 기본 타이핑 인디케이터 확실하게 숨기기 (중복 방지) */
 .webchat__typing-indicator {
   display: none !important;
+}
+
+@media (max-width: 640px) {
+  .chat-glass-panel { border-radius: 18px; }
+  .chat-toggle { width: 54px; height: 54px; border-radius: 17px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-dot { animation: none; }
+  .chat-toggle { transition: none; }
 }
 
 /* =====================================================

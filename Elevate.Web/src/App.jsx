@@ -9,6 +9,7 @@
 import { lazy, Suspense, useEffect, useRef } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { setClarityTag, trackClarityEvent } from './services/clarity';
+import ChatWidget from './components/common/ChatWidget';
 
 const Home = lazy(() => import('./pages/Home'));
 const PostList = lazy(() => import('./pages/PostList'));
@@ -37,22 +38,25 @@ function App() {
   }, [location.pathname, location.search]);
 
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-4 border-ms-blue/20 border-t-ms-blue animate-spin" />
-      </div>
-    }>
-      <Routes>
-        <Route path="/update" element={<Microsoft365Update />} />
-        <Route path="/program-news" element={<ProgramNews />} />
-        <Route path="/agenthon" element={<PostDetail categoryProp="agenthon" useLatest={true} />} />
-        <Route path="/activity" element={<ActivityShowcasePage />} />
-        <Route path="/" element={<Home />} />
-        <Route path="/:category" element={<PostList />} />
-        <Route path="/:category/:postId" element={<PostDetail />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Suspense>
+    <>
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full border-4 border-ms-blue/20 border-t-ms-blue animate-spin" />
+        </div>
+      }>
+        <Routes>
+          <Route path="/update" element={<Microsoft365Update />} />
+          <Route path="/program-news" element={<ProgramNews />} />
+          <Route path="/agenthon" element={<PostDetail categoryProp="agenthon" useLatest={true} />} />
+          <Route path="/activity" element={<ActivityShowcasePage />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/:category" element={<PostList />} />
+          <Route path="/:category/:postId" element={<PostDetail />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+      <ChatWidget />
+    </>
   );
 }
 

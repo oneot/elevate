@@ -29,8 +29,6 @@ import FeatureCard from '../components/home/FeatureCard';
 import MEESection from '../components/home/MEESection';
 import GlobalTrainingPartner from '../components/home/GlobalTrainingPartner';
 
-import ChatWidget from '../components/common/ChatWidget';
-
 // Hooks
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { useMobileRevealAnimation } from '../hooks/useMobileRevealAnimation';
@@ -231,7 +229,6 @@ const Home = () => {
             <GlobalTrainingPartner />
 
             <Footer />
-            <ChatWidget />
         </div>
     );
 };
