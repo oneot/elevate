@@ -48,10 +48,10 @@ const products = [
 ];
 
 const phases = [
-  ['8월 넷째 주', 'Kick-off Day', 'Microsoft Office · 팀별 계정 제공 · 트랙별 도구 교육'],
-  ['9월 첫째 주', 'Define', '교실 현장의 문제, 기대 성과, Demo 기준 정의'],
-  ['9월 둘째 주', 'Build & Improve', '업무 시나리오 또는 AI Agent 제작과 반복 개선'],
-  ['9월 넷째 주', 'Final Competition', '광화문 Microsoft Office · 최종 발표 및 Live Demo'],
+  ['9월 넷째 주', 'Kick-off Day', 'Microsoft Office · 팀별 계정 제공 · 트랙별 도구 교육'],
+  ['10월 첫째 주', 'Define', '교실 현장의 문제, 기대 성과, Demo 기준 정의'],
+  ['10월 둘째 주', 'Build & Improve', '업무 시나리오 또는 AI Agent 제작과 반복 개선'],
+  ['10월 넷째 주', 'Final Competition', '광화문 Microsoft Office · 최종 발표 및 Live Demo'],
 ];
 
 function ApplyButton({ children, className = '' }) {
