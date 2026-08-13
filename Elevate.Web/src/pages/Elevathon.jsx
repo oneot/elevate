@@ -97,7 +97,7 @@ export default function Elevathon() {
       <main>
         <section className="elevathon-hero">
           <div className="elevathon-wrap">
-            <p className="elevathon-eyebrow">FY27 START · PARTER &amp; E4E</p>
+            <p className="elevathon-eyebrow">FY27 START</p>
             <h1><span>Microsoft Elevathon</span><span className="elevathon-soft">Ideas into impact.</span></h1>
             <p className="elevathon-hero-copy">Microsoft AI와 함께 업무를 더 스마트하게, 교육 현장을 더 혁신적으로.<br />한 달간 제작하고 시연하는 Microsoft Elevathon에 초대합니다.</p>
             <div className="elevathon-hero-actions"><ApplyButton>참가 신청하기</ApplyButton></div>
