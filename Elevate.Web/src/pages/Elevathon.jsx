@@ -97,7 +97,7 @@ export default function Elevathon() {
       <main>
         <section className="elevathon-hero">
           <div className="elevathon-wrap">
-            <p className="elevathon-eyebrow">FY27 START · Partner &amp; E4E</p>
+            <p className="elevathon-eyebrow">FY27 START · GTP &amp; E4E</p>
             <h1><span>Microsoft Elevathon</span><span className="elevathon-soft">Ideas into impact.</span></h1>
             <p className="elevathon-hero-copy">Microsoft AI와 함께 업무를 더 스마트하게, 교육 현장을 더 혁신적으로.<br />한 달간 제작하고 시연하는 Microsoft Elevathon에 초대합니다.</p>
             <div className="elevathon-hero-actions"><ApplyButton>참가 신청하기</ApplyButton></div>
@@ -175,8 +175,8 @@ export default function Elevathon() {
           <div className="elevathon-wrap">
             <div data-reveal><p className="elevathon-kicker">Who can join</p><h2>작은 팀으로<br />크게 도전하세요.</h2></div>
             <div className="elevathon-teams" data-reveal>
-              <article><b>Partner · 파트너별 1팀</b><p>각 Elevate Partner에서 최대 4명으로 대표 팀을 구성합니다.</p><img className="elevathon-team-image" src={meeImage} alt="Microsoft Elevate for Educators Network" loading="lazy" decoding="async" /></article>
-              <article><b>E4E · 자유 팀 구성</b><p>Elevate for Educators 교원이라면 최대 4명까지 자유롭게 팀을 구성해 참가할 수 있습니다.</p><img className="elevathon-team-image" src={gtpImage} alt="Microsoft Global Training Partner" loading="lazy" decoding="async" /></article>
+              <article><b>Partner · 파트너 대표팀</b><p>각 파트너사는 최대 4명의 파트너 대표 팀원을 구성해, 조직의 실무 과제를 해결할 AI 프로젝트를 완성합니다.</p><img className="elevathon-team-image" src={meeImage} alt="Microsoft Elevate for Educators Network" loading="lazy" decoding="async" /></article>
+              <article><b>E4E · 교원 자유팀</b><p>교원 최대 4명이 자유롭게 한 팀을 꾸려, 교육 현장의 변화를 이끌 AI 아이디어에 도전합니다.</p><img className="elevathon-team-image" src={gtpImage} alt="Microsoft Global Training Partner" loading="lazy" decoding="async" /></article>
             </div>
           </div>
         </section>

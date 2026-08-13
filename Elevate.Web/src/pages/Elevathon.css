@@ -128,8 +128,8 @@
 
 .elevathon-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 54px; }
 .elevathon-teams article { padding: 30px; border: 1px solid var(--elv-line); border-radius: 24px; background: var(--elv-white); }
-.elevathon-teams b { font-size: 28px; letter-spacing: -0.04em; }
-.elevathon-teams p { margin: 16px 0 0; color: var(--elv-muted); line-height: 1.65; }
+.elevathon-teams b { font-size: 34px; line-height: 1.25; letter-spacing: -0.04em; }
+.elevathon-teams p { margin: 16px 0 0; color: var(--elv-muted); font-size: 20px; line-height: 1.65; }
 .elevathon-team-image { display: block; width: min(100%, 320px); aspect-ratio: 1; margin: 28px auto 0; border: 4px solid var(--elv-white); border-radius: 38px; object-fit: cover; box-shadow: 0 20px 44px rgba(41, 48, 56, .14); }
 
 .elevathon-cta-section { padding: 108px 0 70px; }
@@ -191,6 +191,8 @@
   .elevathon-tools { grid-template-columns: 1fr; }
   .elevathon-tools > a { min-height: 245px; }
   .elevathon-prize-shell, .elevathon-teams { grid-template-columns: 1fr; }
+  .elevathon-teams b { font-size: 30px; }
+  .elevathon-teams p { font-size: 18px; }
   .elevathon-prize { min-height: 165px; }
   .elevathon-prize b { margin-top: 24px; }
   .elevathon-cta-section { padding-top: 76px; }
