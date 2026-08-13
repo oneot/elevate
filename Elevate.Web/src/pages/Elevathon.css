@@ -130,8 +130,7 @@
 .elevathon-teams article { padding: 30px; border: 1px solid var(--elv-line); border-radius: 24px; background: var(--elv-white); }
 .elevathon-teams b { font-size: 28px; letter-spacing: -0.04em; }
 .elevathon-teams p { margin: 16px 0 0; color: var(--elv-muted); line-height: 1.65; }
-.elevathon-teams article div { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
-.elevathon-teams article span { padding: 9px 12px; border: 1px solid var(--elv-line); border-radius: 999px; background: var(--elv-paper); color: #505653; font-size: 12px; }
+.elevathon-team-image { display: block; width: min(100%, 320px); aspect-ratio: 1; margin: 28px auto 0; border: 4px solid var(--elv-white); border-radius: 38px; object-fit: cover; box-shadow: 0 20px 44px rgba(41, 48, 56, .14); }
 
 .elevathon-cta-section { padding: 108px 0 70px; }
 .elevathon-cta { position: relative; min-height: 560px; display: grid; place-items: center; overflow: hidden; padding: 70px 30px; border-radius: 42px; text-align: center; background: radial-gradient(circle at 15% 86%, rgba(255,172,91,.96), transparent 32%), radial-gradient(circle at 50% 75%, rgba(247,83,165,.82), transparent 41%), radial-gradient(circle at 86% 20%, rgba(89,100,244,.74), transparent 36%), linear-gradient(135deg, #fffaf6, #f4efff); box-shadow: var(--elv-shadow); }

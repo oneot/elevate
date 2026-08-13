@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { SITE_NAME, canonicalUrl } from '../constants/seo';
+import meeImage from '../assets/mee-image-720.jpg';
+import gtpImage from '../assets/GTP2-720.jpg';
 import './Elevathon.css';
 
 const FORM_URL = 'https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=v4j5cvGGr0GRqy180BHbR8nX5ErKQsdOq2ua2V06Dq1UOVZBU1E3VFdGM0g5VzJXVVpZVE9WSFNBWS4u';
@@ -52,8 +54,6 @@ const phases = [
   ['9월 넷째 주', 'Final Competition', '광화문 Microsoft Office · 최종 발표 및 Live Demo'],
 ];
 
-const partners = ['DMOA', 'Elixirr', 'Gownet', 'S.Pin Technology', 'Squarenet', 'Techmentor', 'Tekville Education', 'To Be Edu'];
-
 function ApplyButton({ children, className = '' }) {
   return (
     <a className={`elevathon-button elevathon-button-primary ${className}`} href={FORM_URL} target="_blank" rel="noopener noreferrer">
@@ -97,7 +97,7 @@ export default function Elevathon() {
       <main>
         <section className="elevathon-hero">
           <div className="elevathon-wrap">
-            <p className="elevathon-eyebrow">FY27 START · GTP &amp; E4E</p>
+            <p className="elevathon-eyebrow">FY27 START · Partner &amp; E4E</p>
             <h1><span>Microsoft Elevathon</span><span className="elevathon-soft">Ideas into impact.</span></h1>
             <p className="elevathon-hero-copy">Microsoft AI와 함께 업무를 더 스마트하게, 교육 현장을 더 혁신적으로.<br />한 달간 제작하고 시연하는 Microsoft Elevathon에 초대합니다.</p>
             <div className="elevathon-hero-actions"><ApplyButton>참가 신청하기</ApplyButton></div>
@@ -175,8 +175,8 @@ export default function Elevathon() {
           <div className="elevathon-wrap">
             <div data-reveal><p className="elevathon-kicker">Who can join</p><h2>작은 팀으로<br />크게 도전하세요.</h2></div>
             <div className="elevathon-teams" data-reveal>
-              <article><b>GTP · 파트너별 1팀</b><p>각 Korea Global Training Partner에서 최대 4명으로 대표 팀을 구성합니다.</p><div>{partners.map((partner) => <span key={partner}>{partner}</span>)}</div></article>
-              <article><b>E4E · 자유 팀 구성</b><p>Elevate for Educators 교원이라면 최대 4명까지 자유롭게 팀을 구성해 참가할 수 있습니다.</p></article>
+              <article><b>Partner · 파트너별 1팀</b><p>각 Elevate Partner에서 최대 4명으로 대표 팀을 구성합니다.</p><img className="elevathon-team-image" src={meeImage} alt="Microsoft Elevate for Educators Network" loading="lazy" decoding="async" /></article>
+              <article><b>E4E · 자유 팀 구성</b><p>Elevate for Educators 교원이라면 최대 4명까지 자유롭게 팀을 구성해 참가할 수 있습니다.</p><img className="elevathon-team-image" src={gtpImage} alt="Microsoft Global Training Partner" loading="lazy" decoding="async" /></article>
             </div>
           </div>
         </section>
