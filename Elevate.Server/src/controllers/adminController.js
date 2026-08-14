@@ -4,6 +4,7 @@ const { getAssetsContainer, getPostsContainer } = require('../services/cosmosCli
 const { issueBlobUploadSas, issueBlobAttachSas, getBlobReadSasUrl, deleteBlobByUrl } = require('../services/storageClient');
 const { parsePositiveInt, sendError } = require('../utils/http');
 const { toSlugBase } = require('../utils/slug');
+const { stripOrphanBlobUrlTails } = require('../utils/blobUrlHtml');
 
 const allowedStatuses = new Set(['draft', 'published', 'archived']);
 const allowedMimeTypes = new Set([
@@ -37,8 +38,10 @@ const maxAttachSizeBytes = 50 * 1024 * 1024;
 const attachCategoryPartition = '_attach';
 const draftAttachTtlMs = 24 * 60 * 60 * 1000;
 
-var BLOB_SAS_PATTERN = /(https?:\/\/[^"'\s]*\.blob\.core\.windows\.net\/[^"'\s?]*)\?[^"'\s]*/g;
-var BLOB_BARE_PATTERN = /https?:\/\/[^"'\s]*\.blob\.core\.windows\.net\/[^"'\s?]*/g;
+// < > 를 제외하지 않으면, autolink가 링크 텍스트에 복제해 둔 URL을 매치할 때
+// 뒤따르는 </a></p> 같은 닫는 태그까지 삼켜 본문 구조가 깨진다.
+var BLOB_SAS_PATTERN = /(https?:\/\/[^"'\s<>]*\.blob\.core\.windows\.net\/[^"'\s<>?]*)\?[^"'\s<>]*/g;
+var BLOB_BARE_PATTERN = /https?:\/\/[^"'\s<>]*\.blob\.core\.windows\.net\/[^"'\s<>?]*/g;
 
 function isBlobUrl(url) {
   return typeof url === 'string' && url.indexOf('.blob.core.windows.net/') !== -1;
@@ -54,16 +57,18 @@ function stripBlobSas(url) {
   }
 }
 
+// SAS 제거를 먼저, 고아 꼬리 제거를 나중에 수행해야 한다.
+// 꼬리 제거 패턴은 쿼리스트링이 남아 있는 URL을 의도적으로 매치하지 않는다.
 function stripBlobSasFromHtml(html) {
   if (!html) return html;
   BLOB_SAS_PATTERN.lastIndex = 0;
-  return html.replace(BLOB_SAS_PATTERN, '$1');
+  return stripOrphanBlobUrlTails(html.replace(BLOB_SAS_PATTERN, '$1'));
 }
 
 async function enrichHtmlWithSas(html) {
   if (!html) return html;
   BLOB_SAS_PATTERN.lastIndex = 0;
-  var normalized = html.replace(BLOB_SAS_PATTERN, '$1');
+  var normalized = stripOrphanBlobUrlTails(html.replace(BLOB_SAS_PATTERN, '$1'));
   BLOB_BARE_PATTERN.lastIndex = 0;
   var matches = normalized.match(BLOB_BARE_PATTERN);
   if (!matches || matches.length === 0) return normalized;
@@ -867,7 +872,8 @@ exports.createFileMetadata = async (req, res) => {
   if (typeof fileName !== 'string' || fileName.trim().length === 0) {
     return sendError(res, 400, 'BadRequest', 'fileName is required', correlationId);
   }
-  const trimmedFileName = fileName.trim();
+  // macOS가 NFD로 넘긴 한글 파일명을 저장 시점에 NFC로 정규화한다.
+  const trimmedFileName = fileName.trim().normalize('NFC');
   const hasPostId = postId !== undefined && postId !== null;
   if (hasPostId && (typeof postId !== 'string' || postId.trim().length === 0)) {
     return sendError(res, 400, 'BadRequest', 'postId must be a non-empty string', correlationId);
@@ -1093,5 +1099,7 @@ exports._test = {
   buildDraftAttachmentQuery,
   buildAttachmentListQuery,
   buildExpiredDraftAttachmentQuery,
-  getDraftAttachmentExpiresAt
+  getDraftAttachmentExpiresAt,
+  stripBlobSasFromHtml,
+  enrichHtmlWithSas
 };

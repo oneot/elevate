@@ -59,3 +59,35 @@ test('download content disposition sanitizes Windows reserved filename character
     "attachment; filename=\"meeting_final_draft__v1__.pdf\"; filename*=UTF-8''meeting_final_draft__v1__.pdf"
   );
 });
+
+test('download content disposition normalizes decomposed Korean file names to NFC', () => {
+  // macOS Finder가 넘기는 NFD 파일명. 소스 리터럴로 적으면 파일 인코딩에 따라
+  // 테스트가 조용히 무력화되므로 반드시 normalize('NFD')로 만든다.
+  const decomposed = '맞춤법 탐정단.zip'.normalize('NFD');
+  assert.notEqual(decomposed, '맞춤법 탐정단.zip');
+
+  assert.equal(
+    _test.buildDownloadContentDisposition(decomposed),
+    _test.buildDownloadContentDisposition('맞춤법 탐정단.zip')
+  );
+  assert.equal(
+    _test.buildDownloadContentDisposition(decomposed),
+    "attachment; filename=\"___ ___.zip\"; filename*=UTF-8''%EB%A7%9E%EC%B6%A4%EB%B2%95%20%ED%83%90%EC%A0%95%EB%8B%A8.zip"
+  );
+});
+
+test('html safe sas token percent-encodes the characters encodeURIComponent leaves behind', () => {
+  assert.equal(_test.toHtmlSafeSasToken("rscd=UTF-8''name(1).zip"), 'rscd=UTF-8%27%27name%281%29.zip');
+});
+
+test('html safe sas token leaves structural and already encoded characters alone', () => {
+  const token = 'sv=2026-02-06&sr=b&sp=r&sig=aB%2B%2Fcd%3D&se=2026-08-14T08%3A07%3A44Z~-_.';
+
+  assert.equal(_test.toHtmlSafeSasToken(token), token);
+});
+
+test('html safe sas token passes through empty and non string input', () => {
+  assert.equal(_test.toHtmlSafeSasToken(''), '');
+  assert.equal(_test.toHtmlSafeSasToken(null), null);
+  assert.equal(_test.toHtmlSafeSasToken(undefined), undefined);
+});
