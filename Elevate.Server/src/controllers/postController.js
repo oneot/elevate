@@ -1,6 +1,7 @@
 const { getPostsContainer, getAssetsContainer } = require('../services/cosmosClient');
 const { getBlobReadSasUrl } = require('../services/storageClient');
 const { parsePositiveInt, sendError } = require('../utils/http');
+const { stripOrphanBlobUrlTails } = require('../utils/blobUrlHtml');
 const storageAttachContainerName = process.env.STORAGE_ATTACH_CONTAINER_NAME || 'attachments';
 
 function encodeCursor(post) {
@@ -123,9 +124,9 @@ async function getAttachmentFileNameByBlobUrlMap(postId, correlationId) {
 
 async function enrichContentWithAttachDisposition(content, attachmentFileNameByBlobUrl) {
   if (!content) return content;
-  // strip existing SAS tokens first
+  // strip existing SAS tokens first, then any orphan tail left by the legacy strip
   BLOB_SAS_PATTERN.lastIndex = 0;
-  const normalized = content.replace(BLOB_SAS_PATTERN, '$1');
+  const normalized = stripOrphanBlobUrlTails(content.replace(BLOB_SAS_PATTERN, '$1'));
   BLOB_BARE_PATTERN.lastIndex = 0;
   const matches = normalized.match(BLOB_BARE_PATTERN);
   if (!matches || matches.length === 0) return normalized;
@@ -433,5 +434,6 @@ exports.getTagList = async (req, res) => {
 exports._test = {
   normalizeThumbnail,
   buildAttachmentFileNameByBlobUrlMap,
-  hasAttachmentBlobUrlReference
+  hasAttachmentBlobUrlReference,
+  enrichContentWithAttachDisposition
 };

@@ -4,6 +4,7 @@ const { getAssetsContainer, getPostsContainer } = require('../services/cosmosCli
 const { issueBlobUploadSas, issueBlobAttachSas, getBlobReadSasUrl, deleteBlobByUrl } = require('../services/storageClient');
 const { parsePositiveInt, sendError } = require('../utils/http');
 const { toSlugBase } = require('../utils/slug');
+const { stripOrphanBlobUrlTails } = require('../utils/blobUrlHtml');
 
 const allowedStatuses = new Set(['draft', 'published', 'archived']);
 const allowedMimeTypes = new Set([
@@ -56,16 +57,18 @@ function stripBlobSas(url) {
   }
 }
 
+// SAS 제거를 먼저, 고아 꼬리 제거를 나중에 수행해야 한다.
+// 꼬리 제거 패턴은 쿼리스트링이 남아 있는 URL을 의도적으로 매치하지 않는다.
 function stripBlobSasFromHtml(html) {
   if (!html) return html;
   BLOB_SAS_PATTERN.lastIndex = 0;
-  return html.replace(BLOB_SAS_PATTERN, '$1');
+  return stripOrphanBlobUrlTails(html.replace(BLOB_SAS_PATTERN, '$1'));
 }
 
 async function enrichHtmlWithSas(html) {
   if (!html) return html;
   BLOB_SAS_PATTERN.lastIndex = 0;
-  var normalized = html.replace(BLOB_SAS_PATTERN, '$1');
+  var normalized = stripOrphanBlobUrlTails(html.replace(BLOB_SAS_PATTERN, '$1'));
   BLOB_BARE_PATTERN.lastIndex = 0;
   var matches = normalized.match(BLOB_BARE_PATTERN);
   if (!matches || matches.length === 0) return normalized;
@@ -1096,5 +1099,7 @@ exports._test = {
   buildDraftAttachmentQuery,
   buildAttachmentListQuery,
   buildExpiredDraftAttachmentQuery,
-  getDraftAttachmentExpiresAt
+  getDraftAttachmentExpiresAt,
+  stripBlobSasFromHtml,
+  enrichHtmlWithSas
 };
