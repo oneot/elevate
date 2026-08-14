@@ -83,7 +83,7 @@ async function issueBlobUploadSas({ fileName }) {
   ).toString();
 
   return {
-    uploadUrl: `${blobClient.url}?${sasToken}`,
+    uploadUrl: `${blobClient.url}?${toHtmlSafeSasToken(sasToken)}`,
     blobUrl: blobClient.url,
     expiresAt: expiresOn.toISOString()
   };
@@ -113,7 +113,7 @@ async function issueBlobAttachSas({ fileName }) {
   ).toString();
 
   return {
-    uploadUrl: `${blobClient.url}?${sasToken}`,
+    uploadUrl: `${blobClient.url}?${toHtmlSafeSasToken(sasToken)}`,
     blobUrl: blobClient.url,
     expiresAt: expiresOn.toISOString()
   };
@@ -152,7 +152,7 @@ async function getBlobReadSasUrl(blobUrl, validHours, options = {}) {
       storageAccountName
     ).toString();
 
-    return url.origin + url.pathname + '?' + sasToken;
+    return url.origin + url.pathname + '?' + toHtmlSafeSasToken(sasToken);
   } catch (error) {
     console.error('[getBlobReadSasUrl] failed', error);
     return null;
@@ -190,6 +190,17 @@ function encodeRfc5987ValueChars(value) {
     .replace(/\*/g, '%2A');
 }
 
+// Azure SDK는 SAS 파라미터 값을 encodeURIComponent로만 인코딩하는데, 이 함수는
+// ' ( ) 를 이스케이프하지 않는다. Content-Disposition(rscd)은 RFC 5987상 반드시
+// filename*=UTF-8'' 형태를 포함하므로 리터럴 작은따옴표가 URL에 남고, 본문 HTML에서
+// 블롭 URL을 찾는 정규식(BLOB_SAS_PATTERN 등)이 그 지점을 URL 끝으로 오인해 토큰을
+// 잘라버린다. Storage는 서명 검증 전에 쿼리 값을 퍼센트 디코딩하므로 여기서 미리
+// 인코딩해도 서명은 그대로 유효하다. sig는 base64라 ' ( ) 를 포함하지 않는다.
+function toHtmlSafeSasToken(sasToken) {
+  if (typeof sasToken !== 'string' || sasToken.length === 0) return sasToken;
+  return sasToken.replace(/['()]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`);
+}
+
 async function deleteBlobByUrl(blobUrl) {
   if (!blobUrl) {
     return;
@@ -222,6 +233,7 @@ module.exports = {
   deleteBlobByUrl,
   _test: {
     buildDownloadContentDisposition,
-    encodeRfc5987ValueChars
+    encodeRfc5987ValueChars,
+    toHtmlSafeSasToken
   }
 };

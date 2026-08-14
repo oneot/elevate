@@ -59,3 +59,19 @@ test('download content disposition sanitizes Windows reserved filename character
     "attachment; filename=\"meeting_final_draft__v1__.pdf\"; filename*=UTF-8''meeting_final_draft__v1__.pdf"
   );
 });
+
+test('html safe sas token percent-encodes the characters encodeURIComponent leaves behind', () => {
+  assert.equal(_test.toHtmlSafeSasToken("rscd=UTF-8''name(1).zip"), 'rscd=UTF-8%27%27name%281%29.zip');
+});
+
+test('html safe sas token leaves structural and already encoded characters alone', () => {
+  const token = 'sv=2026-02-06&sr=b&sp=r&sig=aB%2B%2Fcd%3D&se=2026-08-14T08%3A07%3A44Z~-_.';
+
+  assert.equal(_test.toHtmlSafeSasToken(token), token);
+});
+
+test('html safe sas token passes through empty and non string input', () => {
+  assert.equal(_test.toHtmlSafeSasToken(''), '');
+  assert.equal(_test.toHtmlSafeSasToken(null), null);
+  assert.equal(_test.toHtmlSafeSasToken(undefined), undefined);
+});
