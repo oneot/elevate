@@ -56,8 +56,10 @@ function normalizeThumbnail(thumbnail) {
   return null;
 }
 
-var BLOB_SAS_PATTERN = /(https?:\/\/[^"'\s\)]*\.blob\.core\.windows\.net\/[^"'\s\)?]*)\?[^"'\s\)]*/g;
-var BLOB_BARE_PATTERN = /https?:\/\/[^"'\s\)]*\.blob\.core\.windows\.net\/[^"'\s\)?]*/g;
+// < > 를 제외하지 않으면, autolink가 링크 텍스트에 복제해 둔 URL을 매치할 때
+// 뒤따르는 </a></p> 같은 닫는 태그까지 삼켜 본문 구조가 깨진다.
+var BLOB_SAS_PATTERN = /(https?:\/\/[^"'\s<>\)]*\.blob\.core\.windows\.net\/[^"'\s<>\)?]*)\?[^"'\s<>\)]*/g;
+var BLOB_BARE_PATTERN = /https?:\/\/[^"'\s<>\)]*\.blob\.core\.windows\.net\/[^"'\s<>\)?]*/g;
 
 function isBlobUrl(url) {
   return typeof url === 'string' && url.indexOf('.blob.core.windows.net/') !== -1;
