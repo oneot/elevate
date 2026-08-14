@@ -173,7 +173,10 @@ function getRollingReadSasWindow(validHours, now = new Date()) {
 
 function buildDownloadContentDisposition(fileName) {
   if (typeof fileName !== 'string') return null;
+  // macOS는 파일명을 NFD(자모 분해)로 전달한다. ASCII fallback 계산보다 먼저 정규화해야
+  // 한글 한 글자가 자모 세 개의 밑줄로 늘어나지 않는다.
   const normalized = fileName
+    .normalize('NFC')
     .replace(/[\u0000-\u001f\u007f]/g, '')
     .replace(/[/"\\:*?<>|]/g, '_')
     .trim();

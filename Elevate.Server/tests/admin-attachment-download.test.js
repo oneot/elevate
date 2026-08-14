@@ -111,6 +111,39 @@ test('createFileMetadata trims fileName before storage and signed URL generation
   assert.equal(res.getBody().fileName, "O'Reilly (final).pdf");
 });
 
+test('createFileMetadata normalizes decomposed Korean fileName to NFC', async () => {
+  lastSignedUrlArgs = [];
+  lastCreatedDoc = null;
+
+  // macOS Finder가 넘기는 NFD 파일명. 소스 리터럴로 적으면 파일 인코딩에 따라
+  // 테스트가 조용히 무력화되므로 반드시 normalize('NFD')로 만든다.
+  const decomposed = '맞춤법 탐정단.zip'.normalize('NFD');
+  assert.notEqual(decomposed, '맞춤법 탐정단.zip');
+
+  const req = {
+    body: {
+      postId: 'post-1',
+      blobUrl: 'https://account.blob.core.windows.net/attachments/attach/2026/08/file.zip',
+      contentType: 'application/zip',
+      sizeBytes: 1234,
+      fileName: decomposed,
+    },
+    correlationId: 'x',
+    params: {},
+    query: {},
+  };
+  const res = makeRes();
+
+  await ctrl.createFileMetadata(req, res);
+
+  assert.equal(res.getStatus(), 201);
+  assert.equal(lastCreatedDoc.fileName, '맞춤법 탐정단.zip');
+  assert.deepEqual(lastSignedUrlArgs[0].options, {
+    downloadFileName: '맞춤법 탐정단.zip',
+  });
+  assert.equal(res.getBody().fileName, '맞춤법 탐정단.zip');
+});
+
 test('createAssetMetadata keeps image signed URL inline without download filename', async () => {
   lastSignedUrlArgs = [];
   lastCreatedDoc = null;

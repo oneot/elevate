@@ -869,7 +869,8 @@ exports.createFileMetadata = async (req, res) => {
   if (typeof fileName !== 'string' || fileName.trim().length === 0) {
     return sendError(res, 400, 'BadRequest', 'fileName is required', correlationId);
   }
-  const trimmedFileName = fileName.trim();
+  // macOS가 NFD로 넘긴 한글 파일명을 저장 시점에 NFC로 정규화한다.
+  const trimmedFileName = fileName.trim().normalize('NFC');
   const hasPostId = postId !== undefined && postId !== null;
   if (hasPostId && (typeof postId !== 'string' || postId.trim().length === 0)) {
     return sendError(res, 400, 'BadRequest', 'postId must be a non-empty string', correlationId);
