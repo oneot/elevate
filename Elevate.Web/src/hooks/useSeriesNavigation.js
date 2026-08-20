@@ -35,7 +35,7 @@ export function useSeriesNavigation(normalizedCategory, post) {
 
   const availableSeriesOptions = useMemo(() => {
     if (!normalizedCategory) return [];
-    return seriesOptions.filter((item) => item.posts.length >= 2);
+    return seriesOptions;
   }, [normalizedCategory, seriesOptions]);
 
   const selectedSeriesKey = useMemo(() => {

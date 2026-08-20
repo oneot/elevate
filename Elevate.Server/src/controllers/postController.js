@@ -385,7 +385,6 @@ exports.getSeriesByCategory = async (req, res) => {
         name,
         posts: posts.sort((a, b) => (a.seriesOrder ?? 0) - (b.seriesOrder ?? 0))
       }))
-      .filter((item) => item.posts.length >= 2)
       .sort((a, b) => a.name.localeCompare(b.name));
 
     return res.json({ items });
