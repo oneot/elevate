@@ -5,7 +5,7 @@ function getTenantId() {
 }
 
 function getAudience() {
-  return process.env.ENTRA_AUDIENCE || process.env.AUTH_API_AUDIENCE || 'api://c4ea0eaf-6aaa-42e0-85ff-eef864cd2728';
+  return process.env.ENTRA_AUDIENCE || process.env.AUTH_API_AUDIENCE || 'c4ea0eaf-6aaa-42e0-85ff-eef864cd2728';
 }
 
 function getIssuer(tenantId) {

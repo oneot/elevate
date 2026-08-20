@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 
 const { getAssetsContainer, getPostsContainer } = require('../services/cosmosClient');
-const { issueBlobUploadSas, deleteBlobByUrl } = require('../services/storageClient');
+const { issueBlobUploadSas, issueBlobAttachSas, getBlobReadSasUrl, deleteBlobByUrl } = require('../services/storageClient');
 const { parsePositiveInt, sendError } = require('../utils/http');
 const { toSlugBase } = require('../utils/slug');
 
@@ -17,6 +17,130 @@ const allowedMimeTypes = new Set([
 ]);
 const maxImageSizeBytes = 10 * 1024 * 1024;
 const assetCategoryPartition = '_asset';
+
+const allowedAttachMimeTypes = new Set([
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'application/pdf',
+  'text/csv',
+  'application/zip',
+  'application/vnd.ms-excel',
+  'application/msword',
+  'application/vnd.ms-powerpoint',
+  'application/x-hwp',
+  'application/haansofthwp',
+  'application/vnd.hancom.hwp',
+  'application/vnd.hancom.hwpx'
+]);
+const maxAttachSizeBytes = 50 * 1024 * 1024;
+const attachCategoryPartition = '_attach';
+const draftAttachTtlMs = 24 * 60 * 60 * 1000;
+
+var BLOB_SAS_PATTERN = /(https?:\/\/[^"'\s]*\.blob\.core\.windows\.net\/[^"'\s?]*)\?[^"'\s]*/g;
+var BLOB_BARE_PATTERN = /https?:\/\/[^"'\s]*\.blob\.core\.windows\.net\/[^"'\s?]*/g;
+
+function isBlobUrl(url) {
+  return typeof url === 'string' && url.indexOf('.blob.core.windows.net/') !== -1;
+}
+
+function stripBlobSas(url) {
+  if (!isBlobUrl(url)) return url;
+  try {
+    var parsed = new URL(url);
+    return parsed.origin + parsed.pathname;
+  } catch (e) {
+    return url;
+  }
+}
+
+function stripBlobSasFromHtml(html) {
+  if (!html) return html;
+  BLOB_SAS_PATTERN.lastIndex = 0;
+  return html.replace(BLOB_SAS_PATTERN, '$1');
+}
+
+async function enrichHtmlWithSas(html) {
+  if (!html) return html;
+  BLOB_SAS_PATTERN.lastIndex = 0;
+  var normalized = html.replace(BLOB_SAS_PATTERN, '$1');
+  BLOB_BARE_PATTERN.lastIndex = 0;
+  var matches = normalized.match(BLOB_BARE_PATTERN);
+  if (!matches || matches.length === 0) return normalized;
+  var uniqueUrls = matches.filter(function(v, i, a) { return a.indexOf(v) === i; });
+  var signed = await Promise.all(uniqueUrls.map(function(u) { return getBlobReadSasUrl(u); }));
+  var result = normalized;
+  uniqueUrls.forEach(function(url, i) {
+    if (signed[i]) {
+      result = result.split(url).join(signed[i]);
+    }
+  });
+  return result;
+}
+
+async function enrichThumbnailWithSas(thumbnail) {
+  if (!thumbnail) return thumbnail;
+  var enriched = Object.assign({}, thumbnail);
+  if (isBlobUrl(thumbnail.url)) {
+    var signedUrl = await getBlobReadSasUrl(thumbnail.url);
+    if (signedUrl) enriched.signedUrl = signedUrl;
+  }
+
+  if (thumbnail.variants && typeof thumbnail.variants === 'object') {
+    var entries = await Promise.all(Object.entries(thumbnail.variants).map(async function(entry) {
+      var key = entry[0];
+      var variant = entry[1];
+      if (!variant || !isBlobUrl(variant.url)) return [key, variant];
+      var variantSignedUrl = await getBlobReadSasUrl(variant.url);
+      return [key, variantSignedUrl ? Object.assign({}, variant, { signedUrl: variantSignedUrl }) : variant];
+    }));
+    enriched.variants = Object.fromEntries(entries);
+  }
+
+  return enriched;
+}
+
+function normalizeThumbnailForStorage(thumbnail) {
+  if (!thumbnail) return null;
+  if (typeof thumbnail === 'string') return { url: stripBlobSas(thumbnail) };
+  if (!thumbnail.url || typeof thumbnail.url !== 'string') return null;
+
+  var normalized = {
+    url: stripBlobSas(thumbnail.url)
+  };
+  if (typeof thumbnail.alt === 'string') normalized.alt = thumbnail.alt;
+  if (Number.isFinite(Number(thumbnail.width)) && Number(thumbnail.width) > 0) normalized.width = Number(thumbnail.width);
+  if (Number.isFinite(Number(thumbnail.height)) && Number(thumbnail.height) > 0) normalized.height = Number(thumbnail.height);
+  if (typeof thumbnail.mimeType === 'string') normalized.mimeType = thumbnail.mimeType;
+  if (Number.isFinite(Number(thumbnail.sizeBytes)) && Number(thumbnail.sizeBytes) >= 0) normalized.sizeBytes = Number(thumbnail.sizeBytes);
+
+  if (thumbnail.variants && typeof thumbnail.variants === 'object') {
+    var variants = {};
+    Object.entries(thumbnail.variants).forEach(function(entry) {
+      var key = entry[0];
+      var variant = entry[1];
+      if (!variant || !variant.url || typeof variant.url !== 'string') return;
+      var safeKey = key.replace(/[^a-zA-Z0-9_-]/g, '');
+      if (!safeKey) return;
+      variants[safeKey] = { url: stripBlobSas(variant.url) };
+      if (Number.isFinite(Number(variant.width)) && Number(variant.width) > 0) variants[safeKey].width = Number(variant.width);
+      if (Number.isFinite(Number(variant.height)) && Number(variant.height) > 0) variants[safeKey].height = Number(variant.height);
+      if (typeof variant.type === 'string') variants[safeKey].type = variant.type;
+      if (Number.isFinite(Number(variant.sizeBytes)) && Number(variant.sizeBytes) >= 0) variants[safeKey].sizeBytes = Number(variant.sizeBytes);
+    });
+    if (Object.keys(variants).length > 0) normalized.variants = variants;
+    else delete normalized.variants;
+  }
+
+  return normalized;
+}
+
+function collectThumbnailUrls(thumbnail) {
+  return Array.from(new Set([
+    thumbnail?.url,
+    ...Object.values(thumbnail?.variants || {}).map(function(variant) { return variant?.url; })
+  ].filter(Boolean)));
+}
 
 function encodeAdminCursor(post) {
   const payload = {
@@ -49,6 +173,69 @@ function createUuid() {
   return crypto.randomBytes(16).toString('hex');
 }
 
+function normalizeDraftSessionId(value) {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 80) return null;
+  if (!/^draft-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(trimmed)) return null;
+  return trimmed;
+}
+
+function buildDraftAttachmentQuery(draftSessionId) {
+  return {
+    query: 'SELECT * FROM c WHERE c.draftSessionId = @draftSessionId AND c.documentType = "attach"',
+    parameters: [{ name: '@draftSessionId', value: draftSessionId }]
+  };
+}
+
+function buildAttachmentListQuery({ postId, draftSessionId }) {
+  if (postId) {
+    return {
+      query: 'SELECT c.id, c.fileName, c.blobUrl, c.contentType, c.sizeBytes FROM c WHERE c.postId = @postId AND c.documentType = "attach"',
+      parameters: [{ name: '@postId', value: postId }]
+    };
+  }
+
+  return {
+    query: 'SELECT c.id, c.fileName, c.blobUrl, c.contentType, c.sizeBytes FROM c WHERE c.draftSessionId = @draftSessionId AND c.documentType = "attach"',
+    parameters: [{ name: '@draftSessionId', value: draftSessionId }]
+  };
+}
+
+function buildExpiredDraftAttachmentQuery(nowIso) {
+  return {
+    query: 'SELECT TOP 50 c.id, c.category, c.partitionKey, c.blobUrl FROM c WHERE c.documentType = "attach" AND IS_DEFINED(c.draftSessionId) AND c.draftSessionId != null AND IS_DEFINED(c.expiresAt) AND c.expiresAt < @now',
+    parameters: [{ name: '@now', value: nowIso }]
+  };
+}
+
+function getDraftAttachmentExpiresAt(now = new Date()) {
+  return new Date(now.getTime() + draftAttachTtlMs).toISOString();
+}
+
+async function cleanupExpiredDraftAttachments(container, now = new Date()) {
+  try {
+    const { resources } = await container.items
+      .query(buildExpiredDraftAttachmentQuery(now.toISOString()), { partitionKey: attachCategoryPartition })
+      .fetchAll();
+
+    for (const file of resources) {
+      try {
+        await deleteBlobByUrl(file.blobUrl);
+      } catch (err) {
+        console.error(`[cleanupExpiredDraftAttachments] blob deletion failed for file ${file.id}`, err);
+      }
+      try {
+        await container.item(file.id, file.category || file.partitionKey || attachCategoryPartition).delete();
+      } catch (err) {
+        console.error(`[cleanupExpiredDraftAttachments] cosmos deletion failed for file ${file.id}`, err);
+      }
+    }
+  } catch (err) {
+    console.error('[cleanupExpiredDraftAttachments] failed', err);
+  }
+}
+
 function validatePostCreatePayload(body) {
   if (!body || typeof body !== 'object') {
     return 'Invalid request payload';
@@ -74,6 +261,31 @@ function validatePostCreatePayload(body) {
     return 'status must be one of draft, published, archived';
   }
 
+  if (body.series !== undefined && body.series !== null && typeof body.series !== 'string') {
+    return 'series must be a string or null';
+  }
+
+  if (body.seriesOrder !== undefined && body.seriesOrder !== null) {
+    if (!Number.isInteger(body.seriesOrder) || body.seriesOrder < 1) {
+      return 'seriesOrder must be a positive integer or null';
+    }
+  }
+
+  // eventDates validation (optional, only for event category)
+  if (body.eventDates !== undefined && body.eventDates !== null) {
+    if (!Array.isArray(body.eventDates)) {
+      return 'eventDates must be an array';
+    }
+    for (let i = 0; i < body.eventDates.length; i++) {
+      const d = body.eventDates[i];
+      if (!d || typeof d !== 'object') {
+        return `eventDates[${i}] must be an object`;
+      } else if (!d.start || !d.end) {
+        return `eventDates[${i}] must have start and end`;
+      }
+    }
+  }
+
   return null;
 }
 
@@ -92,6 +304,35 @@ function validatePostUpdatePayload(body) {
 
   if (body.status !== undefined && !allowedStatuses.has(body.status)) {
     return 'status must be one of draft, published, archived';
+  }
+
+  if (body.youtube !== undefined && body.youtube !== null && typeof body.youtube !== 'string') {
+    return 'youtube must be a string or null';
+  }
+
+  if (body.series !== undefined && body.series !== null && typeof body.series !== 'string') {
+    return 'series must be a string or null';
+  }
+
+  if (body.seriesOrder !== undefined && body.seriesOrder !== null) {
+    if (!Number.isInteger(body.seriesOrder) || body.seriesOrder < 1) {
+      return 'seriesOrder must be a positive integer or null';
+    }
+  }
+
+  // eventDates validation (optional, only for event category)
+  if (body.eventDates !== undefined && body.eventDates !== null) {
+    if (!Array.isArray(body.eventDates)) {
+      return 'eventDates must be an array';
+    }
+    for (let i = 0; i < body.eventDates.length; i++) {
+      const d = body.eventDates[i];
+      if (!d || typeof d !== 'object') {
+        return `eventDates[${i}] must be an object`;
+      } else if (!d.start || !d.end) {
+        return `eventDates[${i}] must have start and end`;
+      }
+    }
   }
 
   return null;
@@ -146,7 +387,12 @@ function toPostResponse(post) {
     publishedAt: post.publishedAt || null,
     updatedAt: post.updatedAt,
     series: post.series || null,
-    thumbnail: post.thumbnail || null
+    seriesOrder: post.seriesOrder ?? null,
+    thumbnail: post.thumbnail || null,
+    youtube: post.youtube || null,
+    eventDates: Array.isArray(post.eventDates) ? post.eventDates : null,
+    eventLocation: post.eventLocation || null,
+    eventTarget: post.eventTarget || null,
   };
 }
 
@@ -164,7 +410,8 @@ function toPostSummary(post) {
   };
 }
 
-function buildAdminListQuery({ limit, cursor, category, tag, status }) {
+function buildAdminListQuery({ limit, page, category, tag, status, search }) {
+  const offset = (page - 1) * limit;
   const whereClauses = ['(NOT IS_DEFINED(p.documentType) OR p.documentType = "post")'];
   const parameters = [];
 
@@ -183,17 +430,25 @@ function buildAdminListQuery({ limit, cursor, category, tag, status }) {
     parameters.push({ name: '@tag', value: tag });
   }
 
-  if (cursor) {
-    whereClauses.push('p.updatedAt < @cursorUpdatedAt');
-    parameters.push({ name: '@cursorUpdatedAt', value: cursor.updatedAt });
+  if (search) {
+    whereClauses.push('(CONTAINS(p.title, @search, true) OR CONTAINS(p.excerpt, @search, true) OR CONTAINS(p.slug, @search, true))');
+    parameters.push({ name: '@search', value: search });
   }
 
+  const whereClause = whereClauses.join(' AND ');
   return {
-    query: `SELECT TOP ${limit} p.id, p.slug, p.category, p.title, p.excerpt, p.tags, p.status, p.publishedAt, p.updatedAt
-            FROM p
-            WHERE ${whereClauses.join(' AND ')}
-            ORDER BY p.updatedAt DESC`,
-    parameters
+    dataQuery: {
+      query: `SELECT p.id, p.slug, p.category, p.title, p.excerpt, p.tags, p.status, p.publishedAt, p.updatedAt
+              FROM p
+              WHERE ${whereClause}
+              ORDER BY p.updatedAt DESC
+              OFFSET ${offset} LIMIT ${limit}`,
+      parameters
+    },
+    countQuery: {
+      query: `SELECT VALUE COUNT(1) FROM p WHERE ${whereClause}`,
+      parameters
+    }
   };
 }
 
@@ -206,36 +461,82 @@ exports.getAdminPostList = async (req, res) => {
       return sendError(res, 400, 'BadRequest', 'Invalid limit value', correlationId);
     }
 
+    const page = parsePositiveInt(req.query.page, 1, 1, 10000);
+    if (page === null) {
+      return sendError(res, 400, 'BadRequest', 'Invalid page value', correlationId);
+    }
+
     if (req.query.status && !allowedStatuses.has(req.query.status)) {
       return sendError(res, 400, 'BadRequest', 'Invalid status value', correlationId);
     }
 
-    let cursor = null;
-    if (req.query.cursor) {
-      cursor = decodeAdminCursor(req.query.cursor);
-      if (!cursor) {
-        return sendError(res, 400, 'BadRequest', 'Invalid cursor value', correlationId);
-      }
-    }
-
     const container = getPostsContainer();
-    const querySpec = buildAdminListQuery({
+    const search = (req.query.search || '').trim();
+    const { dataQuery, countQuery } = buildAdminListQuery({
       limit,
-      cursor,
+      page,
       category: req.query.category,
       tag: req.query.tag,
-      status: req.query.status
+      status: req.query.status,
+      search: search || undefined,
     });
 
-    const { resources } = await container.items.query(querySpec).fetchAll();
+    const [{ resources }, { resources: countResult }] = await Promise.all([
+      container.items.query(dataQuery).fetchAll(),
+      container.items.query(countQuery).fetchAll()
+    ]);
+
+    const totalCount = countResult[0] ?? 0;
     const items = resources.map(toPostSummary);
 
     return res.json({
       items,
-      nextCursor: items.length === limit ? encodeAdminCursor(items[items.length - 1]) : null
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      page
     });
   } catch (error) {
     console.error('[getAdminPostList] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.getAdminSeriesList = async (req, res) => {
+  const correlationId = req.correlationId;
+
+  try {
+    const whereClauses = [
+      '(NOT IS_DEFINED(p.documentType) OR p.documentType = "post")',
+      'IS_DEFINED(p.series)',
+      'p.series != null',
+      'p.series != ""'
+    ];
+    const parameters = [];
+
+    if (req.query.category) {
+      whereClauses.push('p.category = @category');
+      parameters.push({ name: '@category', value: req.query.category });
+    }
+
+    const container = getPostsContainer();
+    const { resources } = await container.items.query({
+      query: `SELECT DISTINCT VALUE p.series
+              FROM p
+              WHERE ${whereClauses.join(' AND ')}`,
+      parameters
+    }).fetchAll();
+
+    const items = Array.from(new Set(
+      resources
+        .map((series) => (typeof series === 'string' ? series.trim() : ''))
+        .filter(Boolean)
+    ))
+      .sort((a, b) => a.localeCompare(b, 'ko'))
+      .map((name) => ({ name }));
+
+    return res.json({ items });
+  } catch (error) {
+    console.error('[getAdminSeriesList] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
   }
 };
@@ -251,7 +552,14 @@ exports.getAdminPostDetail = async (req, res) => {
       return sendError(res, 404, 'NotFound', 'Resource not found', correlationId);
     }
 
-    return res.json(toPostResponse(post));
+    const baseResponse = toPostResponse(post);
+    if (baseResponse.thumbnail) {
+      baseResponse.thumbnail = await enrichThumbnailWithSas(baseResponse.thumbnail);
+    }
+    if (baseResponse.contentMarkdown) {
+      baseResponse.contentMarkdown = await enrichHtmlWithSas(baseResponse.contentMarkdown);
+    }
+    return res.json(baseResponse);
   } catch (error) {
     console.error('[getAdminPostDetail] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
@@ -288,10 +596,15 @@ exports.createPost = async (req, res) => {
       category: req.body.category,
       title: req.body.title,
       excerpt: req.body.excerpt || '',
-      contentMarkdown: req.body.contentMarkdown,
+      contentMarkdown: stripBlobSasFromHtml(req.body.contentMarkdown),
       tags: req.body.tags,
       series: req.body.series || null,
-      thumbnail: req.body.thumbnail || null,
+      seriesOrder: req.body.seriesOrder ?? null,
+      thumbnail: normalizeThumbnailForStorage(req.body.thumbnail),
+      youtube: req.body.youtube || null,
+      eventDates: Array.isArray(req.body.eventDates) ? req.body.eventDates : null,
+      eventLocation: req.body.eventLocation || null,
+      eventTarget: req.body.eventTarget || null,
       status: req.body.status,
       publishedAt: req.body.status === 'published' ? now : null,
       updatedAt: now,
@@ -299,7 +612,11 @@ exports.createPost = async (req, res) => {
     };
 
     const { resource } = await container.items.create(post);
-    return res.status(201).json(toPostResponse(resource));
+    const createResponse = toPostResponse(resource);
+    if (createResponse.thumbnail) {
+      createResponse.thumbnail = await enrichThumbnailWithSas(createResponse.thumbnail);
+    }
+    return res.status(201).json(createResponse);
   } catch (error) {
     console.error('[createPost] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
@@ -323,14 +640,41 @@ exports.updatePost = async (req, res) => {
     }
 
     const now = new Date().toISOString();
+
+    // slug 변경 처리: 제공된 경우에만 업데이트한다.
+    let slug = existing.slug;
+    if (req.body.slug !== undefined) {
+      const requestedSlug = toSlugBase(req.body.slug);
+      if (requestedSlug && requestedSlug !== existing.slug) {
+        if (await slugExists(container, requestedSlug, existing.id)) {
+          return sendError(res, 409, 'Conflict', 'Duplicate slug', correlationId);
+        }
+        slug = requestedSlug;
+      } else if (requestedSlug) {
+        slug = requestedSlug;
+      }
+      // req.body.slug가 빈 문자열이면 기존 slug 유지
+    }
+
+    const incomingThumbnail = req.body.thumbnail !== undefined ? req.body.thumbnail : existing.thumbnail;
+    const normalizedThumbnail = incomingThumbnail
+      ? normalizeThumbnailForStorage(incomingThumbnail)
+      : incomingThumbnail;
+    const incomingContent = req.body.contentMarkdown !== undefined ? req.body.contentMarkdown : existing.contentMarkdown;
     const updated = {
       ...existing,
+      slug,
       title: req.body.title !== undefined ? req.body.title : existing.title,
       excerpt: req.body.excerpt !== undefined ? req.body.excerpt : existing.excerpt,
-      contentMarkdown: req.body.contentMarkdown !== undefined ? req.body.contentMarkdown : existing.contentMarkdown,
+      contentMarkdown: stripBlobSasFromHtml(incomingContent),
       tags: req.body.tags !== undefined ? req.body.tags : existing.tags,
-      series: req.body.series !== undefined ? req.body.series : existing.series,
-      thumbnail: req.body.thumbnail !== undefined ? req.body.thumbnail : existing.thumbnail,
+      series: req.body.series !== undefined ? (req.body.series || null) : existing.series,
+      seriesOrder: req.body.seriesOrder !== undefined ? (req.body.seriesOrder ?? null) : (existing.seriesOrder ?? null),
+      thumbnail: normalizedThumbnail,
+      youtube: req.body.youtube !== undefined ? (req.body.youtube || null) : (existing.youtube || null),
+      eventDates: req.body.eventDates !== undefined ? (Array.isArray(req.body.eventDates) ? req.body.eventDates : null) : existing.eventDates,
+      eventLocation: req.body.eventLocation !== undefined ? (req.body.eventLocation || null) : (existing.eventLocation || null),
+      eventTarget: req.body.eventTarget !== undefined ? (req.body.eventTarget || null) : (existing.eventTarget || null),
       status: req.body.status !== undefined ? req.body.status : existing.status,
       updatedAt: now
     };
@@ -344,7 +688,11 @@ exports.updatePost = async (req, res) => {
     }
 
     const { resource } = await container.item(existing.id, existing.partitionKey || existing.category).replace(updated);
-    return res.json(toPostResponse(resource));
+    const updateResponse = toPostResponse(resource);
+    if (updateResponse.thumbnail) {
+      updateResponse.thumbnail = await enrichThumbnailWithSas(updateResponse.thumbnail);
+    }
+    return res.json(updateResponse);
   } catch (error) {
     console.error('[updatePost] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
@@ -360,6 +708,39 @@ exports.deletePost = async (req, res) => {
 
     if (!existing) {
       return sendError(res, 404, 'NotFound', 'Resource not found', correlationId);
+    }
+
+    // 연결된 에셋(images)과 첨부파일(attach) 조회
+    const assetsContainer = getAssetsContainer();
+    const linkedQuery = {
+      query: 'SELECT * FROM c WHERE c.postId = @postId AND (c.documentType = "asset" OR c.documentType = "attach")',
+      parameters: [{ name: '@postId', value: existing.id }]
+    };
+    const { resources: linkedDocs } = await assetsContainer.items.query(linkedQuery).fetchAll();
+
+    // 에셋/첨부파일 연쇄 삭제 (best-effort)
+    await Promise.all(linkedDocs.map(async (doc) => {
+      try {
+        await deleteBlobByUrl(doc.blobUrl);
+      } catch (err) {
+        console.error(`[deletePost] blob deletion failed for doc ${doc.id}`, err);
+      }
+      try {
+        const pk = doc.partitionKey || doc.category;
+        await assetsContainer.item(doc.id, pk).delete();
+      } catch (err) {
+        console.error(`[deletePost] cosmos doc deletion failed for doc ${doc.id}`, err);
+      }
+    }));
+
+    // 썸네일 블롭 삭제 (best-effort)
+    const thumbnailUrls = collectThumbnailUrls(existing.thumbnail);
+    for (const thumbnailUrl of thumbnailUrls) {
+      try {
+        await deleteBlobByUrl(thumbnailUrl);
+      } catch (err) {
+        console.error('[deletePost] thumbnail blob deletion failed', err);
+      }
     }
 
     await container.item(existing.id, existing.partitionKey || existing.category).delete();
@@ -452,9 +833,11 @@ exports.createAssetMetadata = async (req, res) => {
 
     await container.items.create(assetDocument);
 
+    const signedUrl = await getBlobReadSasUrl(blobUrl);
     return res.status(201).json({
       assetId,
       url: blobUrl,
+      signedUrl: signedUrl || null,
       mimeType: contentType,
       sizeBytes,
       width: 0,
@@ -493,6 +876,243 @@ exports.deleteAsset = async (req, res) => {
   }
 };
 
+exports.issueAttachUploadSas = async (req, res) => {
+  const correlationId = req.correlationId;
+  const { fileName, contentType, sizeBytes } = req.body || {};
+
+  if (!fileName || !contentType) {
+    return sendError(res, 400, 'BadRequest', 'fileName and contentType are required', correlationId);
+  }
+
+  if (!allowedAttachMimeTypes.has(contentType)) {
+    return sendError(res, 400, 'BadRequest', 'Unsupported contentType', correlationId);
+  }
+
+  if (sizeBytes !== undefined && (typeof sizeBytes !== 'number' || sizeBytes <= 0 || sizeBytes > maxAttachSizeBytes)) {
+    return sendError(res, 400, 'BadRequest', 'Invalid sizeBytes', correlationId);
+  }
+
+  try {
+    const payload = await issueBlobAttachSas({ fileName });
+    return res.json(payload);
+  } catch (error) {
+    console.error('[issueAttachUploadSas] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.createFileMetadata = async (req, res) => {
+  const correlationId = req.correlationId;
+  const { postId, draftSessionId, blobUrl, contentType, sizeBytes, fileName } = req.body || {};
+
+  if (!blobUrl || !contentType || !sizeBytes || !fileName) {
+    return sendError(res, 400, 'BadRequest', 'Invalid request payload', correlationId);
+  }
+
+  if (typeof blobUrl !== 'string') {
+    return sendError(res, 400, 'BadRequest', 'blobUrl must be a valid URL string', correlationId);
+  }
+
+  try {
+    new URL(blobUrl);
+  } catch {
+    return sendError(res, 400, 'BadRequest', 'blobUrl must be a valid URL string', correlationId);
+  }
+
+  if (!allowedAttachMimeTypes.has(contentType)) {
+    return sendError(res, 400, 'BadRequest', 'Unsupported contentType', correlationId);
+  }
+
+  if (!Number.isInteger(sizeBytes) || sizeBytes < 1 || sizeBytes > maxAttachSizeBytes) {
+    return sendError(res, 400, 'BadRequest', 'Invalid sizeBytes', correlationId);
+  }
+
+  if (typeof fileName !== 'string' || fileName.trim().length === 0) {
+    return sendError(res, 400, 'BadRequest', 'fileName is required', correlationId);
+  }
+  const trimmedFileName = fileName.trim();
+  const hasPostId = postId !== undefined && postId !== null;
+  if (hasPostId && (typeof postId !== 'string' || postId.trim().length === 0)) {
+    return sendError(res, 400, 'BadRequest', 'postId must be a non-empty string', correlationId);
+  }
+  const normalizedPostId = hasPostId ? postId.trim() : null;
+  const hasDraftSessionId = draftSessionId !== undefined && draftSessionId !== null;
+  const normalizedDraftSessionId = normalizeDraftSessionId(draftSessionId);
+  if (hasDraftSessionId && !normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'Invalid draftSessionId', correlationId);
+  }
+  if (normalizedPostId && normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'Provide either postId or draftSessionId, not both', correlationId);
+  }
+  if (!normalizedPostId && !normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'postId or draftSessionId is required', correlationId);
+  }
+
+  try {
+    const container = getAssetsContainer();
+    const fileId = createUuid();
+    const now = new Date().toISOString();
+    const isDraftAttachment = Boolean(!normalizedPostId && normalizedDraftSessionId);
+    if (isDraftAttachment) {
+      await cleanupExpiredDraftAttachments(container);
+    }
+
+    const fileDocument = {
+      id: fileId,
+      documentType: 'attach',
+      category: attachCategoryPartition,
+      partitionKey: attachCategoryPartition,
+      postId: normalizedPostId,
+      draftSessionId: normalizedPostId ? null : normalizedDraftSessionId,
+      blobUrl,
+      contentType,
+      sizeBytes,
+      fileName: trimmedFileName,
+      createdAt: now,
+      updatedAt: now
+    };
+    if (isDraftAttachment) {
+      fileDocument.expiresAt = getDraftAttachmentExpiresAt(new Date(now));
+      fileDocument.ttl = Math.floor(draftAttachTtlMs / 1000);
+    }
+
+    await container.items.create(fileDocument);
+
+    const signedUrl = await getBlobReadSasUrl(blobUrl, undefined, { downloadFileName: trimmedFileName });
+    return res.status(201).json({
+      fileId,
+      url: blobUrl,
+      signedUrl: signedUrl || null,
+      fileName: trimmedFileName,
+      contentType,
+      sizeBytes
+    });
+  } catch (error) {
+    console.error('[createFileMetadata] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.linkDraftAttachmentsToPost = async (req, res) => {
+  const correlationId = req.correlationId;
+  const { draftSessionId, postId } = req.body || {};
+  const normalizedDraftSessionId = normalizeDraftSessionId(draftSessionId);
+  const normalizedPostId = typeof postId === 'string' ? postId.trim() : '';
+
+  if (!normalizedDraftSessionId || !normalizedPostId) {
+    return sendError(res, 400, 'BadRequest', 'draftSessionId and postId are required', correlationId);
+  }
+
+  try {
+    const postsContainer = getPostsContainer();
+    const post = await findPostById(postsContainer, normalizedPostId);
+    if (!post) {
+      return sendError(res, 404, 'NotFound', 'Post not found', correlationId);
+    }
+
+    const container = getAssetsContainer();
+    await cleanupExpiredDraftAttachments(container);
+    const { resources } = await container.items
+      .query(buildDraftAttachmentQuery(normalizedDraftSessionId), { partitionKey: attachCategoryPartition })
+      .fetchAll();
+
+    for (const file of resources) {
+      const updated = {
+        ...file,
+        postId: normalizedPostId,
+        draftSessionId: null,
+        updatedAt: new Date().toISOString()
+      };
+      delete updated.expiresAt;
+      delete updated.ttl;
+      await container.item(file.id, file.category || file.partitionKey || attachCategoryPartition).replace(updated);
+    }
+
+    return res.json({ linked: resources.length });
+  } catch (error) {
+    console.error('[linkDraftAttachmentsToPost] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.deleteFile = async (req, res) => {
+  const correlationId = req.correlationId;
+
+  try {
+    const container = getAssetsContainer();
+    const querySpec = {
+      query: 'SELECT TOP 1 * FROM c WHERE c.id = @id AND c.documentType = "attach"',
+      parameters: [{ name: '@id', value: req.params.fileId }]
+    };
+
+    const { resources } = await container.items.query(querySpec).fetchAll();
+    const file = resources[0];
+
+    if (!file) {
+      return sendError(res, 404, 'NotFound', 'Resource not found', correlationId);
+    }
+
+    await container.item(file.id, file.category || file.partitionKey || attachCategoryPartition).delete();
+    await deleteBlobByUrl(file.blobUrl);
+
+    return res.status(204).send();
+  } catch (error) {
+    console.error('[deleteFile] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
+exports.getFiles = async (req, res) => {
+  const correlationId = req.correlationId;
+  const rawPostId = req.query?.postId;
+  const rawDraftSessionId = req.query?.draftSessionId;
+  const normalizedPostId = typeof rawPostId === 'string' ? rawPostId.trim() : '';
+  const normalizedDraftSessionId = normalizeDraftSessionId(rawDraftSessionId);
+
+  if (rawPostId !== undefined && !normalizedPostId) {
+    return sendError(res, 400, 'BadRequest', 'postId must be a non-empty string', correlationId);
+  }
+
+  if (rawDraftSessionId !== undefined && !normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'Invalid draftSessionId', correlationId);
+  }
+
+  if (!normalizedPostId && !normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'postId or draftSessionId query parameter is required', correlationId);
+  }
+
+  if (normalizedPostId && normalizedDraftSessionId) {
+    return sendError(res, 400, 'BadRequest', 'Provide either postId or draftSessionId, not both', correlationId);
+  }
+
+  try {
+    const container = getAssetsContainer();
+    const querySpec = buildAttachmentListQuery({
+      postId: normalizedPostId,
+      draftSessionId: normalizedDraftSessionId
+    });
+
+    const { resources } = await container.items.query(querySpec, { partitionKey: attachCategoryPartition }).fetchAll();
+
+    const withSignedUrls = await Promise.all(
+      resources.map(async (file) => {
+        let signedUrl = null;
+        try {
+          signedUrl = await getBlobReadSasUrl(file.blobUrl, undefined, { downloadFileName: file.fileName });
+        } catch (err) {
+          console.warn(`[getFiles] signedUrl generation failed for file ${file.id} (${file.blobUrl}) correlationId=${correlationId}`, err.message);
+        }
+        return { ...file, signedUrl };
+      })
+    );
+
+    return res.json(withSignedUrls);
+  } catch (error) {
+    console.error('[getFiles] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
 exports.getAnalyticsSummary = async (req, res) => {
   const correlationId = req.correlationId;
 
@@ -527,4 +1147,14 @@ exports.getAnalyticsSummary = async (req, res) => {
     console.error('[getAnalyticsSummary] failed', error);
     return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
   }
+};
+
+exports._test = {
+  normalizeThumbnailForStorage,
+  collectThumbnailUrls,
+  normalizeDraftSessionId,
+  buildDraftAttachmentQuery,
+  buildAttachmentListQuery,
+  buildExpiredDraftAttachmentQuery,
+  getDraftAttachmentExpiresAt
 };

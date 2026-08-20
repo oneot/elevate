@@ -1,0 +1,230 @@
+/**
+ * PostMetaSidebar
+ *
+ * PostEditor의 우측 메타데이터 패널.
+ *
+ * Props:
+ *  - post                        {object}   현재 게시글 상태
+ *  - tagsInput                   {string}
+ *  - youtubeInput                {string}
+ *  - youtubeError                {string}
+ *  - isUploading                 {boolean}
+ *  - isNew                       {boolean}
+ *  - onChange                    {function}
+ *  - seriesOptions               {string[]}
+ *  - isCreatingNewSeries         {boolean}
+ *  - newSeriesName               {string}
+ *  - onSeriesSelectChange        {function}
+ *  - onStartNewSeries            {function}
+ *  - onCancelNewSeries           {function}
+ *  - onNewSeriesNameChange       {function}
+ *  - onSeriesOrderChange         {function}
+ *  - onTagsChange                {function}
+ *  - onYoutubeChange             {function}
+ *  - onThumbnailUpload           {function}
+ *  - onAttachmentUploadingChange {function}
+ *  - postId                      {string|undefined}
+ *  - draftSessionId              {string|undefined}
+ *  - categories                  {Array<{value, label}>}
+ *  - linkedCalendarEventId       {string}   event 카테고리: 선택된 calendarEvent id ('' = 없음)
+ *  - calendarEvents              {Array}    event 카테고리: picker 옵션 목록
+ *  - onLinkedCalendarEventChange {function} event 카테고리: id 변경 핸들러
+ */
+
+import { Card, FormField } from '../ui/index.js'
+import AttachUploader from './AttachUploader.jsx'
+
+function PostMetaSidebar({
+  post,
+  tagsInput,
+  youtubeInput,
+  youtubeError,
+  isUploading,
+  isNew,
+  onChange,
+  seriesOptions = [],
+  isCreatingNewSeries = false,
+  newSeriesName = '',
+  onSeriesSelectChange,
+  onStartNewSeries,
+  onCancelNewSeries,
+  onNewSeriesNameChange,
+  onSeriesOrderChange,
+  onTagsChange,
+  onYoutubeChange,
+  onThumbnailUpload,
+  onAttachmentUploadingChange,
+  postId,
+  draftSessionId,
+  categories,
+  linkedCalendarEventId = '',
+  calendarEvents = [],
+  onLinkedCalendarEventChange,
+}) {
+  return (
+    <div className="space-y-8">
+      <Card colorScheme="slate" className="space-y-6">
+        <h3 className="text-sm font-semibold text-neutral-800">메타데이터</h3>
+
+        <FormField label="상태">
+          <select
+            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+            value={post.status}
+            onChange={onChange('status')}
+          >
+            <option value="draft">draft</option>
+            <option value="published">published</option>
+            <option value="archived">archived</option>
+          </select>
+        </FormField>
+
+        <FormField label="카테고리">
+          <select
+            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed"
+            value={post.category}
+            onChange={onChange('category')}
+            disabled={!isNew}
+          >
+            {/* 신규 게시글에서만 카테고리를 선택할 수 있다. 기존 게시글은 카테고리 변경이 불가하다. */}
+            {isNew && (
+              <option value="" disabled>카테고리 선택</option>
+            )}
+            {categories.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </FormField>
+
+        <FormField label="태그" hint="쉼표로 구분합니다.">
+          <input
+            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+            value={tagsInput}
+            onChange={(event) => onTagsChange(event.target.value)}
+            placeholder="Azure, CosmosDB"
+          />
+        </FormField>
+
+        <FormField label="시리즈" hint="같은 시리즈명을 가진 게시글끼리 우측 시리즈 내비게이션으로 묶입니다.">
+          {!isCreatingNewSeries ? (
+            <div className="flex items-center gap-2">
+              <select
+                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+                value={post.series || ''}
+                onChange={onSeriesSelectChange}
+              >
+                <option value="">시리즈 선택 안함</option>
+                {seriesOptions.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={onStartNewSeries}
+                className="shrink-0 rounded-md border border-ms-blue/30 bg-ms-blue/5 px-3 py-2 text-xs font-semibold text-ms-blue transition-colors hover:bg-ms-blue/10"
+              >
+                새 시리즈
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <input
+                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+                value={newSeriesName}
+                onChange={onNewSeriesNameChange}
+                placeholder="새 시리즈 이름 입력"
+              />
+              <button
+                type="button"
+                onClick={onCancelNewSeries}
+                className="rounded-md border border-neutral-300 bg-neutral-50 px-3 py-1.5 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-100"
+              >
+                기존 시리즈 선택
+              </button>
+            </div>
+          )}
+        </FormField>
+
+        <FormField label="시리즈 순서" hint="시리즈를 입력한 경우에만 사용합니다. 1 이상의 숫자만 허용됩니다.">
+          <input
+            type="number"
+            min="1"
+            step="1"
+            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed"
+            value={post.seriesOrder ?? ''}
+            onChange={onSeriesOrderChange}
+            placeholder="1"
+            disabled={!post.series?.trim()}
+          />
+        </FormField>
+
+        {post.category === 'event' && (
+          <FormField label="연결된 달력 이벤트" hint="이 게시글에 연결할 달력 이벤트를 선택합니다.">
+            <select
+              className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+              value={linkedCalendarEventId}
+              onChange={(e) => onLinkedCalendarEventChange && onLinkedCalendarEventChange(e.target.value)}
+            >
+              <option value="">연결 없음</option>
+              {calendarEvents.map(ev => (
+                <option key={ev.id} value={ev.id}>{ev.title}</option>
+              ))}
+            </select>
+          </FormField>
+        )}
+
+        <FormField label="YouTube">
+          <input
+            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+            value={youtubeInput}
+            onChange={onYoutubeChange}
+            placeholder="https://www.youtube.com/watch?v=..."
+          />
+          {youtubeError && <p className="text-xs text-red-500 mt-1">{youtubeError}</p>}
+          {post.youtube && !youtubeError && (
+            <p className="text-xs text-neutral-400 mt-1">ID: {post.youtube}</p>
+          )}
+        </FormField>
+
+        <FormField label="썸네일">
+          {post.thumbnailUrl && (
+            <div className="mb-2 w-full rounded-md border border-neutral-200 overflow-hidden bg-neutral-50 flex items-center justify-center">
+              <img src={post.thumbnailUrl} alt="Thumbnail preview" className="max-h-40 w-auto object-contain" />
+            </div>
+          )}
+          <div className="flex gap-2 items-center">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={async (event) => {
+                const fileObj = event.target.files?.[0]
+                if (!fileObj) return
+                try {
+                  await onThumbnailUpload(fileObj)
+                } catch {
+                  // 업로드 실패 시 파일 선택을 초기화해 재시도할 수 있도록 한다.
+                  event.target.value = ''
+                }
+              }}
+              className="w-full text-sm text-neutral-600 file:mr-4 file:py-1.5 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200 file:transition-colors file:cursor-pointer"
+            />
+          </div>
+          {isUploading && <p className="text-xs text-ms-blue mt-1">썸네일 업로드 중...</p>}
+        </FormField>
+      </Card>
+
+      <Card colorScheme="blue" className="space-y-4">
+        <h3 className="text-base font-semibold text-neutral-700">첨부파일</h3>
+        <p className="text-xs text-neutral-400">
+          업로드 후 URL 복사 버튼으로 마크다운 콘텐츠에 붙여넣을 수 있습니다.
+        </p>
+        <AttachUploader
+          postId={postId}
+          draftSessionId={draftSessionId}
+          onUploadingChange={onAttachmentUploadingChange}
+        />
+      </Card>
+    </div>
+  )
+}
+
+export default PostMetaSidebar

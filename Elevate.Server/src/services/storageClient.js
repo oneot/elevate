@@ -11,7 +11,9 @@ const {
 
 const storageAccountName = process.env.STORAGE_ACCOUNT_NAME;
 const storageContainerName = process.env.STORAGE_CONTAINER_NAME || 'images';
+const storageAttachContainerName = process.env.STORAGE_ATTACH_CONTAINER_NAME || 'attachments';
 let blobServiceClient = null;
+const READ_SAS_CLOCK_SKEW_MS = 5 * 60 * 1000;
 
 function getBlobServiceClient() {
   if (!storageAccountName) {
@@ -49,6 +51,14 @@ function generateBlobPath(fileName) {
   return `uploads/${yyyy}/${mm}/${sanitizeFileName(fileName)}`;
 }
 
+function generateAttachPath(fileName) {
+  const now = new Date();
+  const yyyy = now.getUTCFullYear();
+  const mm = String(now.getUTCMonth() + 1).padStart(2, '0');
+
+  return `attach/${yyyy}/${mm}/${sanitizeFileName(fileName)}`;
+}
+
 async function issueBlobUploadSas({ fileName }) {
   const serviceClient = getBlobServiceClient();
   const blobPath = generateBlobPath(fileName);
@@ -79,6 +89,107 @@ async function issueBlobUploadSas({ fileName }) {
   };
 }
 
+async function issueBlobAttachSas({ fileName }) {
+  const serviceClient = getBlobServiceClient();
+  const blobPath = generateAttachPath(fileName);
+  const containerClient = serviceClient.getContainerClient(storageAttachContainerName);
+  const blobClient = containerClient.getBlockBlobClient(blobPath);
+
+  const startsOn = new Date(Date.now() - 5 * 60 * 1000);
+  const expiresOn = new Date(Date.now() + 15 * 60 * 1000);
+
+  const userDelegationKey = await serviceClient.getUserDelegationKey(startsOn, expiresOn);
+  const sasToken = generateBlobSASQueryParameters(
+    {
+      containerName: storageAttachContainerName,
+      blobName: blobPath,
+      permissions: BlobSASPermissions.parse('cw'),
+      startsOn,
+      expiresOn,
+      protocol: SASProtocol.Https
+    },
+    userDelegationKey,
+    storageAccountName
+  ).toString();
+
+  return {
+    uploadUrl: `${blobClient.url}?${sasToken}`,
+    blobUrl: blobClient.url,
+    expiresAt: expiresOn.toISOString()
+  };
+}
+
+async function getBlobReadSasUrl(blobUrl, validHours, options = {}) {
+  if (!blobUrl) return null;
+  try {
+    const serviceClient = getBlobServiceClient();
+    const url = new URL(blobUrl);
+    const pathSegments = url.pathname.split('/').filter(Boolean);
+    if (pathSegments.length < 2) return null;
+
+    const containerName = pathSegments[0];
+    const blobName = pathSegments.slice(1).join('/');
+
+    const { startsOn, expiresOn } = getReadSasWindow(validHours, new Date(), containerName);
+
+    const userDelegationKey = await serviceClient.getUserDelegationKey(startsOn, expiresOn);
+    const sasOptions = {
+      containerName: containerName,
+      blobName: blobName,
+      permissions: BlobSASPermissions.parse('r'),
+      startsOn: startsOn,
+      expiresOn: expiresOn,
+      protocol: SASProtocol.Https,
+    };
+    const contentDisposition = buildDownloadContentDisposition(options.downloadFileName);
+    if (contentDisposition) {
+      sasOptions.contentDisposition = contentDisposition;
+    }
+
+    const sasToken = generateBlobSASQueryParameters(
+      sasOptions,
+      userDelegationKey,
+      storageAccountName
+    ).toString();
+
+    return url.origin + url.pathname + '?' + sasToken;
+  } catch (error) {
+    console.error('[getBlobReadSasUrl] failed', error);
+    return null;
+  }
+}
+
+function getReadSasWindow(validHours, now = new Date(), _containerName) {
+  return getRollingReadSasWindow(validHours, now);
+}
+
+function getRollingReadSasWindow(validHours, now = new Date()) {
+  const hours = Number.isFinite(validHours) && validHours > 0 ? validHours : 1;
+  return {
+    startsOn: new Date(now.getTime() - READ_SAS_CLOCK_SKEW_MS),
+    expiresOn: new Date(now.getTime() + hours * 60 * 60 * 1000)
+  };
+}
+
+function buildDownloadContentDisposition(fileName) {
+  if (typeof fileName !== 'string') return null;
+  const normalized = fileName
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/[/"\\:*?<>|]/g, '_')
+    .trim();
+  if (!normalized) return null;
+
+  const asciiFallback = normalized.replace(/[^\x20-\x7e]/g, '_') || 'download';
+  const encoded = encodeRfc5987ValueChars(normalized);
+  return `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encoded}`;
+}
+
+function encodeRfc5987ValueChars(value) {
+  return encodeURIComponent(value)
+    .replace(/['()]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`)
+    .replace(/\*/g, '%2A');
+}
+
 async function deleteBlobByUrl(blobUrl) {
   if (!blobUrl) {
     return;
@@ -105,5 +216,12 @@ async function deleteBlobByUrl(blobUrl) {
 
 module.exports = {
   issueBlobUploadSas,
-  deleteBlobByUrl
+  issueBlobAttachSas,
+  getBlobReadSasUrl,
+  getReadSasWindow,
+  deleteBlobByUrl,
+  _test: {
+    buildDownloadContentDisposition,
+    encodeRfc5987ValueChars
+  }
 };

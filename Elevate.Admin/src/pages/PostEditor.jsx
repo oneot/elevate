@@ -1,20 +1,23 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import Card from '../components/Card.jsx'
-import Button from '../components/Button.jsx'
-import FormField from '../components/FormField.jsx'
-import HtmlEditor from '../components/HtmlEditor.jsx'
+import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Card, Button, ConfirmModal, FormField } from '../components/ui/index.js'
+import { HtmlEditor, PostMetaSidebar } from '../components/editor/index.js'
 import { isApiConfigured } from '../lib/apiClient.js'
 import {
   createPost,
+  deletePost,
   getPost,
-  registerAsset,
-  requestUploadSas,
+  listSeriesByCategory,
   updatePost,
-} from '../lib/postsApi.js'
-import { slugify } from '../lib/formatters.js'
+} from '../services/postsApi.js'
+import { linkDraftFilesToPost } from '../services/assetsApi.js'
+import { listCalendarEvents, updateCalendarEvent } from '../services/calendarEventsApi.js'
+import { slugify, extractYoutubeId } from '../utils/formatters.js'
+import { CATEGORIES } from '../constants/categories.js'
 import { useAuth } from '../hooks/useAuth.js'
+import { usePostUpload } from '../hooks/usePostUpload.js'
 
+/** 신규 게시글 작성 시 초기 상태 기본값. */
 const emptyPost = {
   title: '',
   slug: '',
@@ -22,136 +25,174 @@ const emptyPost = {
   category: '',
   tags: [],
   excerpt: '',
+  series: '',
+  seriesOrder: null,
   thumbnailUrl: '',
   htmlBody: '',
+  youtube: '',
 }
 
-const mimeTypeAliases = {
-  'image/jpg': 'image/jpeg',
-  'image/pjpeg': 'image/jpeg',
-  'image/x-png': 'image/png',
-  'image/heic-sequence': 'image/heic',
-  'image/heif-sequence': 'image/heif',
+const CALENDAR_EVENT_LIMIT = 500
+const ATTACHMENT_LINK_WARNING = '첨부파일 연결에 실패했습니다. 저장된 게시글에서 다시 확인해 주세요.'
+
+function toDateString(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
-const extensionMimeMap = {
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.png': 'image/png',
-  '.webp': 'image/webp',
-  '.gif': 'image/gif',
-  '.heic': 'image/heic',
-  '.heif': 'image/heif',
-  '.avif': 'image/avif',
+function getCalendarEventRange(today = new Date()) {
+  return {
+    start: toDateString(new Date(today.getFullYear() - 1, 0, 1)),
+    end: toDateString(new Date(today.getFullYear() + 2, 11, 31)),
+  }
 }
 
-const supportedImageMimeTypes = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-  'image/heic',
-  'image/heif',
-  'image/avif',
-])
-
-function normalizeImageMimeType(file) {
-  const rawType = String(file?.type || '').trim().toLowerCase()
-  const aliasedType = mimeTypeAliases[rawType] || rawType
-
-  if (aliasedType) {
-    return aliasedType
+function createDraftSessionId() {
+  if (globalThis.crypto?.randomUUID) {
+    return `draft-${globalThis.crypto.randomUUID()}`
   }
 
-  const fileName = String(file?.name || '')
-  const dotIndex = fileName.lastIndexOf('.')
-  if (dotIndex < 0) {
-    return ''
+  const bytes = new Uint8Array(16)
+  if (globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(bytes)
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256)
+    }
   }
 
-  const extension = fileName.slice(dotIndex).toLowerCase()
-  return extensionMimeMap[extension] || ''
+  bytes[6] = (bytes[6] & 0x0f) | 0x40
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0'))
+  return `draft-${hex.slice(0, 4).join('')}-${hex.slice(4, 6).join('')}-${hex.slice(6, 8).join('')}-${hex.slice(8, 10).join('')}-${hex.slice(10, 16).join('')}`
 }
 
-async function uploadBlobWithSas(uploadUrl, selectedFile, contentType) {
-  const uploadResponse = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: {
-      'x-ms-blob-type': 'BlockBlob',
-      'Content-Type': contentType,
-    },
-    body: selectedFile,
-  })
-
-  if (uploadResponse.ok) {
-    return
-  }
-
-  let errorDetail = ''
+function getDraftSessionId(storageKey) {
   try {
-    errorDetail = (await uploadResponse.text()).trim()
+    const existing = sessionStorage.getItem(storageKey)
+    if (existing) return existing
+    const next = createDraftSessionId()
+    sessionStorage.setItem(storageKey, next)
+    return next
   } catch {
-    errorDetail = ''
+    return createDraftSessionId()
   }
-
-  throw new Error(errorDetail || `Blob upload failed (${uploadResponse.status})`)
-}
-
-const mockPosts = {
-  'mock-1': {
-    title: 'Azure 기반 블로그 아키텍처',
-    slug: 'azure-architecture-handoff',
-    status: 'draft',
-    category: 'Architecture',
-    tags: ['Azure', 'CosmosDB'],
-    excerpt: '서버리스 기반 운영 아키텍처 요약',
-    thumbnailUrl: '',
-    htmlBody: '<h2>서버리스 기반 운영 아키텍처</h2><p>요약 콘텐츠입니다.</p>',
-  },
-  'mock-2': {
-    title: 'Copilot Studio 연계 방향',
-    slug: 'copilot-studio-knowledge',
-    status: 'published',
-    category: 'Copilot',
-    tags: ['Copilot', 'AI Search'],
-    excerpt: '지식 소스 연계를 위한 방향 정리',
-    thumbnailUrl: '',
-    htmlBody: '<h2>Copilot Studio 연계</h2><p>연계 방향 초안입니다.</p>',
-  },
-  'mock-3': {
-    title: 'Admin 운영 가이드 초안',
-    slug: 'admin-operations-guide',
-    status: 'archived',
-    category: 'Operations',
-    tags: ['Admin', 'Guide'],
-    excerpt: '운영자가 확인해야 할 항목 정리',
-    thumbnailUrl: '',
-    htmlBody: '<h2>운영 가이드</h2><p>운영 체크리스트입니다.</p>',
-  },
 }
 
 function PostEditor() {
   const { msalInstance } = useAuth()
   const { postId } = useParams()
+  const [searchParams] = useSearchParams()
   const isNew = !postId
+  const storageKey = isNew ? 'post-draft-new' : `post-draft-${postId}`
+  const draftAttachmentStorageKey = `${storageKey}:attachments`
+  const [draftSessionId, setDraftSessionId] = useState(() => (
+    isNew ? getDraftSessionId(draftAttachmentStorageKey) : ''
+  ))
   const navigate = useNavigate()
-  const [post, setPost] = useState(emptyPost)
+  const location = useLocation()
+  const flashMessage = location.state?.message
+  const pendingDraftSessionId = location.state?.draftAttachmentLink?.draftSessionId || ''
+  const pendingDraftAttachmentStorageKey = location.state?.draftAttachmentLink?.draftAttachmentStorageKey || ''
+  const flashRetryKeyRef = useRef('')
+  const [post, setPost] = useState(() => ({
+    ...emptyPost,
+    category: isNew ? (searchParams.get('category') || '') : '',
+  }))
   const [tagsInput, setTagsInput] = useState('')
+  const [youtubeInput, setYoutubeInput] = useState('')
+  const [youtubeError, setYoutubeError] = useState('')
+  const [seriesOptions, setSeriesOptions] = useState([])
+  const [isCreatingNewSeries, setIsCreatingNewSeries] = useState(false)
+  const [newSeriesName, setNewSeriesName] = useState('')
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
-  const [uploading, setUploading] = useState(false)
+  const [isAttachmentUploading, setIsAttachmentUploading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [linkedCalendarEventId, setLinkedCalendarEventId] = useState('')
+  const [initialLinkedCalendarEventId, setInitialLinkedCalendarEventId] = useState('')
+  const [calendarEvents, setCalendarEvents] = useState([])
+
+  const { uploading: isUploading, uploadThumbnail, uploadHtmlImage } = usePostUpload({
+    msalInstance,
+    postId,
+    setPost,
+    setError,
+    setMessage,
+  })
+
+  useEffect(() => {
+    setDraftSessionId(isNew ? getDraftSessionId(draftAttachmentStorageKey) : '')
+  }, [draftAttachmentStorageKey, isNew])
+
+  useEffect(() => {
+    if (!flashMessage && !pendingDraftSessionId) return
+
+    let cancelled = false
+    const retryKey = pendingDraftSessionId && postId
+      ? `${postId}:${pendingDraftSessionId}`
+      : ''
+
+    if (retryKey && flashRetryKeyRef.current === retryKey) return
+    if (retryKey) flashRetryKeyRef.current = retryKey
+
+    const clearNavigationState = () => {
+      navigate(location.pathname, { replace: true, state: null })
+    }
+
+    const applyFlashState = async () => {
+      if (flashMessage) setMessage(flashMessage)
+
+      if (!pendingDraftSessionId || !postId) {
+        clearNavigationState()
+        return
+      }
+
+      try {
+        setDraftSessionId(pendingDraftSessionId)
+        await linkDraftFilesToPost({ draftSessionId: pendingDraftSessionId, postId }, { msalInstance })
+        try {
+          if (pendingDraftAttachmentStorageKey) sessionStorage.removeItem(pendingDraftAttachmentStorageKey)
+        } catch { /* storage blocked — non-fatal */ }
+        if (!cancelled) {
+          setDraftSessionId('')
+          const baseMessage = (flashMessage || '저장되었습니다.')
+            .replace(ATTACHMENT_LINK_WARNING, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+          setMessage(`${baseMessage || '저장되었습니다.'} 첨부파일 연결을 다시 완료했습니다.`)
+          clearNavigationState()
+        }
+      } catch (retryError) {
+        console.error('[PostEditor] draft attachment retry failed', retryError)
+        if (!cancelled) {
+          setError('첨부파일 연결 재시도에 실패했습니다. 잠시 후 저장된 게시글을 다시 열어 확인해 주세요.')
+        }
+      }
+    }
+
+    applyFlashState()
+    return () => {
+      cancelled = true
+    }
+  }, [
+    flashMessage,
+    location.pathname,
+    msalInstance,
+    navigate,
+    pendingDraftAttachmentStorageKey,
+    pendingDraftSessionId,
+    postId,
+  ])
 
   useEffect(() => {
     if (!isApiConfigured) {
-      if (!isNew) {
-        const data = mockPosts[postId]
-        if (data) {
-          setPost({ ...emptyPost, ...data })
-          setTagsInput((data.tags || []).join(', '))
-        }
-      }
       setLoading(false)
       return
     }
@@ -168,6 +209,7 @@ function PostEditor() {
         if (isMounted) {
           setPost({ ...emptyPost, ...data })
           setTagsInput((data.tags || []).join(', '))
+          setYoutubeInput(data.youtube || '')
         }
       } catch (err) {
         if (isMounted) {
@@ -185,9 +227,175 @@ function PostEditor() {
     }
   }, [postId, isNew, msalInstance])
 
+  useEffect(() => {
+    if (!isApiConfigured || post.category !== 'event') {
+      setCalendarEvents([])
+      setLinkedCalendarEventId('')
+      setInitialLinkedCalendarEventId('')
+      return
+    }
+    let isMounted = true
+
+    const loadCalendarData = async () => {
+      setCalendarEvents([])
+      setLinkedCalendarEventId('')
+      setInitialLinkedCalendarEventId('')
+      try {
+        const range = getCalendarEventRange()
+        const [allEvents, linkedResult] = await Promise.all([
+          listCalendarEvents({ msalInstance, ...range, limit: CALENDAR_EVENT_LIMIT }),
+          !isNew ? listCalendarEvents({ msalInstance, linkedPostId: postId }) : Promise.resolve({ items: [] }),
+        ])
+        if (isMounted) {
+          setCalendarEvents(Array.isArray(allEvents?.items) ? allEvents.items : [])
+          const linked = linkedResult?.items?.[0]
+          if (linked) {
+            setLinkedCalendarEventId(linked.id)
+            setInitialLinkedCalendarEventId(linked.id)
+          }
+        }
+      } catch (err) {
+        console.error('[PostEditor] calendar events fetch failed', err)
+        if (isMounted) setError(err.message || '달력 이벤트 목록을 불러오지 못했습니다.')
+      }
+    }
+
+    loadCalendarData()
+    return () => { isMounted = false }
+  }, [post.category, isNew, postId, msalInstance])
+
+  useEffect(() => {
+    if (!isApiConfigured || !post.category) {
+      setSeriesOptions([])
+      return
+    }
+
+    let isMounted = true
+
+    listSeriesByCategory(post.category, { msalInstance })
+      .then((data) => {
+        if (!isMounted) return
+        const names = Array.from(new Set(
+          (data?.items || [])
+            .map((item) => (typeof item?.name === 'string' ? item.name.trim() : ''))
+            .filter(Boolean)
+        )).sort((a, b) => a.localeCompare(b, 'ko'))
+        setSeriesOptions(names)
+      })
+      .catch(() => {
+        if (isMounted) setSeriesOptions([])
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [post.category, msalInstance])
+
+  useEffect(() => {
+    const currentSeries = (post.series || '').trim()
+    if (!currentSeries) {
+      setIsCreatingNewSeries(false)
+      setNewSeriesName('')
+      return
+    }
+
+    const existsInOptions = seriesOptions.includes(currentSeries)
+    if (existsInOptions) {
+      setIsCreatingNewSeries(false)
+      setNewSeriesName('')
+      return
+    }
+
+    setIsCreatingNewSeries(true)
+    setNewSeriesName(currentSeries)
+  }, [post.series, seriesOptions])
+
 
   const handleChange = (field) => (event) => {
     setPost((prev) => ({ ...prev, [field]: event.target.value }))
+  }
+
+  const handleSeriesSelectChange = (event) => {
+    const value = event.target.value
+    setIsCreatingNewSeries(false)
+    setNewSeriesName('')
+    setPost((prev) => ({
+      ...prev,
+      series: value,
+      ...(value.trim() ? {} : { seriesOrder: null }),
+    }))
+  }
+
+  const handleStartNewSeries = () => {
+    setIsCreatingNewSeries(true)
+    setNewSeriesName(post.series || '')
+  }
+
+  const handleCancelNewSeries = () => {
+    const fallbackSeries = seriesOptions.includes(post.series || '') ? (post.series || '') : ''
+    setIsCreatingNewSeries(false)
+    setNewSeriesName('')
+    setPost((prev) => ({
+      ...prev,
+      series: fallbackSeries,
+      ...(fallbackSeries ? {} : { seriesOrder: null }),
+    }))
+  }
+
+  const handleNewSeriesNameChange = (event) => {
+    const value = event.target.value
+    setNewSeriesName(value)
+    setPost((prev) => ({
+      ...prev,
+      series: value,
+      ...(value.trim() ? {} : { seriesOrder: null }),
+    }))
+  }
+
+  const handleSeriesOrderChange = (event) => {
+    const rawValue = event.target.value.trim()
+    setPost((prev) => ({
+      ...prev,
+      seriesOrder: rawValue ? Number.parseInt(rawValue, 10) : null,
+    }))
+  }
+
+  const handleYoutubeChange = (event) => {
+    const url = event.target.value
+    setYoutubeInput(url)
+
+    if (!url) {
+      setYoutubeError('')
+      // YouTube URL이 지워졌을 때 자동으로 설정된 썸네일(img.youtube.com)도 함께 초기화한다.
+      // 사용자가 직접 업로드한 썸네일은 유지한다.
+      const wasAutoThumb = post.thumbnailUrl?.includes('img.youtube.com')
+      setPost((prev) => ({
+        ...prev,
+        youtube: '',
+        ...(wasAutoThumb ? { thumbnailUrl: '', thumbnail: null } : {}),
+      }))
+      return
+    }
+
+    const id = extractYoutubeId(url)
+    if (!id) {
+      setYoutubeError('유효하지 않은 YouTube URL입니다.')
+      setPost((prev) => ({ ...prev, youtube: '' }))
+      return
+    }
+
+    setYoutubeError('')
+    const autoThumbUrl = `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+    // 썸네일이 비어 있을 때만 YouTube 썸네일을 자동 설정한다.
+    // 이미 썸네일이 있으면 사용자가 의도적으로 선택한 것으로 간주해 변경하지 않는다.
+    setPost((prev) => ({
+      ...prev,
+      youtube: id,
+      ...(!prev.thumbnailUrl ? {
+        thumbnailUrl: autoThumbUrl,
+        thumbnail: { url: autoThumbUrl, alt: '', width: 480, height: 360, mimeType: 'image/jpeg', sizeBytes: 0 },
+      } : {}),
+    }))
   }
 
   const handleSave = async () => {
@@ -199,9 +407,23 @@ function PostEditor() {
       return
     }
 
+    if (!post.category) {
+      setError('카테고리를 선택해주세요.')
+      return
+    }
+
+    if (isAttachmentUploading) {
+      setError('첨부파일 업로드가 완료된 뒤 저장해주세요.')
+      return
+    }
+
+    // slug 입력값을 항상 정규화한다 (한글·특수문자 제거).
+    // 정규화 후에도 빈 문자열이면 제목에서 생성하고,
+    // 여전히 비어 있으면 서버가 자동 생성하도록 비워 둔다.
+    const normalizedSlug = slugify(post.slug || '')
     const payload = {
       ...post,
-      slug: post.slug || slugify(post.title),
+      slug: normalizedSlug || slugify(post.title),
       tags: tagsInput
         .split(',')
         .map((tag) => tag.trim())
@@ -213,12 +435,49 @@ function PostEditor() {
       if (isNew) {
         const created = await createPost(payload, { msalInstance })
         const newId = created?.id || created?.postId
-        setMessage('저장되었습니다.')
+        const warnings = []
+        let draftAttachmentLinkState = null
+        if (newId && draftSessionId) {
+          try {
+            await linkDraftFilesToPost({ draftSessionId, postId: newId }, { msalInstance })
+            try { sessionStorage.removeItem(draftAttachmentStorageKey) } catch { /* storage blocked — non-fatal */ }
+          } catch (linkError) {
+            console.error('[PostEditor] draft attachment link failed', linkError)
+            warnings.push(ATTACHMENT_LINK_WARNING)
+            draftAttachmentLinkState = {
+              draftSessionId,
+              draftAttachmentStorageKey,
+            }
+          }
+        }
+        if (post.category === 'event' && newId) {
+          try {
+            await syncCalendarEventLink(newId)
+          } catch (calendarError) {
+            console.error('[PostEditor] calendar event link failed after post creation', calendarError)
+            warnings.push(calendarError.message || '달력 이벤트 연결에 실패했습니다.')
+          }
+        }
+        const successMessage = warnings.length > 0
+          ? `저장되었습니다. ${warnings.join(' ')}`
+          : '저장되었습니다.'
         if (newId) {
-          navigate(`/posts/${newId}`)
+          try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
+          navigate(`/posts/${newId}`, {
+            state: {
+              message: successMessage,
+              ...(draftAttachmentLinkState ? { draftAttachmentLink: draftAttachmentLinkState } : {}),
+            },
+          })
+        } else {
+          setMessage(successMessage)
         }
       } else {
         await updatePost(postId, payload, { msalInstance })
+        if (post.category === 'event') {
+          await syncCalendarEventLink(postId)
+        }
+        try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
         setMessage('업데이트되었습니다.')
       }
     } catch (err) {
@@ -228,81 +487,59 @@ function PostEditor() {
     }
   }
 
-  const uploadThumbnail = async (selectedFile) => {
-    if (!selectedFile) return;
+  const syncCalendarEventLink = async (savedPostId) => {
+    const previousEventId = initialLinkedCalendarEventId
+    const nextEventId = linkedCalendarEventId
+    const linkChanged = previousEventId !== nextEventId
 
-    const contentType = normalizeImageMimeType(selectedFile)
-    if (!supportedImageMimeTypes.has(contentType)) {
-      throw new Error('지원하지 않는 이미지 형식입니다. JPG, PNG, WEBP, GIF, HEIC, HEIF, AVIF 파일만 업로드할 수 있습니다.')
-    }
+    if (!linkChanged) return
 
-    if (!isApiConfigured) {
-      const previewUrl = URL.createObjectURL(selectedFile)
-      setPost((prev) => ({ ...prev, thumbnailUrl: previewUrl }))
-      setMessage('API 없이 썸네일 미리보기 이미지를 적용했습니다.')
-      return
-    }
-
-    setUploading(true)
-    setError('')
-    setMessage('')
-
+    let linkedNextEvent = false
     try {
-      const sas = await requestUploadSas({
-        fileName: selectedFile.name,
-        contentType,
-        sizeBytes: selectedFile.size,
-      }, { msalInstance })
+      if (nextEventId) {
+        await updateCalendarEvent(nextEventId, { linkedPostId: savedPostId }, { msalInstance })
+        linkedNextEvent = true
+      }
 
-      await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType)
+      if (previousEventId) {
+        try {
+          await updateCalendarEvent(previousEventId, { linkedPostId: null }, { msalInstance })
+        } catch (unlinkError) {
+          if (linkedNextEvent) {
+            try {
+              await updateCalendarEvent(nextEventId, { linkedPostId: null }, { msalInstance })
+            } catch (rollbackError) {
+              console.error('[PostEditor] calendar event link rollback failed', rollbackError)
+            }
+          }
+          throw unlinkError
+        }
+      }
 
-      const asset = await registerAsset({
-        postId: postId || null,
-        blobUrl: sas.blobUrl,
-        contentType,
-        sizeBytes: selectedFile.size,
-        fileName: selectedFile.name,
-      }, { msalInstance })
-
-      setPost((prev) => ({
-        ...prev,
-        thumbnailUrl: asset?.url || asset?.cdnUrl || asset?.blobUrl || sas.blobUrl,
-      }))
-      setMessage('썸네일 이미지가 업로드되었습니다.')
+      setInitialLinkedCalendarEventId(nextEventId)
     } catch (err) {
-      setError(err.message || '썸네일 이미지 업로드에 실패했습니다.')
-    } finally {
-      setUploading(false)
+      throw new Error('게시글은 저장되었으나 달력 이벤트 연결에 실패했습니다: ' + (err.message || ''))
     }
   }
 
-  const uploadHtmlImage = async (selectedFile) => {
-    const contentType = normalizeImageMimeType(selectedFile)
-    if (!supportedImageMimeTypes.has(contentType)) {
-      throw new Error('지원하지 않는 이미지 형식입니다. JPG, PNG, WEBP, GIF, HEIC, HEIF, AVIF 파일만 업로드할 수 있습니다.')
-    }
-
+  const handleDelete = async () => {
+    // API 미구성 환경에서는 삭제 요청 자체를 차단한다.
     if (!isApiConfigured) {
-      return URL.createObjectURL(selectedFile)
+      setError('API가 연결되어 있지 않아 삭제할 수 없습니다.')
+      setShowDeleteModal(false)
+      return
     }
-
-    const sas = await requestUploadSas({
-      fileName: selectedFile.name,
-      contentType,
-      sizeBytes: selectedFile.size,
-    }, { msalInstance })
-
-    await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType)
-
-    const asset = await registerAsset({
-      postId: postId || null,
-      blobUrl: sas.blobUrl,
-      contentType,
-      sizeBytes: selectedFile.size,
-      fileName: selectedFile.name,
-    }, { msalInstance })
-
-    return asset?.url || asset?.cdnUrl || asset?.blobUrl || sas.blobUrl
+    setDeleting(true)
+    setError('')
+    try {
+      await deletePost(postId, { msalInstance })
+      navigate(post.category ? `/category/${post.category}` : '/')
+    } catch (err) {
+      setError(err.message || '삭제에 실패했습니다.')
+      setShowDeleteModal(false)
+    } finally {
+      setDeleting(false)
+    }
   }
 
   if (loading) {
@@ -317,6 +554,8 @@ function PostEditor() {
       </div>
     )
   }
+
+  const saveDisabled = saving || isAttachmentUploading
 
   return (
     <div className="space-y-10 animate-fadeIn">
@@ -335,11 +574,16 @@ function PostEditor() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => navigate('/posts')}>
+          <Button variant="secondary" onClick={() => navigate(post.category ? `/category/${post.category}` : '/')}>
             목록으로
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? '저장 중...' : '저장'}
+          {!isNew && isApiConfigured && (
+            <Button variant="danger" onClick={() => setShowDeleteModal(true)} disabled={deleting}>
+              삭제
+            </Button>
+          )}
+          <Button onClick={handleSave} disabled={saveDisabled}>
+            {saving ? '저장 중...' : isAttachmentUploading ? '첨부 업로드 중...' : '저장'}
           </Button>
         </div>
       </div>
@@ -367,7 +611,19 @@ function PostEditor() {
             />
           </FormField>
 
-
+          <FormField label="Slug" hint="비워두면 제목에서 자동 생성됩니다.">
+            <input
+              className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-mono transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
+              value={post.slug}
+              onChange={handleChange('slug')}
+              placeholder="my-post-slug"
+            />
+            {post.slug && slugify(post.slug) !== post.slug && (
+              <p className="mt-1 text-xs text-amber-600">
+                저장 시 <span className="font-mono font-semibold">{slugify(post.slug) || '(자동 생성)'}</span>으로 변환됩니다.
+              </p>
+            )}
+          </FormField>
 
           <FormField label="요약">
             <textarea
@@ -388,65 +644,51 @@ function PostEditor() {
                 }))
               }
               onUploadImage={uploadHtmlImage}
+              storageKey={storageKey}
             />
           </FormField>
         </Card>
 
         <aside className="space-y-8">
-          <Card colorScheme="slate" className="space-y-6">
-            <h3 className="text-sm font-semibold text-neutral-800">메타데이터</h3>
-            <FormField label="상태">
-              <select
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-                value={post.status}
-                onChange={handleChange('status')}
-              >
-                <option value="draft">draft</option>
-                <option value="published">published</option>
-                <option value="archived">archived</option>
-              </select>
-            </FormField>
-            <FormField label="카테고리">
-              <input
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-                value={post.category}
-                onChange={handleChange('category')}
-                placeholder="예: Architecture"
-              />
-            </FormField>
-            <FormField label="태그" hint="쉼표로 구분합니다.">
-              <input
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-                value={tagsInput}
-                onChange={(event) => setTagsInput(event.target.value)}
-                placeholder="Azure, CosmosDB"
-              />
-            </FormField>
-            <FormField label="썸네일">
-              {post.thumbnailUrl && (
-                <div className="mb-2 w-full rounded-md border border-neutral-200 overflow-hidden bg-neutral-50 flex items-center justify-center">
-                  <img src={post.thumbnailUrl} alt="Thumbnail preview" className="max-h-40 w-auto object-contain" />
-                </div>
-              )}
-              <div className="flex gap-2 items-center">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={async (event) => {
-                    const fileObj = event.target.files?.[0];
-                    if (fileObj) {
-                      await uploadThumbnail(fileObj);
-                    }
-                  }}
-                  className="w-full text-sm text-neutral-600 file:mr-4 file:py-1.5 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200 file:transition-colors file:cursor-pointer"
-                />
-              </div>
-              {uploading && <p className="text-xs text-ms-blue mt-1">썸네일 업로드 중...</p>}
-            </FormField>
-          </Card>
-
+          <PostMetaSidebar
+            post={post}
+            tagsInput={tagsInput}
+            youtubeInput={youtubeInput}
+            youtubeError={youtubeError}
+            isUploading={isUploading}
+            isNew={isNew}
+            onChange={handleChange}
+            seriesOptions={seriesOptions}
+            isCreatingNewSeries={isCreatingNewSeries}
+            newSeriesName={newSeriesName}
+            onSeriesSelectChange={handleSeriesSelectChange}
+            onStartNewSeries={handleStartNewSeries}
+            onCancelNewSeries={handleCancelNewSeries}
+            onNewSeriesNameChange={handleNewSeriesNameChange}
+            onSeriesOrderChange={handleSeriesOrderChange}
+            onTagsChange={setTagsInput}
+            onYoutubeChange={handleYoutubeChange}
+            onThumbnailUpload={uploadThumbnail}
+            onAttachmentUploadingChange={setIsAttachmentUploading}
+            linkedCalendarEventId={linkedCalendarEventId}
+            calendarEvents={calendarEvents}
+            onLinkedCalendarEventChange={setLinkedCalendarEventId}
+            postId={postId}
+            draftSessionId={draftSessionId}
+            categories={CATEGORIES}
+          />
         </aside>
       </div>
+
+      <ConfirmModal
+        open={showDeleteModal}
+        title="게시글을 삭제하시겠습니까?"
+        description={`"${post.title || '(제목 없음)'}" 게시글이 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
+        confirmLabel="삭제"
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteModal(false)}
+        loading={deleting}
+      />
     </div>
   )
 }

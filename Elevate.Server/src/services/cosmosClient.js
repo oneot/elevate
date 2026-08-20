@@ -25,6 +25,14 @@ function getAssetsContainerName() {
   return process.env.COSMOS_ASSETS_CONTAINER_NAME || getPostsContainerName();
 }
 
+function getCalendarEventsContainerName() {
+  return process.env.COSMOS_CALENDAR_EVENTS_CONTAINER_NAME || getPostsContainerName();
+}
+
+function getActivityVideosContainerName() {
+  return process.env.COSMOS_ACTIVITY_VIDEOS_CONTAINER_NAME || getPostsContainerName();
+}
+
 function getClient() {
   if (!client) {
     const endpoint = getEndpoint();
@@ -55,9 +63,19 @@ function getAssetsContainer() {
   return getDatabase().container(getAssetsContainerName());
 }
 
+function getCalendarEventsContainer() {
+  return getDatabase().container(getCalendarEventsContainerName());
+}
+
+function getActivityVideosContainer() {
+  return getDatabase().container(getActivityVideosContainerName());
+}
+
 module.exports = {
   getClient,
   getDatabase,
   getPostsContainer,
-  getAssetsContainer
+  getAssetsContainer,
+  getCalendarEventsContainer,
+  getActivityVideosContainer
 };

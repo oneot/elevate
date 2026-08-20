@@ -1,0 +1,208 @@
+.elevathon-page {
+  --elv-ink: #111314;
+  --elv-muted: #69706d;
+  --elv-line: rgba(17, 19, 20, 0.12);
+  --elv-paper: #fbfcfb;
+  --elv-white: #ffffff;
+  --elv-green: #087f5b;
+  --elv-mint: #dff8ed;
+  --elv-blue: #dceeff;
+  --elv-violet: #e8e0ff;
+  --elv-pink: #ffe1ef;
+  --elv-orange: #ffe7cf;
+  --elv-max: 1240px;
+  --elv-shadow: 0 28px 90px rgba(25, 39, 34, 0.11);
+  min-height: 100vh;
+  color: var(--elv-ink);
+  background: var(--elv-paper);
+  font-family: "Segoe UI Variable", "Segoe UI", Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+.elevathon-page * { box-sizing: border-box; }
+.elevathon-page a { color: inherit; text-decoration: none; }
+.elevathon-wrap { width: min(var(--elv-max), calc(100% - 40px)); margin: 0 auto; }
+
+.elevathon-button {
+  display: inline-flex;
+  min-height: 48px;
+  padding: 0 21px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 1px solid var(--elv-ink);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 750;
+  transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+}
+.elevathon-button-primary { color: var(--elv-white) !important; background: var(--elv-ink); box-shadow: 0 12px 30px rgba(17,19,20,.18); }
+.elevathon-button:hover { transform: translateY(-2px); background: var(--elv-green); border-color: var(--elv-green); }
+.elevathon-button:focus-visible, .elevathon-page a:focus-visible { outline: 3px solid rgba(8, 127, 91, 0.38); outline-offset: 4px; }
+.elevathon-arrow { font-size: 19px; line-height: 1; transition: transform .2s ease; }
+.elevathon-button:hover .elevathon-arrow { transform: translateX(4px); }
+
+.elevathon-hero { position: relative; min-height: 930px; padding: 92px 0 74px; isolation: isolate; }
+.elevathon-hero::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  left: 50%;
+  bottom: 34px;
+  width: min(1320px, 96vw);
+  height: 610px;
+  transform: translateX(-50%);
+  border-radius: 44px;
+  background: radial-gradient(circle at 18% 68%, rgba(255,159,86,.88), transparent 29%), radial-gradient(circle at 49% 62%, rgba(247,86,157,.8), transparent 36%), radial-gradient(circle at 75% 55%, rgba(99,110,255,.78), transparent 33%), radial-gradient(circle at 88% 86%, rgba(66,218,187,.62), transparent 29%), linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.26) 36%, rgba(255,255,255,.92) 100%);
+  filter: saturate(105%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.68), var(--elv-shadow);
+}
+.elevathon-hero::after { content: ""; position: absolute; z-index: -1; inset: auto 0 0; height: 360px; background: linear-gradient(to bottom, transparent, var(--elv-paper) 88%); pointer-events: none; }
+.elevathon-eyebrow { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0 0 24px; color: var(--elv-green); font-size: 12px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; }
+.elevathon-eyebrow::before { content: ""; width: 28px; height: 1px; background: currentColor; }
+.elevathon-hero .elevathon-wrap { text-align: center; }
+.elevathon-hero h1 { max-width: 1040px; margin: 0 auto; font-size: clamp(56px, 8.5vw, 116px); line-height: 0.91; letter-spacing: -0.068em; font-weight: 730; }
+.elevathon-hero h1 span { display: block; }
+.elevathon-hero h1 .elevathon-soft { color: #6c726f; font-weight: 440; }
+.elevathon-hero-copy { max-width: 720px; margin: 32px auto 0; color: #5f6663; font-size: clamp(17px, 2vw, 21px); line-height: 1.7; letter-spacing: -0.02em; }
+.elevathon-hero-actions { display: flex; justify-content: center; gap: 12px; margin-top: 30px; }
+.elevathon-hero-visual { position: relative; width: min(940px, 90vw); height: 355px; margin: 54px auto 0; perspective: 1100px; }
+.elevathon-center-glass { position: absolute; inset: 56px 17% 30px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.8); border-radius: 38px; background: rgba(255,255,255,.38); backdrop-filter: blur(26px) saturate(140%); box-shadow: 0 36px 80px rgba(51,26,61,.2), inset 0 1px rgba(255,255,255,.85); transform: rotateX(4deg); }
+.elevathon-center-glass strong { font-size: clamp(30px, 5vw, 62px); letter-spacing: -0.05em; line-height: 1.04; }
+.elevathon-center-glass strong span { display: block; margin-top: 15px; font-size: clamp(11px, 1.2vw, 15px); letter-spacing: 0.08em; text-transform: uppercase; }
+.elevathon-product-float { position: absolute; display: flex; min-width: 184px; padding: 13px 16px; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,.78); border-radius: 19px; background: rgba(255,255,255,.68); backdrop-filter: blur(18px); box-shadow: 0 18px 54px rgba(46,30,62,.14); font-size: 14px; font-weight: 740; animation: elevathon-hover 5s ease-in-out infinite; }
+.elevathon-product-float img { width: 42px; height: 42px; flex: 0 0 auto; object-fit: contain; filter: drop-shadow(0 7px 12px rgba(43,29,66,.17)); }
+.elevathon-float-1 { left: 0; top: 8px; }
+.elevathon-float-2 { right: 0; top: 14px; animation-delay: -1.2s; }
+.elevathon-float-3 { left: 3%; bottom: -2px; animation-delay: -2.4s; }
+.elevathon-float-4 { left: calc(50% - 92px); bottom: -26px; animation-delay: -3.2s; }
+.elevathon-float-5 { right: 3%; bottom: -12px; animation-delay: -4.1s; }
+@keyframes elevathon-hover { 50% { transform: translateY(-10px) rotate(0.5deg); } }
+
+.elevathon-section { padding: 108px 0; }
+.elevathon-stats-section { padding: 70px 0 86px; }
+.elevathon-kicker { margin: 0; color: var(--elv-green); font-size: 12px; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; }
+.elevathon-section h2, .elevathon-cta h2 { max-width: 900px; margin: 18px 0 0; font-size: clamp(42px, 6vw, 78px); line-height: 0.98; letter-spacing: -0.058em; }
+.elevathon-lead { max-width: 660px; margin: 24px 0 0; color: var(--elv-muted); font-size: 19px; line-height: 1.65; }
+.elevathon-stats { display: grid; grid-template-columns: repeat(4, 1fr); border-block: 1px solid var(--elv-line); }
+.elevathon-stats > div { padding: 34px 24px 38px; border-right: 1px solid var(--elv-line); }
+.elevathon-stats > div:last-child { border-right: 0; }
+.elevathon-stats b { display: block; font-size: clamp(42px, 6vw, 68px); line-height: 1; letter-spacing: -0.05em; }
+.elevathon-stats span { display: block; margin-top: 14px; color: var(--elv-muted); font-size: clamp(16px, 1.5vw, 19px); font-weight: 650; line-height: 1.4; }
+
+.elevathon-tracks { display: grid; grid-template-columns: 1fr 1fr; margin-top: 58px; border-top: 1px solid var(--elv-ink); }
+.elevathon-tracks article { position: relative; min-height: 520px; padding: 36px 46px 44px 0; border-right: 1px solid var(--elv-line); }
+.elevathon-tracks article + article { padding-left: 46px; padding-right: 0; border-right: 0; }
+.elevathon-tracks .elevathon-track-label { margin: 0; color: var(--elv-green); font-size: 14px; font-weight: 800; letter-spacing: 0.11em; }
+.elevathon-tracks strong { display: block; margin-top: 12px; color: var(--elv-green); font-size: clamp(42px, 5.2vw, 68px); line-height: 0.94; letter-spacing: -0.06em; font-weight: 820; }
+.elevathon-tracks h3 { margin: 25px 0 0; font-size: clamp(28px, 3.2vw, 43px); line-height: 1.08; letter-spacing: -0.04em; }
+.elevathon-tracks article > p:not(.elevathon-track-label) { max-width: 460px; margin: 26px 0 0; color: var(--elv-muted); font-size: 17px; line-height: 1.7; }
+.elevathon-tracks article > div { position: absolute; right: 46px; bottom: 44px; left: 0; padding-top: 20px; border-top: 1px solid var(--elv-line); font-size: 16px; font-weight: 730; }
+.elevathon-tracks article + article > div { right: 0; left: 46px; }
+
+.elevathon-tools-section { position: relative; }
+.elevathon-tools-section::before { content: ""; position: absolute; inset: 10% -18% auto auto; width: 560px; height: 560px; border-radius: 50%; background: radial-gradient(circle, #dbe8ff, transparent 67%); filter: blur(10px); z-index: -1; }
+.elevathon-tools { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 58px; }
+.elevathon-tools > a { min-height: 320px; display: flex; flex-direction: column; justify-content: space-between; padding: 22px; border: 1px solid rgba(255,255,255,.8); border-radius: 26px; background: rgba(255,255,255,.66); backdrop-filter: blur(18px); box-shadow: 0 18px 60px rgba(34,45,40,.08); transition: transform .25s ease, box-shadow .25s ease; }
+.elevathon-tools > a:hover { transform: translateY(-7px); box-shadow: 0 28px 75px rgba(34,45,40,.14); }
+.elevathon-tools img { width: 64px; height: 64px; object-fit: contain; }
+.elevathon-tools h3 { margin: 12px 0 0; font-size: 26px; letter-spacing: -0.035em; }
+.elevathon-tools p { margin: 14px 0 0; color: var(--elv-muted); font-size: 14px; line-height: 1.58; }
+.elevathon-tools a > span { color: #8b918e; font-size: 11px; }
+
+.elevathon-schedule { display: grid; grid-template-columns: 0.88fr 1.12fr; gap: 74px; align-items: start; }
+.elevathon-timeline { margin-top: 4px; }
+.elevathon-phase { position: relative; display: grid; grid-template-columns: 88px 1fr; gap: 22px; padding-bottom: 42px; }
+.elevathon-phase:not(:last-child)::before { content: ""; position: absolute; top: 35px; bottom: 0; left: 42px; width: 1px; background: var(--elv-line); }
+.elevathon-phase time { z-index: 1; width: 86px; height: 34px; display: grid; place-items: center; border-radius: 999px; background: var(--elv-mint); color: var(--elv-green); font-size: 12px; font-weight: 800; }
+.elevathon-phase h3 { margin: 4px 0 7px; font-size: 23px; letter-spacing: -0.03em; }
+.elevathon-phase p { margin: 0; color: var(--elv-muted); font-size: 15px; line-height: 1.5; }
+
+.elevathon-prize-shell { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 54px; padding: 22px; border-radius: 34px; background: linear-gradient(135deg, #edf9f4, #f3f0ff 48%, #fff1e8); box-shadow: inset 0 0 0 1px rgba(255,255,255,.82); }
+.elevathon-prize { min-height: 230px; padding: 26px; border: 1px solid rgba(255,255,255,.92); border-radius: 24px; background: rgba(255,255,255,.76); transition: transform .26s ease, box-shadow .26s ease; }
+.elevathon-prize:hover { transform: translateY(-8px); box-shadow: 0 22px 48px rgba(44,39,58,.13); }
+.elevathon-prize small { color: var(--elv-green); font-size: 24px; font-weight: 800; }
+.elevathon-prize b { display: block; margin-top: 38px; font-size: clamp(35px, 4vw, 52px); letter-spacing: -0.05em; }
+.elevathon-prize span { display: block; margin-top: 16px; color: var(--elv-muted); font-size: 13px; }
+
+.elevathon-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 54px; }
+.elevathon-teams article { padding: 30px; border: 1px solid var(--elv-line); border-radius: 24px; background: var(--elv-white); }
+.elevathon-teams b { font-size: 34px; line-height: 1.25; letter-spacing: -0.04em; }
+.elevathon-teams p { margin: 16px 0 0; color: var(--elv-muted); font-size: 20px; line-height: 1.65; }
+.elevathon-team-image { display: block; width: min(100%, 320px); aspect-ratio: 1; margin: 28px auto 0; border: 4px solid var(--elv-white); border-radius: 38px; object-fit: cover; box-shadow: 0 20px 44px rgba(41, 48, 56, .14); }
+
+.elevathon-cta-section { padding: 108px 0 70px; }
+.elevathon-cta { position: relative; min-height: 560px; display: grid; place-items: center; overflow: hidden; padding: 70px 30px; border-radius: 42px; text-align: center; background: radial-gradient(circle at 15% 86%, rgba(255,172,91,.96), transparent 32%), radial-gradient(circle at 50% 75%, rgba(247,83,165,.82), transparent 41%), radial-gradient(circle at 86% 20%, rgba(89,100,244,.74), transparent 36%), linear-gradient(135deg, #fffaf6, #f4efff); box-shadow: var(--elv-shadow); }
+.elevathon-cta::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,.8), transparent 58%, rgba(255,255,255,.35)); pointer-events: none; }
+.elevathon-cta > div { position: relative; z-index: 1; }
+.elevathon-cta h2 { margin-inline: auto; font-size: clamp(48px, 7vw, 94px); }
+.elevathon-cta > div > p:not(.elevathon-eyebrow) { max-width: 660px; margin: 28px auto; color: #515754; font-size: 19px; line-height: 1.6; }
+.elevathon-cta small { display: block; margin-top: 15px; color: #5f6663; font-size: 12px; }
+.elevathon-mobile-apply { display: none; }
+
+.elevathon-page [data-reveal] { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+.elevathon-page [data-reveal].is-visible { opacity: 1; transform: none; }
+
+@media (max-width: 1100px) and (min-width: 901px) { .elevathon-tools { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 900px) {
+  .elevathon-hero { min-height: 900px; padding-top: 84px; }
+  .elevathon-hero::before { height: 580px; bottom: 30px; }
+  .elevathon-hero-visual { height: 390px; margin-top: 44px; }
+  .elevathon-center-glass { inset: 92px 7% 80px; }
+  .elevathon-product-float { min-width: 150px; padding: 10px; font-size: 12px; }
+  .elevathon-float-1, .elevathon-float-3 { left: 0; }
+  .elevathon-float-2, .elevathon-float-5 { right: 0; }
+  .elevathon-float-4 { left: calc(50% - 75px); bottom: 2px; }
+  .elevathon-stats { grid-template-columns: 1fr 1fr; }
+  .elevathon-stats > div:nth-child(2) { border-right: 0; }
+  .elevathon-stats > div:nth-child(-n+2) { border-bottom: 1px solid var(--elv-line); }
+  .elevathon-tracks, .elevathon-schedule { grid-template-columns: 1fr; }
+  .elevathon-tracks article { min-height: 430px; padding-right: 0; border-right: 0; border-bottom: 1px solid var(--elv-line); }
+  .elevathon-tracks article + article { padding-left: 0; }
+  .elevathon-tracks article > div, .elevathon-tracks article + article > div { right: 0; left: 0; }
+  .elevathon-tools { grid-template-columns: 1fr 1fr; }
+  .elevathon-schedule { gap: 52px; }
+}
+
+@media (max-width: 620px) {
+  .elevathon-wrap { width: calc(100% - 28px); }
+  .elevathon-hero { min-height: 850px; padding-top: 68px; }
+  .elevathon-hero h1 { font-size: 55px; }
+  .elevathon-hero-copy br { display: none; }
+  .elevathon-hero::before { width: calc(100% - 16px); height: 545px; border-radius: 28px; }
+  .elevathon-hero-visual { width: 100%; height: 390px; }
+  .elevathon-center-glass { inset: 100px 5% 98px; border-radius: 26px; }
+  .elevathon-product-float { min-width: 140px; font-size: 11px; }
+  .elevathon-float-1 { top: 46px; }
+  .elevathon-float-2 { top: 60px; }
+  .elevathon-float-3 { bottom: -4px; }
+  .elevathon-float-4 { left: calc(50% - 70px); bottom: 64px; }
+  .elevathon-float-5 { bottom: -4px; }
+  .elevathon-product-float img { width: 38px; height: 38px; }
+  .elevathon-section { padding: 76px 0; }
+  .elevathon-stats-section { padding: 48px 0 54px; }
+  .elevathon-section h2 { font-size: 44px; }
+  .elevathon-lead { font-size: 17px; }
+  .elevathon-stats > div { padding: 25px 16px; }
+  .elevathon-stats b { font-size: 42px; }
+  .elevathon-stats span { font-size: 14px; }
+  .elevathon-tracks article { min-height: 500px; }
+  .elevathon-tools { grid-template-columns: 1fr; }
+  .elevathon-tools > a { min-height: 245px; }
+  .elevathon-prize-shell, .elevathon-teams { grid-template-columns: 1fr; }
+  .elevathon-teams b { font-size: 30px; }
+  .elevathon-teams p { font-size: 18px; }
+  .elevathon-prize { min-height: 165px; }
+  .elevathon-prize b { margin-top: 24px; }
+  .elevathon-cta-section { padding-top: 76px; }
+  .elevathon-cta { min-height: 520px; padding-inline: 18px; border-radius: 28px; }
+  .elevathon-cta h2 { font-size: 52px; }
+  .elevathon-mobile-apply { position: fixed; z-index: 99; right: auto; bottom: 12px; left: 50%; display: flex; width: max-content; min-height: 48px; padding-inline: 19px; color: var(--elv-ink) !important; border-color: rgba(255,255,255,.8); background: rgba(255,255,255,.58); backdrop-filter: blur(18px) saturate(140%); box-shadow: 0 8px 24px rgba(17,19,20,.09), inset 0 1px rgba(255,255,255,.88); font-size: 13px; transform: translateX(-50%); }
+  .elevathon-mobile-apply:hover { border-color: rgba(255,255,255,.8); background: rgba(255,255,255,.68); transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .elevathon-page *, .elevathon-page *::before, .elevathon-page *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .elevathon-page [data-reveal] { opacity: 1; transform: none; }
+}

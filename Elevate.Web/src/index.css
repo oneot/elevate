@@ -1,7 +1,8 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme {
-  --font-sans: 'Pretendard', sans-serif;
+  --font-sans: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
   --color-ms-blue: #0078D4;
   --color-ms-green: #107C10;
   --color-ms-orange: #D83B01;
@@ -468,6 +469,20 @@ body {
   border-radius: 0.5rem;
   margin: 1rem 0;
 }
+.prose .post-content-media {
+  display: block;
+  background-color: rgba(241, 245, 249, 0.72);
+}
+.prose .post-content-iframe {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: 220px;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+}
 .prose pre {
   background-color: #1e293b;
   color: #e2e8f0;
@@ -630,41 +645,250 @@ body {
 }
 
 
-/* --- Chat Widget Custom Styles --- */
-
-/* 1. 버튼 둥둥 떠다니는 애니메이션 */
-@keyframes float-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-.animate-float-slow {
-  animation: float-slow 3s ease-in-out infinite;
+/* --- Chat Widget: layered glass interface --- */
+.chat-panel-stage {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(10px) scale(0.985);
+  transform-origin: bottom right;
+  pointer-events: none;
 }
 
-/* 2. WebChat SDK 내부 스타일 강제 적용 */
+.chat-glass-panel {
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.74), rgba(248, 250, 252, 0.6));
+  box-shadow:
+    0 24px 70px rgba(15, 23, 42, 0.18),
+    0 8px 24px rgba(71, 85, 105, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(24px) saturate(135%);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+}
+
+.chat-glass-panel::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.95), transparent 35%),
+    radial-gradient(circle at 100% 24%, rgba(219, 234, 254, 0.18), transparent 32%);
+  content: '';
+  pointer-events: none;
+}
+
+.chat-panel-header {
+  height: 76px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.chat-agent-mark,
+.chat-state-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.94);
+  border-radius: 12px;
+  color: #475569;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.82), rgba(241, 245, 249, 0.48));
+  box-shadow:
+    0 9px 22px rgba(71, 85, 105, 0.13),
+    0 0 0 1px rgba(148, 163, 184, 0.08),
+    inset 0 1px 0 white;
+}
+
+.chat-state-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+}
+
+.chat-online-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+}
+
+.chat-icon-button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #64748b;
+  cursor: pointer;
+  transition: 160ms ease;
+}
+
+.chat-icon-button:hover {
+  border-color: rgba(148, 163, 184, 0.18);
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.chat-icon-button:focus-visible,
+.chat-toggle:focus-visible,
+.chat-retry-button:focus-visible {
+  outline: 3px solid rgba(71, 85, 105, 0.2);
+  outline-offset: 2px;
+}
+
+.chat-toggle {
+  position: relative;
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 18px;
+  color: #334155;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.82), rgba(241, 245, 249, 0.58));
+  box-shadow:
+    0 22px 52px rgba(15, 23, 42, 0.3),
+    0 6px 16px rgba(15, 23, 42, 0.16),
+    0 0 0 5px rgba(255, 255, 255, 0.38),
+    inset 0 1px 0 white;
+  backdrop-filter: blur(24px) saturate(125%);
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.chat-toggle:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.7));
+  box-shadow:
+    0 26px 60px rgba(15, 23, 42, 0.36),
+    0 8px 20px rgba(15, 23, 42, 0.18),
+    0 0 0 6px rgba(255, 255, 255, 0.48),
+    inset 0 1px 0 white;
+}
+
+.chat-toggle:active { transform: translateY(0) scale(0.96); }
+.chat-toggle.is-open { color: white; background: rgba(30, 41, 59, 0.78); }
+
+.chat-toggle-status {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 13px;
+  height: 13px;
+  border: 3px solid white;
+  border-radius: 999px;
+  background: #10b981;
+}
+
+.chat-retry-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 15px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 10px;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.52);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chat-privacy-note {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-top: 1px solid rgba(148, 163, 184, 0.13);
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 10px;
+}
+
 #webchat-container .webchat__send-box {
-  background: rgba(255,255,255,0.8) !important;
-  backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(0,0,0,0.05);
+  background: rgba(255, 255, 255, 0.22) !important;
+  backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
   margin: 0 !important;
-  padding: 10px !important;
+  padding: 12px !important;
 }
 
 #webchat-container .webchat__send-box__main {
-  border-radius: 999px !important;
-  background: #f1f5f9 !important;
-  border: 1px solid transparent !important;
-  transition: all 0.2s;
+  min-height: 46px;
+  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.58) !important;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05), inset 0 1px 0 white;
+  transition: 160ms ease;
 }
 
 #webchat-container .webchat__send-box__main:focus-within {
-  background: white !important;
-  border-color: #0078D4 !important;
-  box-shadow: 0 0 0 3px rgba(0,120,212,0.1);
+  background: rgba(255, 255, 255, 0.82) !important;
+  border-color: rgba(71, 85, 105, 0.42) !important;
+  box-shadow: 0 0 0 3px rgba(71, 85, 105, 0.08), 0 8px 20px rgba(15, 23, 42, 0.07);
 }
 
 #webchat-container .webchat__basic-transcript__text {
-  font-family: 'Pretendard', sans-serif !important;
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif !important;
+}
+
+#webchat-container .webchat__basic-transcript {
+  background: transparent !important;
+}
+
+#webchat-container .webchat__bubble__content {
+  border-color: rgba(255, 255, 255, 0.82) !important;
+  box-shadow:
+    0 6px 18px rgba(15, 23, 42, 0.075),
+    0 0 0 1px rgba(148, 163, 184, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  line-height: 1.55;
+}
+
+.chat-greeting-loader {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 14px;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.26);
+  backdrop-filter: blur(18px) saturate(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+}
+
+.chat-greeting-loader-mark {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  border-radius: 15px;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 12px 30px rgba(71, 85, 105, 0.12),
+    inset 0 1px 0 white;
+}
+
+.chat-greeting-loader p {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 /* 아바타 숨김 */
@@ -684,15 +908,13 @@ body {
 #webchat-container .webchat__render-markdown ol { list-style-type: decimal !important; }
 #webchat-container .webchat__render-markdown ul { list-style-type: disc !important; }
 
-/* --- Loading Animation (Bouncing Blue Dots) --- */
-
 @keyframes bounce-loading {
   0%, 100% { transform: translateY(0); opacity: 0.7; }
   50% { transform: translateY(-8px); opacity: 1; }
 }
 
 .loading-dot {
-  @apply w-2.5 h-2.5 rounded-full bg-[#0078D4]; /* 점 크기 살짝 줄임 */
+  @apply w-2 h-2 rounded-full bg-teal-600;
   animation: bounce-loading 0.6s infinite ease-in-out alternate;
 }
 
@@ -703,4 +925,394 @@ body {
 /* 기본 타이핑 인디케이터 확실하게 숨기기 (중복 방지) */
 .webchat__typing-indicator {
   display: none !important;
+}
+
+@media (max-width: 640px) {
+  .chat-glass-panel { border-radius: 18px; }
+  .chat-toggle { width: 54px; height: 54px; border-radius: 17px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-dot { animation: none; }
+  .chat-toggle { transition: none; }
+}
+
+/* =====================================================
+   EventCalendar — Glass Panel Design
+   기존 clean-card / .glass-nav 패턴과 일관성 유지
+   ===================================================== */
+
+/* 외부 래퍼: 사이트 clean-card와 동일한 유리판 효과 */
+.rbc-calendar-wrapper {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 0.5px solid rgba(255, 255, 255, 0.72);
+  border-bottom-color: rgba(255, 255, 255, 0.28);
+  border-radius: 20px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.10),
+    0 1.5px 6px rgba(0, 120, 212, 0.06),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.95);
+  overflow: hidden;
+  padding: 0;
+}
+
+/* 최상단 하이라이트 스트라이프 (유리 반사 효과) */
+.rbc-calendar-wrapper::before {
+  content: '';
+  display: block;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9) 40%, rgba(255,255,255,0.5) 70%, transparent);
+  margin-bottom: 0;
+}
+
+.rbc-calendar {
+  background: transparent;
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
+}
+
+/* ── 년월 레이블 (달력 상단, 별도 div) ── */
+.rbc-top-label {
+  font-size: 1.05rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #0078D4 0%, #002050 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.01em;
+  text-align: center;
+  padding: 1.1rem 1.5rem 1rem;
+}
+
+/* ── 하단 네비게이션 버튼 (커스텀 툴바) ── */
+.rbc-toolbar {
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border-top: 0.5px solid rgba(0, 120, 212, 0.08);
+  margin-top: 0;
+}
+
+.rbc-bottom-toolbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0 0.5rem;
+}
+
+.rbc-nav-btn {
+  background: rgba(255, 255, 255, 0.7);
+  border: 0.5px solid rgba(0, 120, 212, 0.20);
+  border-radius: 10px;
+  color: #374151;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.38rem 0.9rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), inset 0 1px 1px rgba(255,255,255,0.9);
+  line-height: 1.4;
+}
+
+.rbc-nav-btn:hover {
+  background: rgba(0, 120, 212, 0.10);
+  border-color: rgba(0, 120, 212, 0.35);
+  color: #0078D4;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,120,212,0.12), inset 0 1px 1px rgba(255,255,255,0.9);
+}
+
+.rbc-today-btn {
+  background: linear-gradient(135deg, #0078D4 0%, #005fa3 100%);
+  border-color: #005fa3;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0,120,212,0.30);
+}
+
+.rbc-today-btn:hover {
+  background: linear-gradient(135deg, #106ebe 0%, #004a82 100%);
+  border-color: #004a82;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* ── 요일 헤더 행 ── */
+.rbc-month-header {
+  background: transparent;
+  border-bottom: 0.5px solid rgba(0, 120, 212, 0.10);
+}
+
+.rbc-header {
+  padding: 0.55rem 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+  border: none;
+  text-align: center;
+  background: transparent;
+}
+
+.rbc-header + .rbc-header {
+  border-left: 0.5px solid rgba(0, 120, 212, 0.08);
+}
+
+/* ── 날짜 셀 그리드 ── */
+.rbc-month-view {
+  border: none !important;
+  background: transparent;
+  flex: 1;
+}
+
+.rbc-month-row {
+  border-top: 0.5px solid rgba(0, 120, 212, 0.08);
+  overflow: visible;
+}
+
+/* 첫 번째 행 상단 외곽선 제거 */
+.rbc-month-row:first-child {
+  border-top: none;
+}
+
+.rbc-day-bg {
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+/* 첫 번째 열 좌측 외곽선 제거 */
+.rbc-day-bg:first-child {
+  border-left: none;
+}
+
+.rbc-day-bg + .rbc-day-bg {
+  border-left: 0.5px solid rgba(0, 120, 212, 0.08);
+}
+
+.rbc-day-bg:hover {
+  background: rgba(0, 120, 212, 0.03);
+}
+
+/* 오늘 날짜 강조 */
+.rbc-today {
+  background: rgba(0, 120, 212, 0.06) !important;
+  position: relative;
+}
+
+/* 날짜 숫자 */
+.rbc-date-cell {
+  padding: 0.3rem 0.5rem 0.15rem;
+  text-align: right;
+}
+
+.rbc-date-cell a,
+.rbc-date-cell button {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #475569;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+}
+
+.rbc-date-cell a:hover,
+.rbc-date-cell button:hover {
+  background: rgba(0, 120, 212, 0.10);
+  color: #0078D4;
+}
+
+.rbc-today .rbc-date-cell a,
+.rbc-today .rbc-date-cell button,
+.rbc-now .rbc-date-cell a,
+.rbc-now .rbc-date-cell button {
+  background: linear-gradient(135deg, #0078D4 0%, #005fa3 100%);
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0,120,212,0.35);
+}
+
+/* 이번 달 밖 날짜 */
+.rbc-off-range-bg {
+  background: rgba(248, 250, 252, 0.35) !important;
+}
+
+.rbc-off-range .rbc-date-cell a,
+.rbc-off-range .rbc-date-cell button {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* ── 이벤트 pill ── */
+.rbc-event {
+  border: none !important;
+  border-radius: 6px !important;
+  font-size: 0.70rem !important;
+  font-weight: 600 !important;
+  padding: 0.15rem 0.5rem !important;
+  transition: all 0.18s ease !important;
+  cursor: pointer !important;
+}
+
+/* 기본(미선택) 이벤트 막대: 연한 파란색 (불투명) */
+.rbc-event.event-bar--default {
+  background: #dbeafe !important;
+  color: #0060a8 !important;
+  box-shadow: none !important;
+}
+
+.rbc-event.event-bar--default:hover {
+  background: #bfdbfe !important;
+  box-shadow: 0 2px 6px rgba(0, 120, 212, 0.15) !important;
+  transform: translateY(-1px);
+}
+
+/* 선택된 이벤트 막대: 진한 파란색 + 링 */
+.rbc-event.event-bar--selected {
+  background: #0078D4 !important;
+  color: #fff !important;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0078D4, 0 3px 10px rgba(0, 120, 212, 0.4) !important;
+  transform: translateY(-1px);
+}
+
+.rbc-event.event-bar--selected:hover {
+  background: #005fa3 !important;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #005fa3, 0 4px 14px rgba(0, 120, 212, 0.5) !important;
+}
+
+.rbc-event.event-bar--selected:focus {
+  outline: none;
+}
+
+/* more (+N more) 링크 */
+.rbc-show-more {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #0078D4;
+  background: rgba(0,120,212,0.07);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  margin: 0.1rem 0.25rem;
+}
+
+.rbc-show-more:hover {
+  background: rgba(0,120,212,0.14);
+  color: #005fa3;
+}
+
+/* ── 팝업 오버레이 ── */
+.rbc-overlay {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 0.5px solid rgba(255,255,255,0.8);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+}
+
+.rbc-overlay-header {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0078D4;
+  border-bottom: 0.5px solid rgba(0,120,212,0.12);
+  padding: 0.5rem 0.75rem;
+}
+
+/* 내부 컨텐츠 패딩 */
+.rbc-month-view {
+  padding: 0 0.5rem 0.5rem;
+}
+
+/* ── 이벤트 호버 툴팁 ── */
+.event-tooltip {
+  position: fixed;
+  transform: translate(-50%, calc(-100% - 10px));
+  z-index: 9999;
+  background: #fff;
+  border: 1px solid rgba(0, 120, 212, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 120, 212, 0.1);
+  padding: 0.6rem 0.85rem;
+  min-width: 180px;
+  max-width: 260px;
+  pointer-events: none;
+}
+
+.event-tooltip-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 0.45rem;
+  line-height: 1.3;
+}
+
+.event-tooltip-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  color: #4b5563;
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+.event-tooltip-icon {
+  font-size: 0.78rem;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+/* Collapsible code block toggle button (injected by html.js) */
+.prose .collapsible-code-block {
+  margin: 1rem 0;
+}
+
+.prose .collapsible-code-block pre {
+  margin: 0;
+}
+
+.collapsible-code-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.collapsible-code-toggle {
+  display: block;
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #6b7280;
+}
+.collapsible-code-toggle:hover {
+  color: #374151;
+  border-color: #9ca3af;
+}
+
+.collapsible-code-copy {
+  display: block;
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #6b7280;
+}
+.collapsible-code-copy:hover {
+  color: #374151;
+  border-color: #9ca3af;
 }
