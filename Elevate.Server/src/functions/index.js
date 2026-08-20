@@ -20,6 +20,7 @@ const { functionDefinition: adminActivityVideoCreate } = require('./adminActivit
 const { functionDefinition: adminActivityVideoDetail } = require('./adminActivityVideoDetail');
 const { functionDefinition: adminActivityVideoUpdate } = require('./adminActivityVideoUpdate');
 const { functionDefinition: adminActivityVideoDelete } = require('./adminActivityVideoDelete');
+const { functionDefinition: adminSeriesList } = require('./adminSeriesList');
 const { functionDefinition: adminPostsList } = require('./adminPostsList');
 const { functionDefinition: adminPostDetail } = require('./adminPostDetail');
 const { functionDefinition: adminCreatePost } = require('./adminCreatePost');
@@ -44,6 +45,7 @@ const functionDefinitions = [
   publicTags,
   publicCalendarEventsList,       // literal route — before parameterized routes
   publicActivityVideosList,
+  adminSeriesList,
   adminPostsList,
   adminPostDetail,
   adminCreatePost,

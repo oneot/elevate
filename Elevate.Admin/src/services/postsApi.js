@@ -108,7 +108,6 @@ export const _test = {
 
 /**
  * 카테고리별 기존 시리즈 목록을 조회한다.
- * 관리자 앱의 API base(/api/admin)를 기준으로 public series 경로로 상대 이동한다.
  * @param {string} category
  * @param {{ msalInstance?: object }} options
  */
@@ -116,7 +115,7 @@ export function listSeriesByCategory(category, options = {}) {
   const params = new URLSearchParams()
   if (category) params.set('category', category)
   const qs = params.toString()
-  return apiFetch(`/../public/series${qs ? `?${qs}` : ''}`, options)
+  return apiFetch(`/series${qs ? `?${qs}` : ''}`, options)
 }
 
 /**

@@ -501,6 +501,46 @@ exports.getAdminPostList = async (req, res) => {
   }
 };
 
+exports.getAdminSeriesList = async (req, res) => {
+  const correlationId = req.correlationId;
+
+  try {
+    const whereClauses = [
+      '(NOT IS_DEFINED(p.documentType) OR p.documentType = "post")',
+      'IS_DEFINED(p.series)',
+      'p.series != null',
+      'p.series != ""'
+    ];
+    const parameters = [];
+
+    if (req.query.category) {
+      whereClauses.push('p.category = @category');
+      parameters.push({ name: '@category', value: req.query.category });
+    }
+
+    const container = getPostsContainer();
+    const { resources } = await container.items.query({
+      query: `SELECT DISTINCT VALUE p.series
+              FROM p
+              WHERE ${whereClauses.join(' AND ')}`,
+      parameters
+    }).fetchAll();
+
+    const items = Array.from(new Set(
+      resources
+        .map((series) => (typeof series === 'string' ? series.trim() : ''))
+        .filter(Boolean)
+    ))
+      .sort((a, b) => a.localeCompare(b, 'ko'))
+      .map((name) => ({ name }));
+
+    return res.json({ items });
+  } catch (error) {
+    console.error('[getAdminSeriesList] failed', error);
+    return sendError(res, 500, 'InternalServerError', 'Unexpected error occurred', correlationId);
+  }
+};
+
 exports.getAdminPostDetail = async (req, res) => {
   const correlationId = req.correlationId;
 
