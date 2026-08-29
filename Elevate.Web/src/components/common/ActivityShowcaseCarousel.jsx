@@ -1,7 +1,7 @@
 /**
  * @file ActivityShowcaseCarousel.jsx
  * @description 활동 사례 영상을 3D orbit 방식으로 전환하는 캐러셀 컴포넌트.
- *
+
  * 카테고리 필터, 5장 카드 3D orbit 배치, YouTube iframe 재생 전환, 우측 활동 목록 사이드바로 구성된다.
  * `items` 배열의 각 항목은 `{ id, videoId, title, description, category, year, channel }` 형식이다.
  *

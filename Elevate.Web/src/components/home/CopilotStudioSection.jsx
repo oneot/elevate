@@ -22,7 +22,7 @@ const CopilotStudioSection = () => {
                         <h2 className="text-4xl lg:text-5xl font-bold mb-6 text-slate-900">
                             대한민국 AI Skilling,<br />
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-purple-900">
-                                Copilot Agent
+                                Microsoft AI
                             </span>로 <br className="md:hidden" />
                             시작합니다!
                         </h2>
@@ -30,7 +30,7 @@ const CopilotStudioSection = () => {
                             학생들과 교육자들이 직접 AI 에이전트를 만드는 해커톤{' '}
                             <span className="text-purple-600 font-bold">‘에이전톤’</span>에 도전하세요.
                             <br className="hidden md:block" />
-                            Copilot → Studio → Foundry로 이어지는{' '}
+                            Copilot → Studio → Github로 이어지는{' '}
                             <span className="text-purple-600 font-bold">AI 제작 3단계 여정</span>은 AI를 단순히 잘 사용하는
                             <br className="hidden md:block" />
                             User가 아닌 Creator, 즉 <span className="text-purple-600 font-bold">Agent Boss</span>로 성장할 수 있는 구조를 제공합니다.
