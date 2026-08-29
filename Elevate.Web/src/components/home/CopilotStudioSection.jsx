@@ -5,7 +5,7 @@
  * '에이전톤 문의하기' 외부 링크, '에이전톤 우수사례' 내부 링크, Copilot Studio 아이콘 이미지로 구성된다.
  */
 import { Link } from 'react-router-dom';
-import copilotStudioIcon from '../../assets/NewMicrosoft365Icons/copilotstudio.png';
+import copilotStudioIcon from '../../assets/NewMicrosoft365Icons/githubicon.png';
 
 const CopilotStudioSection = () => {
     return (
@@ -86,7 +86,7 @@ const CopilotStudioSection = () => {
                                 alt="CopilotStudio Logo"
                                 loading="lazy"
                                 decoding="async"
-                                className="w-[250px] h-[250px] object-contain
+                                className="w-[200px] h-[200px] object-contain
                                             filter drop-shadow-lg
                                             transition-transform duration-500
                                             group-hover:scale-110"
