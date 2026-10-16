@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { CATEGORY_DISPLAY_NAMES, M365_SPLIT_RULES, getDisplayCategory } from '../src/constants/categories.js';
 
 const siteUrl = 'https://microsoft-elevate.com';
 const distDir = join(process.cwd(), 'dist');
@@ -77,6 +78,15 @@ const routes = [
     title: 'OneNote Posts | Microsoft Elevate',
     description: 'OneNote 관련 Microsoft AI 교육 자료와 실습 콘텐츠를 확인하세요.',
   },
+  // Word / PowerPoint / Forms / OneDrive are shown as their own categories (split out of M365 in the web app).
+  ...M365_SPLIT_RULES.map(({ category }) => {
+    const name = CATEGORY_DISPLAY_NAMES[category] || category;
+    return {
+      path: `/${category}`,
+      title: `${name} Posts | Microsoft Elevate`,
+      description: `${name} 관련 Microsoft AI 교육 자료와 실습 콘텐츠를 확인하세요.`,
+    };
+  }),
 ];
 
 function escapeHtml(value) {
@@ -118,7 +128,7 @@ function routePathToOutputStem(path) {
 function renderRouteHtml(route) {
   const title = escapeHtml(route.title);
   const description = escapeHtml(route.description);
-  const url = `${siteUrl}${route.path}`;
+  const url = `${siteUrl}${route.canonicalPath || route.path}`;
   const image = route.image || defaultImage;
   let html = template;
 
@@ -211,14 +221,22 @@ async function collectPostRoutes() {
         const category = toSafeRouteSegment(post.category);
         const slug = toSafeRouteSegment(post.slug);
         if (!category || !slug) continue;
-        const path = `/${category}/${slug}`;
-        postsByRoute.set(path, {
-          path,
+        // M365 posts that the web app shows under Word/PowerPoint/Forms/OneDrive live at /<app>/<slug>.
+        // The old /m365/<slug> URL stays available (the app redirects it) and points its canonical there.
+        const displayCategory = toSafeRouteSegment(getDisplayCategory(post)) || category;
+        const canonicalPath = `/${displayCategory}/${slug}`;
+        const route = {
           title: `${post.title} | Microsoft Elevate`,
           description: post.excerpt || `${post.title} - Microsoft Elevate 게시글입니다.`,
           image: getStablePostImage(post.thumbnail),
           type: 'article',
-        });
+          canonicalPath,
+        };
+        postsByRoute.set(canonicalPath, { ...route, path: canonicalPath });
+        if (displayCategory !== category) {
+          const legacyPath = `/${category}/${slug}`;
+          postsByRoute.set(legacyPath, { ...route, path: legacyPath });
+        }
       }
 
       page += 1;

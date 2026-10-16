@@ -2,7 +2,7 @@
  * @file Home.jsx
  * @description Microsoft Elevate 홈페이지 컴포넌트.
  *
- * MapSection → 기능 카드 그리드 → 업데이트/행사 카드 → CopilotStudioSection →
+ * MapSection → 기능 카드 그리드 → 업데이트/행사 카드(현재 숨김) → CopilotStudioSection →
  * MEESection → GlobalTrainingPartner 순으로 섹션을 구성한다.
  * URL hash(`#section-id`)로 진입하면 해당 섹션으로 자동 스크롤한다.
  */
@@ -10,6 +10,7 @@ import { Helmet } from 'react-helmet-async';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { DEFAULT_DESCRIPTION, DEFAULT_OG_IMAGE, DEFAULT_TITLE, SITE_NAME, canonicalUrl } from '../constants/seo';
+import { SHOW_NEWS_SECTIONS } from '../constants/features';
 
 // Icons
 import copilotIcon from '../assets/NewMicrosoft365Icons/copilot-logo-500.png';
@@ -185,38 +186,41 @@ const Home = () => {
                 </div>
             </section>
 
-            {/* Microsoft365 Update & Program News Section */}
-            <section id="microsoft365-update" className="py-12 md:py-16 px-4 sm:px-6 max-w-7xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Microsoft365 Update Card */}
-                    <a href="/update"
-                        className="group block rounded-[2rem] bg-white border border-white/30 p-6 min-h-[120px] flex flex-col items-start justify-center text-left shadow-[0_6px_28px_0_rgba(0,0,0,0.10),0_1.5px_6px_0_rgba(0,0,0,0.06)] hover:shadow-[0_6px_28px_0_rgba(0,0,0,0.20),0_1.5px_6px_0_rgba(0,0,0,0.12)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-200 relative overflow-hidden"
-                    >
-                        <div className="flex items-center mb-3">
-                            <span className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mr-3 shadow-lg shadow-orange-100 border border-white text-3xl transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:bg-slate-50 group-hover:shadow-orange-200/80">
-                                📰
-                            </span>
-                            <h3 className="text-xl font-bold text-orange-600 group-hover:text-orange-700 transition-colors">AI & M365 최신 정보</h3>
-                        </div>
-                        <p className="text-slate-700/80 font-medium mb-4 text-[15px]">Microsoft 제품 업데이트 소식을 확인해보세요.</p>
-                        <span className="text-orange-600 font-bold text-xs opacity-100 translate-x-0 sm:opacity-0 sm:translate-x-[-10px] sm:group-hover:opacity-100 sm:group-hover:translate-x-0 transition-all duration-300 flex items-center gap-1">더 알아보기 <span aria-hidden>→</span></span>
-                    </a>
+            {/* Microsoft365 Update & Program News Section
+                — 요즘 업데이트하지 않아 숨김. features.js의 SHOW_NEWS_SECTIONS를 true로 바꾸면 다시 보인다. */}
+            {SHOW_NEWS_SECTIONS && (
+                <section id="microsoft365-update" className="py-12 md:py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Microsoft365 Update Card */}
+                        <a href="/update"
+                            className="group block rounded-[2rem] bg-white border border-white/30 p-6 min-h-[120px] flex flex-col items-start justify-center text-left shadow-[0_6px_28px_0_rgba(0,0,0,0.10),0_1.5px_6px_0_rgba(0,0,0,0.06)] hover:shadow-[0_6px_28px_0_rgba(0,0,0,0.20),0_1.5px_6px_0_rgba(0,0,0,0.12)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-200 relative overflow-hidden"
+                        >
+                            <div className="flex items-center mb-3">
+                                <span className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mr-3 shadow-lg shadow-orange-100 border border-white text-3xl transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:bg-slate-50 group-hover:shadow-orange-200/80">
+                                    📰
+                                </span>
+                                <h3 className="text-xl font-bold text-orange-600 group-hover:text-orange-700 transition-colors">AI & M365 최신 정보</h3>
+                            </div>
+                            <p className="text-slate-700/80 font-medium mb-4 text-[15px]">Microsoft 제품 업데이트 소식을 확인해보세요.</p>
+                            <span className="text-orange-600 font-bold text-xs opacity-100 translate-x-0 sm:opacity-0 sm:translate-x-[-10px] sm:group-hover:opacity-100 sm:group-hover:translate-x-0 transition-all duration-300 flex items-center gap-1">더 알아보기 <span aria-hidden>→</span></span>
+                        </a>
 
-                    {/* Program News Card */}
-                    <a href="/program-news"
-                        className="group block rounded-[2rem] bg-white border border-white/30 p-6 min-h-[120px] flex flex-col items-start justify-center text-left shadow-[0_6px_28px_0_rgba(0,0,0,0.10),0_1.5px_6px_0_rgba(0,0,0,0.06)] hover:shadow-[0_6px_28px_0_rgba(0,0,0,0.20),0_1.5px_6px_0_rgba(0,0,0,0.12)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-200 relative overflow-hidden"
-                    >
-                        <div className="flex items-center mb-3">
-                            <span className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mr-3 shadow-lg shadow-blue-100 border border-white text-3xl transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:bg-slate-50 group-hover:shadow-blue-200/80">
-                                📢
-                            </span>
-                            <h3 className="text-xl font-bold text-sky-600 group-hover:text-sky-700 transition-colors">행사 및 프로그램 소식</h3>
-                        </div>
-                        <p className="text-slate-700/80 font-medium mb-4 text-[15px]">Microsoft Elevate와 함께하는 프로그램 & 행사 소식을 알아보세요.</p>
-                        <span className="text-sky-600 font-bold text-xs opacity-100 translate-x-0 sm:opacity-0 sm:translate-x-[-10px] sm:group-hover:opacity-100 sm:group-hover:translate-x-0 transition-all duration-300 flex items-center gap-1">더 알아보기 <span aria-hidden>→</span></span>
-                    </a>
-                </div>
-            </section>
+                        {/* Program News Card */}
+                        <a href="/program-news"
+                            className="group block rounded-[2rem] bg-white border border-white/30 p-6 min-h-[120px] flex flex-col items-start justify-center text-left shadow-[0_6px_28px_0_rgba(0,0,0,0.10),0_1.5px_6px_0_rgba(0,0,0,0.06)] hover:shadow-[0_6px_28px_0_rgba(0,0,0,0.20),0_1.5px_6px_0_rgba(0,0,0,0.12)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-200 relative overflow-hidden"
+                        >
+                            <div className="flex items-center mb-3">
+                                <span className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mr-3 shadow-lg shadow-blue-100 border border-white text-3xl transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:bg-slate-50 group-hover:shadow-blue-200/80">
+                                    📢
+                                </span>
+                                <h3 className="text-xl font-bold text-sky-600 group-hover:text-sky-700 transition-colors">행사 및 프로그램 소식</h3>
+                            </div>
+                            <p className="text-slate-700/80 font-medium mb-4 text-[15px]">Microsoft Elevate와 함께하는 프로그램 & 행사 소식을 알아보세요.</p>
+                            <span className="text-sky-600 font-bold text-xs opacity-100 translate-x-0 sm:opacity-0 sm:translate-x-[-10px] sm:group-hover:opacity-100 sm:group-hover:translate-x-0 transition-all duration-300 flex items-center gap-1">더 알아보기 <span aria-hidden>→</span></span>
+                        </a>
+                    </div>
+                </section>
+            )}
 
             <section id="agenthon">
             <CopilotStudioSection />
