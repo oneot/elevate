@@ -195,7 +195,7 @@ const Home = () => {
                     </h2>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-4 lg:grid-cols-3 gap-6 md:gap-8 auto-rows-auto sm:auto-rows-[minmax(240px,auto)]">
+                <div className="grid grid-cols-1 sm:grid-cols-4 lg:grid-cols-3 gap-6 md:gap-8">
                     {features.map((feature, index) => (
                         <FeatureCard
                             key={feature.to}

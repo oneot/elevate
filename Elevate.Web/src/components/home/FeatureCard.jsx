@@ -102,28 +102,27 @@ const FeatureCard = ({
             aria-label={ariaLabel} 
             className={`card-link block h-full touch-manipulation row-span-1 ${wrapperClassName}`}
         >
-            <div className={`reveal-card clean-card rounded-[2rem] p-5 sm:p-6 group fade-in-section h-full flex flex-col justify-between ${colors.gradient} shadow-soft hover:shadow-hover transition-all duration-300`}>
-                <div>
-                    <div className={`w-14 h-14 rounded-2xl bg-white flex items-center justify-center mb-4 shadow-lg ${colors.shadow} border border-white ${iconType === 'emoji' ? 'text-3xl' : ''} transition-all duration-300 ease-out group-hover:scale-105 sm:group-hover:scale-110 ${iconType === 'emoji' ? 'group-hover:-translate-y-0.5 group-hover:bg-slate-50' : ''}`}>
-                        {iconType === 'emoji' ? (
-                            icon
-                        ) : (
-                            <img 
-                                src={icon} 
-                                alt={title} 
-                                decoding="async"
-                                className={`${iconSize} group-hover:scale-110 transition-transform`} 
-                            />
-                        )}
-                    </div>
-                    <h3 className={`ehome-card-title ${colors.titleColor}`}>{title}</h3>
-                    <p className="ehome-card-copy">
-                        {[].concat(description).map((line) => (
-                            <span key={line} className="ehome-card-line">{line}</span>
-                        ))}
-                    </p>
+            <div className={`ehome-card reveal-card clean-card rounded-[2rem] p-5 sm:p-6 group fade-in-section h-full ${colors.gradient} shadow-soft hover:shadow-hover transition-all duration-300`}>
+                <div className={`w-14 h-14 rounded-2xl bg-white flex items-center justify-center mb-4 shadow-lg ${colors.shadow} border border-white ${iconType === 'emoji' ? 'text-3xl' : ''} transition-all duration-300 ease-out group-hover:scale-105 sm:group-hover:scale-110 ${iconType === 'emoji' ? 'group-hover:-translate-y-0.5 group-hover:bg-slate-50' : ''}`}>
+                    {iconType === 'emoji' ? (
+                        icon
+                    ) : (
+                        <img 
+                            src={icon} 
+                            alt={title} 
+                            decoding="async"
+                            className={`${iconSize} group-hover:scale-110 transition-transform`} 
+                        />
+                    )}
                 </div>
-                <div className={`card-cta mt-6 sm:mt-0 ${colors.ctaColor} text-xs font-bold 
+                <h3 className={`ehome-card-title ${colors.titleColor}`}>{title}</h3>
+                <p className="ehome-card-copy">
+                    {[].concat(description).map((line) => (
+                        <span key={line} className="ehome-card-line">{line}</span>
+                    ))}
+                </p>
+                {/* 오른쪽 아래, 설명 마지막 줄과 같은 줄 (카드가 좁으면 그 아래 줄) — styles/home.css .ehome-card-cta */}
+                <div className={`ehome-card-cta card-cta ${colors.ctaColor} text-xs font-bold 
                     opacity-100 translate-x-0 
                     sm:opacity-0 sm:translate-x-[-10px] 
                     sm:group-hover:opacity-100 sm:group-hover:translate-x-0 

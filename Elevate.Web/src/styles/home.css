@@ -104,6 +104,38 @@ body:has(.ehome) {
   text-overflow: ellipsis;
 }
 
+/* App card '더 알아보기': bottom-right, on the same line as the last description line, so it adds no height.
+   316px = longest last line (219.5px) + gap + link (80px) in Windows Malgun Gothic, the widest common Korean font.
+   Narrower cards move it to its own line below instead of letting it run into the text. */
+.ehome-card {
+  position: relative;
+  container-type: inline-size;
+}
+
+.ehome-card-cta {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  line-height: 23px;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .ehome-card-cta {
+    right: 24px;
+    bottom: 24px;
+  }
+}
+
+@container (width < 316px) {
+  .ehome-card-cta {
+    position: static;
+    margin-top: 6px;
+    line-height: 16px;
+    text-align: right;
+  }
+}
+
 /* Same content width as the header (max-w-7xl + px-4 / sm:px-6), so edges line up with the logo */
 .ehome-wrap {
   width: 100%;
