@@ -5,7 +5,7 @@
  * - 홈 화면과 같은 상단 헤더(Navigation)는 스크롤하면 위로 사라지고(Apple Developer처럼),
  *   그 아래 문서 바만 상단에 붙어 남는다. 붙은 뒤에는 살짝 리퀴드 글래스로 바뀐다.
  * - 왼쪽 내비게이터(데스크톱: sticky 사이드바 / 모바일: 드로어)
- * - `/` 키로 내비게이터 필터에 포커스
+ * - `/` 키로 문서 바의 검색창에 포커스 (화면에는 따로 표시하지 않는 단축키)
  * 블로그 목록(PostList)·상세(PostDetail)와 활동 사례(ActivityShowcasePage) 화면에서 사용한다.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -115,6 +115,7 @@ export default function DocsShell({ section = 'blog', tintStyle, navigator, sear
   const navRef = useRef(null);
   const toggleRef = useRef(null);
   const sentinelRef = useRef(null);
+  const dbarRef = useRef(null);
 
   const routeKey = `${location.pathname}${location.search}`;
   const [drawerRouteKey, setDrawerRouteKey] = useState(routeKey);
@@ -141,7 +142,7 @@ export default function DocsShell({ section = 'blog', tintStyle, navigator, sear
   }, []);
 
   // Keep the sticky sidebar exactly as tall as the visible viewport below the doc bar,
-  // so the filter field at its bottom stays on screen while the header scrolls away.
+  // so the end of its list stays reachable while the header scrolls away.
   useLayoutEffect(() => {
     const nav = navRef.current;
     if (!nav) return undefined;
@@ -193,22 +194,16 @@ export default function DocsShell({ section = 'blog', tintStyle, navigator, sear
       if (target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) {
         return;
       }
-      const input = navRef.current?.querySelector('[data-edoc-filter]');
+      const input = dbarRef.current?.querySelector('.edoc-search__input');
       if (!input) return;
       event.preventDefault();
-      if (window.matchMedia('(min-width: 1024px)').matches) {
-        if (collapsed) {
-          setCollapsed(false);
-          persistCollapsed(false);
-        }
-      } else {
-        setDrawerOpen(true);
-      }
-      requestAnimationFrame(() => input.focus({ preventScroll: true }));
+      if (drawerOpen) setDrawerOpen(false);
+      input.focus({ preventScroll: true });
+      input.select();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [drawerOpen, collapsed]);
+  }, [drawerOpen]);
 
   const toggleNav = () => {
     if (isDesktop) {
@@ -239,7 +234,7 @@ export default function DocsShell({ section = 'blog', tintStyle, navigator, sear
       <Navigation fixed={false} />
       <div ref={sentinelRef} className="edoc-dbar-sentinel" aria-hidden="true" />
 
-      <div className="edoc-dbar" data-stuck={barStuck ? 'true' : 'false'}>
+      <div ref={dbarRef} className="edoc-dbar" data-stuck={barStuck ? 'true' : 'false'}>
         <div className="edoc-dbar__inner">
           <button
             ref={toggleRef}

@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { listPosts } from '../../api/posts';
-import { getApiCategory, getDisplayCategoriesForApi, withDisplayCategory } from '../../constants/categories';
+import { getApiCategory, getDisplayCategoriesForApi, toDisplayPost } from '../../constants/categories';
 import { getPostContentHeadings } from '../../utils/html';
 
 /* ------------------------------------------------------------------ */
@@ -25,18 +25,19 @@ const titleCollator = new Intl.Collator('ko', { numeric: true, sensitivity: 'bas
 /**
  * 작성일(publishedAt) 최신순 정렬 — 최근에 쓴 글이 앞에 온다.
  * 작성일은 날짜 단위로만 저장돼 같은 날 글이 많으므로, 같은 날짜끼리는 데이터에 남아 있는
- * 기존 순서 값(seriesOrder)이 큰 글(나중에 쓴 글), 그다음 제목(숫자 인식) 역순으로 정렬한다.
+ * 기존 순서 값(seriesOrder)이 큰 글(나중에 쓴 글), 그다음 서버 제목(숫자 인식) 역순으로 정렬한다.
+ * 화면 제목을 바꿔도 순서가 흔들리지 않도록 원래 서버 제목(serverTitle)으로 비교한다.
  */
 export function sortByPublishedDesc(posts) {
   return [...posts].sort((a, b) => (
     publishedTime(b) - publishedTime(a)
     || (b.seriesOrder ?? -Infinity) - (a.seriesOrder ?? -Infinity)
-    || titleCollator.compare(b.title || '', a.title || '')
+    || titleCollator.compare(b.serverTitle || b.title || '', a.serverTitle || a.title || '')
   ));
 }
 
 /**
- * 서버 카테고리 하나의 게시글 전체를 가져와 화면 카테고리로 바꾸고 최신순으로 정렬한다.
+ * 서버 카테고리 하나의 게시글 전체를 가져와 화면 카테고리·화면 제목으로 바꾸고 최신순으로 정렬한다.
  * 결과는 모듈 캐시에 보관해 목록/상세/사이드바가 함께 쓴다.
  */
 export function loadApiCategoryPosts(apiCategory) {
@@ -45,7 +46,7 @@ export function loadApiCategoryPosts(apiCategory) {
   const entry = {};
   entry.promise = listPosts({ category: apiCategory, limit: CATEGORY_FETCH_LIMIT })
     .then((data) => {
-      entry.items = sortByPublishedDesc((data?.items || []).map(withDisplayCategory));
+      entry.items = sortByPublishedDesc((data?.items || []).map(toDisplayPost));
       return entry.items;
     })
     .catch((error) => {

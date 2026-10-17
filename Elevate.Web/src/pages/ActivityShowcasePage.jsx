@@ -210,7 +210,6 @@ export default function ActivityShowcasePage() {
             header={<NavHeader backTo="/" backLabel="Elevate 홈" title="활동 사례" subtitle={`영상 ${items.length}개`} />}
             sections={navSections}
             activeId={selected ? `vid:${selected.videoId}` : ''}
-            filterPlaceholder="카테고리·영상 필터"
           />
         )}
         fabLabel="영상 목록"

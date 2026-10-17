@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { CATEGORY_DISPLAY_NAMES, M365_SPLIT_RULES, getDisplayCategory } from '../src/constants/categories.js';
+import { CATEGORY_DISPLAY_NAMES, CATEGORY_SPLIT_RULES, getDisplayCategory } from '../src/constants/categories.js';
+import { getDisplayExcerpt, getDisplayTitle } from '../src/constants/postText.js';
 
 const siteUrl = 'https://microsoft-elevate.com';
 const distDir = join(process.cwd(), 'dist');
@@ -78,8 +79,9 @@ const routes = [
     title: 'OneNote Posts | Microsoft Elevate',
     description: 'OneNote 관련 Microsoft AI 교육 자료와 실습 콘텐츠를 확인하세요.',
   },
-  // Word / PowerPoint / Forms / OneDrive are shown as their own categories (split out of M365 in the web app).
-  ...M365_SPLIT_RULES.map(({ category }) => {
+  // Word / PowerPoint / Forms / OneDrive (from M365) and GitHub / Azure (from Copilot Studio)
+  // are shown as their own categories in the web app.
+  ...CATEGORY_SPLIT_RULES.map(({ category }) => {
     const name = CATEGORY_DISPLAY_NAMES[category] || category;
     return {
       path: `/${category}`,
@@ -221,13 +223,18 @@ async function collectPostRoutes() {
         const category = toSafeRouteSegment(post.category);
         const slug = toSafeRouteSegment(post.slug);
         if (!category || !slug) continue;
-        // M365 posts that the web app shows under Word/PowerPoint/Forms/OneDrive live at /<app>/<slug>.
-        // The old /m365/<slug> URL stays available (the app redirects it) and points its canonical there.
+        // Posts that the web app shows under a split category (e.g. Forms, GitHub) live at /<app>/<slug>.
+        // The old /<server category>/<slug> URL stays available (the app redirects it) and points its canonical there.
         const displayCategory = toSafeRouteSegment(getDisplayCategory(post)) || category;
         const canonicalPath = `/${displayCategory}/${slug}`;
+        // Same tidied title and subtitle as the web app (constants/postText.js). Short titles such as
+        // '시작하기' need the category to make sense in link previews, so this matches PostDetail's page title.
+        const title = getDisplayTitle(post);
+        const excerpt = getDisplayExcerpt(post);
+        const categoryName = CATEGORY_DISPLAY_NAMES[displayCategory] || displayCategory;
         const route = {
-          title: `${post.title} | Microsoft Elevate`,
-          description: post.excerpt || `${post.title} - Microsoft Elevate 게시글입니다.`,
+          title: `${title} | ${categoryName} | Microsoft Elevate`,
+          description: excerpt || `${title} - Microsoft Elevate 게시글입니다.`,
           image: getStablePostImage(post.thumbnail),
           type: 'article',
           canonicalPath,

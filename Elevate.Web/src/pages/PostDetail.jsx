@@ -10,8 +10,10 @@
  * - heading id는 preparePostHtml에서 미리 주입되며, 같은 id로 내비게이터 목차와 스크롤 스파이를 만든다.
  * - 현재 글은 카테고리 글 목록 안에서 펼쳐지고, 그 아래에 목차가 중첩된다 (Apple 문서의 현재 페이지 하위 항목처럼).
  * - 본문 하단에 작성일 기준 이전(더 오래된)/다음(더 최근) 글 카드를 표시한다.
- * - M365에서 분리한 카테고리(Word/PowerPoint/Forms/OneDrive)는 서버에서 m365로 조회하고,
- *   글이 속한 화면 카테고리와 URL이 다르면 올바른 주소로 바꾼다 (예: /m365/forms-share → /forms/forms-share).
+ * - 화면에서만 나눈 카테고리(M365의 Word/PowerPoint/Forms/OneDrive, Copilot Studio의 GitHub/Azure)는
+ *   서버 카테고리로 조회하고, 글이 속한 화면 카테고리와 URL이 다르면 올바른 주소로 바꾼다
+ *   (예: /m365/forms-share → /forms/forms-share, /copilot-studio/github-pages → /github/github-pages).
+ * - 제목과 부제목은 화면용으로 다듬은 문구(constants/postText.js)를 쓴다.
  */
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -32,6 +34,7 @@ import {
     getApiCategory,
     getCategoryListRoute,
     getDisplayCategory,
+    toDisplayPost,
 } from '../constants/categories';
 import { DEFAULT_OG_IMAGE, SITE_NAME, canonicalUrl } from '../constants/seo';
 import NotFound from './NotFound';
@@ -162,7 +165,7 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
             setNotFound(false);
             try {
                 const postData = await getPost(apiCategory, postId, { signal: controller.signal });
-                setPost(postData);
+                setPost(toDisplayPost(postData));
             } catch (err) {
                 if (err.name === 'AbortError') return;
                 if (err.status === 404) {
@@ -275,11 +278,9 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
             ...(backToListHref !== '/' ? [{ label: categoryDisplayName, to: backToListHref }] : []),
         ];
 
-    const tags = Array.isArray(post?.tags) ? post.tags.slice(0, 3) : [];
     const heroMeta = post ? [
         formatDateKo(post.publishedAt),
         outline.minutes ? `약 ${outline.minutes}분 분량` : null,
-        tags.length ? tags.map((tag) => `#${tag}`).join(' ') : null,
     ] : [];
 
     const searchBase = POST_LIST_CATEGORIES.includes(displayCategory) ? `/${displayCategory}` : '/all';
@@ -304,7 +305,6 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
             sections={navSections}
             activeId={activeHeadingId ? `toc:${activeHeadingId}` : `post:${post.id}`}
             resetKey={post.id}
-            filterPlaceholder="목차·게시글 필터"
         />
     ) : <NavSkeleton />;
 

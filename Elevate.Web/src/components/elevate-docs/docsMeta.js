@@ -26,6 +26,12 @@ import wordPaint from '../../assets/docs-icons/paint-word.webp';
 import powerpointPaint from '../../assets/docs-icons/paint-powerpoint.webp';
 import formsPaint from '../../assets/docs-icons/paint-forms.webp';
 import onedrivePaint from '../../assets/docs-icons/paint-onedrive.webp';
+import githubIcon from '../../assets/docs-icons/github.svg';
+import githubPaint from '../../assets/docs-icons/paint-github.webp';
+import githubGlyph from '../../assets/docs-icons/glyph-github.webp';
+import azureIcon from '../../assets/docs-icons/azure.svg';
+import azurePaint from '../../assets/docs-icons/paint-azure.webp';
+import azureGlyph from '../../assets/docs-icons/glyph-azure.webp';
 import allPaint from '../../assets/docs-icons/paint-all.webp';
 import allGlyph from '../../assets/docs-icons/glyph-all.webp';
 import m365Glyph from '../../assets/docs-icons/glyph-m365.webp';
@@ -170,6 +176,27 @@ const META = {
     heroA: '#f4ebf9',
     heroB: '#faf5fc',
     description: '수업 노트, 학생 과제, 공동 작업을 한 권의 디지털 노트북에 담습니다.',
+  },
+  // GitHub 마크는 한 가지 색이라 유리 타일 빛과 배경은 GitHub의 보라·파랑·초록·분홍으로 칠한다.
+  github: {
+    mesh: ['#8957e5', '#2f81f7', '#3fb950', '#db61a2'],
+    icon: githubIcon,
+    paint: githubPaint,
+    glyph: githubGlyph,
+    tint: '130, 80, 223',
+    heroA: '#f1edfb',
+    heroB: '#f6f8fd',
+    description: '만든 에이전트를 GitHub Pages로 웹에 올리고, GitHub Copilot과 함께 바이브 코딩으로 다듬어 봅니다.',
+  },
+  azure: {
+    mesh: ['#50e6ff', '#0078d4', '#3ccbf4', '#2f5fd9'],
+    icon: azureIcon,
+    paint: azurePaint,
+    glyph: azureGlyph,
+    tint: '0, 120, 212',
+    heroA: '#e8f2fc',
+    heroB: '#f3f8fd',
+    description: 'Azure 클라우드로 에이전트와 웹앱을 안전하게 배포하고 운영하는 방법을 알아봅니다.',
   },
   update: { tint: '0, 120, 212', heroA: '#eaf3fc', heroB: '#f5f9fd' },
   m365update: { tint: '0, 120, 212', heroA: '#eaf3fc', heroB: '#f5f9fd' },

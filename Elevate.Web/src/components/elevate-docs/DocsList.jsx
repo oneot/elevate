@@ -1,9 +1,9 @@
 /**
  * @file DocsList.jsx
- * @description 목록 화면 구성 요소: 게시글 카드 그리드, 태그 칩, 페이지네이션,
+ * @description 목록 화면 구성 요소: 게시글 카드 그리드, 페이지네이션,
  * 모바일 카테고리 전환기, 그리고 이들을 묶는 DocsListSection.
  */
-import { useMemo, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getImageLoadingProps, getThumbnailImageProps } from '../../utils/postImages';
@@ -13,7 +13,6 @@ import { AppArt, GlassDrops } from './DocsHero';
 import { useSlidingThumb } from './docsHooks';
 
 const CARD_IMAGE_SIZES = '(min-width: 1440px) 340px, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw';
-const VISIBLE_TAGS = 12;
 
 export function DocsPostCard({ post, priority = false, showCategory = false }) {
   const category = post.category || 'all';
@@ -83,58 +82,6 @@ export function DocsEmpty({ title, children }) {
       </div>
       <strong>{title}</strong>
       {children && <span>{children}</span>}
-    </div>
-  );
-}
-
-export function DocsTagChips({ tags = [], selected = '', onSelect }) {
-  const [expanded, setExpanded] = useState(false);
-  const uniqueTags = useMemo(() => {
-    const seen = new Set();
-    return tags.filter((tag) => {
-      const key = String(tag || '').trim().toLowerCase();
-      if (!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [tags]);
-
-  if (uniqueTags.length === 0) return null;
-
-  const selectedIndex = uniqueTags.findIndex((tag) => tag.toLowerCase() === selected);
-  const forced = selectedIndex >= VISIBLE_TAGS;
-  const showAll = expanded || forced;
-  const visibleTags = showAll ? uniqueTags : uniqueTags.slice(0, VISIBLE_TAGS);
-
-  return (
-    <div className="edoc-chips" role="group" aria-label="태그로 거르기">
-      <button type="button" className="edoc-chip" aria-pressed={!selected} onClick={() => onSelect('')}>
-        전체
-      </button>
-      {visibleTags.map((tag) => (
-        <button
-          key={tag}
-          type="button"
-          className="edoc-chip"
-          aria-pressed={tag.toLowerCase() === selected}
-          onClick={() => onSelect(tag)}
-        >
-          <span className="edoc-chip__hash" aria-hidden="true">
-            #
-          </span>
-          {tag}
-        </button>
-      ))}
-      {uniqueTags.length > VISIBLE_TAGS && !forced && (
-        <button
-          type="button"
-          className="edoc-chip edoc-chip--more"
-          aria-expanded={showAll}
-          onClick={() => setExpanded((value) => !value)}
-        >
-          {showAll ? '접기' : `+${uniqueTags.length - VISIBLE_TAGS}개 더 보기`}
-        </button>
-      )}
     </div>
   );
 }
@@ -238,9 +185,6 @@ export default function DocsListSection({
   countLabel,
   clearLabel = '필터 지우기',
   onClear,
-  tags,
-  selectedTag = '',
-  onTagSelect,
   loading,
   error,
   posts = [],
@@ -283,7 +227,6 @@ export default function DocsListSection({
           </div>
         </div>
       )}
-      {tags && onTagSelect && <DocsTagChips tags={tags} selected={selectedTag} onSelect={onTagSelect} />}
       {body}
       <DocsPagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
     </section>

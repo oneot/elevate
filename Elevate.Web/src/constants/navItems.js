@@ -40,6 +40,8 @@ export const NAV_ITEMS = [
             { label: 'Excel', to: '/excel' },
             { label: 'Word', to: '/word' },
             { label: 'Minecraft Education', to: '/minecraft' },
+            { label: 'GitHub', to: '/github' },
+            { label: 'Azure', to: '/azure' },
         ],
     },
     {
