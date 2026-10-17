@@ -16,12 +16,14 @@ import '../styles/home.css';
 
 // Icons
 import copilotIcon from '../assets/NewMicrosoft365Icons/copilot-logo-500.png';
-import m365Icon from '../assets/NewMicrosoft365Icons/m365-copilot-logo-500.png';
 import copilotStudioIcon from '../assets/NewMicrosoft365Icons/copilotstudio.png';
 import teamsIcon from '../assets/NewMicrosoft365Icons/Teams_512.png';
 import minecraftIcon from '../assets/NewMicrosoft365Icons/minecraft.png';
 import excelIcon from '../assets/NewMicrosoft365Icons/Excel_512.png';
 import onenoteIcon from '../assets/NewMicrosoft365Icons/OneNote_512.png';
+import formsIcon from '../assets/docs-icons/forms.svg';
+import githubIcon from '../assets/docs-icons/github.svg';
+import azureIcon from '../assets/docs-icons/azure.svg';
 
 // Components
 import Navigation from '../components/layout/Navigation';
@@ -57,88 +59,108 @@ const Home = () => {
             });
         }
     }, [location.hash]);
-    // 기능 카드 데이터
-    // mdColSpan: md(768px+) 6열 그리드에서의 col-span 클래스 — 2-3-2 레이아웃
-    //   행1 (M365·Copilot)                       → col-span-3 (2카드)
-    //   행2 (CopilotStudio·Teams·MinecraftEDU)   → col-span-2 (3카드)
-    //   행3 (Excel·OneNote)                      → col-span-3 (2카드)
+    // 기능 카드 데이터 — 1024px부터 3×3, 왼쪽 위부터 이 순서. 640px부터는 한 줄에 두 장(마지막 한 장은 가운데), 그보다 좁으면 한 장씩.
+    // description: 두 줄 — 앱이 하는 일 한 문장 + 권하는 한 문장. 각 줄은 가장 좁은 카드(약 227px)에서도 한 줄에 들어가게,
+    //   글자가 가장 넓게 그려지는 Windows 맑은 고딕 15px 기준 220px 이하로 둔다.
+    // iconSize: 그림마다 둘레 여백이 달라서, 보이는 아이콘 크기가 서로 비슷해지도록 맞춘 값.
     const features = [
         {
-            title: 'M365',
-            description: '수업 준비, 협업, 평가까지 교실에 필요한 모든 도구를 한 곳에 모았습니다.<br/>Microsoft 365 하나로 끊김 없는 수업을 시작하세요.',
-            icon: m365Icon,
-            iconType: 'image',
-            to: '/m365',
-            colorScheme: 'orange',
-            ariaLabel: 'M365 개요 페이지로 이동',
-            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-3'
-        },
-        {
             title: 'Copilot',
-            description: 'AI가 수업 자료 제작과 행정 업무를 돕고, 학생들의 아이디어를 함께 확장합니다.<br/>Microsoft Copilot과 함께 가르치는 시간을 되찾으세요.',
+            description: ['AI가 수업과 업무를 돕습니다.', '가르치는 시간을 되찾으세요.'],
             icon: copilotIcon,
             iconType: 'image',
+            iconSize: 'w-11 h-11',
             to: '/copilot',
             colorScheme: 'blue',
-            ariaLabel: 'Copilot 페이지로 이동',
-            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-3'
-        },
-        {
-            title: 'Copilot Studio',
-            description: '학생들이 자신만의 AI 에이전트를 만들고 문제 해결에 활용할 수 있습니다.<br/>Microsoft Copilot Studio로 학생의 아이디어가 현실이 되는 미래형 수업을 시작하세요.',
-            icon: copilotStudioIcon,
-            iconType: 'image',
-            iconSize: 'w-9 h-9',
-            to: '/copilot-studio',
-            colorScheme: 'violet',
-            ariaLabel: 'Copilot Studio 페이지로 이동',
-            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-2'
+            ariaLabel: 'Copilot 페이지로 이동'
         },
         {
             title: 'Microsoft Teams',
-            description: '수업에 필요한 모든 소통이 한 공간에서 연결됩니다.<br/>Microsoft Teams와 함께하는 수업을 시작하세요.',
+            description: ['수업과 소통이 한곳에 모입니다.', '온라인 교실을 열어 보세요.'],
             icon: teamsIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
             to: '/teams',
             colorScheme: 'indigo',
-            ariaLabel: 'Microsoft Teams 페이지로 이동',
-            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-2'
-        },
-        {
-            title: 'Minecraft EDU',
-            description: '블록으로 만든 가상 세계에서 학생들이 코딩과 AI를 직접 다루며 문제 해결력을 키웁니다.<br/>Minecraft Education과 함께 놀이로 배우는 수업을 시작하세요.',
-            icon: minecraftIcon,
-            iconType: 'image',
-            iconSize: 'w-9 h-9',
-            to: '/minecraft',
-            colorScheme: 'green',
-            ariaLabel: 'Minecraft EDU 페이지로 이동',
-            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-2'
-        },
-        {
-            title: 'Excel',
-            description: '성적, 출석, 설문 결과까지 수업에서 다루는 모든 데이터를 표로 정리하고 분석합니다.<br/>Microsoft Excel로 수업 데이터를 한눈에 살펴보세요.',
-            icon: excelIcon,
-            iconType: 'image',
-            iconSize: 'w-9 h-9',
-            to: '/excel',
-            colorScheme: 'emerald',
-            ariaLabel: 'Excel 페이지로 이동',
-            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-3'
+            ariaLabel: 'Microsoft Teams 페이지로 이동'
         },
         {
             title: 'OneNote',
-            description: '수업 노트, 학생 과제, 공동 작업을 한 권의 디지털 노트북에 담습니다.<br/>Microsoft OneNote와 함께 흩어진 수업 기록을 한 권에 모아보세요.',
+            description: ['수업 기록을 한 권에 담습니다.', '흩어진 노트와 과제를 모으세요.'],
             icon: onenoteIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
             to: '/onenote',
             colorScheme: 'violet',
-            ariaLabel: 'OneNote 페이지로 이동',
-            mdColSpan: 'col-span-1 sm:col-span-1 md:col-span-3'
+            ariaLabel: 'OneNote 페이지로 이동'
+        },
+        {
+            title: 'Excel',
+            description: ['수업 데이터를 표로 정리합니다.', '성적과 출석을 한눈에 보세요.'],
+            icon: excelIcon,
+            iconType: 'image',
+            iconSize: 'w-9 h-9',
+            to: '/excel',
+            colorScheme: 'emerald',
+            ariaLabel: 'Excel 페이지로 이동'
+        },
+        {
+            title: 'Forms',
+            description: ['설문과 퀴즈를 쉽게 만듭니다.', '응답 결과를 바로 확인해 보세요.'],
+            icon: formsIcon,
+            iconType: 'image',
+            iconSize: 'w-11 h-11',
+            to: '/forms',
+            colorScheme: 'teal',
+            ariaLabel: 'Forms 페이지로 이동'
+        },
+        {
+            title: 'Minecraft EDU',
+            description: ['블록으로 코딩과 AI를 익힙니다.', '놀며 배우는 수업을 시작하세요.'],
+            icon: minecraftIcon,
+            iconType: 'image',
+            iconSize: 'w-9 h-9',
+            to: '/minecraft',
+            colorScheme: 'green',
+            ariaLabel: 'Minecraft EDU 페이지로 이동'
+        },
+        {
+            title: 'Copilot Studio',
+            description: ['나만의 AI 에이전트를 만듭니다.', '코딩 없이 대화로 시작해 보세요.'],
+            icon: copilotStudioIcon,
+            iconType: 'image',
+            iconSize: 'w-9 h-9',
+            to: '/copilot-studio',
+            colorScheme: 'violet',
+            ariaLabel: 'Copilot Studio 페이지로 이동'
+        },
+        {
+            title: 'GitHub',
+            description: ['코드를 저장하고 공유합니다.', '전 세계 개발자와 협업해 보세요.'],
+            icon: githubIcon,
+            iconType: 'image',
+            iconSize: 'w-8 h-8',
+            to: '/github',
+            colorScheme: 'slate',
+            ariaLabel: 'GitHub 페이지로 이동'
+        },
+        {
+            title: 'Azure',
+            description: ['Microsoft의 클라우드입니다.', '앱과 AI를 손쉽게 운영해 보세요.'],
+            icon: azureIcon,
+            iconType: 'image',
+            iconSize: 'w-9 h-9',
+            to: '/azure',
+            colorScheme: 'sky',
+            ariaLabel: 'Azure 페이지로 이동'
         }
     ];
+    // 두 장씩 놓이는 폭에서 카드 수가 홀수면 마지막 한 장을 가운데에 둔다 (4열 중 2~3열).
+    const featureSpan = (index) => (
+        features.length % 2 === 1 && index === features.length - 1
+            ? 'col-span-1 sm:col-span-2 sm:col-start-2 lg:col-span-1 lg:col-start-auto'
+            : 'col-span-1 sm:col-span-2 lg:col-span-1'
+    );
 
     return (
         <div className="ehome relative min-h-screen selection:bg-ms-blue/20 selection:text-ms-blue">
@@ -173,12 +195,12 @@ const Home = () => {
                     </h2>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-6 md:gap-8 auto-rows-auto sm:auto-rows-[minmax(240px,auto)]">
+                <div className="grid grid-cols-1 sm:grid-cols-4 lg:grid-cols-3 gap-6 md:gap-8 auto-rows-auto sm:auto-rows-[minmax(240px,auto)]">
                     {features.map((feature, index) => (
                         <FeatureCard
-                            key={index}
+                            key={feature.to}
                             {...feature}
-                            wrapperClassName={feature.mdColSpan}
+                            wrapperClassName={featureSpan(index)}
                         />
                     ))}
                 </div>

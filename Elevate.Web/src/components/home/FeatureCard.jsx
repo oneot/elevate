@@ -5,7 +5,7 @@
  * `colorScheme` prop으로 그라디언트/그림자/텍스트 색상 테마를 선택한다.
  * Tailwind JIT를 위해 `colorSchemes` 객체에 전체 클래스명이 하드코딩되어 있다.
  * `iconType`에 따라 이미지 또는 emoji 아이콘을 렌더링하며,
- * `description`은 HTML을 허용하여 `dangerouslySetInnerHTML`로 렌더링된다.
+ * `description`은 줄 배열로 받아 한 줄씩 보여 준다 (줄이 카드보다 길면 줄바꿈 대신 말줄임).
  */
 import { Link } from 'react-router-dom';
 
@@ -14,11 +14,11 @@ import { Link } from 'react-router-dom';
  * 
  * @param {Object} props
  * @param {string} props.title - 카드 제목
- * @param {string} props.description - 카드 설명
+ * @param {string|string[]} props.description - 카드 설명 (배열이면 항목마다 한 줄)
  * @param {string} props.icon - 아이콘 이미지 경로 또는 emoji 문자열
  * @param {('image'|'emoji')} props.iconType - 아이콘 타입 ('image' 또는 'emoji')
  * @param {string} props.to - 라우팅 경로
- * @param {('orange'|'blue'|'indigo'|'green'|'emerald'|'violet'|'slate')} props.colorScheme - 색상 테마
+ * @param {('orange'|'blue'|'indigo'|'green'|'emerald'|'teal'|'sky'|'violet'|'slate')} props.colorScheme - 색상 테마
  * @param {string} [props.ctaLabel='더 알아보기 →'] - CTA 버튼 텍스트
  * @param {string} props.ariaLabel - 접근성을 위한 aria-label
  * @param {string} [props.iconSize='w-10 h-10'] - 이미지 아이콘 크기 (iconType이 'image'일 때만 적용)
@@ -68,6 +68,18 @@ const FeatureCard = ({
             titleColor: 'text-emerald-700',
             ctaColor: 'text-emerald-600'
         },
+        teal: {
+            gradient: 'bg-gradient-to-br from-white to-teal-50',
+            shadow: 'shadow-teal-100',
+            titleColor: 'text-teal-700',
+            ctaColor: 'text-teal-600'
+        },
+        sky: {
+            gradient: 'bg-gradient-to-br from-white to-sky-50',
+            shadow: 'shadow-sky-100',
+            titleColor: 'text-sky-700',
+            ctaColor: 'text-sky-600'
+        },
         violet: {
             gradient: 'bg-gradient-to-br from-white to-violet-50',
             shadow: 'shadow-violet-100',
@@ -76,9 +88,9 @@ const FeatureCard = ({
         },
         slate: {
             gradient: 'bg-gradient-to-br from-white to-slate-100',
-            shadow: 'shadow-md',
-            titleColor: 'text-slate-800',
-            ctaColor: 'text-slate-500'
+            shadow: 'shadow-slate-200',
+            titleColor: 'text-slate-900',
+            ctaColor: 'text-slate-700'
         }
     };
 
@@ -105,7 +117,11 @@ const FeatureCard = ({
                         )}
                     </div>
                     <h3 className={`ehome-card-title ${colors.titleColor}`}>{title}</h3>
-                    <p className="ehome-card-copy text-sm" dangerouslySetInnerHTML={{ __html: description }} />
+                    <p className="ehome-card-copy">
+                        {[].concat(description).map((line) => (
+                            <span key={line} className="ehome-card-line">{line}</span>
+                        ))}
+                    </p>
                 </div>
                 <div className={`card-cta mt-6 sm:mt-0 ${colors.ctaColor} text-xs font-bold 
                     opacity-100 translate-x-0 

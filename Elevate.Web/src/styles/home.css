@@ -74,9 +74,9 @@ body:has(.ehome) {
 
 /* Feature card title — fits the original 240px card rows (same line box as text-xl) */
 .ehome-card-title {
-  font-size: 23px;
+  font-size: 26px;
   font-weight: 400;
-  line-height: 28px;
+  line-height: 32px;
   letter-spacing: -0.035em;
 }
 
@@ -89,8 +89,19 @@ body:has(.ehome) {
 }
 
 .ehome-card-copy {
+  margin-top: 2px;
   color: var(--eh-muted);
+  font-size: 15px;
+  line-height: 23px;
   word-break: keep-all;
+}
+
+/* App card description: always exactly one row per line, on every screen size */
+.ehome-card-line {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* Same content width as the header (max-w-7xl + px-4 / sm:px-6), so edges line up with the logo */
