@@ -47,19 +47,19 @@ const MEESection = () => {
                     </div>
 
                     <div className="lg:w-8/12 relative z-10">
-                        <span className="inline-block py-1 px-3 rounded-md bg-blue-50 text-blue-800 font-bold text-xs uppercase mb-4 tracking-wider border border-blue-100">
+                        <span className="ehome-label inline-block py-1 px-3 rounded-md bg-blue-50 text-blue-800 text-xs uppercase mb-4 border border-blue-100">
                             Community
                         </span>
                         
-                        <h2 className="text-4xl lg:text-5xl font-bold mb-6 text-slate-900">
+                        <h2 className="ehome-title text-4xl lg:text-5xl mb-6">
                             마이크로소프트 <br className="md:hidden" />교육 전문가 커뮤니티<br />
                             {/* Gradient text */}
-                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-900">
+                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-900 font-bold">
                                 Microsoft Elevate <br className="md:hidden" />for Educators
                             </span>
                         </h2>
 
-                        <p className="text-slate-600 text-base mb-10 leading-relaxed font-medium">
+                        <p className="ehome-copy text-base mb-10">
                             최신 Microsoft AI를 교실에 가장 먼저 적용할 수 있는 기회,
                             <span className="text-blue-800 font-bold"> 마이크로소프트 교육 전문가 그룹</span>에 합류하세요.
                             <br className="hidden md:block" /> <span className="text-blue-800 font-bold"> Microsoft Elevate for Educators (MEE)</span> 커뮤니티에서 교육 혁신 인사이트를 나누며 함께 성장해 보세요.

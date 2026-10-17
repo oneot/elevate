@@ -4,6 +4,7 @@
  *
  * MapSection → 기능 카드 그리드 → 업데이트/행사 카드(현재 숨김) → CopilotStudioSection →
  * MEESection → GlobalTrainingPartner 순으로 섹션을 구성한다.
+ * 흰 배경 위에 Elevathon 페이지와 같은 글씨체를 쓴다 (styles/home.css, `.ehome` 범위).
  * URL hash(`#section-id`)로 진입하면 해당 섹션으로 자동 스크롤한다.
  */
 import { Helmet } from 'react-helmet-async';
@@ -11,6 +12,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { DEFAULT_DESCRIPTION, DEFAULT_OG_IMAGE, DEFAULT_TITLE, SITE_NAME, canonicalUrl } from '../constants/seo';
 import { SHOW_NEWS_SECTIONS } from '../constants/features';
+import '../styles/home.css';
 
 // Icons
 import copilotIcon from '../assets/NewMicrosoft365Icons/copilot-logo-500.png';
@@ -139,7 +141,7 @@ const Home = () => {
     ];
 
     return (
-        <div className="relative min-h-screen font-sans selection:bg-ms-blue/20 selection:text-ms-blue">
+        <div className="ehome relative min-h-screen selection:bg-ms-blue/20 selection:text-ms-blue">
             <Helmet>
                 <title>{DEFAULT_TITLE}</title>
                 <meta name="description" content={DEFAULT_DESCRIPTION} />
@@ -157,25 +159,21 @@ const Home = () => {
                 <meta name="twitter:image" content={DEFAULT_OG_IMAGE} />
             </Helmet>
 
-            {/* Background Blobs */}
-            <div className="pastel-bg">
-                <div className="blob blob-1"></div>
-                <div className="blob blob-2"></div>
-                <div className="blob blob-3"></div>
-            </div>
-
             <Navigation />
 
             <MapSection />
 
             {/* Microsoft 365 Section */}
             <section id="m365-section" className="py-16 md:py-20 px-4 sm:px-6 max-w-7xl mx-auto">
-                <div className="mb-10 md:mb-12 text-center fade-in-section">
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-4 md:mb-6 tracking-tight text-slate-900">Explore Microsoft AI</h2>
-                    <p className="text-slate-500 text-base sm:text-lg">교실 속 작은 변화를 돕는 실용적인 AI 도구들을 만나보세요.</p>
+                <div className="ehome-head mb-10 md:mb-14 fade-in-section">
+                    <p className="ehome-kicker">Explore Microsoft AI</p>
+                    <h2 className="ehome-h2">
+                        교실 속 작은 변화를 돕는<br />
+                        실용적인 AI 도구들을 만나보세요.
+                    </h2>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-6 md:gap-8 auto-rows-auto sm:auto-rows-[240px]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-6 md:gap-8 auto-rows-auto sm:auto-rows-[minmax(240px,auto)]">
                     {features.map((feature, index) => (
                         <FeatureCard
                             key={index}

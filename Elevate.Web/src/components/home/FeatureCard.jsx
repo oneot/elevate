@@ -104,8 +104,8 @@ const FeatureCard = ({
                             />
                         )}
                     </div>
-                    <h3 className={`text-xl font-bold ${colors.titleColor}`}>{title}</h3>
-                    <p className="text-sm text-slate-500" dangerouslySetInnerHTML={{ __html: description }} />
+                    <h3 className={`ehome-card-title ${colors.titleColor}`}>{title}</h3>
+                    <p className="ehome-card-copy text-sm" dangerouslySetInnerHTML={{ __html: description }} />
                 </div>
                 <div className={`card-cta mt-6 sm:mt-0 ${colors.ctaColor} text-xs font-bold 
                     opacity-100 translate-x-0 

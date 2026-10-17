@@ -1,0 +1,307 @@
+/*
+ * Home page (/) — original Home design on a plain white page, set in the
+ * Elevathon typeface. Everything is scoped under .ehome so the rest of the site
+ * is untouched.
+ */
+
+body:has(.ehome) {
+  background: #fff;
+}
+
+.ehome {
+  --eh-ink: #111314;
+  --eh-muted: #69706d;
+  --eh-copy: #5f6663;
+  --eh-accent: #0067b8;
+
+  overflow-x: clip;
+  background: #fff;
+  color: var(--eh-ink);
+  font-family: "Segoe UI Variable", "Segoe UI", Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Elevathon type system (same values as /elevathon) ---------- */
+
+/* Small uppercase label above a section heading */
+.ehome-kicker {
+  margin: 0;
+  color: var(--eh-accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+/* Big section heading: regular weight, very tight tracking */
+.ehome-h2 {
+  margin: 18px 0 0;
+  color: var(--eh-ink);
+  font-size: clamp(34px, 4.8vw, 64px);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.058em;
+  word-break: keep-all;
+}
+
+.ehome-head {
+  max-width: 920px;
+}
+
+/* Headings inside the glass panels (sizes come from the panel markup) */
+.ehome-title {
+  color: var(--eh-ink);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.058em;
+  word-break: keep-all;
+}
+
+/* Panel badge ("AI SKILLING" …) uses the kicker letterforms */
+.ehome-label {
+  font-weight: 800;
+  letter-spacing: 0.13em;
+}
+
+.ehome-copy {
+  color: var(--eh-copy);
+  font-weight: 400;
+  line-height: 1.7;
+  letter-spacing: -0.01em;
+  word-break: keep-all;
+}
+
+/* Feature card title — fits the original 240px card rows (same line box as text-xl) */
+.ehome-card-title {
+  font-size: 23px;
+  font-weight: 400;
+  line-height: 28px;
+  letter-spacing: -0.035em;
+}
+
+.ehome-card-title--sm {
+  color: var(--eh-ink);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.375;
+  letter-spacing: -0.03em;
+}
+
+.ehome-card-copy {
+  color: var(--eh-muted);
+  word-break: keep-all;
+}
+
+/* Same content width as the header (max-w-7xl + px-4 / sm:px-6), so edges line up with the logo */
+.ehome-wrap {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+@media (min-width: 640px) {
+  .ehome-wrap {
+    padding: 0 24px;
+  }
+}
+
+/* ---------- Hero: text + Korea map ---------- */
+
+/*
+ * The text is always left-aligned.
+ * < 768px    : text above the map (map centred below)
+ * 768–1359px : text and map side by side as one group, centred on the page
+ * >= 1360px  : side by side across the full content width (desktop)
+ */
+.ehome-hero__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 44px;
+  padding-top: 112px;
+  padding-bottom: 40px;
+}
+
+@media (min-width: 768px) {
+  .ehome-hero__inner {
+    grid-template-columns: minmax(0, 47vw) auto;
+    justify-content: center;
+    align-items: center;
+    column-gap: 3vw;
+    padding-top: 120px;
+    padding-bottom: 64px;
+  }
+}
+
+/* Landscape desktop: the hero fills the first screen, like before */
+@media (min-width: 1024px) {
+  .ehome-hero__inner {
+    min-height: max(640px, 100vh);
+    min-height: max(640px, 100svh);
+    padding-top: 104px;
+    padding-bottom: 48px;
+  }
+}
+
+@media (min-width: 1360px) {
+  .ehome-hero__inner {
+    grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+    justify-content: normal;
+    column-gap: clamp(24px, 4vw, 72px);
+  }
+}
+
+.ehome-hero__text {
+  container-type: inline-size;
+}
+
+/* Stacked (mobile) layout: a little more room between the hero text and the screen edge */
+@media (max-width: 767.98px) {
+  .ehome-hero__text {
+    padding-inline: 12px;
+  }
+}
+
+.ehome-hero__title {
+  margin: 0;
+  color: var(--eh-ink);
+  font-size: clamp(40px, 14.2cqi, 64px);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.05em;
+  word-break: keep-all;
+}
+
+@media (min-width: 768px) {
+  .ehome-hero__title {
+    font-size: clamp(40px, 14.2cqi, 100px);
+  }
+}
+
+.ehome-hero__title > span {
+  display: block;
+}
+
+/* Deep Microsoft-blue → navy gradient on "Microsoft AI", kept bolder than the rest of the line */
+.ehome-hero__gradient {
+  padding-right: 0.04em;
+  margin-right: -0.04em;
+  background: linear-gradient(100deg, #0a64c4 0%, #0b47a6 50%, #0b2a6c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 730;
+  -webkit-text-fill-color: transparent;
+}
+
+.ehome-hero__lead {
+  max-width: 34em;
+  margin: clamp(22px, 5cqi, 34px) 0 0;
+  color: #5f6663;
+  font-size: clamp(16px, 3.1cqi, 20px);
+  line-height: 1.7;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
+}
+
+.ehome-hero__lead strong {
+  /* inline-block + balance: when the instruction wraps, it splits evenly instead of leaving one word behind */
+  display: inline-block;
+  color: var(--eh-ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: rgba(0, 120, 212, 0.3);
+  text-decoration-thickness: 4px;
+  text-underline-offset: 4px;
+  text-wrap: balance;
+}
+
+/* Account help card (original glass card) */
+.ehome-hero__help {
+  margin-top: clamp(24px, 5.5cqi, 36px);
+}
+
+/*
+ * Phones: a compact help card whose question and "더 알아보기" each stay on one line.
+ * The title size follows the card width; 17em leaves room for wider Android Hangul fonts
+ * (Apple SD Gothic Neo needs ~14.5em).
+ */
+@media (max-width: 767.98px) {
+  .ehome-help-card {
+    --help-fs: max(10.5px, min(16px, calc((min(100cqi, 420px) - 90px) / 17)));
+    gap: 12px;
+    padding: 14px 16px 14px 14px;
+  }
+
+  .ehome-help-card__icon {
+    width: 48px;
+    height: 48px;
+    padding: 6px;
+    border-radius: 14px;
+  }
+
+  .ehome-help-card .ehome-card-title--sm {
+    font-size: var(--help-fs);
+    white-space: nowrap;
+  }
+
+  .ehome-help-card__more {
+    margin-top: 4px;
+  }
+
+  .ehome-help-card__more > div {
+    font-size: max(11px, calc(var(--help-fs) * 0.86));
+    line-height: 1.4;
+  }
+}
+
+/* The map keeps the SVG's aspect ratio and never grows taller than the viewport allows. */
+.ehome-map {
+  position: relative;
+  width: min(100%, 420px);
+  aspect-ratio: 670 / 920;
+  margin: 0 auto;
+}
+
+/* The peninsula sits ~4% left of centre inside the SVG viewBox; when stacked, nudge it to the page centre. */
+@media (max-width: 767.98px) {
+  .ehome-map {
+    translate: 4% 0;
+  }
+}
+
+/*
+ * Mid widths: the SVG leaves ~19% empty space right of the peninsula. Letting that strip hang past
+ * the grid track means the *visible* text + map group is what gets centred.
+ */
+@media (min-width: 768px) and (max-width: 1359.98px) {
+  .ehome-map {
+    --hero-map-w: min(39vw, calc(min(78vh, 760px) * 0.7283));
+    width: var(--hero-map-w);
+    margin-right: calc(var(--hero-map-w) * -0.19);
+  }
+
+  @supports (height: 1svh) {
+    .ehome-map {
+      --hero-map-w: min(39vw, calc(min(78svh, 760px) * 0.7283));
+    }
+  }
+}
+
+@media (min-width: 1360px) {
+  .ehome-map {
+    width: min(100%, calc(min(78vh, 760px) * 0.7283));
+    width: min(100%, calc(min(78svh, 760px) * 0.7283));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ehome-hero *,
+  .ehome-hero *::before,
+  .ehome-hero *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
