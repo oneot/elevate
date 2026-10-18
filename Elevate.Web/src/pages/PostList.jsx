@@ -13,7 +13,7 @@
  * - 게시글 제목과 부제목은 화면용으로 다듬은 문구(constants/postText.js)를 보여 준다.
  * 왼쪽 내비게이터: 카테고리 → 게시글(최신순) 트리 (DocsShell / DocsNavigator)
  */
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { LayoutGrid } from 'lucide-react';
@@ -22,7 +22,9 @@ import DocsShell from '../components/elevate-docs/DocsShell';
 import DocsHero from '../components/elevate-docs/DocsHero';
 import DocsNavigator, { NavHeader } from '../components/elevate-docs/DocsNavigator';
 import DocsListSection, { DocsCategorySwitcher } from '../components/elevate-docs/DocsList';
-import { loadApiCategoryPosts, loadCategoryPosts, sortByPublishedDesc, useCategoryPosts } from '../components/elevate-docs/docsHooks';
+import { useCategoryPosts } from '../components/elevate-docs/docsHooks';
+import { loadApiCategoryPosts, loadCategoryPosts, sortByPublishedDesc } from '../api/categoryPosts';
+import { useApiResource } from '../hooks/useApiResource';
 import { getDocsMeta, getTintStyle } from '../components/elevate-docs/docsMeta';
 import { listPosts } from '../api/posts';
 import {
@@ -55,15 +57,34 @@ export default function PostList() {
   const pageParam = Number.isFinite(_rawPage) && _rawPage > 0 ? _rawPage : 1;
   const qParam = (searchParams.get('q') || '').trim();
 
-  const [posts, setPosts] = useState([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const { postsMap, ensure: ensurePosts } = useCategoryPosts();
-
   const isValidCategory = category && VALID_CATEGORIES.includes(category);
   const displayName = isValidCategory ? (CATEGORY_DISPLAY_NAMES[category] || category) : '';
+  const { postsMap, errorsMap, ensure: ensurePosts } = useCategoryPosts();
+
+  const loadPosts = useCallback(async (signal) => {
+    if (category !== 'all' || qParam) {
+      const candidates = category !== 'all'
+        ? await loadCategoryPosts(category, { signal })
+        : sortByPublishedDesc((await Promise.all(
+          BASE_CATEGORIES.map((key) => loadApiCategoryPosts(key, { signal })),
+        )).flat());
+      const filtered = candidates.filter((post) => matchesQuery(post, qParam));
+      return {
+        posts: filtered.slice((pageParam - 1) * PAGE_SIZE, pageParam * PAGE_SIZE),
+        totalPages: Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)),
+        totalCount: filtered.length,
+      };
+    }
+    const data = await listPosts({
+      limit: PAGE_SIZE,
+      page: pageParam,
+      categories: BASE_CATEGORIES,
+      signal,
+    });
+    return { posts: data.items.map(toDisplayPost), totalPages: Math.max(1, data.totalPages), totalCount: data.totalCount };
+  }, [category, pageParam, qParam]);
+  const { data, loading, error, retry } = useApiResource(isValidCategory ? loadPosts : null);
+  const { posts = [], totalPages = 1, totalCount = 0 } = data || {};
 
   const updateUrlParams = useCallback((params) => {
     const newParams = new URLSearchParams(searchParams);
@@ -74,65 +95,15 @@ export default function PostList() {
     setSearchParams(newParams, { replace: false });
   }, [searchParams, setSearchParams]);
 
-  // 게시글 로드 (작성일 최신순)
-  useEffect(() => {
-    if (!isValidCategory) return;
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        if (category !== 'all' || qParam) {
-          // 서버 검색은 원래 서버 제목만 보므로, 검색은 화면용 제목·부제목과 원래 문구를 모두 보며 여기서 거른다.
-          const candidates = category !== 'all'
-            ? await loadCategoryPosts(category)
-            : sortByPublishedDesc((await Promise.all(BASE_CATEGORIES.map((key) => loadApiCategoryPosts(key)))).flat());
-          const filtered = candidates.filter((post) => matchesQuery(post, qParam));
-          if (!cancelled) {
-            const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-            setPosts(filtered.slice((pageParam - 1) * PAGE_SIZE, pageParam * PAGE_SIZE));
-            setTotalPages(pages);
-            setTotalCount(filtered.length);
-          }
-        } else {
-          const data = await listPosts({
-            limit: PAGE_SIZE,
-            page: pageParam,
-            categories: BASE_CATEGORIES,
-          });
-          if (!cancelled) {
-            setPosts((data.items || []).map(toDisplayPost));
-            setTotalPages(data.totalPages || 1);
-            setTotalCount(data.totalCount || 0);
-          }
-        }
-      } catch (err) {
-        if (!cancelled) {
-          console.warn('PostList fetch error:', err.message || err);
-          setError(err.message || '게시글을 불러오지 못했습니다.');
-          setPosts([]);
-          setTotalPages(1);
-          setTotalCount(0);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => { cancelled = true; };
-  }, [category, pageParam, qParam, isValidCategory]);
-
   // 사이드바: 현재 카테고리의 게시글 목록, 본문을 다 불러온 뒤에는 나머지 카테고리 개수도 채운다.
   useEffect(() => {
     if (isValidCategory) ensurePosts(category);
   }, [category, isValidCategory, ensurePosts]);
 
   useEffect(() => {
-    if (loading) return;
+    if (!isValidCategory || loading || error) return;
     VALID_CATEGORIES.forEach((key) => ensurePosts(key));
-  }, [loading, ensurePosts]);
+  }, [isValidCategory, loading, error, ensurePosts]);
 
   const handlePageChange = (newPage) => {
     updateUrlParams({ page: newPage > 1 ? String(newPage) : '' });
@@ -157,6 +128,8 @@ export default function PostList() {
         badge: categoryPosts ? categoryPosts.length : undefined,
         defaultExpanded: key === category && key !== 'all',
         onExpand: () => ensurePosts(key),
+        error: errorsMap[key],
+        onRetry: () => ensurePosts(key),
         children: key === 'all' || !categoryPosts ? undefined : categoryPosts.map((post) => ({
           id: `post:${key}:${post.id}`,
           label: post.title,
@@ -165,7 +138,7 @@ export default function PostList() {
         })),
       };
     }),
-  }], [postsMap, category, ensurePosts]);
+  }], [postsMap, errorsMap, category, ensurePosts]);
 
   const switcherItems = useMemo(() => VALID_CATEGORIES.map((key) => ({
     key,
@@ -182,7 +155,7 @@ export default function PostList() {
   const crumbs = category === 'all' ? [] : [{ label: 'Blog', to: '/all' }, { label: displayName }];
 
   const heroMeta = [
-    ready ? (qParam ? `검색 결과 ${totalCount}개` : `게시글 ${totalCount}개`) : '불러오는 중',
+    ready ? (qParam ? `검색 결과 ${totalCount}개` : `게시글 ${totalCount}개`) : error ? '불러오기 실패' : '불러오는 중',
     category === 'all' ? `카테고리 ${VALID_CATEGORIES.length - 1}개` : '최신순',
   ];
 
@@ -241,7 +214,8 @@ export default function PostList() {
           clearLabel="검색 지우기"
           onClear={qParam ? handleClearSearch : undefined}
           loading={loading}
-          error={error}
+          error={error?.message}
+          onRetry={retry}
           posts={posts}
           skeletonCount={PAGE_SIZE}
           showCategory={category === 'all'}
