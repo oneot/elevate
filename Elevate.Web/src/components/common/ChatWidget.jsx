@@ -2,9 +2,9 @@
  * @file ChatWidget.jsx
  * @description 우측 하단 플로팅 채팅 토글 버튼 쉘 컴포넌트.
  *
- * 페이지 진입 시 WebChat과 DirectLine 연결을 백그라운드에서 준비한다.
+ * 페이지 진입 시 토큰만 미리 준비하고, 처음 열 때 WebChat을 로드한다.
  * 실제 WebChat UI와 DirectLine 연결은 ChatWidgetPanel에서 처리한다.
- * 패널은 앱 수명 동안 마운트 상태를 유지하고 토글로 표시 여부만 변경한다.
+ * 한 번 연 패널은 마운트 상태를 유지하고 토글로 표시 여부만 변경한다.
  */
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { MessageCircle, X } from 'lucide-react';
@@ -57,6 +57,7 @@ const getBotToken = ({ force = false, consume = false } = {}) => {
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [hasOpened, setHasOpened] = useState(false);
 
   useEffect(() => {
     getBotToken().catch(() => {});
@@ -71,6 +72,7 @@ const ChatWidget = () => {
       closeChat();
       return;
     }
+    setHasOpened(true);
     setIsOpen(true);
   };
 
@@ -98,7 +100,7 @@ const ChatWidget = () => {
             </div>
           </div>
         }>
-          <ChatWidgetPanel onClose={closeChat} getToken={getBotToken} />
+          {hasOpened && <ChatWidgetPanel onClose={closeChat} getToken={getBotToken} />}
         </Suspense>
       </div>
 

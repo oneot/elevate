@@ -27,13 +27,13 @@ jobs:
             - name: Setup Node
               uses: actions/setup-node@v4
               with:
-                  node-version: 20
+                  node-version-file: .nvmrc
                   cache: npm
                   cache-dependency-path: Elevate.Admin/package-lock.json
 
             - name: Install dependencies
               working-directory: Elevate.Admin
-              run: npm install --legacy-peer-deps
+              run: npm ci --legacy-peer-deps
 
             - name: Validate build env secrets
               env:
@@ -58,6 +58,10 @@ jobs:
                   VITE_AZURE_AD_REDIRECT_URI: ${{ secrets.ADMIN_VITE_AZURE_AD_REDIRECT_URI }}
                   VITE_AZURE_AD_API_SCOPE: ${{ secrets.ADMIN_VITE_AZURE_AD_API_SCOPE }}
               run: npm run build
+
+            - name: Check initial bundle budget
+              working-directory: Elevate.Admin
+              run: npm run check:bundle
 
             - name: Deploy to Azure Static Web Apps
               id: deployswa

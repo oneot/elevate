@@ -1,5 +1,9 @@
-import { apiFetch } from './client';
+import { apiFetch, ApiError } from './client';
 
-export function listActivityVideos({ signal } = {}) {
-  return apiFetch('/activity-videos', signal ? { signal } : undefined);
+export async function listActivityVideos({ signal } = {}) {
+  const data = await apiFetch('/activity-videos', { signal });
+  if (!Array.isArray(data?.items)) {
+    throw new ApiError('영상 목록 응답 형식이 올바르지 않습니다.', { code: 'InvalidResponse' });
+  }
+  return data;
 }

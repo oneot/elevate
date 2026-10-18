@@ -32,21 +32,19 @@ export class ApiError extends Error {
 
 /**
  * 응답 본문에서 에러 메시지를 추출한다.
- * JSON 파싱을 먼저 시도하고 실패하면 plain text로 폴백한다.
- * 두 경우 모두 실패하면 빈 문자열을 반환한다.
+ * 본문은 한 번만 읽고 JSON 또는 plain text 메시지로 해석한다.
  * @param {Response} response
  * @returns {Promise<string>}
  */
 async function readErrorMessage(response) {
+  const text = await response.text()
   try {
-    const errorBody = await response.json()
-    return errorBody?.message || errorBody?.code || ''
-  } catch {
-    try {
-      return await response.text()
-    } catch {
-      return ''
-    }
+    const errorBody = JSON.parse(text)
+    if (typeof errorBody?.message === 'string') return errorBody.message
+    return typeof errorBody?.code === 'string' ? errorBody.code : ''
+  } catch (error) {
+    if (error instanceof SyntaxError) return text.trim()
+    throw error
   }
 }
 
@@ -71,53 +69,62 @@ export async function apiFetch(path, options = {}) {
     throw new Error('API_BASE_URL_NOT_CONFIGURED')
   }
 
-  const { skipAuth = false, msalInstance, ...fetchOptions } = options
+  const { skipAuth = false, msalInstance, headers: requestHeaders, ...fetchOptions } = options
+  const { signal } = fetchOptions
+  signal?.throwIfAborted()
   const token = skipAuth ? '' : await getApiAccessToken(msalInstance)
+  signal?.throwIfAborted()
 
   if (!skipAuth && !token) {
     // 토큰이 없으면 MSAL이 이미 redirect를 시작한 상태이므로 더 이상 진행하지 않는다.
     throw new AuthError('AUTH_REDIRECT_REQUIRED')
   }
 
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(fetchOptions.headers || {}),
-  }
+  const headers = new Headers(requestHeaders)
+  if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
 
   if (token) {
-    headers.Authorization = `Bearer ${token}`
+    headers.set('Authorization', `Bearer ${token}`)
   }
-
-  let response
 
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
-      headers,
+    const response = await fetch(`${API_BASE_URL}${path}`, {
       ...fetchOptions,
+      headers,
     })
-  } catch (error) {
-    throw new NetworkError(error?.message || 'NETWORK_ERROR')
-  }
+    signal?.throwIfAborted()
 
-  if (!response.ok) {
-    const message = await readErrorMessage(response)
+    if (!response.ok) {
+      const message = await readErrorMessage(response)
+      signal?.throwIfAborted()
 
-    if (response.status === 401 && !skipAuth) {
-      // 401 수신 시 캐시된 토큰이 만료되었을 수 있으므로 강제 갱신을 시도한다.
-      // 갱신 성공 여부와 무관하게 AuthError를 던져 호출자가 재시도를 결정하게 한다.
-      if (msalInstance) {
-        await getApiAccessToken(msalInstance, { forceRefresh: true })
+      if (response.status === 401 && !skipAuth) {
+        // Refresh the token for the next user action; never replay a write.
+        if (msalInstance) {
+          await getApiAccessToken(msalInstance, { forceRefresh: true })
+        }
+
+        throw new AuthError(message || 'UNAUTHORIZED', 401)
       }
 
-      throw new AuthError(message || 'UNAUTHORIZED', 401)
+      throw new ApiError(message || `API_ERROR_${response.status}`, response.status)
     }
 
-    throw new ApiError(message || `API_ERROR_${response.status}`, response.status)
-  }
+    if (response.status === 204) return null
 
-  if (response.status === 204) {
-    return null
+    try {
+      const body = await response.json()
+      signal?.throwIfAborted()
+      return body
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw new ApiError('서버 응답 형식이 올바르지 않습니다.', response.status)
+      }
+      throw error
+    }
+  } catch (error) {
+    if (signal?.aborted) throw signal.reason
+    if (error instanceof TypeError) throw new NetworkError(error.message || 'NETWORK_ERROR')
+    throw error
   }
-
-  return response.json()
 }

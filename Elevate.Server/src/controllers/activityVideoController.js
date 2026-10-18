@@ -20,6 +20,10 @@ function getActivityVideoId(req) {
   return req.params.activityVideoId || req.params.activityvideoid || req.params.id;
 }
 
+function getPartitionKey(video) {
+  return video.category || video.partitionKey || PARTITION_KEY;
+}
+
 function normalizeOptionalString(value) {
   if (value === undefined || value === null) return null;
   const trimmed = value.trim();
@@ -283,10 +287,10 @@ exports.updateActivityVideo = async (req, res) => {
 
     let resource;
     if (updated.category !== existing.category) {
-      await container.item(getActivityVideoId(req), existing.category).delete();
+      await container.item(getActivityVideoId(req), getPartitionKey(existing)).delete();
       ({ resource } = await container.items.create(updated));
     } else {
-      ({ resource } = await container.item(getActivityVideoId(req), existing.category).replace(updated));
+      ({ resource } = await container.item(getActivityVideoId(req), getPartitionKey(existing)).replace(updated));
     }
     return res.json(toActivityVideoResponse(resource));
   } catch (error) {
@@ -302,7 +306,7 @@ exports.deleteActivityVideo = async (req, res) => {
     try {
       const existing = await readActivityVideo(container, getActivityVideoId(req), correlationId, res);
       if (!existing) return null;
-      await container.item(getActivityVideoId(req), existing.category).delete();
+      await container.item(getActivityVideoId(req), getPartitionKey(existing)).delete();
     } catch (error) {
       if (error.code === 404) {
         return sendError(res, 404, 'NotFound', 'Resource not found', correlationId);
