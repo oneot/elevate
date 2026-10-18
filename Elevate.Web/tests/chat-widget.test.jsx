@@ -116,6 +116,7 @@ vi.mock('botframework-webchat', () => ({
             {activity.text}
           </p>
         ))}
+        {activities.length > 0 && <span data-timestamp style={{ color: styleOptions.subtle }}>방금</span>}
         <div className="webchat__send-box" data-user-id={userID || 'fixture-user'}>
           <div className="webchat__send-box__main">
             <input aria-label="메시지 입력" disabled={disabled} />
@@ -483,6 +484,7 @@ it('uses opaque header, body, bubbles, input and footer surfaces, not wrapper op
       expect(getComputedStyle(host.querySelector(selector)).backgroundColor).toBe('rgb(248, 250, 252)');
     }
     expect(getComputedStyle(host.querySelector('[data-webchat] p')).color).toBe('rgb(15, 23, 42)');
+    expect(getComputedStyle(host.querySelector('[data-timestamp]')).color).toBe('rgb(100, 116, 139)');
     expect(host.querySelector('.chat-panel-stage').style.opacity).toBe('');
     expect(getComputedStyle(host.querySelector('.chat-glass-panel')).backgroundImage).toContain('#ffffff');
     expect(host.querySelector('.chat-glass-panel').className).not.toContain('min-h-[430px]');

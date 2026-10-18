@@ -2,6 +2,7 @@ import ReactWebChat from 'botframework-webchat';
 
 const styleOptions = {
   accent: '#475569',
+  subtle: '#64748b',
   botAvatarInitials: null,
   botAvatarImage: null,
   userAvatarInitials: null,
