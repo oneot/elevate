@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay, addDays, parseISO } from 'date-fns';
+import { format, parse, startOfWeek, getDay, addDays, addMonths, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
@@ -115,11 +115,10 @@ export default function EventCalendar({ calendarEvents = [], selectedEventId, on
 
   const navigate = useCallback((action) => {
     setCurrentDate(prev => {
-      const d = new Date(prev);
       if (action === 'TODAY') return new Date();
-      if (action === 'PREV') { d.setMonth(d.getMonth() - 1); return d; }
-      if (action === 'NEXT') { d.setMonth(d.getMonth() + 1); return d; }
-      return d;
+      if (action === 'PREV') return addMonths(prev, -1);
+      if (action === 'NEXT') return addMonths(prev, 1);
+      return prev;
     });
   }, []);
 

@@ -11,6 +11,7 @@ const defaultImage = `${siteUrl}/og-image.png`;
 const rawApiBaseUrl = process.env.VITE_API_BASE_URL;
 const apiBaseUrl = rawApiBaseUrl?.replace(/\/$/, '');
 const requireApiRoutes = process.env.REQUIRE_API_ROUTES === 'true';
+const maxApiPages = 20;
 
 const routes = [
   {
@@ -215,8 +216,14 @@ async function collectPostRoutes() {
   try {
     do {
       const data = await fetchPublicPostsPage(page);
-      const items = Array.isArray(data?.items) ? data.items : [];
-      totalPages = Math.max(1, Number(data?.totalPages) || 1);
+      if (!Array.isArray(data?.items) || !Number.isSafeInteger(data.totalPages) || data.totalPages < 0) {
+        throw new Error('Invalid public posts pagination');
+      }
+      if (data.totalPages > maxApiPages) {
+        throw new Error(`Public posts exceed the ${maxApiPages}-page SEO route limit`);
+      }
+      const items = data.items;
+      totalPages = Math.max(1, data.totalPages);
 
       for (const post of items) {
         if (!post?.category || !post?.slug || !post?.title) continue;
@@ -247,8 +254,9 @@ async function collectPostRoutes() {
       }
 
       page += 1;
-    } while (page <= totalPages && page <= 20);
+    } while (page <= totalPages);
   } catch (error) {
+    if (requireApiRoutes) throw error;
     console.warn(`[generate-seo-routes] Skipping post detail routes: ${error.message}`);
     return [];
   }

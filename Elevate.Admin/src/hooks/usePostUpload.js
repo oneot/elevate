@@ -22,7 +22,7 @@ import { assertCompleteThumbnailVariants, canCreateThumbnailVariants } from '../
  * @param {{ msalInstance, postId, setPost, setError, setMessage }} params
  */
 export function usePostUpload({ msalInstance, postId, setPost, setError, setMessage }) {
-  const [uploading, setUploading] = useState(false)
+  const [pendingUploads, setPendingUploads] = useState(0)
   const previewUrlRef = useRef(null)
 
   // 컴포넌트 언마운트 시 마지막으로 생성된 ObjectURL을 해제해 메모리 누수를 방지한다.
@@ -103,7 +103,7 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
       return
     }
 
-    setUploading(true)
+    setPendingUploads((count) => count + 1)
     setError('')
     setMessage('')
 
@@ -154,7 +154,7 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
     } catch (err) {
       setError(err.message || '썸네일 이미지 업로드에 실패했습니다.')
     } finally {
-      setUploading(false)
+      setPendingUploads((count) => count - 1)
     }
   }
 
@@ -175,26 +175,31 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
       return URL.createObjectURL(selectedFile)
     }
 
-    const sas = await requestUploadSas({
-      fileName: selectedFile.name,
-      contentType,
-      sizeBytes: selectedFile.size,
-    }, { msalInstance })
+    setPendingUploads((count) => count + 1)
+    try {
+      const sas = await requestUploadSas({
+        fileName: selectedFile.name,
+        contentType,
+        sizeBytes: selectedFile.size,
+      }, { msalInstance })
 
-    await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType, {
-      cacheControl: imageBlobCacheControl,
-    })
+      await uploadBlobWithSas(sas.uploadUrl, selectedFile, contentType, {
+        cacheControl: imageBlobCacheControl,
+      })
 
-    const asset = await registerAsset({
-      postId: postId || null,
-      blobUrl: sas.blobUrl,
-      contentType,
-      sizeBytes: selectedFile.size,
-      fileName: selectedFile.name,
-    }, { msalInstance })
+      const asset = await registerAsset({
+        postId: postId || null,
+        blobUrl: sas.blobUrl,
+        contentType,
+        sizeBytes: selectedFile.size,
+        fileName: selectedFile.name,
+      }, { msalInstance })
 
-    return asset?.signedUrl || asset?.url || asset?.cdnUrl || asset?.blobUrl || sas.blobUrl
+      return asset?.signedUrl || asset?.url || asset?.cdnUrl || asset?.blobUrl || sas.blobUrl
+    } finally {
+      setPendingUploads((count) => count - 1)
+    }
   }
 
-  return { uploading, uploadThumbnail, uploadHtmlImage }
+  return { uploading: pendingUploads > 0, uploadThumbnail, uploadHtmlImage }
 }

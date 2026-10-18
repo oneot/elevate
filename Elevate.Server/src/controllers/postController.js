@@ -1,5 +1,5 @@
 const { getPostsContainer, getAssetsContainer } = require('../services/cosmosClient');
-const { getBlobReadSasUrl } = require('../services/storageClient');
+const { enrichContentWithSas, enrichThumbnailWithSas } = require('../services/postContent');
 const { parsePositiveInt, sendError } = require('../utils/http');
 const storageAttachContainerName = process.env.STORAGE_ATTACH_CONTAINER_NAME || 'attachments';
 
@@ -56,33 +56,6 @@ function normalizeThumbnail(thumbnail) {
   return null;
 }
 
-var BLOB_SAS_PATTERN = /(https?:\/\/[^"'\s\)]*\.blob\.core\.windows\.net\/[^"'\s\)?]*)\?[^"'\s\)]*/g;
-var BLOB_BARE_PATTERN = /https?:\/\/[^"'\s\)]*\.blob\.core\.windows\.net\/[^"'\s\)?]*/g;
-
-function isBlobUrl(url) {
-  return typeof url === 'string' && url.indexOf('.blob.core.windows.net/') !== -1;
-}
-
-async function enrichThumbnailWithSas(thumbnail) {
-  if (!thumbnail) return thumbnail;
-  const enriched = Object.assign({}, thumbnail);
-  if (isBlobUrl(thumbnail.url)) {
-    const signedUrl = await getBlobReadSasUrl(thumbnail.url);
-    if (signedUrl) enriched.signedUrl = signedUrl;
-  }
-
-  if (thumbnail.variants && typeof thumbnail.variants === 'object') {
-    const entries = await Promise.all(Object.entries(thumbnail.variants).map(async ([key, variant]) => {
-      if (!variant || !isBlobUrl(variant.url)) return [key, variant];
-      const signedUrl = await getBlobReadSasUrl(variant.url);
-      return [key, signedUrl ? Object.assign({}, variant, { signedUrl }) : variant];
-    }));
-    enriched.variants = Object.fromEntries(entries);
-  }
-
-  return enriched;
-}
-
 function buildAttachmentFileNameByBlobUrlMap(files) {
   const fileNameByBlobUrl = new Map();
   if (!Array.isArray(files)) return fileNameByBlobUrl;
@@ -117,29 +90,6 @@ async function getAttachmentFileNameByBlobUrlMap(postId, correlationId) {
     console.warn(`[getAttachmentFileNameByBlobUrlMap] failed correlationId=${correlationId}`, error?.message || error);
     return new Map();
   }
-}
-
-async function enrichContentWithAttachDisposition(content, attachmentFileNameByBlobUrl) {
-  if (!content) return content;
-  // strip existing SAS tokens first
-  BLOB_SAS_PATTERN.lastIndex = 0;
-  const normalized = content.replace(BLOB_SAS_PATTERN, '$1');
-  BLOB_BARE_PATTERN.lastIndex = 0;
-  const matches = normalized.match(BLOB_BARE_PATTERN);
-  if (!matches || matches.length === 0) return normalized;
-
-  const uniqueUrls = matches.filter((v, i, a) => a.indexOf(v) === i);
-  const signed = await Promise.all(
-    uniqueUrls.map((blobUrl) => getBlobReadSasUrl(blobUrl, undefined, {
-      downloadFileName: attachmentFileNameByBlobUrl?.get(blobUrl)
-    }))
-  );
-
-  let result = normalized;
-  uniqueUrls.forEach((url, i) => {
-    if (signed[i]) result = result.split(url).join(signed[i]);
-  });
-  return result;
 }
 
 function toPostSummary(post) {
@@ -296,7 +246,7 @@ exports.getPostDetail = async (req, res) => {
       : new Map();
     const [thumbnail, contentMarkdown] = await Promise.all([
       enrichThumbnailWithSas(post.thumbnail),
-      enrichContentWithAttachDisposition(post.contentMarkdown, attachmentFileNameByBlobUrl)
+      enrichContentWithSas(post.contentMarkdown, attachmentFileNameByBlobUrl)
     ]);
 
     return res.json({ ...post, thumbnail, contentMarkdown });

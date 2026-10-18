@@ -412,6 +412,11 @@ function PostEditor() {
       return
     }
 
+    if (isUploading) {
+      setError('이미지 업로드가 완료된 뒤 저장해주세요.')
+      return
+    }
+
     if (isAttachmentUploading) {
       setError('첨부파일 업로드가 완료된 뒤 저장해주세요.')
       return
@@ -555,7 +560,7 @@ function PostEditor() {
     )
   }
 
-  const saveDisabled = saving || isAttachmentUploading
+  const saveDisabled = saving || isUploading || isAttachmentUploading
 
   return (
     <div className="space-y-10 animate-fadeIn">
@@ -583,7 +588,7 @@ function PostEditor() {
             </Button>
           )}
           <Button onClick={handleSave} disabled={saveDisabled}>
-            {saving ? '저장 중...' : isAttachmentUploading ? '첨부 업로드 중...' : '저장'}
+            {saving ? '저장 중...' : isUploading ? '이미지 업로드 중...' : isAttachmentUploading ? '첨부 업로드 중...' : '저장'}
           </Button>
         </div>
       </div>

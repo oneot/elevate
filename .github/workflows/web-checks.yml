@@ -1,11 +1,14 @@
-name: Web request checks
+name: Repository checks
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop, admin]
     paths:
       - 'Elevate.Web/**'
-      - '.github/workflows/web-checks.yml'
+      - 'Elevate.Admin/**'
+      - 'Elevate.Server/**'
+      - '.github/workflows/**'
+      - '.nvmrc'
 
 permissions:
   contents: read
@@ -13,6 +16,7 @@ permissions:
 jobs:
   web-checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: Elevate.Web
@@ -20,19 +24,67 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: Elevate.Web/package-lock.json
       - run: npm ci --legacy-peer-deps
+      - run: npm run lint
       - name: Request and page regressions
         run: npm test
       - name: Existing source regressions
         run: |
           npm run check:seo
-          npm run test:chunk-recovery
-          npm run test:build-id
-          npm run test:post-detail-enhancement
+          npm run test:source
       - name: Build without external API access
         run: npx --no-install vite build
         env:
           VITE_API_BASE_URL: https://api.example.test/api/public
+      - name: Generate offline SEO shells
+        run: npm run generate:seo-routes
+        env:
+          VITE_API_BASE_URL: ''
+          REQUIRE_API_ROUTES: 'false'
+
+  admin-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: Elevate.Admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: Elevate.Admin/package-lock.json
+      - run: npm ci --legacy-peer-deps
+      - run: npm run lint
+      - run: npm test
+      - run: npm run test:source
+      - name: Build with fixture configuration
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: https://api.example.test/api/admin
+          VITE_AZURE_AD_CLIENT_ID: 00000000-0000-0000-0000-000000000000
+          VITE_AZURE_AD_AUTHORITY: https://login.microsoftonline.com/00000000-0000-0000-0000-000000000000
+          VITE_AZURE_AD_REDIRECT_URI: https://admin.example.test
+          VITE_AZURE_AD_API_SCOPE: api://00000000-0000-0000-0000-000000000000/access_as_user
+      - run: npm run check:bundle
+
+  server-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: Elevate.Server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: Elevate.Server/package-lock.json
+      - run: npm ci
+      - name: Server and authorization regressions without Azure access
+        run: npm test

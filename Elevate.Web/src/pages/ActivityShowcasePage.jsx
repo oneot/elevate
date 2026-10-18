@@ -7,18 +7,19 @@
  * - 영상 카드 그리드: 카테고리 칩과 상단 검색으로 거른다
  * URL 쿼리: ?v=<YouTube 영상 ID>(선택한 영상), ?category=, ?q=, ?preview=local(내장 목록만 사용)
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useSearchParams } from 'react-router-dom';
 import { CalendarDays, CirclePlay, GraduationCap, LayoutGrid, Mic, Workflow } from 'lucide-react';
 import DocsShell from '../components/elevate-docs/DocsShell';
 import DocsHero from '../components/elevate-docs/DocsHero';
 import DocsNavigator, { NavHeader } from '../components/elevate-docs/DocsNavigator';
-import { DocsEmpty } from '../components/elevate-docs/DocsList';
+import { DocsEmpty, DocsLoadError } from '../components/elevate-docs/DocsList';
 import { VideoGrid, VideoTheater } from '../components/elevate-docs/DocsVideo';
 import { getDocsMeta, getTintStyle } from '../components/elevate-docs/docsMeta';
 import fallbackActivityVideos from '../data/activityVideos.json';
 import { listActivityVideos } from '../api/activityVideos';
+import { useApiResource } from '../hooks/useApiResource';
 import { DEFAULT_OG_IMAGE, SITE_NAME, canonicalUrl } from '../constants/seo';
 
 const PAGE_TITLE = '활동사례 알아보기 | Microsoft Elevate';
@@ -46,21 +47,12 @@ function matchesQuery(item, q) {
 
 export default function ActivityShowcasePage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [useLocalPreview] = useState(() => searchParams.get('preview') === 'local');
-  const [items, setItems] = useState(fallbackActivityVideos);
+  const useLocalPreview = searchParams.get('preview') === 'local';
   const [playingId, setPlayingId] = useState(null);
 
-  // 공개 API 목록을 쓰고, 실패하면 내장 목록(fallback)을 그대로 보여 준다.
-  useEffect(() => {
-    if (useLocalPreview) return undefined;
-    const controller = new AbortController();
-    listActivityVideos({ signal: controller.signal })
-      .then((data) => {
-        if (Array.isArray(data?.items)) setItems(data.items);
-      })
-      .catch(() => {});
-    return () => controller.abort();
-  }, [useLocalPreview]);
+  const loadVideos = useCallback(async (signal) => (await listActivityVideos({ signal })).items, []);
+  const { data, loading, error, retry } = useApiResource(useLocalPreview ? null : loadVideos);
+  const items = data || fallbackActivityVideos;
 
   const categories = useMemo(() => [...new Set(items.map((item) => item.category).filter(Boolean))], [items]);
   const categoryParam = searchParams.get('category') || '';
@@ -222,6 +214,19 @@ export default function ActivityShowcasePage() {
           abstract={meta.description}
           meta={[`영상 ${items.length}개`, `카테고리 ${categories.length}개`]}
         />
+
+        {loading && (
+          <p className="edoc-container edoc-container--wide" role="status">최신 영상 목록을 불러오는 중...</p>
+        )}
+        {error && (
+          <div className="edoc-container edoc-container--wide">
+            <DocsLoadError
+              title="최신 영상 목록을 불러오지 못했습니다."
+              message={`기본 영상 목록을 표시합니다. ${error.message}`}
+              onRetry={retry}
+            />
+          </div>
+        )}
 
         <VideoTheater
           item={selected}

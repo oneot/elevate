@@ -1,11 +1,13 @@
+import { lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/layout/index.js'
 import NotFound from './pages/NotFound.jsx'
-import PostEditor from './pages/PostEditor.jsx'
-import CategoryPosts from './pages/CategoryPosts.jsx'
-import CalendarEventEditor from './pages/CalendarEventEditor.jsx'
-import ActivityVideos from './pages/ActivityVideos.jsx'
-import ActivityVideoEditor from './pages/ActivityVideoEditor.jsx'
+
+const PostEditor = lazy(() => import('./pages/PostEditor.jsx'))
+const CategoryPosts = lazy(() => import('./pages/CategoryPosts.jsx'))
+const CalendarEventEditor = lazy(() => import('./pages/CalendarEventEditor.jsx'))
+const ActivityVideos = lazy(() => import('./pages/ActivityVideos.jsx'))
+const ActivityVideoEditor = lazy(() => import('./pages/ActivityVideoEditor.jsx'))
 
 /**
  * 앱 라우팅 구조.

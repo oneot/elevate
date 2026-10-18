@@ -1,5 +1,31 @@
 # Deployment and Incident Runbook
 
+## 빌드·PR 검증 경계
+
+개발·Actions 빌드의 Node 버전은 루트 `.nvmrc`의 22.x를 사용한다.
+Web과 Admin은 각각의 잠금 파일로 `npm ci --legacy-peer-deps`를 실행한다.
+`Repository checks`는 `main`, `develop`, `admin` 대상 PR에서 Web/Admin/Server의
+로컬 회귀 검증을 수행한다. 운영 API·MSAL·SAS 비밀값이 필요한 테스트가 아니다.
+
+`main` → GitHub Pages와 `admin` → Azure Static Web Apps 배포 경계는 유지한다.
+이 변경은 Azure Functions의 실배포 Node 버전이나 GitHub/Azure 설정을 변경하지 않는다.
+Server 배포 자동화는 현재 저장소에서 확인되지 않았으므로 별도 운영 확인이 필요하다.
+
+### 배포 전 실패를 확인할 항목
+
+- Web 배포의 `REQUIRE_API_ROUTES=true`는 필수 SEO 메타데이터 수집을 뜻한다.
+  API 실패·응답 페이지 정보 오류·기존 20페이지 한도 초과 시 이제 배포 빌드가 실패한다.
+  오류를 숨겨 성공한 것처럼 배포하지 말고 API 응답과 페이지 한도를 확인한다.
+  생성 대상은 기존 SEO shell이며, 본문·이미지 정적 스냅샷이 아니다.
+- Admin은 Vite 빌드 후 `npm run check:bundle`이 기본 목록의 정적 JavaScript
+  의존성 합계와 편집기 분리를 검사한다. 600 KiB 초과 또는 Tiptap 즉시 로딩이면
+  실패한다. 번들 경고를 숨기거나 한도만 높이기 전에 manifest의 import 경로를 확인한다.
+- 모의 API/루프백 fixture/로컬 번들 성공과 실제 운영 로그인·게시·업로드·삭제,
+  CORS 및 VPN 검증 결과는 분리해 기록한다.
+
+분석 범위·실제 수정·미검증 항목은
+[모더나이즈 문서](../04-application/MODERNIZATION.md)에 기록한다.
+
 ## HTTP / VPN 접속 장애
 
 운영 코드는 `main` push를 배포하는 `.github/workflows/deploy.yml`과

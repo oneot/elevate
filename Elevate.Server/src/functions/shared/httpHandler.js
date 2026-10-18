@@ -104,14 +104,20 @@ async function readRequestBody(request) {
   const contentType = String(getHeader(request.headers, 'content-type') || '').toLowerCase();
 
   try {
+    const text = await request.text();
     if (contentType.includes('application/json')) {
-      return await request.json();
+      return text.trim() ? JSON.parse(text) : null;
     }
 
-    const text = await request.text();
     return text || null;
   } catch (error) {
-    return null;
+    if (error instanceof SyntaxError) {
+      const invalidBody = new Error('Invalid JSON request body');
+      invalidBody.status = 400;
+      invalidBody.code = 'BadRequest';
+      throw invalidBody;
+    }
+    throw error;
   }
 }
 
@@ -143,8 +149,12 @@ function createControllerHandler(controller, options = {}) {
         );
       }
 
-      if (context.log && typeof context.log.error === 'function') {
+      if (typeof context.error === 'function') {
+        context.error(`[${options.name || 'function'}] failed`, error);
+      } else if (context.log && typeof context.log.error === 'function') {
         context.log.error(`[${options.name || 'function'}] failed`, error);
+      } else {
+        console.error(`[${options.name || 'function'}] failed`, error);
       }
 
       return buildErrorResponse(500, 'InternalServerError', 'Unexpected error occurred', correlationId);

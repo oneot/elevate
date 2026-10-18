@@ -32,9 +32,15 @@ function parsePositiveInt(value, defaultValue, min, max) {
     return defaultValue;
   }
 
-  const parsed = Number.parseInt(value, 10);
+  if (typeof value !== 'number' && typeof value !== 'string') {
+    return null;
+  }
+  if (typeof value === 'string' && !/^\d+$/.test(value.trim())) {
+    return null;
+  }
+  const parsed = Number(value);
 
-  if (Number.isNaN(parsed)) {
+  if (!Number.isSafeInteger(parsed)) {
     return null;
   }
 
