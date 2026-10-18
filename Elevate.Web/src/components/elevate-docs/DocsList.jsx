@@ -86,6 +86,16 @@ export function DocsEmpty({ title, children }) {
   );
 }
 
+export function DocsLoadError({ message, onRetry, title = '게시글을 불러오지 못했습니다.' }) {
+  return (
+    <div className="edoc-empty" role="alert">
+      <strong>{title}</strong>
+      <span>{message}</span>
+      {onRetry && <button type="button" className="edoc-textlink" onClick={onRetry}>다시 시도</button>}
+    </div>
+  );
+}
+
 function getPageNumbers(currentPage, totalPages, delta = 2) {
   const left = Math.max(1, currentPage - delta);
   const right = Math.min(totalPages, currentPage + delta);
@@ -187,6 +197,7 @@ export default function DocsListSection({
   onClear,
   loading,
   error,
+  onRetry,
   posts = [],
   skeletonCount = 12,
   showCategory = false,
@@ -198,7 +209,7 @@ export default function DocsListSection({
 }) {
   let body;
   if (loading) body = <DocsPostGridSkeleton count={skeletonCount} />;
-  else if (error) body = <DocsEmpty title="게시글을 불러오지 못했습니다.">{error}</DocsEmpty>;
+  else if (error) body = <DocsLoadError message={error} onRetry={onRetry} />;
   else if (posts.length === 0) body = <DocsEmpty title={emptyTitle}>{emptyHint}</DocsEmpty>;
   else body = <DocsPostGrid posts={posts} showCategory={showCategory} />;
 
@@ -228,7 +239,9 @@ export default function DocsListSection({
         </div>
       )}
       {body}
-      <DocsPagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
+      {!loading && !error && (
+        <DocsPagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
+      )}
     </section>
   );
 }

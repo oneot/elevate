@@ -1,0 +1,38 @@
+name: Web request checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'Elevate.Web/**'
+      - '.github/workflows/web-checks.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  web-checks:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Elevate.Web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: Elevate.Web/package-lock.json
+      - run: npm ci --legacy-peer-deps
+      - name: Request and page regressions
+        run: npm test
+      - name: Existing source regressions
+        run: |
+          npm run check:seo
+          npm run test:chunk-recovery
+          npm run test:build-id
+          npm run test:post-detail-enhancement
+      - name: Build without external API access
+        run: npx --no-install vite build
+        env:
+          VITE_API_BASE_URL: https://api.example.test/api/public

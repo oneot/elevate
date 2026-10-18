@@ -12,7 +12,7 @@
  * /all 페이지에는 program-news 게시글이 노출되지 않는다.
  * (BASE_CATEGORIES / POST_LIST_CATEGORIES에 포함되지 않음)
  */
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useSearchParams } from 'react-router-dom';
 import PostListLayout from '../components/posts/PostListLayout';
@@ -22,6 +22,7 @@ import Footer from '../components/layout/Footer';
 import EventCalendar from '../components/posts/EventCalendar';
 import { POST_LIST_PAGE_SIZE, useCategoryPostList } from '../hooks/useCategoryPostList';
 import { listCalendarEvents } from '../api/calendarEvents';
+import { useApiResource } from '../hooks/useApiResource';
 import { sortByEventDates } from '../utils/eventSorting';
 import { DEFAULT_OG_IMAGE, SITE_NAME, canonicalUrl } from '../constants/seo';
 
@@ -75,6 +76,7 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
     selectedTags,
     loading,
     error,
+    retry,
     filteredPosts,
     paginatedPosts,
     currentPage,
@@ -86,18 +88,12 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
     updateUrlParams,
   } = useCategoryPostList(category, { sortEventPosts: activeTab !== 'event' });
 
-  const [calendarEvents, setCalendarEvents] = useState([]);
-
-  useEffect(() => {
-    if (activeTab !== 'event') return;
-    let isMounted = true;
-    const controller = new AbortController();
-    const range = getCalendarEventRange();
-    listCalendarEvents({ signal: controller.signal, ...range, limit: CALENDAR_EVENT_LIMIT })
-      .then(data => { if (isMounted) setCalendarEvents(Array.isArray(data?.items) ? data.items : []); })
-      .catch(err => { if (err?.name !== 'AbortError') console.error('[ProgramNews] calendarEvents fetch failed', err); });
-    return () => { isMounted = false; controller.abort(); };
-  }, [activeTab]);
+  const loadCalendar = useCallback(async (signal) => {
+    const data = await listCalendarEvents({ signal, ...getCalendarEventRange(), limit: CALENDAR_EVENT_LIMIT });
+    return data.items;
+  }, []);
+  const calendar = useApiResource(activeTab === 'event' ? loadCalendar : null);
+  const calendarEvents = useMemo(() => calendar.data || [], [calendar.data]);
 
   const [searchParams] = useSearchParams();
   const selectedEventId = searchParams.get('event') || null;
@@ -128,11 +124,21 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
     : (activeTab === 'event' ? eventPaginatedPosts : paginatedPosts);
 
   const calendarSlot = activeTab === 'event' ? (
-    <EventCalendar
-      calendarEvents={calendarEvents}
-      selectedEventId={selectedEventId}
-      onSelectEvent={handleCalendarSelect}
-    />
+    <div aria-busy={calendar.loading || undefined}>
+      {calendar.loading ? <p role="status">일정을 불러오는 중…</p> : calendar.error ? (
+        <div role="alert" className="text-center py-6">
+          <p>일정을 불러오지 못했습니다.</p>
+          <p>{calendar.error.message}</p>
+          <button type="button" className="text-ms-blue hover:underline" onClick={calendar.retry}>일정 다시 시도</button>
+        </div>
+      ) : (
+        <EventCalendar
+          calendarEvents={calendarEvents}
+          selectedEventId={selectedEventId}
+          onSelectEvent={handleCalendarSelect}
+        />
+      )}
+    </div>
   ) : null;
 
   // PostListLayout의 navTabs에 전달할 탭 버튼 UI — PostList.jsx의 카테고리 이동 버튼과 동일한 스타일
@@ -180,6 +186,7 @@ function NewsTabContent({ category, displayName, activeTab, onTabChange }) {
       posts={displayedPosts}
       loading={loading}
       error={error}
+      onRetry={retry}
       countLabel={!loading && selectedTags.length > 0 ? `${eventFilteredPosts.length}개의 게시글이 일치합니다.` : undefined}
       activeQuery={qParam}
       skeletonCount={POST_LIST_PAGE_SIZE}

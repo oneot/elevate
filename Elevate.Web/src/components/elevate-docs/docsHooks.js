@@ -4,100 +4,76 @@
  * (newest first), post outline extraction and scroll-spy for the left navigator.
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { listPosts } from '../../api/posts';
-import { getApiCategory, getDisplayCategoriesForApi, toDisplayPost } from '../../constants/categories';
+import { groupByDisplayCategory, loadApiCategoryPosts, snapshotPostsCache } from '../../api/categoryPosts';
+import { getApiCategory, getDisplayCategoriesForApi } from '../../constants/categories';
 import { getPostContentHeadings } from '../../utils/html';
 
 /* ------------------------------------------------------------------ */
-/* Posts per category (module-level cache shared across pages)         */
+/* Posts per category                                                 */
 /* ------------------------------------------------------------------ */
 
-const CATEGORY_FETCH_LIMIT = 100;
-const postsCache = new Map();
-
-function publishedTime(post) {
-  const time = Date.parse(post?.publishedAt || '');
-  return Number.isFinite(time) ? time : 0;
-}
-
-const titleCollator = new Intl.Collator('ko', { numeric: true, sensitivity: 'base' });
-
-/**
- * 작성일(publishedAt) 최신순 정렬 — 최근에 쓴 글이 앞에 온다.
- * 작성일은 날짜 단위로만 저장돼 같은 날 글이 많으므로, 같은 날짜끼리는 데이터에 남아 있는
- * 기존 순서 값(seriesOrder)이 큰 글(나중에 쓴 글), 그다음 서버 제목(숫자 인식) 역순으로 정렬한다.
- * 화면 제목을 바꿔도 순서가 흔들리지 않도록 원래 서버 제목(serverTitle)으로 비교한다.
- */
-export function sortByPublishedDesc(posts) {
-  return [...posts].sort((a, b) => (
-    publishedTime(b) - publishedTime(a)
-    || (b.seriesOrder ?? -Infinity) - (a.seriesOrder ?? -Infinity)
-    || titleCollator.compare(b.serverTitle || b.title || '', a.serverTitle || a.title || '')
-  ));
-}
-
-/**
- * 서버 카테고리 하나의 게시글 전체를 가져와 화면 카테고리·화면 제목으로 바꾸고 최신순으로 정렬한다.
- * 결과는 모듈 캐시에 보관해 목록/상세/사이드바가 함께 쓴다.
- */
-export function loadApiCategoryPosts(apiCategory) {
-  const cached = postsCache.get(apiCategory);
-  if (cached) return cached.promise;
-  const entry = {};
-  entry.promise = listPosts({ category: apiCategory, limit: CATEGORY_FETCH_LIMIT })
-    .then((data) => {
-      entry.items = sortByPublishedDesc((data?.items || []).map(toDisplayPost));
-      return entry.items;
-    })
-    .catch((error) => {
-      postsCache.delete(apiCategory);
-      throw error;
-    });
-  postsCache.set(apiCategory, entry);
-  return entry.promise;
-}
-
-/** 화면 카테고리 하나의 게시글 (최신순). */
-export function loadCategoryPosts(category) {
-  return loadApiCategoryPosts(getApiCategory(category)).then((items) => items.filter((post) => post.category === category));
-}
-
-function groupByDisplayCategory(apiCategory, items) {
-  const groups = {};
-  getDisplayCategoriesForApi(apiCategory).forEach((category) => {
-    groups[category] = items.filter((post) => post.category === category);
-  });
-  return groups;
-}
-
-function snapshotPostsCache() {
-  let snapshot = {};
-  postsCache.forEach((entry, apiCategory) => {
-    if (entry.items) snapshot = { ...snapshot, ...groupByDisplayCategory(apiCategory, entry.items) };
-  });
-  return snapshot;
+function withoutCategories(map, categories) {
+  const next = { ...map };
+  categories.forEach((category) => { delete next[category]; });
+  return next;
 }
 
 /**
  * 카테고리별 게시글 목록을 필요할 때 불러온다. `ensure(category)`는 여러 번 불러도 안전하다.
- * @returns {{ postsMap: Record<string, Array>, ensure: (category: string) => void }}
+ * @returns {{ postsMap: Record<string, Array>, errorsMap: Record<string, string>, ensure: Function }}
  */
 export function useCategoryPosts() {
-  const [postsMap, setPostsMap] = useState(snapshotPostsCache);
+  const [state, setState] = useState(() => ({ postsMap: snapshotPostsCache(), errorsMap: {} }));
+  const requestsRef = useRef(new Map());
+
+  useEffect(() => {
+    const requests = requestsRef.current;
+    return () => {
+      requests.forEach((controller) => controller.abort());
+      requests.clear();
+    };
+  }, []);
 
   const ensure = useCallback((category) => {
     if (!category || category === 'all') return;
     const apiCategory = getApiCategory(category);
-    loadApiCategoryPosts(apiCategory)
+    if (requestsRef.current.has(apiCategory)) return;
+    const categories = getDisplayCategoriesForApi(apiCategory);
+    const controller = new AbortController();
+    requestsRef.current.set(apiCategory, controller);
+    const cached = snapshotPostsCache();
+    setState((prev) => ({
+      postsMap: {
+        ...withoutCategories(prev.postsMap, categories),
+        ...Object.fromEntries(categories.filter((key) => cached[key]).map((key) => [key, cached[key]])),
+      },
+      errorsMap: withoutCategories(prev.errorsMap, categories),
+    }));
+    loadApiCategoryPosts(apiCategory, { signal: controller.signal })
       .then((items) => {
-        setPostsMap((prev) => ({ ...prev, ...groupByDisplayCategory(apiCategory, items) }));
+        if (controller.signal.aborted) return;
+        setState((prev) => ({
+          postsMap: { ...prev.postsMap, ...groupByDisplayCategory(apiCategory, items) },
+          errorsMap: withoutCategories(prev.errorsMap, categories),
+        }));
       })
-      .catch(() => {
-        setPostsMap((prev) => (prev[category] ? prev : { ...prev, [category]: [] }));
+      .catch((error) => {
+        if (controller.signal.aborted) return;
+        console.warn('[useCategoryPosts] 요청 실패:', error.code || error.status || error.name);
+        setState((prev) => ({
+          postsMap: withoutCategories(prev.postsMap, categories),
+          errorsMap: {
+            ...prev.errorsMap,
+            ...Object.fromEntries(categories.map((key) => [key, error.message || '목록을 불러오지 못했습니다.'])),
+          },
+        }));
+      })
+      .finally(() => {
+        if (requestsRef.current.get(apiCategory) === controller) requestsRef.current.delete(apiCategory);
       });
   }, []);
 
-  return { postsMap, ensure };
+  return { ...state, ensure };
 }
 
 /* ------------------------------------------------------------------ */

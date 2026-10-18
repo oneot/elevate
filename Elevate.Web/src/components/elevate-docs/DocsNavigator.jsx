@@ -98,6 +98,11 @@ function NavItem({ node, depth, ctx }) {
       {expanded &&
         (node.children ? (
           <NavList nodes={node.children} depth={depth + 1} ctx={ctx} />
+        ) : node.error ? (
+          <div className="edoc-nav__note" style={{ '--depth': depth + 1 }} role="alert">
+            <p>{node.error}</p>
+            <button type="button" className="edoc-textlink" onClick={node.onRetry}>다시 시도</button>
+          </div>
         ) : (
           <p className="edoc-nav__note" style={{ '--depth': depth + 1 }}>
             불러오는 중…

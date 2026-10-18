@@ -17,14 +17,16 @@
  */
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import DocsShell from '../components/elevate-docs/DocsShell';
 import DocsHero, { DocsArticleSkeleton } from '../components/elevate-docs/DocsHero';
 import DocsNavigator, { NavHeader, NavSkeleton } from '../components/elevate-docs/DocsNavigator';
 import DocsPrevNext from '../components/elevate-docs/DocsPrevNext';
+import { DocsLoadError } from '../components/elevate-docs/DocsList';
 import { scrollToElementSettled, useCategoryPosts, usePostOutline, useScrollSpy } from '../components/elevate-docs/docsHooks';
 import { getDocsMeta, getDocsSection, getTintStyle } from '../components/elevate-docs/docsMeta';
 import { getPost, getLatestAgenthonPost } from '../api/posts';
+import { useApiResource } from '../hooks/useApiResource';
 import { preparePostHtml, injectHeadingIds, injectLinkHandlers, injectCollapsibleCodeBlocks, optimizeEmbeddedMedia } from '../utils/html';
 import { formatDateKo } from '../utils/url';
 import {
@@ -103,84 +105,24 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
     // categoryProp이 있으면 URL 파라미터보다 우선한다 (고정 URL 라우트용)
     const normalizedCategory = (categoryProp || categoryParam)?.toLowerCase();
 
-    // useLatest 모드일 때 getLatestAgenthonPost()로 최신 게시글을 직접 로드한다.
-    // 목록 API + 상세 API 2단계 호출이 이미 캡슐화되어 있으므로 중복 구현 없이 재사용한다.
-    const [resolvedPostId, setResolvedPostId] = useState(postIdParam ?? null);
-    const [loadingLatest, setLoadingLatest] = useState(useLatest);
-    const [post, setPost] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [notFound, setNotFound] = useState(false);
-
-    useEffect(() => {
-        // useLatest 모드는 현재 agenthon 카테고리에서만 지원한다.
-        // 다른 카테고리에서 useLatest=true로 재사용할 경우 잘못된 게시글을 로드하지 않도록 가드한다.
-        if (!useLatest || !normalizedCategory) return;
-        if (normalizedCategory !== 'agenthon') return;
-        let cancelled = false;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setLoadingLatest(true);
-        getLatestAgenthonPost()
-            .then((post) => {
-                if (cancelled) return;
-                if (post?.slug) {
-                    setResolvedPostId(post.slug);
-                } else {
-                    // 최신 게시글이 없으면 notFound 처리하여 무한 로딩 방지
-                    setResolvedPostId(null);
-                    setNotFound(true);
-                    setLoading(false);
-                }
-            })
-            .catch(() => {
-                if (cancelled) return;
-                setResolvedPostId(null);
-                setNotFound(true);
-                setLoading(false);
-            })
-            .finally(() => { if (!cancelled) setLoadingLatest(false); });
-        return () => { cancelled = true; };
-    }, [normalizedCategory, useLatest]);
-
-    // URL 파라미터가 변경될 때 resolvedPostId를 동기화한다 (일반 /:category/:postId 라우트용)
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        if (!useLatest) setResolvedPostId(postIdParam ?? null);
-    }, [postIdParam, useLatest]);
-
-    const postId = resolvedPostId;
-    // 화면 카테고리(forms 등)를 서버 카테고리(m365)로 바꿔 조회한다.
     const apiCategory = getApiCategory(normalizedCategory);
+    const isValidCategory = VALID_CATEGORIES.includes(normalizedCategory)
+        && (!useLatest || normalizedCategory === 'agenthon');
+    const loadPost = useCallback(async (signal) => {
+        const postData = useLatest
+            ? await getLatestAgenthonPost({ signal })
+            : await getPost(apiCategory, postIdParam, { signal });
+        return postData ? toDisplayPost(postData) : null;
+    }, [apiCategory, postIdParam, useLatest]);
+    const { data: post, loading, error, retry } = useApiResource(
+        isValidCategory && (useLatest || postIdParam) ? loadPost : null,
+    );
+    const postId = useLatest ? post?.slug : postIdParam;
+    const isReady = !loading && !error && Boolean(post);
     const preparedContentHtml = useMemo(
         () => preparePostHtml(post?.contentMarkdown || ''),
         [post?.contentMarkdown]
     );
-
-    useEffect(() => {
-        if (!apiCategory || !postId) return;
-        // AbortController: 라우트 전환 시 이전 fetch를 취소하여 응답이 뒤늦게 도착해도
-        // 현재 페이지의 상태를 덮어쓰지 않도록 한다.
-        const controller = new AbortController();
-        async function load() {
-            setLoading(true);
-            setNotFound(false);
-            try {
-                const postData = await getPost(apiCategory, postId, { signal: controller.signal });
-                setPost(toDisplayPost(postData));
-            } catch (err) {
-                if (err.name === 'AbortError') return;
-                if (err.status === 404) {
-                    setNotFound(true);
-                } else {
-                    console.error('PostDetail fetch error:', err);
-                    setNotFound(true);
-                }
-            } finally {
-                setLoading(false);
-            }
-        }
-        load();
-        return () => controller.abort();
-    }, [apiCategory, postId]);
 
     // 글이 실제로 속한 화면 카테고리 (예: m365 서버 글 중 Forms 글 → forms)
     const displayCategory = (post && getDisplayCategory(post)) || normalizedCategory;
@@ -195,10 +137,10 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
 
     // 같은 카테고리의 게시글 (최신순) — 사이드바와 이전/다음 글에 사용
     // 이전 글 = 더 먼저 쓴 글(목록에서 아래), 다음 글 = 더 최근에 쓴 글(목록에서 위)
-    const { postsMap, ensure: ensureCategoryPosts } = useCategoryPosts();
+    const { postsMap, errorsMap, ensure: ensureCategoryPosts } = useCategoryPosts();
     useEffect(() => {
-        if (displayCategory) ensureCategoryPosts(displayCategory);
-    }, [displayCategory, ensureCategoryPosts]);
+        if (isReady && displayCategory) ensureCategoryPosts(displayCategory);
+    }, [isReady, displayCategory, ensureCategoryPosts]);
     const categoryPostsLoaded = Boolean(postsMap[displayCategory]);
     const categoryPosts = useMemo(() => postsMap[displayCategory] || [], [postsMap, displayCategory]);
     const currentIndex = post ? categoryPosts.findIndex((item) => item.id === post.id) : -1;
@@ -207,7 +149,6 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
     const backToListHref = getCategoryListRoute(displayCategory);
     const buildPostHref = useCallback((item) => `/${item.category}/${item.slug}`, []);
 
-    const isReady = !loading && !loadingLatest && Boolean(post);
     const outline = usePostOutline(isReady ? preparedContentHtml : '');
     const headingIds = useMemo(() => outline.headings.map((heading) => heading.id), [outline.headings]);
     const [activeHeadingId, lockHeading] = useScrollSpy(headingIds);
@@ -251,11 +192,11 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
     }, [post, outline.tree, scrollToHeading, scrollToTop, categoryPosts, categoryPostsLoaded, currentIndex, buildPostHref]);
 
     // 유효하지 않은 카테고리인 경우 404 페이지를 직접 렌더링 (<Navigate to="*">는 잘못된 상대 경로로 이동)
-    if (!VALID_CATEGORIES.includes(normalizedCategory)) {
+    if (!isValidCategory) {
         return <NotFound />;
     }
 
-    if (notFound) {
+    if (error?.status === 404 || (!loading && !error && !post)) {
         return <NotFound />;
     }
 
@@ -294,19 +235,35 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
     const navigator = isReady ? (
         <DocsNavigator
             header={(
-                <NavHeader
-                    backTo="/all"
-                    backLabel="전체 게시글"
-                    title={categoryDisplayName}
-                    titleTo={backToListHref !== '/' ? backToListHref : undefined}
-                    subtitle={categoryPostsLoaded ? `게시글 ${categoryPosts.length}개 · 최신순` : undefined}
-                />
+                <>
+                    <NavHeader
+                        backTo="/all"
+                        backLabel="전체 게시글"
+                        title={categoryDisplayName}
+                        titleTo={backToListHref !== '/' ? backToListHref : undefined}
+                        subtitle={categoryPostsLoaded ? `게시글 ${categoryPosts.length}개 · 최신순` : undefined}
+                    />
+                    {errorsMap[displayCategory] && (
+                        <div className="edoc-nav__note" role="alert">
+                            <p>{errorsMap[displayCategory]}</p>
+                            <button type="button" className="edoc-textlink" onClick={() => ensureCategoryPosts(displayCategory)}>
+                                목록 다시 시도
+                            </button>
+                        </div>
+                    )}
+                </>
             )}
             sections={navSections}
             activeId={activeHeadingId ? `toc:${activeHeadingId}` : `post:${post.id}`}
             resetKey={post.id}
         />
-    ) : <NavSkeleton />;
+    ) : loading ? <NavSkeleton /> : (
+        <DocsNavigator
+            header={<NavHeader backTo="/all" backLabel="전체 게시글" />}
+            sections={[]}
+            emptyLabel="게시글을 불러오지 못했습니다."
+        />
+    );
 
     return (
         <>
@@ -337,7 +294,12 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
                 search={search}
                 fabLabel="목차"
             >
-                {!isReady && <DocsArticleSkeleton />}
+                {loading && <DocsArticleSkeleton />}
+                {!loading && error && (
+                    <div className="edoc-container edoc-section">
+                        <DocsLoadError message={error.message} onRetry={retry} />
+                    </div>
+                )}
 
                 {isReady && (
                     <>

@@ -2,7 +2,7 @@
  * @file useCategoryPostList.js
  * @description 카테고리 게시글 목록 페이지에서 공통으로 사용하는 훅.
  *
- * 지정된 카테고리의 게시글을 최대 100개 불러온 뒤,
+ * 지정된 카테고리의 게시글을 페이지 단위로 모두 불러온 뒤,
  * 태그 필터·검색어 필터·클라이언트 사이드 페이지네이션·URL 파라미터 동기화를 제공한다.
  *
  * ## URL 파라미터 형식
@@ -14,9 +14,10 @@
  * - 태그는 소문자 trim 후 중복 제거한다 (normalizeTag).
  * - 선택된 모든 태그를 포함하는 게시글만 표시한다 (AND 조건).
  */
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { listPosts } from '../api/posts';
+import { listAllPosts } from '../api/posts';
+import { useApiResource } from './useApiResource';
 import { sortByEventDates } from '../utils/eventSorting';
 
 export const POST_LIST_PAGE_SIZE = 20;
@@ -60,44 +61,14 @@ export function useCategoryPostList(category, { sortEventPosts = true } = {}) {
     return normalizeTagList(tagsParam.split(','));
   }, [tagsParam]);
 
-  const [allPosts, setAllPosts] = useState([]);
-  const [allTags, setAllTags] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // 카테고리 게시글을 최대 100개 fetch한다.
-  // AbortController로 fetch를 취소하고, isActive 가드로 unmount 후 setState를 방지한다.
-  // (finally는 AbortError 이후에도 실행되므로 isActive 체크가 필요)
-  useEffect(() => {
-    const controller = new AbortController();
-    let isActive = true;
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await listPosts({ category, limit: 100, signal: controller.signal });
-        const allItems = (data.items || []).map((p) => ({ ...p, tags: normalizeTagList(p.tags || []) }));
-        if (!isActive) return;
-        setAllPosts(allItems);
-        // 전체 게시글에서 고유 태그 목록을 수집한다.
-        const tagSet = new Set();
-        allItems.forEach((p) => (p.tags || []).forEach((t) => tagSet.add(normalizeTag(t))));
-        setAllTags(Array.from(tagSet));
-      } catch (err) {
-        if (err.name === 'AbortError' || !isActive) return;
-        setError(err.message || '게시글을 불러오지 못했습니다.');
-        setAllPosts([]);
-        setAllTags([]);
-      } finally {
-        if (isActive) setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      isActive = false;
-      controller.abort();
-    };
+  const loadPosts = useCallback(async (signal) => {
+    const items = await listAllPosts({ category, signal });
+    return items.map((post) => ({ ...post, tags: normalizeTagList(post.tags || []) }));
   }, [category]);
+  const { data, loading, error: requestError, retry } = useApiResource(loadPosts);
+  const allPosts = useMemo(() => data || [], [data]);
+  const allTags = useMemo(() => [...new Set(allPosts.flatMap((post) => post.tags))], [allPosts]);
+  const error = requestError?.message || null;
 
   // 태그 + 검색어 필터 적용: 선택된 태그를 모두 포함하고 검색어가 제목/요약에 포함된 게시글만 표시.
   // event 카테고리는 필터 후 "오늘과 가장 가까운 이벤트 우선" 기준으로 추가 정렬한다.
@@ -174,6 +145,7 @@ export function useCategoryPostList(category, { sortEventPosts = true } = {}) {
     selectedTags,
     loading,
     error,
+    retry,
     filteredPosts,
     paginatedPosts,
     currentPage,
