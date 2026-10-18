@@ -57,7 +57,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-      {location.pathname !== '/elevathon' && <ChatWidget />}
+      <ChatWidget hidden={location.pathname === '/elevathon'} />
     </>
   );
 }

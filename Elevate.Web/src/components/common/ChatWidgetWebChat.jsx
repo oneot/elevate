@@ -1,98 +1,54 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import ReactWebChat, { createDirectLine, createStore } from 'botframework-webchat';
-import { Bot } from 'lucide-react';
+import ReactWebChat from 'botframework-webchat';
 
-const LoadingSpinner = () => (
-  <div className="flex space-x-1.5 p-2 animate-fade-in-up">
-    <div className="loading-dot"></div>
-    <div className="loading-dot"></div>
-    <div className="loading-dot"></div>
-  </div>
-);
+const styleOptions = {
+  accent: '#475569',
+  botAvatarInitials: null,
+  botAvatarImage: null,
+  userAvatarInitials: null,
+  userAvatarImage: null,
+  bubbleBackground: '#ffffff',
+  bubbleBorderColor: '#e2e8f0',
+  bubbleBorderRadius: 12,
+  bubbleTextColor: '#0f172a',
+  bubbleFromUserBackground: '#334155',
+  bubbleFromUserBorderColor: '#334155',
+  bubbleFromUserBorderRadius: 12,
+  bubbleFromUserTextColor: 'White',
+  rootHeight: '100%',
+  rootWidth: '100%',
+  backgroundColor: '#f8fafc',
+  sendBoxBackground: '#ffffff',
+  sendBoxTextColor: '#0f172a',
+  sendBoxPlaceholderColor: '#64748b',
+  hideUploadButton: true,
+  hideTypingIndicator: true,
+};
 
-export default function ChatWidgetWebChat({ token }) {
-  const [isBotTyping, setIsBotTyping] = useState(false);
-  const [hasReceivedGreeting, setHasReceivedGreeting] = useState(false);
-  const typingTimeoutRef = useRef(null);
-  const directLine = useMemo(() => createDirectLine({ token }), [token]);
-
-  useEffect(() => {
-    return () => {
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    };
-  }, []);
-
-  const store = useMemo(
-    () =>
-      createStore({}, ({ dispatch }) => (next) => (action) => {
-        if (action.type === 'DIRECT_LINE/INCOMING_ACTIVITY') {
-          const { activity } = action.payload;
-          if (activity.type === 'typing' && activity.from.role === 'bot') {
-            setIsBotTyping(true);
-            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-            typingTimeoutRef.current = setTimeout(() => setIsBotTyping(false), 5000);
-          }
-          if (activity.type === 'message' && activity.from.role === 'bot') {
-            setHasReceivedGreeting(true);
-            setIsBotTyping(false);
-            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-          }
-        }
-        if (action.type === 'DIRECT_LINE/CONNECT_FULFILLED') {
-          dispatch({
-            type: 'WEB_CHAT/SEND_EVENT',
-            payload: { name: 'startConversation', type: 'event' },
-          });
-        }
-        return next(action);
-      }),
-    []
-  );
-
-  const styleOptions = useMemo(() => ({
-    accent: '#475569',
-    botAvatarInitials: null,
-    botAvatarImage: null,
-    userAvatarInitials: null,
-    userAvatarImage: null,
-    bubbleBackground: 'rgba(255, 255, 255, 0.54)',
-    bubbleBorderColor: 'rgba(255, 255, 255, 0.72)',
-    bubbleBorderRadius: 12,
-    bubbleFromUserBackground: 'rgba(30, 41, 59, 0.86)',
-    bubbleFromUserBorderColor: 'rgba(255, 255, 255, 0.24)',
-    bubbleFromUserBorderRadius: 12,
-    bubbleFromUserTextColor: 'White',
-    rootHeight: '100%',
-    rootWidth: '100%',
-    backgroundColor: 'transparent',
-    hideUploadButton: true,
-    hideTypingIndicator: true,
-  }), []);
+export default function ChatWidgetWebChat({ connection }) {
+  const { directLine, store, userID, status, hasReceivedGreeting, isBotTyping } = connection;
 
   return (
     <div id="webchat-container" className="h-full w-full">
       <ReactWebChat
         directLine={directLine}
         store={store}
+        userID={userID}
+        disabled={status !== 'connected'}
         styleOptions={styleOptions}
         locale="ko-KR"
       />
-      {!hasReceivedGreeting && (
-        <div className="chat-greeting-loader" role="status" aria-live="polite">
-          <div className="chat-greeting-loader-mark" aria-hidden="true">
-            <Bot size={24} strokeWidth={1.7} />
-          </div>
-          <div className="flex space-x-1.5" aria-hidden="true">
-            <div className="loading-dot"></div>
-            <div className="loading-dot"></div>
-            <div className="loading-dot"></div>
-          </div>
-          <p>Elevate Agent를 불러오고 있어요</p>
+      {status === 'connected' && !hasReceivedGreeting && (
+        <div className="chat-welcome-note" role="status">
+          연결되었습니다. 메시지를 입력해 주세요.
         </div>
       )}
       {isBotTyping && (
-        <div className="absolute bottom-20 left-5 z-50 rounded-xl border border-white/80 bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur-xl">
-          <LoadingSpinner />
+        <div className="chat-typing-indicator" role="status" aria-label="답변 작성 중">
+          <div className="flex space-x-1.5 p-2" aria-hidden="true">
+            <div className="loading-dot"></div>
+            <div className="loading-dot"></div>
+            <div className="loading-dot"></div>
+          </div>
         </div>
       )}
     </div>
