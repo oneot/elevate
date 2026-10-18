@@ -1,4 +1,4 @@
-# Elevate
+# Microsoft Elevate Korea 공식 Blog
 
 React 공개 사이트와 관리자, Azure Functions API를 관리하는 저장소입니다.
 공개 사이트는 GitHub Pages와 실시간 Azure API를 사용하며, 관리자의 작성·게시·수정·삭제
