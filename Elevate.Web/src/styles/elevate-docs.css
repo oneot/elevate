@@ -162,6 +162,14 @@
   letter-spacing: -0.02em;
   color: var(--edoc-ink);
   white-space: nowrap;
+  transition: color 0.2s;
+}
+
+/* Same hover cue as post card titles */
+@media (hover: hover) {
+  .edoc-dbar__title:hover {
+    color: var(--edoc-accent);
+  }
 }
 
 .edoc-iconbtn {

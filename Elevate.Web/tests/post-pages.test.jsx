@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { act, useLayoutEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
@@ -270,4 +272,23 @@ it('leaves the failed-detail sidebar without a back link because the doc bar sti
   expect(nav.textContent).toContain('게시글을 불러오지 못했습니다.');
   expect(nav.querySelector('.edoc-nav__back, .edoc-nav__head')).toBeNull();
   expect(host.querySelector('.edoc-dbar__title').getAttribute('href')).toBe('/all');
+});
+
+it('gives the doc bar title the same hover color and transition as post card titles', () => {
+  const style = document.createElement('style');
+  style.textContent = readFileSync(resolve('src/styles/elevate-docs.css'), 'utf8');
+  document.head.append(style);
+  try {
+    const rules = [...style.sheet.cssRules];
+    const hoverRules = rules.filter((rule) => rule.media?.mediaText === '(hover: hover)').flatMap((rule) => [...rule.cssRules]);
+    const declared = (list, selector, property) => list.find((rule) => rule.selectorText === selector)?.style.getPropertyValue(property);
+    const cardHoverColor = declared(hoverRules, '.edoc-card__link:hover .edoc-card__title', 'color');
+    const cardTransition = declared(rules, '.edoc-card__title', 'transition');
+    expect(cardHoverColor).toBe('var(--edoc-accent)');
+    expect(cardTransition).toBeTruthy();
+    expect(declared(hoverRules, '.edoc-dbar__title:hover', 'color')).toBe(cardHoverColor);
+    expect(declared(rules, '.edoc-dbar__title', 'transition')).toBe(cardTransition);
+  } finally {
+    style.remove();
+  }
 });
