@@ -54,6 +54,14 @@ VPN on/off 재현 방법과 운영 조치는 [접속 장애 런북](../documents
 상세 사이드바의 카테고리 제목(카테고리 목록 링크) 앞에는 `docsMeta.js`의 앱 아이콘을 표시하고,
 아이콘이 없는 카테고리·섹션은 제목 글자만 표시합니다. 활동 사례(`/activity`) 사이드바의 머리글은 그대로입니다.
 
+## 블로그 카드 썸네일
+
+블로그 카드(`DocsPostCard`)는 글 주소 `/<category>/<slug>`에 맞는 UI 미니어처 이미지가
+`src/assets/post-thumbs/<category>/<slug>-480.webp`, `-960.webp`에 있으면 그 이미지를 쓰고,
+없으면 관리자에서 올린 썸네일을 씁니다. 화면에서만 바꾸므로 서버 데이터와 OG·공유 미리보기 이미지는 그대로입니다.
+새 글에 적용하려면 같은 이름 규칙으로 16:9 WebP 두 장(480×270, 960×540)을 추가합니다.
+`<category>`는 글 주소의 화면 카테고리입니다(예: Copilot Studio에서 나뉜 GitHub·Azure 글은 `github`, `azure`).
+
 ## 회귀 검증
 
 ```bash
@@ -66,7 +74,7 @@ npm run test:post-detail-enhancement
 
 Vitest와 jsdom은 개발 의존성입니다. 테스트는 실제 React 화면과 API 클라이언트를 실행하되
 `fetch`와 시간을 모의하여 무응답, 본문 정체, 취소 경쟁, 재시도, 페이지/검색/카테고리와 상세 진입,
-블로그 사이드바의 이동 경로와 앱 아이콘을 검증합니다.
+블로그 사이드바의 이동 경로와 앱 아이콘, 카드 썸네일 선택을 검증합니다.
 실제 VPN on/off 또는 기업 네트워크 정책을 검증하는 테스트는 아닙니다.
 `Repository checks` PR 워크플로는 외부 API·비밀값 없이 Web·Admin·Server의
 회귀 검증과 프런트엔드 빌드를 실행합니다.
