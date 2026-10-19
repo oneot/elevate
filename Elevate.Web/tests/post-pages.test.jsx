@@ -13,6 +13,7 @@ import ProgramNews from '../src/pages/ProgramNews';
 import { API_REQUEST_TIMEOUT_MS } from '../src/api/client';
 import { CATEGORY_CACHE_TTL_MS } from '../src/api/categoryPosts';
 import { getDocsMeta } from '../src/components/elevate-docs/docsMeta';
+import { APP_INTROS } from '../src/constants/appIntros';
 
 let root;
 let host;
@@ -231,6 +232,20 @@ it('lists categories without a sidebar back link or visible heading while keepin
     expect(host.querySelector('a[href="/"]').textContent).toContain('Microsoft');
   }
   expect(host.querySelector('.edoc-hero__eyebrow').textContent).toBe('카테고리');
+});
+
+it('shows the Home app card intro as the same two lines under each app category title', async () => {
+  fetch.mockImplementation(() => Promise.resolve(emptyList()));
+  const heroLines = () => host.querySelector('.edoc-hero__abstract').innerHTML.split('<br>');
+  await renderRoute('/copilot-studio');
+  expect(heroLines()).toEqual(['나만의 AI 에이전트를 만듭니다.', '코딩 없이 대화로 시작해 보세요.']);
+  for (const [category, intro] of Object.entries(APP_INTROS)) {
+    await act(() => navigate(`/${category}`));
+    expect(heroLines(), category).toEqual(intro);
+  }
+  await act(() => navigate('/word'));
+  expect(host.querySelector('.edoc-hero__abstract br')).toBeNull();
+  expect(host.querySelector('.edoc-hero__abstract').textContent).toBe(getDocsMeta('word').description);
 });
 
 it.each([
