@@ -7,6 +7,7 @@ import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getImageLoadingProps, getThumbnailImageProps } from '../../utils/postImages';
+import { getPostThumbImageProps } from '../../utils/postThumbs';
 import { formatDateKo } from '../../utils/url';
 import { getDocsMeta, getTintStyle } from './docsMeta';
 import { AppArt, GlassDrops } from './DocsHero';
@@ -17,7 +18,9 @@ const CARD_IMAGE_SIZES = '(min-width: 1440px) 340px, (min-width: 1024px) 30vw, (
 export function DocsPostCard({ post, priority = false, showCategory = false }) {
   const category = post.category || 'all';
   const meta = getDocsMeta(category);
-  const imageProps = getThumbnailImageProps(post.thumbnail, { sizes: CARD_IMAGE_SIZES });
+  // UI 미니어처 썸네일이 있는 글은 그 이미지를, 없으면 관리자에서 올린 썸네일을 쓴다.
+  const imageProps = getPostThumbImageProps(category, post.slug, CARD_IMAGE_SIZES)
+    || getThumbnailImageProps(post.thumbnail, { sizes: CARD_IMAGE_SIZES });
   const loadingProps = getImageLoadingProps(Boolean(priority && imageProps));
   const details = formatDateKo(post.publishedAt);
 
