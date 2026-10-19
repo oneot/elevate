@@ -10,6 +10,7 @@ import Microsoft365Update from '../src/pages/Microsoft365Update';
 import ProgramNews from '../src/pages/ProgramNews';
 import { API_REQUEST_TIMEOUT_MS } from '../src/api/client';
 import { CATEGORY_CACHE_TTL_MS } from '../src/api/categoryPosts';
+import { getDocsMeta } from '../src/components/elevate-docs/docsMeta';
 
 let root;
 let host;
@@ -206,4 +207,67 @@ it('shows calendar failure separately and retries it without hiding or refetchin
   expect(host.querySelector('[role="alert"]')).toBeNull();
   expect(host.textContent).toContain('Title event');
   expect(fetch.mock.calls.filter(([url]) => new URL(url).pathname.endsWith('/posts'))).toHaveLength(1);
+});
+
+function serve(item) {
+  return (url) => Promise.resolve(new URL(url).pathname.endsWith('/posts')
+    ? json({ items: [item], totalCount: 1, totalPages: 1 })
+    : json(item));
+}
+
+it('lists categories without a sidebar back link or visible heading while keeping the group name and other routes', async () => {
+  fetch.mockImplementation(() => Promise.resolve(emptyList()));
+  await renderRoute('/all');
+  for (const route of ['/all', '/m365']) {
+    if (route !== '/all') await act(() => navigate(route));
+    const nav = host.querySelector('#edoc-nav');
+    expect(nav.querySelector('.edoc-nav__back, .edoc-nav__head, .edoc-nav__heading')).toBeNull();
+    expect(nav.querySelector('[role="group"]').getAttribute('aria-label')).toBe('카테고리');
+    expect(nav.textContent).not.toContain('카테고리');
+    expect(nav.querySelector('.edoc-nav__row[data-active="true"]').textContent).toContain(route === '/all' ? '전체 게시글' : 'M365');
+    expect(host.querySelector('.edoc-dbar__title').getAttribute('href')).toBe('/all');
+    expect(host.querySelector('a[href="/"]').textContent).toContain('Microsoft');
+  }
+  expect(host.querySelector('.edoc-hero__eyebrow').textContent).toBe('카테고리');
+});
+
+it.each([
+  ['m365', 'M365'],
+  ['copilot-studio', 'Copilot Studio'],
+])('shows the %s app icon before the detail sidebar title without a back link', async (category, name) => {
+  fetch.mockImplementation(serve(post('detail', category)));
+  await renderRoute(`/${category}/test-detail`);
+  const nav = host.querySelector('#edoc-nav');
+  expect(nav.querySelector('.edoc-nav__back')).toBeNull();
+  const title = nav.querySelector('.edoc-nav__title');
+  expect(title.getAttribute('href')).toBe(`/${category}`);
+  expect(title.textContent).toBe(name);
+  const icon = title.querySelector('img');
+  expect(icon.getAttribute('src')).toBe(getDocsMeta(category).icon);
+  expect(icon.getAttribute('alt')).toBe('');
+  expect(nav.querySelector('.edoc-nav__subtitle').textContent).toBe('게시글 1개 · 최신순');
+  expect(host.querySelector('.edoc-dbar__title').getAttribute('href')).toBe('/all');
+  expect([...host.querySelectorAll('.edoc-crumbs a')].map((link) => link.getAttribute('href'))).toEqual(['/all', `/${category}`]);
+});
+
+it('keeps icon-less sections as a plain sidebar title while all posts stay reachable from the blog menu', async () => {
+  fetch.mockImplementation(serve(post('news', 'update')));
+  await renderRoute('/update/test-news');
+  const nav = host.querySelector('#edoc-nav');
+  expect(nav.querySelector('.edoc-nav__back')).toBeNull();
+  const title = nav.querySelector('.edoc-nav__title');
+  expect(title.textContent).toBe('업데이트');
+  expect(title.querySelector('img')).toBeNull();
+  expect(host.querySelector('.edoc-dbar__title').getAttribute('href')).toBe('/update');
+  const blogMenu = [...host.querySelectorAll('nav a')].find((link) => link.textContent === '블로그');
+  expect(blogMenu.getAttribute('href')).toBe('/all');
+});
+
+it('leaves the failed-detail sidebar without a back link because the doc bar still returns to all posts', async () => {
+  fetch.mockResolvedValueOnce(json({ message: 'Server unavailable' }, 500));
+  await renderRoute('/m365/test-detail');
+  const nav = host.querySelector('#edoc-nav');
+  expect(nav.textContent).toContain('게시글을 불러오지 못했습니다.');
+  expect(nav.querySelector('.edoc-nav__back, .edoc-nav__head')).toBeNull();
+  expect(host.querySelector('.edoc-dbar__title').getAttribute('href')).toBe('/all');
 });
