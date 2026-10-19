@@ -71,7 +71,7 @@ export function AppArt({ paint, glyph, variant = 'hero', className = '' }) {
  * @param {React.ReactNode} [props.eyebrow]
  * @param {string} [props.eyebrowIcon]
  * @param {React.ReactNode} props.title
- * @param {React.ReactNode} [props.abstract]
+ * @param {React.ReactNode|string[]} [props.abstract] - 요약 (문자열 배열이면 항목마다 한 줄)
  * @param {React.ReactNode[]} [props.meta] - 세로 구분선으로 나뉘는 메타 정보
  * @param {boolean} [props.wide] - 목록 화면처럼 넓은 컨테이너를 쓴다
  * @param {boolean} [props.compact] - 상세 화면용 작은 장식
@@ -120,7 +120,18 @@ export default function DocsHero({
           <h1 id={titleId} className="edoc-hero__title">
             {title}
           </h1>
-          {abstract && <p className="edoc-hero__abstract">{abstract}</p>}
+          {abstract && (
+            <p className="edoc-hero__abstract">
+              {Array.isArray(abstract)
+                ? abstract.map((line, index) => (
+                    <Fragment key={index}>
+                      {index > 0 && <br />}
+                      {line}
+                    </Fragment>
+                  ))
+                : abstract}
+            </p>
+          )}
           {metaItems.length > 0 && (
             <div className="edoc-hero__meta">
               {metaItems.map((item, index) => (

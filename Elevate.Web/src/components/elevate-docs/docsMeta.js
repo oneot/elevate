@@ -3,6 +3,7 @@
  * @description Visual metadata (tint, icons, hero copy) for the docs-style blog pages.
  */
 import { CATEGORY_DISPLAY_NAMES } from '../../constants/categories';
+import { APP_INTROS } from '../../constants/appIntros';
 import { DEFAULT_DESCRIPTION } from '../../constants/seo';
 import m365Icon from '../../assets/docs-icons/m365-64.webp';
 import m365Paint from '../../assets/docs-icons/paint-m365.webp';
@@ -59,7 +60,8 @@ const BASE = {
   description: '',
 };
 
-// Hero descriptions reuse the copy already used for each product on the Home page.
+// 앱 카테고리 머리글의 소개는 첫 화면 앱 카드와 같은 두 줄(APP_INTROS)을 쓴다.
+// 첫 화면에 카드가 없는 M365·Word·PowerPoint·OneDrive는 여기 적은 한 문장을 쓴다.
 const META = {
   all: {
     tint: '0, 103, 184',
@@ -105,7 +107,7 @@ const META = {
     tint: '3, 120, 124',
     heroA: '#e6f4f4',
     heroB: '#f2f9f9',
-    description: 'Microsoft Forms로 설문, 퀴즈, 신청서를 만들고 결과를 확인하는 방법을 알아봅니다.',
+    description: APP_INTROS.forms,
   },
   onedrive: {
     mesh: ['#2895fc', '#2bcaf8', '#5aa8ff', '#1d7af0'],
@@ -125,7 +127,7 @@ const META = {
     tint: '108, 92, 231',
     heroA: '#eef0fe',
     heroB: '#fbf2f8',
-    description: 'AI가 수업 자료 제작과 행정 업무를 돕고, 학생들의 아이디어를 함께 확장합니다.',
+    description: APP_INTROS.copilot,
   },
   'copilot-studio': {
     mesh: ['#2fd0bd', '#e157be', '#24b3d8', '#a958e0'],
@@ -135,7 +137,7 @@ const META = {
     tint: '0, 128, 128',
     heroA: '#e7f4f3',
     heroB: '#f1f7fb',
-    description: '학생들이 자신만의 AI 에이전트를 만들고 문제 해결에 활용할 수 있습니다.',
+    description: APP_INTROS['copilot-studio'],
   },
   teams: {
     mesh: ['#8f97fc', '#6c5cf0', '#b4a8ff', '#5d74f2'],
@@ -145,7 +147,7 @@ const META = {
     tint: '91, 95, 199',
     heroA: '#eeeefb',
     heroB: '#f6f6fd',
-    description: '수업에 필요한 모든 소통이 한 공간에서 연결됩니다.',
+    description: APP_INTROS.teams,
   },
   minecraft: {
     mesh: ['#7cc33a', '#4f8f1a', '#a9dc6a', '#c79a6b'],
@@ -155,7 +157,7 @@ const META = {
     tint: '76, 135, 52',
     heroA: '#edf5e7',
     heroB: '#f6f9f1',
-    description: '블록으로 만든 가상 세계에서 학생들이 코딩과 AI를 직접 다루며 문제 해결력을 키웁니다.',
+    description: APP_INTROS.minecraft,
   },
   excel: {
     mesh: ['#9ce671', '#2f9a45', '#6fd36a', '#c3f08a'],
@@ -165,7 +167,7 @@ const META = {
     tint: '16, 124, 65',
     heroA: '#e8f4ec',
     heroB: '#f3f9f5',
-    description: '성적, 출석, 설문 결과까지 수업에서 다루는 모든 데이터를 표로 정리하고 분석합니다.',
+    description: APP_INTROS.excel,
   },
   onenote: {
     mesh: ['#dd67fd', '#9b3fd0', '#f0a0ec', '#b65cf0'],
@@ -175,7 +177,7 @@ const META = {
     tint: '119, 25, 170',
     heroA: '#f4ebf9',
     heroB: '#faf5fc',
-    description: '수업 노트, 학생 과제, 공동 작업을 한 권의 디지털 노트북에 담습니다.',
+    description: APP_INTROS.onenote,
   },
   // GitHub 마크는 한 가지 색이라 유리 타일 빛과 배경은 GitHub의 보라·파랑·초록·분홍으로 칠한다.
   github: {
@@ -186,7 +188,7 @@ const META = {
     tint: '130, 80, 223',
     heroA: '#f1edfb',
     heroB: '#f6f8fd',
-    description: '만든 에이전트를 GitHub Pages로 웹에 올리고, GitHub Copilot과 함께 바이브 코딩으로 다듬어 봅니다.',
+    description: APP_INTROS.github,
   },
   azure: {
     mesh: ['#50e6ff', '#0078d4', '#3ccbf4', '#2f5fd9'],
@@ -196,7 +198,7 @@ const META = {
     tint: '0, 120, 212',
     heroA: '#e8f2fc',
     heroB: '#f3f8fd',
-    description: 'Azure 클라우드로 에이전트와 웹앱을 안전하게 배포하고 운영하는 방법을 알아봅니다.',
+    description: APP_INTROS.azure,
   },
   update: { tint: '0, 120, 212', heroA: '#eaf3fc', heroB: '#f5f9fd' },
   m365update: { tint: '0, 120, 212', heroA: '#eaf3fc', heroB: '#f5f9fd' },
@@ -218,10 +220,11 @@ const META = {
 
 /**
  * @param {string} category
- * @returns {{ key: string, name: string, icon: string|null, paint: string, glyph: string, mesh: string[], tint: string, heroA: string, heroB: string, description: string }}
+ * @returns {{ key: string, name: string, icon: string|null, paint: string, glyph: string, mesh: string[], tint: string, heroA: string, heroB: string, description: string|string[] }}
  *   icon: 사이드바·eyebrow용 작은 앱 아이콘, paint: 유리 타일 안 빛을 칠할 컬러 이미지,
  *   glyph: 앱 아이콘을 흰 반투명 유리로 바꿔 미리 만들어 둔 이미지 (glyph-*.webp, 색 이미지는 paint-*.webp)
  *   mesh: 히어로 배경 전체에 은은하게 퍼지는 4색 (각 앱 아이콘의 색에서 골랐다)
+ *   description: 머리글 소개 (배열이면 항목마다 한 줄)
  */
 export function getDocsMeta(category) {
   const key = category && META[category] ? category : 'all';

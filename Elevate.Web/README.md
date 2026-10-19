@@ -54,6 +54,11 @@ VPN on/off 재현 방법과 운영 조치는 [접속 장애 런북](../documents
 상세 사이드바의 카테고리 제목(카테고리 목록 링크) 앞에는 `docsMeta.js`의 앱 아이콘을 표시하고,
 아이콘이 없는 카테고리·섹션은 제목 글자만 표시합니다. 활동 사례(`/activity`) 사이드바의 머리글은 그대로입니다.
 
+## 블로그 카테고리 소개
+
+카테고리 목록(`/:category`) 머리글의 소개는 첫 화면 앱 카드와 같은 두 줄을 `src/constants/appIntros.js`에서 함께 씁니다.
+첫 화면에 카드가 없는 M365·Word·PowerPoint·OneDrive는 `docsMeta.js`에 적은 한 문장을 씁니다.
+
 ## 블로그 카드 썸네일
 
 블로그 카드(`DocsPostCard`)는 글 주소 `/<category>/<slug>`에 맞는 UI 미니어처 이미지가

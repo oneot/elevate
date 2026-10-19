@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { DEFAULT_DESCRIPTION, DEFAULT_OG_IMAGE, DEFAULT_TITLE, SITE_NAME, canonicalUrl } from '../constants/seo';
 import { SHOW_NEWS_SECTIONS } from '../constants/features';
+import { APP_INTROS } from '../constants/appIntros';
 import '../styles/home.css';
 
 // Icons
@@ -60,13 +61,12 @@ const Home = () => {
         }
     }, [location.hash]);
     // 기능 카드 데이터 — 1024px부터 3×3, 왼쪽 위부터 이 순서. 640px부터는 한 줄에 두 장(마지막 한 장은 가운데), 그보다 좁으면 한 장씩.
-    // description: 두 줄 — 앱이 하는 일 한 문장 + 권하는 한 문장. 각 줄은 가장 좁은 카드(약 227px)에서도 한 줄에 들어가게,
-    //   글자가 가장 넓게 그려지는 Windows 맑은 고딕 15px 기준 220px 이하로 둔다.
+    // description: 앱 소개 두 줄 — 블로그 카테고리 머리글과 함께 쓰는 constants/appIntros.js (줄 길이 규칙도 그 파일에 있다).
     // iconSize: 그림마다 둘레 여백이 달라서, 보이는 아이콘 크기가 서로 비슷해지도록 맞춘 값.
     const features = [
         {
             title: 'Copilot',
-            description: ['AI가 수업과 업무를 돕습니다.', '가르치는 시간을 되찾으세요.'],
+            description: APP_INTROS.copilot,
             icon: copilotIcon,
             iconType: 'image',
             iconSize: 'w-11 h-11',
@@ -76,7 +76,7 @@ const Home = () => {
         },
         {
             title: 'Microsoft Teams',
-            description: ['수업과 소통이 한곳에 모입니다.', '온라인 교실을 열어 보세요.'],
+            description: APP_INTROS.teams,
             icon: teamsIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
@@ -86,7 +86,7 @@ const Home = () => {
         },
         {
             title: 'OneNote',
-            description: ['수업 기록을 한 권에 담습니다.', '흩어진 노트와 과제를 모으세요.'],
+            description: APP_INTROS.onenote,
             icon: onenoteIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
@@ -96,7 +96,7 @@ const Home = () => {
         },
         {
             title: 'Excel',
-            description: ['수업 데이터를 표로 정리합니다.', '성적과 출석을 한눈에 보세요.'],
+            description: APP_INTROS.excel,
             icon: excelIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
@@ -106,7 +106,7 @@ const Home = () => {
         },
         {
             title: 'Forms',
-            description: ['설문과 퀴즈를 쉽게 만듭니다.', '응답 결과를 바로 확인해 보세요.'],
+            description: APP_INTROS.forms,
             icon: formsIcon,
             iconType: 'image',
             iconSize: 'w-11 h-11',
@@ -116,7 +116,7 @@ const Home = () => {
         },
         {
             title: 'Minecraft EDU',
-            description: ['블록으로 코딩과 AI를 익힙니다.', '놀며 배우는 수업을 시작하세요.'],
+            description: APP_INTROS.minecraft,
             icon: minecraftIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
@@ -126,7 +126,7 @@ const Home = () => {
         },
         {
             title: 'Copilot Studio',
-            description: ['나만의 AI 에이전트를 만듭니다.', '코딩 없이 대화로 시작해 보세요.'],
+            description: APP_INTROS['copilot-studio'],
             icon: copilotStudioIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
@@ -136,7 +136,7 @@ const Home = () => {
         },
         {
             title: 'GitHub',
-            description: ['코드를 저장하고 공유합니다.', '전 세계 개발자와 협업해 보세요.'],
+            description: APP_INTROS.github,
             icon: githubIcon,
             iconType: 'image',
             iconSize: 'w-8 h-8',
@@ -146,7 +146,7 @@ const Home = () => {
         },
         {
             title: 'Azure',
-            description: ['Microsoft의 클라우드입니다.', '앱과 AI를 손쉽게 운영해 보세요.'],
+            description: APP_INTROS.azure,
             icon: azureIcon,
             iconType: 'image',
             iconSize: 'w-9 h-9',
