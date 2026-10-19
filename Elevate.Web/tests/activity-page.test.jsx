@@ -95,3 +95,11 @@ it('does not request the API when starting in local preview', async () => {
   expect(fetch).not.toHaveBeenCalled();
   expect(host.querySelectorAll('.edoc-vcard')).toHaveLength(fallbackVideos.length);
 });
+
+it('keeps its own sidebar header with the home link and a plain title', async () => {
+  await renderRoute('/activity?preview=local');
+  const head = host.querySelector('#edoc-nav .edoc-nav__head');
+  expect(head.querySelector('.edoc-nav__back').getAttribute('href')).toBe('/');
+  expect(head.querySelector('.edoc-nav__title').textContent).toBe('활동 사례');
+  expect(head.querySelector('img')).toBeNull();
+});

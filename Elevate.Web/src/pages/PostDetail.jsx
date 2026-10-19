@@ -14,6 +14,8 @@
  *   서버 카테고리로 조회하고, 글이 속한 화면 카테고리와 URL이 다르면 올바른 주소로 바꾼다
  *   (예: /m365/forms-share → /forms/forms-share, /copilot-studio/github-pages → /github/github-pages).
  * - 제목과 부제목은 화면용으로 다듬은 문구(constants/postText.js)를 쓴다.
+ * - 사이드바 제목(카테고리 이름) 앞에는 앱 아이콘을 둔다. 아이콘이 없는 카테고리·섹션은 글자만 보여 준다.
+ *   전체 게시글로 가는 길은 문서 바·브레드크럼·상단 '블로그' 메뉴가 맡아 사이드바에 뒤로 가기 링크를 두지 않는다.
  */
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -237,10 +239,9 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
             header={(
                 <>
                     <NavHeader
-                        backTo="/all"
-                        backLabel="전체 게시글"
                         title={categoryDisplayName}
                         titleTo={backToListHref !== '/' ? backToListHref : undefined}
+                        iconSrc={docsMeta.icon || undefined}
                         subtitle={categoryPostsLoaded ? `게시글 ${categoryPosts.length}개 · 최신순` : undefined}
                     />
                     {errorsMap[displayCategory] && (
@@ -259,7 +260,6 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
         />
     ) : loading ? <NavSkeleton /> : (
         <DocsNavigator
-            header={<NavHeader backTo="/all" backLabel="전체 게시글" />}
             sections={[]}
             emptyLabel="게시글을 불러오지 못했습니다."
         />

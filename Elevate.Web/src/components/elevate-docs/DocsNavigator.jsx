@@ -112,8 +112,19 @@ function NavItem({ node, depth, ctx }) {
   );
 }
 
-/** 내비게이터 상단: 뒤로 가기 링크 + 제목 (Apple의 "‹ All Technologies / SwiftUI"). */
-export function NavHeader({ backTo, backLabel, title, titleTo, subtitle }) {
+/**
+ * 내비게이터 상단: 뒤로 가기 링크(선택) + 제목 (Apple의 "‹ All Technologies / SwiftUI").
+ * iconSrc가 있으면 제목 앞에 앱 아이콘을 둔다. 아이콘은 장식이라 제목 글자가 이름이 된다.
+ */
+export function NavHeader({ backTo, backLabel, title, titleTo, iconSrc, subtitle }) {
+  const titleClassName = iconSrc ? 'edoc-nav__title edoc-nav__title--icon' : 'edoc-nav__title';
+  const titleContent = (
+    <>
+      {iconSrc && <img className="edoc-nav__title-icon" src={iconSrc} alt="" width="22" height="22" decoding="async" />}
+      {title}
+    </>
+  );
+
   return (
     <div className="edoc-nav__head">
       {backTo && (
@@ -124,11 +135,11 @@ export function NavHeader({ backTo, backLabel, title, titleTo, subtitle }) {
       )}
       {title &&
         (titleTo ? (
-          <Link to={titleTo} className="edoc-nav__title">
-            {title}
+          <Link to={titleTo} className={titleClassName}>
+            {titleContent}
           </Link>
         ) : (
-          <p className="edoc-nav__title">{title}</p>
+          <p className={titleClassName}>{titleContent}</p>
         ))}
       {subtitle && <p className="edoc-nav__subtitle">{subtitle}</p>}
     </div>
@@ -150,7 +161,8 @@ export function NavSkeleton() {
 /**
  * @param {Object} props
  * @param {React.ReactNode} [props.header]
- * @param {Array<{ id: string, heading?: string, nodes: Array }>} props.sections
+ * @param {Array<{ id: string, heading?: string, ariaLabel?: string, nodes: Array }>} props.sections
+ *   heading: 화면에 보이는 섹션 제목, ariaLabel: 제목을 보이지 않을 때 스크린리더용 그룹 이름
  *   node: { id, label, to?, onSelect?, icon?, iconSrc?, prefix?, badge?, kind?: 'item'|'toc',
  *           emphasis?, children?, hasChildren?, onExpand?, defaultExpanded? }
  * @param {string} [props.activeId] - 하이라이트가 놓일 항목 id
@@ -270,7 +282,12 @@ export default function DocsNavigator({
           <p className="edoc-nav__note">{emptyLabel}</p>
         ) : (
           sections.map((section) => (
-            <div key={section.id} className="edoc-nav__group" role="group" aria-label={section.heading || undefined}>
+            <div
+              key={section.id}
+              className="edoc-nav__group"
+              role="group"
+              aria-label={section.ariaLabel || section.heading || undefined}
+            >
               {section.heading && <p className="edoc-nav__heading">{section.heading}</p>}
               <NavList nodes={section.nodes} depth={0} ctx={ctx} />
             </div>

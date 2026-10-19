@@ -11,7 +11,9 @@
  *   검색·페이지네이션을 브라우저에서 처리한다. M365에서 분리한
  *   Word/PowerPoint/Forms/OneDrive와 Copilot Studio에서 분리한 GitHub/Azure도 이 경로로 처리한다.
  * - 게시글 제목과 부제목은 화면용으로 다듬은 문구(constants/postText.js)를 보여 준다.
- * 왼쪽 내비게이터: 카테고리 → 게시글(최신순) 트리 (DocsShell / DocsNavigator)
+ * 왼쪽 내비게이터: 카테고리 → 게시글(최신순) 트리 (DocsShell / DocsNavigator).
+ *   홈은 상단 로고, 전체 게시글은 문서 바의 'Blog'와 상단 '블로그' 메뉴로 가므로 뒤로 가기 링크를 두지 않고,
+ *   '카테고리' 제목도 화면에 보이지 않게 스크린리더용 그룹 이름으로만 남긴다.
  */
 import { useEffect, useCallback, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
@@ -20,7 +22,7 @@ import { LayoutGrid } from 'lucide-react';
 import NotFound from './NotFound';
 import DocsShell from '../components/elevate-docs/DocsShell';
 import DocsHero from '../components/elevate-docs/DocsHero';
-import DocsNavigator, { NavHeader } from '../components/elevate-docs/DocsNavigator';
+import DocsNavigator from '../components/elevate-docs/DocsNavigator';
 import DocsListSection, { DocsCategorySwitcher } from '../components/elevate-docs/DocsList';
 import { useCategoryPosts } from '../components/elevate-docs/docsHooks';
 import { loadApiCategoryPosts, loadCategoryPosts, sortByPublishedDesc } from '../api/categoryPosts';
@@ -114,7 +116,7 @@ export default function PostList() {
 
   const navSections = useMemo(() => [{
     id: 'categories',
-    heading: '카테고리',
+    ariaLabel: '카테고리',
     nodes: VALID_CATEGORIES.map((key) => {
       const meta = getDocsMeta(key);
       const categoryPosts = postsMap[key];
@@ -192,7 +194,6 @@ export default function PostList() {
         }}
         navigator={(
           <DocsNavigator
-            header={<NavHeader backTo="/" backLabel="Elevate 홈" />}
             sections={navSections}
             activeId={`cat:${category}`}
           />
