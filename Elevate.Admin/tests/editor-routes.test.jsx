@@ -6,6 +6,8 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import App from '../src/App.jsx'
 import { createPost, getPost, listAllPosts, updatePost } from '../src/services/postsApi.js'
 import { renderAutoThumbnail } from '../src/utils/autoThumbnail.js'
+import { getPublishedSeriesOrder } from '../src/services/publicSeriesApi.js'
+import { POST_TEXT_OVERRIDES } from '../../Elevate.Web/src/constants/postText.js'
 
 const { msalInstance, uploadState, uploadThumbnailFile } = vi.hoisted(() => ({
   msalInstance: {}, uploadState: { uploading: false }, uploadThumbnailFile: vi.fn(),
@@ -37,6 +39,7 @@ vi.mock('../src/services/postsApi.js', () => ({
   createPost: vi.fn(), deletePost: vi.fn(), getPost: vi.fn(), listAllPosts: vi.fn(),
   listPosts: vi.fn(), updatePost: vi.fn(),
 }))
+vi.mock('../src/services/publicSeriesApi.js', () => ({ getPublishedSeriesOrder: vi.fn() }))
 
 const GENERATED_FILE = new File(['png'], 'auto-thumbnail.png', { type: 'image/png' })
 const GENERATED_THUMBNAIL = {
@@ -109,6 +112,7 @@ beforeEach(() => {
     thumbnail: { url: 'https://images.example.test/old.jpg' }, thumbnailUrl: 'https://images.example.test/old.jpg?sig=1',
   })
   listAllPosts.mockResolvedValue([])
+  getPublishedSeriesOrder.mockResolvedValue(new Map())
   createPost.mockResolvedValue({ id: 'created-1' })
   updatePost.mockResolvedValue({ id: 'post-1', status: 'published', slug: 'existing-post', updatedAt: '2026-10-20T01:00:00Z' })
   renderAutoThumbnail.mockResolvedValue(GENERATED_FILE)
@@ -253,6 +257,22 @@ it('saves an existing post with only the editable fields and keeps its first thu
   }, { msalInstance })
   expect(host.textContent).toContain('업데이트되었습니다.')
   expect(listAllPosts.mock.calls.length).toBeGreaterThan(loadsBeforeSave)
+})
+
+it('fills the title and summary the public site shows and saves them for posts tidied on the public site', async () => {
+  const { title, excerpt } = POST_TEXT_OVERRIDES.find((entry) => entry.title[0] === 'AI Creative Agent Team 제작하기')
+  getPost.mockResolvedValue({
+    id: 'post-1', title: title[0], excerpt: excerpt[0], category: 'copilot-studio', slug: 'copilotstudio',
+    htmlBody: '<p>Agent team</p>', tags: [], status: 'published', series: '', updatedAt: '2026-10-13T00:09:00Z',
+    thumbnail: null, thumbnailUrl: '',
+  })
+  await renderRoute('/posts/post-1')
+  expect(titleInput().value).toBe(title[1])
+  expect(excerptInput().value).toBe(excerpt[1])
+  await save()
+  expect(updatePost).toHaveBeenCalledWith('post-1', {
+    title: title[1], excerpt: excerpt[1], htmlBody: '<p>Agent team</p>', status: 'published', thumbnail: null,
+  }, { msalInstance })
 })
 
 it('creates a thumbnail only once when an existing post without one is published', async () => {

@@ -11,6 +11,7 @@ import { linkDraftFilesToPost } from '../services/assetsApi.js'
 import { formatDate } from '../utils/formatters.js'
 import { renderAutoThumbnail } from '../utils/autoThumbnail.js'
 import { getPublicThumbImage } from '../utils/publicThumbs.js'
+import { withDisplayText } from '../utils/postText.js'
 import {
   ALL_APPS_KEY,
   BASE_CATEGORIES,
@@ -218,7 +219,8 @@ function PostEditor() {
       try {
         const data = await getPost(postId, { msalInstance })
         if (isMounted) {
-          setPost({ ...emptyPost, ...data })
+          // 제목·요약은 공개 사이트에 보이는 문구로 채운다. 저장하면 이 문구가 서버에 저장된다.
+          setPost({ ...emptyPost, ...withDisplayText(data) })
           setPersistedStatus(data.status || '')
         }
       } catch (err) {
