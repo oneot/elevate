@@ -24,6 +24,18 @@ React + Vite로 빌드하며, `admin` 브랜치 push 때 Azure Static Web Apps�
 | `/posts/:postId` | 게시글 편집·삭제 |
 | `/category/:categoryId` | 이전 주소. `/apps/:categoryId`로 이동한다 |
 
+목록의 제목·요약과 순서는 공개 블로그와 같습니다.
+
+- 제목·요약: 공개 사이트가 화면에서 다듬어 보여 주는 문구(`Elevate.Web/src/constants/postText.js`)를 그대로 씁니다
+  (`src/utils/postText.js`). 검색은 이 문구와 서버에 저장된 원래 문구를 모두 찾습니다.
+- 순서: 게시일 최신순이고, 같은 시각에 올린 시리즈 글은 시리즈 순서가 큰 글이 먼저입니다(공개 블로그 앱 목록과 같은 규칙,
+  `src/utils/postOrder.js`). 관리자 목록 API 요약에는 `seriesOrder`가 없어 공개 API `GET /api/public/series`(약 12 KB, 인증 없음)로 받고,
+  4초 안에 받지 못하면 같은 시각 안에서는 서버 제목 역순으로 둡니다. 게시한 적 없는 글은 마지막 수정 시각을 게시일 대신 씁니다.
+  카드 아래에는 마지막 수정 시각을 표시합니다.
+- 공개 사이트 '전체 게시글'은 서버 정렬(게시일)만 쓰므로 같은 시각 글의 순서는 데이터베이스 순서입니다.
+  그래서 같은 시각에 한꺼번에 올린 기존 시리즈 글(예: 2026-03-11 Teams·Forms)은 관리자 '전체 게시글'과 순서가 다를 수 있습니다.
+  공개 사이트 앱 목록(예: `/teams`)과는 같습니다.
+
 목록 카드 이미지는 공개 사이트 카드(`DocsPostCard`)와 같은 규칙과 같은 `<img sizes>`로 고릅니다
 (`src/hooks/useCardImage.js`, `src/utils/postImages.js`).
 
@@ -33,7 +45,8 @@ React + Vite로 빌드하며, `admin` 브랜치 push 때 Azure Static Web Apps�
 3. 둘 다 없으면 앱 유리 타일.
 
 게시 상태는 썸네일을 가리지 않도록 카드 아래 날짜 옆에 표시합니다.
-브라우저 아이콘은 오리 이미지로 만든 `public/favicon.ico`(16·32·48px), `favicon-192.png`, `apple-touch-icon.png`(180px, 흰 배경)입니다.
+브라우저 탭 제목은 `Admin | Microsoft Elevate`이고, 아이콘은 오리 이미지로 만든 `public/favicon.ico`(16·32·48px),
+`favicon-192.png`, `apple-touch-icon.png`(180px, 흰 배경)입니다.
 
 제거한 기능: Sub category(Agenthon, Update, MEE, 행사 소식, 프로그램 소식) 목록·작성,
 달력 이벤트 편집과 게시글 연결, Management(활동 영상) 목록·편집,
@@ -57,6 +70,7 @@ React + Vite로 빌드하며, `admin` 브랜치 push 때 Azure Static Web Apps�
 
 | 항목 | 동작 |
 | --- | --- |
+| 제목·요약 | 공개 사이트에 보이는 문구로 채웁니다. 공개 사이트가 화면에서 다듬은 글은 저장할 때 그 문구가 서버에 저장되고, 이후 공개 사이트는 저장된 문구를 그대로 보여 줍니다(다듬은 문구는 서버 문구가 원래 문구일 때만 적용) |
 | 상태 | **게시**(공개)와 **보관**(비공개) 두 가지. 새 글의 기본값은 보관이며 서버에는 `archived`로 저장합니다. 서버의 `draft` 글은 보관으로 보이고, 보관을 유지하면 `draft` 그대로 둡니다 |
 | slug | 입력하지 않습니다. 새 글을 만들 때 서버가 제목으로 만듭니다(영문·숫자만 사용, 없으면 `post`, 겹치면 `-2`, `-3` …). 저장 후에는 바뀌지 않습니다 |
 | 태그·시리즈 | 편집하지 않습니다. 새 글에는 앱 태그만 자동으로 붙고, 기존 글의 태그·시리즈는 수정 요청에 보내지 않아 그대로 남습니다 |
@@ -104,7 +118,8 @@ React + Vite로 빌드하며, `admin` 브랜치 push 때 Azure Static Web Apps�
 - category는 저장 후 바꿀 수 없습니다(서버 partition). 새 글에서 앱을 바꾸면 category와
   앱 태그가 함께 바뀝니다. 태그 편집이 없으므로 관리자에서 앱 태그가 지워지지 않습니다.
 - 목록은 7개 category의 요약을 모두(100개/페이지) 받아 브라우저에서 분류하고,
-  저장·삭제 직후와 30초가 지난 뒤 목록에 돌아올 때 다시 불러옵니다.
+  저장·삭제 직후와 30초가 지난 뒤 목록에 돌아올 때 다시 불러옵니다. 이때 공개 API의 시리즈 순서도 함께 받습니다.
+  공개 API 주소는 `VITE_API_BASE_URL`의 끝 `/admin`을 `/public`으로 바꿔 만듭니다(같은 Function App). 다른 형식이면 받지 않습니다.
 
 ## 인증
 
@@ -127,7 +142,7 @@ React + Vite로 빌드하며, `admin` 브랜치 push 때 Azure Static Web Apps�
 
 | 변수 | 필수 | 설명 |
 | --- | --- | --- |
-| `VITE_API_BASE_URL` | 예 | 관리자 API 기준 URL (`…/api/admin`) |
+| `VITE_API_BASE_URL` | 예 | 관리자 API 기준 URL (`…/api/admin`). 목록 정렬에 쓰는 공개 API(`…/api/public`)도 이 값에서 만든다 |
 | `VITE_AZURE_AD_CLIENT_ID` | 예 | Entra 앱(클라이언트) ID |
 | `VITE_AZURE_AD_AUTHORITY` | 예 | `https://login.microsoftonline.com/<tenant-id>` |
 | `VITE_AZURE_AD_API_SCOPE` | 예 | API scope (`api://<app-id>/<scope>`) |
@@ -152,12 +167,14 @@ npm run sync:post-content   # Web 본문 CSS를 바꾼 뒤 편집기용 복사�
 편집기(Tiptap) 즉시 로딩을 실패로 처리합니다. 앱 아이콘·유리 타일·유리 오브젝트 이미지는 JS에 인라인하지 않습니다
 (`vite.config.js`의 `assetsInlineLimit: 0`). 자동 썸네일 코드는 편집 화면 chunk에만 들어갑니다.
 목록 카드가 쓰는 정적 썸네일 주소표(약 17 KB)는 초기 목록 JavaScript에 들어갑니다.
+공개 사이트 화면 문구표(약 26 KB)는 별도 chunk로 두고 목록을 불러올 때 함께 받습니다.
 
 ## 배포
 
 1. 변경은 `main`에 병합합니다.
 2. 운영 반영은 `main`을 `admin` 브랜치로 병합해 push할 때 `.github/workflows/deploy-admin-azure-swa.yml`이 수행합니다.
-   `Elevate.Admin/**` 또는 공개 사이트 정적 썸네일(`Elevate.Web/src/assets/post-thumbs/**`)이 바뀌었을 때 실행됩니다.
+   `Elevate.Admin/**`, 공개 사이트 정적 썸네일(`Elevate.Web/src/assets/post-thumbs/**`),
+   공개 사이트 화면 문구(`Elevate.Web/src/constants/postText.js`)가 바뀌었을 때 실행됩니다.
 3. 배포 후 두 호스트에서 각각 로그인·목록(카드 썸네일이 공개 사이트와 같은지)·앱별 새 글 저장(보관)·게시와 자동 썸네일·편집·로그아웃을 확인합니다.
 
 자세한 운영 절차는 [배포 런북](../documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md#관리자-배포와-도메인)을 참고합니다.

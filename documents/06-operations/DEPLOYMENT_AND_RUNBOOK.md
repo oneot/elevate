@@ -107,8 +107,9 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 
 1. Admin 변경을 `main`에 병합한다.
 2. `main`을 `admin` 브랜치에 병합해 push하면 `.github/workflows/deploy-admin-azure-swa.yml`이 빌드·번들 예산 검사 후 배포한다.
-   `admin`은 `main`보다 뒤처질 수 있으므로 병합 전 차이를 확인한다. 이 workflow는 `Elevate.Admin/**`와
-   공개 사이트 정적 썸네일(`Elevate.Web/src/assets/post-thumbs/**`, 관리자 목록 카드가 빌드에 포함) 변경 때 실행된다.
+   `admin`은 `main`보다 뒤처질 수 있으므로 병합 전 차이를 확인한다. 이 workflow는 `Elevate.Admin/**`,
+   공개 사이트 정적 썸네일(`Elevate.Web/src/assets/post-thumbs/**`), 공개 사이트 화면용 제목·요약
+   (`Elevate.Web/src/constants/postText.js`) 변경 때 실행된다. 뒤의 두 파일은 관리자 빌드에 함께 들어간다.
 3. 빌드 값은 GitHub secrets에서 주입한다: `ADMIN_VITE_API_BASE_URL`, `ADMIN_VITE_AZURE_AD_CLIENT_ID`,
    `ADMIN_VITE_AZURE_AD_AUTHORITY`, `ADMIN_VITE_AZURE_AD_API_SCOPE`, `ADMIN_VITE_AZURE_AD_REDIRECT_URI`,
    `AZURE_STATIC_WEB_APPS_API_TOKEN_ADMIN`.
@@ -136,6 +137,7 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 
 1. 접속 → Microsoft 로그인 → 같은 호스트로 돌아와 `전체 게시글`과 13개 앱 개수가 표시된다.
    브라우저 탭 아이콘이 오리 이미지이고, 앱 목록 카드 썸네일이 공개 사이트 같은 앱 목록의 카드 이미지와 같다.
+   탭 제목은 `Admin | Microsoft Elevate`다. 각 앱 목록의 제목·요약·순서(게시일 최신순)가 공개 사이트 같은 앱 목록과 같다.
 2. Word와 GitHub에서 새 글을 보관 상태로 저장하면 각 앱 목록의 '보관' 필터에 나타난다
    (저장 category `m365`·`copilot-studio`, 태그 `word`·`github`, slug는 서버가 제목으로 생성).
 3. 기존 글 편집 저장, 본문 이미지·첨부 업로드가 동작한다. 기존 글의 썸네일·slug·태그·시리즈는 바뀌지 않는다.
@@ -151,6 +153,7 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 | 로그인 후 다른 호스트로 이동 | 배포 산출물이 이번 변경 이후 빌드인지 (이전 빌드는 secret 주소로 고정) |
 | 목록에서 CORS 오류 | Function App CORS에 접속한 origin이 있는지 |
 | 이미지·첨부 업로드 실패 (콘솔에 Blob CORS 오류) | Storage Blob CORS 허용 origin에 접속한 관리자 호스트가 있는지 (위 '인증·CORS 전제') |
+| 목록 순서가 공개 사이트 앱 목록과 다름 | 브라우저 콘솔의 `[AdminPostsProvider] 공개 사이트 시리즈 순서 조회 실패`. 공개 API `GET /api/public/series` 응답과 Function App CORS. 받지 못해도 목록은 게시일순이며 같은 시각 글만 순서가 달라진다. 공개 사이트 '전체 게시글'은 같은 시각 글을 데이터베이스 순서로 보여 주므로 그 부분은 원래 다를 수 있다 |
 | 목록 카드가 썸네일 대신 유리 타일 | 정적 썸네일이 없는 글이면 상세 조회(`GET /api/admin/posts/{id}`) 응답의 `thumbnail.variants`와 Blob 읽기. 공개 사이트 정적 썸네일을 새로 넣었다면 Admin이 다시 배포됐는지 |
 | '썸네일을 자동으로 만들지 못했습니다' | 브라우저 콘솔의 `[PostEditor] auto thumbnail failed` 오류, Blob 업로드 SAS·CORS. 글은 저장되며 다음 게시 저장 때 다시 만든다 |
 
