@@ -368,6 +368,34 @@ SDK 내부의 React 개발 모드 경고와 큰 청크/Speech SDK 빌드 경고�
     - GitHub API의 일시 오류(5xx·네트워크)는 10초 간격으로 다시 시도한다.
     - 테스트를 40개로 늘렸다: 다시 실행 후 통과, 다시 실행 후에도 실패, 늦게 바뀌는 상태, 검사 요청 5xx, 취소는 다시 실행하지 않음.
 
+### AI 요약 (2026-10-21, 8차)
+
+사용자 요청: "어드민 페이지에서 게시글 작성 할 때, 요약 부분을 삭제 해주고, 게시글이 저장 될 때 AI가 본문을 분석해서 요약한줄을 기재하게 만들어줘. 썸네일 기능과 유사한 방식으로."
+사용자 결정: 요약은 저장소 파일이 아니라 **게시글 데이터(DB)에 직접 기재**한다. 그래야 공개 사이트·관리자 목록·검색이 같은 요약을 쓴다.
+
+- **관리자**: 편집 화면의 요약 입력 칸을 지웠다. 생성·수정 요청에 `excerpt`를 보내지 않으므로, 서버는 새 글을 빈 요약으로 만들고 기존 글의 요약은 그대로 둔다.
+- **생성**: 썸네일을 만드는 Copilot 세션이 본문을 읽은 김에 `work/<id>/excerpt.txt`에 요약 한 줄도 쓴다. 추가 AI 호출이 없다.
+  - 규칙(`checkExcerpt`): 한 줄, 한 문장, 25~70자(목표 35~55자), '~니다.'로 끝남, 마크다운·HTML·따옴표 꾸밈 없음, 제목과 다름. 사람이 다듬은 기존 요약 80개(33~55자, 모두 '~니다.')에 맞췄다.
+  - 작업 지시에 같은 앱의 규칙에 맞는 기존 요약을 예시로 넣는다(`pickExcerptExamples`).
+  - AI는 `thumb-render excerpt <key>`로 규칙을 스스로 확인한다. 렌더러만 실행할 수 있어서 render.mjs에 검사 모드를 두었다.
+- **검사**: validate는 요약이 규칙에 맞을 때만 버전 기록에 남긴다. 지문은 AI 요약으로 다시 계산한다(기재 뒤의 글과 지문이 같아야 같은 내용으로 다시 만들지 않는다).
+  요약이 틀려도 썸네일은 진행하고 요약만 건너뛴다.
+- **기재**: publish가 PR을 열기 전에 서버 `PUT /api/automation/posts/{id}/excerpt`로 요약을 쓴다. PR 본문에는 '요약(AI)' 줄로 결과를 남긴다.
+  - 인증은 GitHub OIDC다. job 권한은 `id-token: write`, 비밀값은 없다.
+  - 서버(`middleware/automationAuth.js`)는 GitHub 공개 키로 서명을 확인한다. claim은 audience, `repository`·`repository_id`, `ref`(main), `workflow_ref`(post-thumbnails.yml@main)를 모두 확인하고, 다른 저장소·브랜치·workflow는 403이다.
+  - 컨트롤러(`controllers/automationController.js`)는 게시된 글에만 쓴다. AI가 읽은 뒤 저장된 글(`expectedUpdatedAt` 불일치)이나 읽고 쓰는 사이 저장된 글(Cosmos ETag)은 409로 건너뛴다.
+  - `updatedAt`은 바꾸지 않고, `excerptSource`(`ai`)·`excerptGeneratedAt`·`excerptRunId`를 남긴다.
+  - 5xx·네트워크 오류는 다시 시도하고, 404(서버 미배포·글 없음)와 409는 실패로 보지 않는다.
+- **검증**
+  - 서버 테스트 9개 추가(전체 155개, 153개 통과, Azure 2개 건너뜀).
+    - OIDC: 통과, 토큰 없음·다른 audience·다른 발급자·만료·다른 키는 401, 다른 저장소·저장소 번호·브랜치·PR ref·다른 workflow는 403, 앱 설정으로 바꾸기, 로그에 토큰 없음
+    - 컨트롤러: 기재·`updatedAt` 유지, 변경·미게시·불일치 건너뜀, ETag 경합, 입력 검사
+    - 라우트 등록과 토큰 없는 호출 401
+    - workflow·브랜치·`updatedAt`·ETag 확인을 일부러 빼면 테스트가 실패하는 것도 확인했다.
+  - 도구 테스트 48개 통과: 요약 규칙, 예시 고르기, 렌더러 검사 모드, 기재 요청 형식·건너뜀·재시도·거절, OIDC 토큰 요청.
+  - 관리자: Vitest 148개 통과(요약 칸 없음, 저장 요청에 요약 없음, API 본문에 요약 없음). lint, CI fixture 빌드, `check:bundle` 574,565 bytes.
+  - 실제 글(`word/wordonline1`)로 로컬에서 끝까지 확인했다: prepare(같은 앱 요약 예시, 글 번호) → 요약 쓰기 → `render excerpt` → validate(요약 기록, AI 요약 지문) → publish dry run(기재 요청, PR 본문). 규칙에 맞지 않는 요약은 썸네일을 막지 않고 건너뛰는 것도 확인했다.
+
 ## 회귀 검증과 배포 경계
 
 아래 세 앱 검증 수치는 PR #272 당시 기록이다. 웹챗 후속 변경은 별도 Web 회귀와

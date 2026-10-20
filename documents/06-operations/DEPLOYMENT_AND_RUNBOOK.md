@@ -144,9 +144,9 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
    (저장 category `m365`·`copilot-studio`, 태그 `word`·`github`, slug는 서버가 제목으로 생성).
 3. 기존 글 편집 저장, 본문 이미지·첨부 업로드가 동작한다. 기존 글의 썸네일·slug·태그·시리즈는 바뀌지 않는다.
    편집 화면의 썸네일 미리보기가 공개 사이트 카드 이미지와 같다.
-4. 썸네일: 테스트 글을 '게시'로 저장해도 관리자는 썸네일을 만들지 않는다(요청에 `thumbnail` 없음). 저장하면 Actions에 `Post thumbnails on save`
-   실행이 생긴다. 마지막 저장 10분 뒤 `Post thumbnails`가 시작돼 썸네일 PR을 열고, Repository checks를 통과하면 자동으로 병합·배포한다.
-   보통 25분 안팎에 공개 사이트와 관리자 카드에 보인다(아래 '게시글 썸네일 자동 생성').
+4. 썸네일·요약: 테스트 글을 '게시'로 저장해도 관리자는 썸네일과 요약을 만들지 않는다(요청에 `thumbnail`·`excerpt` 없음). 저장하면 Actions에 `Post thumbnails on save`
+   실행이 생긴다. 마지막 저장 10분 뒤 `Post thumbnails`가 시작돼 AI가 요약 한 줄을 게시글에 기재하고(보통 15~20분), 썸네일 PR을 연다.
+   Repository checks를 통과하면 자동으로 병합·배포해, 보통 25분 안팎에 공개 사이트와 관리자 카드에 썸네일이 보인다(아래 '게시글 썸네일 자동 생성').
    게시한 글은 공개 사이트에 바로 보이므로 확인 후 보관으로 바꾸거나 삭제한다. 테스트 글의 썸네일도 자동으로 병합되므로,
    필요 없으면 글을 먼저 보관·삭제한 뒤 병합 커밋을 되돌린다(글이 게시된 채로 이미지만 지우면 다시 만든다).
 5. 첨부파일을 올리고 '링크 복사' 후 본문에 붙여 넣으면 파일 이름으로 된 링크가 들어간다. 게시 후 공개 사이트에서 그 링크로 원래 파일 이름으로 내려받아진다.
@@ -163,6 +163,7 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 | 게시했는데 썸네일 PR이 오지 않음 | 저장 때마다 Actions에 `Post thumbnails on save` 실행이 생기는지 본다. 없으면 Function App 로그의 `[thumbnailTrigger]` 경고(HTTP 401·403은 토큰 만료·권한)와 앱 설정 `THUMBNAIL_DISPATCH_TOKEN`. 있으면 이어진 `Post thumbnails` 실행 기록(plan 출력), `thumbnail-failed` 이슈, 브랜치 `thumbnail/<앱>/<slug>`가 이미 있는지 (아래 표) |
 | 썸네일 PR이 열렸는데 병합되지 않음 | PR의 라벨 `thumbnail-merge-blocked`와 댓글(이유, 검사 링크). `Post thumbnails` 실행의 merge job 요약. 저장소 변수 `THUMBNAIL_AUTO_MERGE`가 `false`인지 (아래 표) |
 | 병합됐는데 사이트에 썸네일이 없음 | merge job이 실행한 `Deploy to GitHub Pages`, `Sync post thumbnails to admin` → `Deploy Elevate.Admin To Azure Static Web Apps` 실행 결과 |
+| 게시했는데 요약이 비어 있음 | `Post thumbnails` 실행 요약과 PR 본문의 '요약(AI)' 줄. 404면 서버가 automation 입구가 있는 코드로 배포됐는지, 401·403이면 Function App 로그의 `[automationAuth]` 경고(audience·저장소·브랜치·workflow claim), 409면 그 사이 저장돼 다음 실행이 다시 쓴다 (아래 '게시글 썸네일 자동 생성') |
 
 ## 서버(Function App) 배포
 
@@ -192,6 +193,20 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
   - 확인함: 서버 코드로 GitHub 실행 요청을 보내 접수되는 것(확인용 실행은 취소).
   - 확인 안 함(2026-10-21 기준): 관리자에서 실제 글을 '게시'로 저장했을 때 실행이 생기는 것. 다음 실제 글 게시 때 확인한다.
 
+### AI 요약 기재 입구 (automation)
+
+`PUT /api/automation/posts/{id}/excerpt`는 관리자 로그인이 아니라 GitHub Actions OIDC 토큰으로 인증한다(`src/middleware/automationAuth.js`).
+비밀값이 없고, 'Post thumbnails' publish job만 이 입구로 AI 요약을 게시글에 쓴다.
+
+| 항목 | 값 |
+| --- | --- |
+| 받는 토큰 | 발급자 `https://token.actions.githubusercontent.com`, audience `api://elevate-post-automation`, `repository` `oneot/elevate`, `repository_id` `1125077519`, `ref` `refs/heads/main`, `workflow_ref` `oneot/elevate/.github/workflows/post-thumbnails.yml@refs/heads/main` |
+| 쓰는 범위 | 게시된 글의 `excerpt` 한 칸과 `excerptSource`(`ai`)·`excerptGeneratedAt`·`excerptRunId`. `updatedAt`은 바꾸지 않는다 |
+| 건너뜀 | AI가 읽은 뒤 저장된 글(요청의 `expectedUpdatedAt`과 다름)·읽고 쓰는 사이 저장된 글(Cosmos ETag 다름)·게시가 아닌 글은 409, 없는 글·slug가 다르면 404 |
+| 앱 설정 | 기본값이 코드에 있어 설정할 것이 없다. 바꿀 때만 `AUTOMATION_OIDC_AUDIENCE`, `AUTOMATION_GITHUB_REPOSITORY`, `AUTOMATION_GITHUB_REPOSITORY_ID`, `AUTOMATION_GITHUB_WORKFLOW`, `AUTOMATION_GITHUB_REF` |
+| 바깥 연결 | 토큰 서명을 확인하려고 GitHub 공개 키(`https://token.actions.githubusercontent.com/.well-known/jwks`)를 읽는다 |
+| 배포 | 이 입구가 들어간 서버 코드를 배포해야 동작한다. 그 전에는 publish가 404를 받아 요약만 건너뛴다 |
+
 ## 게시글 썸네일 자동 생성
 
 관리자에서 글을 '게시' 상태로 저장(새 글·수정)하면 서버가 `.github/workflows/post-thumbnails-on-save.yml`을 실행한다.
@@ -201,8 +216,10 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 대상이 없으면 확인만 하고 약 30초 만에 끝나며 AI를 부르지 않는다. 게시 후 공개 사이트 카드에 보이기까지 보통 25분 안팎이다
 (대기 10분, 생성·검사·병합 10분 안팎, 배포 몇 분).
 새 글과, 이미지를 그린 뒤 제목·요약·본문이 바뀐 글(`tools/post-thumbs/sources/`의 내용 지문과 비교)이 대상이다.
-GitHub Copilot CLI가 글 본문 전체를 읽고 'UI 미니어처' 키트(`tools/post-thumbs`)로 장면을 설계·렌더·검수한 뒤,
-별도 job이 결과를 검사해 PR(라벨 `thumbnail`)로 올린다. 이어서 merge job이 사람 없이 병합한다.
+GitHub Copilot CLI가 글 본문 전체를 읽고 'UI 미니어처' 키트(`tools/post-thumbs`)로 장면을 설계·렌더·검수하고, 같은 글의 요약 한 줄도 쓴다.
+관리자에는 요약 입력 칸이 없다. publish job이 요약을 위 'AI 요약 기재 입구'로 게시글에 기재한 뒤(실패해도 썸네일은 진행),
+결과를 검사해 PR(라벨 `thumbnail`)로 올린다. 버전 기록의 지문은 AI 요약으로 계산하므로, 요약을 기재한 글을 내용 없이 다시 저장해도 다시 만들지 않는다.
+이어서 merge job이 사람 없이 병합한다.
 - PR 브랜치에서 `Repository checks`(`web-checks.yml`)를 workflow_dispatch로 실행한다. GITHUB_TOKEN으로 만든 PR에는 pull_request 검사가 돌지 않기 때문이다.
 - 검사가 통과하고 PR이 publish가 올린 커밋 그대로면 병합하고 브랜치를 지운다. 병합 요청에 커밋 SHA를 함께 보낸다.
 - 하나라도 병합하면 `Deploy to GitHub Pages`와 `Sync post thumbnails to admin`을 직접 실행한다. GITHUB_TOKEN으로 병합한 커밋은 push 이벤트를 만들지 않기 때문이다.
