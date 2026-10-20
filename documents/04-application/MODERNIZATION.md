@@ -65,7 +65,7 @@
 ## 성능과 용량
 
 동일 Node 22 환경의 Vite 빌드로 비교했다. 초기 목록 크기는 HTML 진입과 기본
-`CategoryPosts` 화면의 정적 JavaScript 의존성을 중복 없이 합친 값이다.
+`CategoryPosts`(관리자 리뉴얼 후 `AppPosts`) 화면의 정적 JavaScript 의존성을 중복 없이 합친 값이다.
 
 | 측정 | 기준 코드 | 변경 후 |
 | --- | --- | --- |
@@ -138,6 +138,41 @@ Vite 프로덕션 빌드 및 외부 API 없는 SEO shell 생성을 통과했다.
 운영 봇에 테스트 메시지를 보내지 않았으며 원본 첨부·실사용 대화·토큰을 산출물에 포함하지 않았다.
 SDK 내부의 React 개발 모드 경고와 큰 청크/Speech SDK 빌드 경고는 기준 코드에도 있으며
 이번 수정에서 SDK 전면 교체나 의존성 버전 변경으로 숨기지 않는다.
+
+### 관리자 리뉴얼 (2026-10-20)
+
+기준은 `main`의 `61b12ea`다. 관리자 프런트엔드만 바꾸며, Server API·데이터와 운영 설정은 변경하지 않는다.
+공개 사이트는 분류 규칙 두 줄(아래)만 바뀐다. 위 관리자 항목 중 일정·활동 영상 편집 관련 내용은
+이번 리뉴얼로 관리자 화면에서 제거됐다. 해당 서버 API와 공개 사이트 표시는 그대로다.
+
+- **제거**: Sub category(Agenthon, Update, MEE, 행사 소식, 프로그램 소식) 목록·작성,
+  달력 이벤트 편집·게시글 연결, Management(활동 영상) 목록·편집 화면과 서비스, 미사용 `EventDatesEditor`.
+  관리 대상이 아닌 category 글을 주소로 열면 편집 양식 대신 안내만 표시한다.
+- **앱 분류**: 관리자 목록을 공개 블로그의 13개 앱으로 맞췄다. 2026-10-20 공개 API 대조 결과
+  M365 22건은 M365 3·Word 5·PowerPoint 7·Forms 5·OneDrive 2건이다. Copilot Studio 11건은
+  Copilot Studio 6·GitHub 4·Azure 1건이다. 분리된 M365 글 19건은 모두 시리즈와 앱 태그를 함께 가진다.
+  관리자는 Web 규칙을 복제하고(`Elevate.Admin/src/constants/apps.js`) Web 원본과의 일치를 테스트한다.
+  새 글은 앱의 서버 category에 저장하고 앱 태그를 붙인다(예: Word → `m365` + `word`).
+- **Web 규칙 변경**: GitHub/Azure는 기존 slug 목록으로만 나뉘어 새 글을 배치할 수 없었다.
+  그래서 `CATEGORY_SPLIT_RULES`에 `tag: 'github'`, `tag: 'azure'`를 추가했다. 추가 전 규칙에서도 위 공개 글 33건의
+  분류가 같음을 `Elevate.Web/tests/category-split-rules.test.js`로 고정했다.
+  태그 'GitHub'를 가진 Copilot Studio 글은 `agent-to-website` 하나이며 이미 slug로 GitHub다.
+- **디자인**: 공개 블로그(`DocsShell`/`DocsHero`/`DocsList`)와 같은 헤더·문서 바·앱 내비게이터·
+  히어로·카드 그리드를 관리자용 CSS(`ea-*`)로 구현했다. 관리자 목록 API 요약에는 썸네일이 없다.
+  그래서 카드 이미지 자리는 공개 사이트가 썸네일 없는 글에 쓰는 앱 유리 타일로 채운다.
+- **인증**: `redirectUri`/`postLogoutRedirectUri`는 현재 origin이다. `VITE_AZURE_AD_REDIRECT_URI`는
+  같은 호스트일 때만 적용한다. 로그인 계정이 없으면 화면 진입 시 한 번만 로그인으로 이동하고, 헤더에서 로그아웃한다.
+  로그아웃 직후 같은 탭에서는 자동으로 다시 로그인시키지 않는다.
+- **기존 결함 수정**: `main` 운영 빌드에서 `/posts/new`가 Tiptap 오류
+  (`Cannot read properties of null (reading 'cached')`)로 열리지 않았다. React가 숨겼던 편집기를 다시 연결할 때
+  이미 파괴된 Tiptap 인스턴스로 `getHTML()`을 호출한 것이 원인이다. 파괴된 인스턴스를 건너뛰게 했고,
+  `<Activity>`로 같은 경로를 재현하는 회귀 테스트를 추가했다. 기존 글을 불러오지 못하면 빈 양식을 열지 않는다.
+  빈 양식을 저장해 기존 내용을 덮어쓰는 위험이 있었기 때문이다.
+- **번들**: 초기 목록 JavaScript는 545,418 → 556,137 bytes(gzip 157,386 → 162,449)로 600 KiB 예산 안이다.
+  앱 아이콘·유리 타일 이미지(약 330 KB)는 JS에 인라인하지 않는다.
+
+모의 API와 로컬 브라우저로 화면, 새 글·편집 흐름, 자동 저장 복구를 확인했다.
+실제 Entra 로그인, 운영 API 저장, 사용자 지정 도메인 접속은 배포 후 확인 대상이다.
 
 ## 회귀 검증과 배포 경계
 

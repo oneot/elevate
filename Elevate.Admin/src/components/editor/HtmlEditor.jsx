@@ -424,7 +424,7 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
   return (
     <div>
       {showRestoreBanner && (
-        <div className="mb-2 flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-700">
+        <div className="mb-2 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-700">
           <span>저장되지 않은 작업이 있습니다. 복구하시겠어요?</span>
           <div className="flex gap-2 ml-4">
             <button
@@ -444,10 +444,10 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
           </div>
         </div>
       )}
-      <div className="relative rounded-md border border-neutral-300 bg-white shadow-elevation-2 focus-within:border-ms-blue focus-within:ring-1 focus-within:ring-ms-blue transition-shadow duration-200">
+      <div className="relative rounded-xl border border-[#d2d2d7] bg-white focus-within:border-ms-blue/50 focus-within:ring-4 focus-within:ring-ms-blue/10 transition-shadow duration-200">
         <div className="max-h-[70vh] overflow-y-auto">
           {/* 툴바 - 스크롤 컨테이너 내에서 sticky */}
-          <div className="border-b border-neutral-200 bg-[#f3f2f1] p-1 sticky top-0 z-10">
+          <div className="rounded-t-xl border-b border-[#e8e8ed] bg-[#f5f5f7] p-1 sticky top-0 z-10">
             <div className="flex flex-wrap gap-0.5 items-center px-1">
               {/* 실행취소/다시실행 */}
               <ToolbarButton
@@ -588,7 +588,7 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
 
           {/* 에디터 - 드래그 피드백 */}
           <div
-            className={`relative p-4 bg-white cursor-text transition-colors duration-150 ${
+            className={`relative min-h-[320px] rounded-b-xl p-4 sm:p-5 bg-white cursor-text transition-colors duration-150 ${
               isDragging ? 'border-dashed border-2 border-blue-400 bg-blue-50' : ''
             }`}
             onClick={() => editor.commands.focus()}

@@ -21,9 +21,9 @@
 | 영역 | 진입점과 책임 |
 | --- | --- |
 | 공개 Web | `Elevate.Web/src/main.jsx`, `App.jsx`: React SPA, 공개 API 조회, 본문·영상·행사 표시 |
-| Admin | `Elevate.Admin/src/main.jsx`, `App.jsx`: MSAL 로그인, 게시글·일정·영상 편집, SAS 업로드 |
+| Admin | `Elevate.Admin/src/main.jsx`, `App.jsx`: MSAL 로그인, 공개 사이트 13개 앱별 게시글 작성·편집, SAS 업로드 ([Admin README](../../Elevate.Admin/README.md)) |
 | Server | `Elevate.Server/src/functions/index.js`: Azure Functions HTTP 등록, 관리자 인증, 컨트롤러, Cosmos/Blob 접근 |
-| 배포 | `.github/workflows/deploy.yml`: `main` → GitHub Pages. `deploy-admin-azure-swa.yml`: `admin` → Azure Static Web Apps |
+| 배포 | `.github/workflows/deploy.yml`: `main` → GitHub Pages. `deploy-admin-azure-swa.yml`: `admin` → Azure Static Web Apps (`admin.microsoft-elevate.com`, 기본 호스트) |
 
 일반 PR 대상은 저장소 지침의 `develop`이다. 이번 전체 모더나이즈는 사용자가 승인한
 예외에 따라 [PR #271](https://github.com/oneot/elevate/pull/271)을 포함한 `main`을 기준으로 별도 PR을 준비한다.

@@ -94,6 +94,47 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 `npm test`는 네트워크와 시간을 모의한 회귀 검증이다. 실제 VPN 상태 비교나 운영 접근 복원 검증을 대체하지 않는다.
 이 절차를 수정할 때에는 실제 측정과 모의 결과를 따로 기록한다.
 
+## 관리자 배포와 도메인
+
+관리자(`Elevate.Admin`)는 같은 빌드를 두 호스트에서 서비스한다.
+
+| 호스트 | 용도 |
+| --- | --- |
+| `https://admin.microsoft-elevate.com` | 사용자 지정 도메인 (DNS: GoDaddy, Static Web Apps 사용자 지정 도메인) |
+| `https://white-sea-0567ed600.4.azurestaticapps.net` | Static Web Apps 기본 호스트 |
+
+### 배포 절차
+
+1. Admin 변경을 `main`에 병합한다.
+2. `main`을 `admin` 브랜치에 병합해 push하면 `.github/workflows/deploy-admin-azure-swa.yml`이 빌드·번들 예산 검사 후 배포한다.
+   `admin`은 `main`보다 뒤처질 수 있으므로 병합 전 차이를 확인한다.
+3. 빌드 값은 GitHub secrets에서 주입한다: `ADMIN_VITE_API_BASE_URL`, `ADMIN_VITE_AZURE_AD_CLIENT_ID`,
+   `ADMIN_VITE_AZURE_AD_AUTHORITY`, `ADMIN_VITE_AZURE_AD_API_SCOPE`, `ADMIN_VITE_AZURE_AD_REDIRECT_URI`,
+   `AZURE_STATIC_WEB_APPS_API_TOKEN_ADMIN`.
+   `ADMIN_VITE_AZURE_AD_REDIRECT_URI`는 같은 호스트에서만 쓰이는 선택 값이다. 앱은 현재 origin을 기본으로 쓴다.
+
+### 인증·CORS 전제 (2026-10-20 코디네이터 확인)
+
+- Entra 앱 등록의 SPA 리디렉션 URI: 두 호스트의 origin을 끝 슬래시 있는 형태와 없는 형태로 모두 등록했다.
+  앱은 끝 슬래시 없는 현재 origin을 보낸다(예: `https://admin.microsoft-elevate.com`).
+- Function App CORS에 `https://admin.microsoft-elevate.com`을 추가했다. 기본 호스트 origin도 유지한다.
+- MSAL 캐시는 `sessionStorage`이므로 두 호스트의 로그인 상태는 공유되지 않는다. 호스트마다 한 번씩 로그인한다.
+
+### 배포 후 확인
+
+두 호스트에서 각각 다음을 확인한다. 테스트 글은 임시저장으로 만들고 확인 후 삭제한다.
+
+1. 접속 → Microsoft 로그인 → 같은 호스트로 돌아와 `전체 게시글`과 13개 앱 개수가 표시된다.
+2. Word와 GitHub에서 새 글을 임시저장하면 각 앱 목록에 나타난다(저장 category `m365`·`copilot-studio`, 태그 `word`·`github`).
+3. 기존 글 편집 저장, 썸네일·본문 이미지·첨부 업로드가 동작한다.
+4. 로그아웃하면 같은 호스트로 돌아와 '로그아웃되었습니다' 안내와 '다시 로그인' 버튼이 보인다.
+
+| 증상 | 확인할 것 |
+| --- | --- |
+| `AADSTS50011` | 로그인 요청의 `redirect_uri`와 Entra SPA 리디렉션 URI가 끝 슬래시까지 같은지 |
+| 로그인 후 다른 호스트로 이동 | 배포 산출물이 이번 변경 이후 빌드인지 (이전 빌드는 secret 주소로 고정) |
+| 목록에서 CORS 오류 | Function App CORS에 접속한 origin이 있는지 |
+
 ## GitHub Pages Smoke Test
 
 After deploy, verify these routes return `HTTP 200` and reference existing assets:

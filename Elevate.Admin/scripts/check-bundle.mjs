@@ -15,7 +15,7 @@ function visit(key) {
 }
 
 visit('index.html')
-visit('src/pages/CategoryPosts.jsx')
+visit('src/pages/AppPosts.jsx')
 const files = [...initial].map((key) => manifest[key].file).filter((file) => file.endsWith('.js'))
 assert.ok(!files.some((file) => file.includes('vendor-tiptap-')), '초기 화면이 Tiptap 편집기를 즉시 로드합니다.')
 

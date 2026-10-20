@@ -27,9 +27,6 @@ function toEditorPost(apiPost) {
     youtube: apiPost.youtube || '',
     updatedAt: apiPost.updatedAt || null,
     publishedAt: apiPost.publishedAt || null,
-    eventDates: Array.isArray(apiPost.eventDates) ? apiPost.eventDates : null,
-    eventLocation: apiPost.eventLocation || '',
-    eventTarget: apiPost.eventTarget || '',
   }
 }
 
@@ -87,18 +84,6 @@ function toApiPayload(post) {
     payload.youtube = post.youtube || null
   }
 
-  if (post.eventDates !== undefined) {
-    payload.eventDates = Array.isArray(post.eventDates) ? post.eventDates : null
-  }
-
-  if (post.eventLocation !== undefined) {
-    payload.eventLocation = post.eventLocation || null
-  }
-
-  if (post.eventTarget !== undefined) {
-    payload.eventTarget = post.eventTarget || null
-  }
-
   return payload
 }
 
@@ -121,10 +106,10 @@ export function listSeriesByCategory(category, options = {}) {
 /**
  * 게시글 목록을 조회한다. 쿼리 파라미터 기본값은 서버와 일치할 때 생략해
  * URL을 불필요하게 길어지지 않도록 한다.
- * @param {{ msalInstance, page?, limit?, status?, category?, search? }} options
+ * @param {{ msalInstance, page?, limit?, status?, category?, search?, signal? }} options
  */
 export function listPosts(options = {}) {
-  const { msalInstance, page = 1, limit = 20, status, category, search } = options;
+  const { msalInstance, page = 1, limit = 20, status, category, search, signal } = options;
   const params = new URLSearchParams();
   if (page !== 1) params.set('page', String(page));
   if (limit !== 20) params.set('limit', String(limit));
@@ -132,7 +117,26 @@ export function listPosts(options = {}) {
   if (category && category !== 'all') params.set('category', category);
   if (search) params.set('search', search);
   const qs = params.toString();
-  return apiFetch(`/posts${qs ? `?${qs}` : ''}`, { msalInstance })
+  return apiFetch(`/posts${qs ? `?${qs}` : ''}`, { msalInstance, signal })
+}
+
+const LIST_ALL_PAGE_SIZE = 100
+
+/**
+ * 한 서버 category의 게시글 요약을 모든 상태·페이지에 걸쳐 조회한다 (서버 최대 limit 100).
+ * 관리자 앱 목록은 공개 사이트와 같은 분류 규칙을 브라우저에서 적용하므로 category 전체가 필요하다.
+ * @param {{ msalInstance, category: string, signal?: AbortSignal }} options
+ * @returns {Promise<Array<object>>}
+ */
+export async function listAllPosts({ msalInstance, category, signal } = {}) {
+  const first = await listPosts({ msalInstance, category, limit: LIST_ALL_PAGE_SIZE, signal })
+  const items = Array.isArray(first?.items) ? [...first.items] : []
+  const totalPages = Number.isInteger(first?.totalPages) ? first.totalPages : 1
+  for (let page = 2; page <= totalPages; page += 1) {
+    const data = await listPosts({ msalInstance, category, page, limit: LIST_ALL_PAGE_SIZE, signal })
+    if (Array.isArray(data?.items)) items.push(...data.items)
+  }
+  return items
 }
 
 /**

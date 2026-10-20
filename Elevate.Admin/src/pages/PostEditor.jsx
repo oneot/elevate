@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Card, Button, ConfirmModal, FormField } from '../components/ui/index.js'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { ArrowLeft, ExternalLink, Save, Trash2 } from 'lucide-react'
+import { ConfirmModal, FormField, Notice } from '../components/ui/index.js'
 import { HtmlEditor, PostMetaSidebar } from '../components/editor/index.js'
+import AppHero from '../components/apps/AppHero.jsx'
 import { isApiConfigured } from '../lib/apiClient.js'
 import {
   createPost,
@@ -11,11 +14,23 @@ import {
   updatePost,
 } from '../services/postsApi.js'
 import { linkDraftFilesToPost } from '../services/assetsApi.js'
-import { listCalendarEvents, updateCalendarEvent } from '../services/calendarEventsApi.js'
-import { slugify, extractYoutubeId } from '../utils/formatters.js'
-import { CATEGORIES } from '../constants/categories.js'
+import { slugify, extractYoutubeId, formatDate } from '../utils/formatters.js'
+import {
+  ALL_APPS_KEY,
+  APP_LABELS,
+  BASE_CATEGORIES,
+  applyAppTag,
+  getApiCategory,
+  getDisplayCategory,
+  isAppKey,
+} from '../constants/apps.js'
+import { getAppMeta } from '../constants/appMeta.js'
+import { STATUS_LABELS } from '../constants/status.js'
+import { PUBLIC_SITE_URL } from '../constants/site.js'
 import { useAuth } from '../hooks/useAuth.js'
 import { usePostUpload } from '../hooks/usePostUpload.js'
+import { useAdminPosts } from '../hooks/adminPosts.js'
+import { useDbarSlot, usePageApp } from '../hooks/shell.js'
 
 /** 신규 게시글 작성 시 초기 상태 기본값. */
 const emptyPost = {
@@ -32,21 +47,19 @@ const emptyPost = {
   youtube: '',
 }
 
-const CALENDAR_EVENT_LIMIT = 500
 const ATTACHMENT_LINK_WARNING = '첨부파일 연결에 실패했습니다. 저장된 게시글에서 다시 확인해 주세요.'
 
-function toDateString(date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+function parseTags(value) {
+  return value
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter(Boolean)
 }
 
-function getCalendarEventRange(today = new Date()) {
-  return {
-    start: toDateString(new Date(today.getFullYear() - 1, 0, 1)),
-    end: toDateString(new Date(today.getFullYear() + 2, 11, 31)),
-  }
+/** 새 글 주소의 앱 (?app=, 이전 주소 호환용 ?category=). */
+function getInitialApp(searchParams) {
+  const app = searchParams.get('app') || searchParams.get('category')
+  return isAppKey(app) ? app : ''
 }
 
 function createDraftSessionId() {
@@ -84,6 +97,9 @@ function getDraftSessionId(storageKey) {
 
 function PostEditor() {
   const { msalInstance } = useAuth()
+  const { refresh: refreshPosts } = useAdminPosts()
+  const dbarSlot = useDbarSlot()
+  const fieldId = useId()
   const { postId } = useParams()
   const [searchParams] = useSearchParams()
   const isNew = !postId
@@ -98,26 +114,30 @@ function PostEditor() {
   const pendingDraftSessionId = location.state?.draftAttachmentLink?.draftSessionId || ''
   const pendingDraftAttachmentStorageKey = location.state?.draftAttachmentLink?.draftAttachmentStorageKey || ''
   const flashRetryKeyRef = useRef('')
-  const [post, setPost] = useState(() => ({
-    ...emptyPost,
-    category: isNew ? (searchParams.get('category') || '') : '',
-  }))
-  const [tagsInput, setTagsInput] = useState('')
+  const [selectedApp, setSelectedApp] = useState(() => (isNew ? getInitialApp(searchParams) : ''))
+  const [post, setPost] = useState(() => {
+    const app = isNew ? getInitialApp(searchParams) : ''
+    return { ...emptyPost, category: app ? getApiCategory(app) : '' }
+  })
+  // 새 글은 고른 앱의 태그(예: Word → word)를 미리 넣어 공개 사이트의 같은 앱에 표시되게 한다.
+  const [tagsInput, setTagsInput] = useState(() => (
+    isNew ? applyAppTag([], getInitialApp(searchParams)).join(', ') : ''
+  ))
   const [youtubeInput, setYoutubeInput] = useState('')
   const [youtubeError, setYoutubeError] = useState('')
   const [seriesOptions, setSeriesOptions] = useState([])
   const [isCreatingNewSeries, setIsCreatingNewSeries] = useState(false)
   const [newSeriesName, setNewSeriesName] = useState('')
   const [loading, setLoading] = useState(!isNew)
+  const [loadError, setLoadError] = useState('')
+  const [loadAttempt, setLoadAttempt] = useState(0)
+  const [persisted, setPersisted] = useState(null)
   const [saving, setSaving] = useState(false)
   const [isAttachmentUploading, setIsAttachmentUploading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
-  const [linkedCalendarEventId, setLinkedCalendarEventId] = useState('')
-  const [initialLinkedCalendarEventId, setInitialLinkedCalendarEventId] = useState('')
-  const [calendarEvents, setCalendarEvents] = useState([])
 
   const { uploading: isUploading, uploadThumbnail, uploadHtmlImage } = usePostUpload({
     msalInstance,
@@ -203,17 +223,19 @@ function PostEditor() {
 
     const loadPost = async () => {
       setLoading(true)
-      setError('')
+      setLoadError('')
       try {
         const data = await getPost(postId, { msalInstance })
         if (isMounted) {
           setPost({ ...emptyPost, ...data })
           setTagsInput((data.tags || []).join(', '))
           setYoutubeInput(data.youtube || '')
+          setPersisted({ status: data.status, slug: data.slug })
         }
       } catch (err) {
+        // 불러오지 못한 글을 빈 양식으로 보여 주면 저장 시 기존 내용을 덮어쓸 수 있으므로 양식을 열지 않는다.
         if (isMounted) {
-          setError(err.message || '포스트를 불러오지 못했습니다.')
+          setLoadError(err.message || '게시글을 불러오지 못했습니다.')
         }
       } finally {
         if (isMounted) setLoading(false)
@@ -225,44 +247,7 @@ function PostEditor() {
     return () => {
       isMounted = false
     }
-  }, [postId, isNew, msalInstance])
-
-  useEffect(() => {
-    if (!isApiConfigured || post.category !== 'event') {
-      setCalendarEvents([])
-      setLinkedCalendarEventId('')
-      setInitialLinkedCalendarEventId('')
-      return
-    }
-    let isMounted = true
-
-    const loadCalendarData = async () => {
-      setCalendarEvents([])
-      setLinkedCalendarEventId('')
-      setInitialLinkedCalendarEventId('')
-      try {
-        const range = getCalendarEventRange()
-        const [allEvents, linkedResult] = await Promise.all([
-          listCalendarEvents({ msalInstance, ...range, limit: CALENDAR_EVENT_LIMIT }),
-          !isNew ? listCalendarEvents({ msalInstance, linkedPostId: postId }) : Promise.resolve({ items: [] }),
-        ])
-        if (isMounted) {
-          setCalendarEvents(Array.isArray(allEvents?.items) ? allEvents.items : [])
-          const linked = linkedResult?.items?.[0]
-          if (linked) {
-            setLinkedCalendarEventId(linked.id)
-            setInitialLinkedCalendarEventId(linked.id)
-          }
-        }
-      } catch (err) {
-        console.error('[PostEditor] calendar events fetch failed', err)
-        if (isMounted) setError(err.message || '달력 이벤트 목록을 불러오지 못했습니다.')
-      }
-    }
-
-    loadCalendarData()
-    return () => { isMounted = false }
-  }, [post.category, isNew, postId, msalInstance])
+  }, [postId, isNew, msalInstance, loadAttempt])
 
   useEffect(() => {
     if (!isApiConfigured || !post.category) {
@@ -310,9 +295,17 @@ function PostEditor() {
     setNewSeriesName(currentSeries)
   }, [post.series, seriesOptions])
 
-
   const handleChange = (field) => (event) => {
     setPost((prev) => ({ ...prev, [field]: event.target.value }))
+  }
+
+  // 새 글의 앱을 바꾸면 서버 category와 앱 태그를 함께 맞춘다 (예: Word → m365 + word 태그).
+  const handleAppChange = (event) => {
+    const app = event.target.value
+    if (!isAppKey(app)) return
+    setSelectedApp(app)
+    setPost((prev) => ({ ...prev, category: getApiCategory(app) }))
+    setTagsInput((prev) => applyAppTag(parseTags(prev), app).join(', '))
   }
 
   const handleSeriesSelectChange = (event) => {
@@ -398,6 +391,20 @@ function PostEditor() {
     }))
   }
 
+  const parsedTags = useMemo(() => parseTags(tagsInput), [tagsInput])
+  // 공개 사이트에서 이 글이 표시될 앱 (slug → 시리즈 → 태그, Elevate.Web과 같은 규칙).
+  const displayApp = post.category
+    ? getDisplayCategory({
+      category: post.category,
+      slug: slugify(post.slug || ''),
+      series: (post.series || '').trim(),
+      tags: parsedTags,
+    })
+    : ''
+  const pageApp = isNew ? selectedApp : (isAppKey(displayApp) ? displayApp : '')
+  const isUnmanagedPost = !isNew && !loading && !loadError && Boolean(post.category) && !BASE_CATEGORIES.includes(post.category)
+  usePageApp(pageApp || null)
+
   const handleSave = async () => {
     setError('')
     setMessage('')
@@ -408,7 +415,7 @@ function PostEditor() {
     }
 
     if (!post.category) {
-      setError('카테고리를 선택해주세요.')
+      setError('앱을 선택해주세요.')
       return
     }
 
@@ -429,10 +436,7 @@ function PostEditor() {
     const payload = {
       ...post,
       slug: normalizedSlug || slugify(post.title),
-      tags: tagsInput
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter(Boolean),
+      tags: parsedTags,
     }
 
     setSaving(true)
@@ -455,17 +459,10 @@ function PostEditor() {
             }
           }
         }
-        if (post.category === 'event' && newId) {
-          try {
-            await syncCalendarEventLink(newId)
-          } catch (calendarError) {
-            console.error('[PostEditor] calendar event link failed after post creation', calendarError)
-            warnings.push(calendarError.message || '달력 이벤트 연결에 실패했습니다.')
-          }
-        }
         const successMessage = warnings.length > 0
           ? `저장되었습니다. ${warnings.join(' ')}`
           : '저장되었습니다.'
+        refreshPosts()
         if (newId) {
           try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
           navigate(`/posts/${newId}`, {
@@ -478,52 +475,22 @@ function PostEditor() {
           setMessage(successMessage)
         }
       } else {
-        await updatePost(postId, payload, { msalInstance })
-        if (post.category === 'event') {
-          await syncCalendarEventLink(postId)
-        }
+        const updated = await updatePost(postId, payload, { msalInstance })
         try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
+        // 저장 중에 고친 입력은 덮어쓰지 않고, 서버가 정한 시각만 반영한다.
+        setPost((prev) => ({
+          ...prev,
+          updatedAt: updated?.updatedAt ?? prev.updatedAt,
+          publishedAt: updated?.publishedAt ?? null,
+        }))
+        setPersisted({ status: updated?.status || payload.status, slug: updated?.slug || payload.slug })
         setMessage('업데이트되었습니다.')
+        refreshPosts()
       }
     } catch (err) {
       setError(err.message || '저장에 실패했습니다.')
     } finally {
       setSaving(false)
-    }
-  }
-
-  const syncCalendarEventLink = async (savedPostId) => {
-    const previousEventId = initialLinkedCalendarEventId
-    const nextEventId = linkedCalendarEventId
-    const linkChanged = previousEventId !== nextEventId
-
-    if (!linkChanged) return
-
-    let linkedNextEvent = false
-    try {
-      if (nextEventId) {
-        await updateCalendarEvent(nextEventId, { linkedPostId: savedPostId }, { msalInstance })
-        linkedNextEvent = true
-      }
-
-      if (previousEventId) {
-        try {
-          await updateCalendarEvent(previousEventId, { linkedPostId: null }, { msalInstance })
-        } catch (unlinkError) {
-          if (linkedNextEvent) {
-            try {
-              await updateCalendarEvent(nextEventId, { linkedPostId: null }, { msalInstance })
-            } catch (rollbackError) {
-              console.error('[PostEditor] calendar event link rollback failed', rollbackError)
-            }
-          }
-          throw unlinkError
-        }
-      }
-
-      setInitialLinkedCalendarEventId(nextEventId)
-    } catch (err) {
-      throw new Error('게시글은 저장되었으나 달력 이벤트 연결에 실패했습니다: ' + (err.message || ''))
     }
   }
 
@@ -538,7 +505,8 @@ function PostEditor() {
     setError('')
     try {
       await deletePost(postId, { msalInstance })
-      navigate(post.category ? `/category/${post.category}` : '/')
+      refreshPosts()
+      navigate(`/apps/${pageApp || ALL_APPS_KEY}`)
     } catch (err) {
       setError(err.message || '삭제에 실패했습니다.')
       setShowDeleteModal(false)
@@ -547,142 +515,210 @@ function PostEditor() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="animate-fadeIn">
-        <Card className="py-12 text-center">
-          <div className="space-y-2">
-            <div className="inline-block w-8 h-8 border-4 border-neutral-200 border-t-ms-blue rounded-full animate-spin"></div>
-            <p className="text-sm text-neutral-500 mt-2">불러오는 중...</p>
+  const listPath = `/apps/${pageApp || ALL_APPS_KEY}`
+  const backLink = (
+    <Link to={listPath} className="ea-btn ea-btn--ghost ea-btn--sm" aria-label="목록으로">
+      <ArrowLeft size={16} aria-hidden="true" />
+      <span className="max-sm:hidden">목록으로</span>
+    </Link>
+  )
+
+  if (loading || loadError || isUnmanagedPost) {
+    let state
+    if (loading) {
+      state = (
+        <div className="ea-empty" role="status">
+          <span className="ea-spinner" aria-hidden="true" />
+          <span>게시글을 불러오는 중...</span>
+        </div>
+      )
+    } else if (loadError) {
+      state = (
+        <div className="ea-empty" role="alert">
+          <strong>게시글을 불러오지 못했습니다.</strong>
+          <span>{loadError}</span>
+          <div className="ea-empty__actions">
+            <button type="button" className="ea-btn ea-btn--primary ea-btn--sm" onClick={() => setLoadAttempt((value) => value + 1)}>
+              다시 시도
+            </button>
           </div>
-        </Card>
-      </div>
+        </div>
+      )
+    } else {
+      state = (
+        <div className="ea-empty" role="status">
+          <span className="ea-drop" aria-hidden="true" />
+          <strong>관리자에서 다루지 않는 게시글입니다.</strong>
+          <span>‘{post.category}’ 카테고리 게시글은 앱 게시글 관리에서 제외되었습니다. 공개 사이트와 서버 데이터는 그대로 유지됩니다.</span>
+          <div className="ea-empty__actions">
+            <Link to={`/apps/${ALL_APPS_KEY}`} className="ea-btn ea-btn--primary ea-btn--sm">전체 게시글로 이동</Link>
+          </div>
+        </div>
+      )
+    }
+    return (
+      <>
+        {dbarSlot && createPortal(<div className="ea-dbar__actions flex items-center gap-2">{backLink}</div>, dbarSlot)}
+        <div className="ea-container ea-section">{state}</div>
+      </>
     )
   }
 
   const saveDisabled = saving || isUploading || isAttachmentUploading
+  const saveLabel = saving ? '저장 중...' : isUploading ? '이미지 업로드 중...' : isAttachmentUploading ? '첨부 업로드 중...' : '저장'
+  const appMeta = pageApp ? getAppMeta(pageApp) : null
+  const publicUrl = !isNew && persisted?.status === 'published' && persisted.slug && isAppKey(displayApp)
+    ? `${PUBLIC_SITE_URL}/${displayApp}/${encodeURIComponent(persisted.slug)}`
+    : ''
+  const appMismatch = isNew && selectedApp && isAppKey(displayApp) && displayApp !== selectedApp
 
   return (
-    <div className="space-y-10 animate-fadeIn">
-      {!isApiConfigured ? (
-        <div className="rounded-lg border border-amber-200/50 bg-amber-50/80 backdrop-blur-sm px-4 py-3 text-sm text-amber-700">
-          API가 아직 연결되지 않아 목업 모드로 동작합니다.
-        </div>
-      ) : null}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-3xl font-bold text-gradient">
-            {isNew ? '새 포스트 작성' : '포스트 편집'}
-          </h2>
-          <p className="text-sm text-neutral-500 mt-1">
-            HTML 본문과 메타데이터를 관리합니다.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => navigate(post.category ? `/category/${post.category}` : '/')}>
-            목록으로
-          </Button>
+    <>
+      {dbarSlot && createPortal(
+        <div className="ea-dbar__actions flex items-center gap-2">
+          {backLink}
           {!isNew && isApiConfigured && (
-            <Button variant="danger" onClick={() => setShowDeleteModal(true)} disabled={deleting}>
-              삭제
-            </Button>
+            <button
+              type="button"
+              className="ea-btn ea-btn--danger ea-btn--sm"
+              onClick={() => setShowDeleteModal(true)}
+              disabled={deleting}
+              aria-label="삭제"
+            >
+              <Trash2 size={15} aria-hidden="true" />
+              <span className="max-sm:hidden">삭제</span>
+            </button>
           )}
-          <Button onClick={handleSave} disabled={saveDisabled}>
-            {saving ? '저장 중...' : isUploading ? '이미지 업로드 중...' : isAttachmentUploading ? '첨부 업로드 중...' : '저장'}
-          </Button>
+          <button type="button" className="ea-btn ea-btn--primary ea-btn--sm" onClick={handleSave} disabled={saveDisabled}>
+            <Save size={15} aria-hidden="true" />
+            {saveLabel}
+          </button>
+        </div>,
+        dbarSlot,
+      )}
+
+      <AppHero
+        compact
+        app={pageApp || ALL_APPS_KEY}
+        crumbs={[
+          { label: '전체 게시글', to: `/apps/${ALL_APPS_KEY}` },
+          ...(appMeta ? [{ label: appMeta.name, to: `/apps/${pageApp}` }] : []),
+          { label: isNew ? '새 글' : '편집' },
+        ]}
+        eyebrow={appMeta ? appMeta.name : '앱을 선택하세요'}
+        eyebrowIcon={appMeta?.icon || undefined}
+        title={post.title.trim() || (isNew ? '새 게시글' : '(제목 없음)')}
+        meta={[
+          STATUS_LABELS[post.status] || STATUS_LABELS.draft,
+          !isNew && post.updatedAt ? `마지막 수정 ${formatDate(post.updatedAt)}` : null,
+          !isNew && post.publishedAt ? `게시 ${formatDate(post.publishedAt)}` : null,
+        ]}
+        actions={publicUrl ? (
+          <a className="ea-btn ea-btn--glass ea-btn--sm" href={publicUrl} target="_blank" rel="noopener noreferrer">
+            공개 사이트에서 보기
+            <ExternalLink size={14} aria-hidden="true" />
+          </a>
+        ) : null}
+      />
+
+      <div className="ea-container">
+        <div className="ea-editor__notices">
+          {!isApiConfigured && <Notice tone="warning">API가 아직 연결되지 않아 목업 모드로 동작합니다.</Notice>}
+          {error && <Notice tone="error">{error}</Notice>}
+          {message && <Notice tone="success">{message}</Notice>}
+          {appMismatch && (
+            <Notice tone="warning">
+              선택한 앱은 {APP_LABELS[selectedApp]}이지만 시리즈 또는 태그 때문에 공개 사이트에서는 {APP_LABELS[displayApp]}에 표시됩니다.
+            </Notice>
+          )}
         </div>
-      </div>
 
-      {error ? (
-        <div className="rounded-lg border border-rose-200/50 bg-rose-50/80 backdrop-blur-sm px-4 py-3 text-sm text-rose-700 animate-slideUp">
-          {error}
+        <div className="ea-editor">
+          <div className="ea-editor__main">
+            <section className="ea-panel" aria-label="기본 정보">
+              <div className="ea-fields">
+                <FormField label="제목" htmlFor={`${fieldId}-title`}>
+                  <input
+                    id={`${fieldId}-title`}
+                    className="ea-input ea-input--title"
+                    value={post.title}
+                    onChange={handleChange('title')}
+                    placeholder="게시글 제목"
+                  />
+                </FormField>
+
+                <FormField label="Slug" htmlFor={`${fieldId}-slug`} hint="비워두면 제목에서 자동 생성됩니다. 공개 사이트 주소의 마지막 부분입니다.">
+                  <input
+                    id={`${fieldId}-slug`}
+                    className="ea-input ea-input--mono"
+                    value={post.slug}
+                    onChange={handleChange('slug')}
+                    placeholder="my-post-slug"
+                  />
+                  {post.slug && slugify(post.slug) !== post.slug && (
+                    <p className="text-xs text-[#8a4b00]">
+                      저장 시 <span className="font-mono font-semibold">{slugify(post.slug) || '(자동 생성)'}</span>으로 변환됩니다.
+                    </p>
+                  )}
+                </FormField>
+
+                <FormField label="요약" htmlFor={`${fieldId}-excerpt`}>
+                  <textarea
+                    id={`${fieldId}-excerpt`}
+                    className="ea-textarea"
+                    value={post.excerpt}
+                    onChange={handleChange('excerpt')}
+                    placeholder="목록 카드에 표시되는 한 줄 요약"
+                  />
+                </FormField>
+              </div>
+            </section>
+
+            <section className="ea-panel" aria-label="본문">
+              <h2 className="ea-panel__title">본문</h2>
+              <HtmlEditor
+                value={post.htmlBody}
+                onChange={(value) =>
+                  setPost((prev) => ({
+                    ...prev,
+                    htmlBody: value,
+                  }))
+                }
+                onUploadImage={uploadHtmlImage}
+                storageKey={storageKey}
+              />
+            </section>
+          </div>
+
+          <aside className="ea-editor__side" aria-label="게시 설정">
+            <PostMetaSidebar
+              post={post}
+              tagsInput={tagsInput}
+              youtubeInput={youtubeInput}
+              youtubeError={youtubeError}
+              isUploading={isUploading}
+              isNew={isNew}
+              selectedApp={selectedApp}
+              displayApp={displayApp}
+              onAppChange={handleAppChange}
+              onChange={handleChange}
+              seriesOptions={seriesOptions}
+              isCreatingNewSeries={isCreatingNewSeries}
+              newSeriesName={newSeriesName}
+              onSeriesSelectChange={handleSeriesSelectChange}
+              onStartNewSeries={handleStartNewSeries}
+              onCancelNewSeries={handleCancelNewSeries}
+              onNewSeriesNameChange={handleNewSeriesNameChange}
+              onSeriesOrderChange={handleSeriesOrderChange}
+              onTagsChange={setTagsInput}
+              onYoutubeChange={handleYoutubeChange}
+              onThumbnailUpload={uploadThumbnail}
+              onAttachmentUploadingChange={setIsAttachmentUploading}
+              postId={postId}
+              draftSessionId={draftSessionId}
+            />
+          </aside>
         </div>
-      ) : null}
-
-      {message ? (
-        <div className="rounded-lg border border-ms-green/20 bg-ms-green/10 backdrop-blur-sm px-4 py-3 text-sm text-ms-green animate-slideUp">
-          {message}
-        </div>
-      ) : null}
-
-      <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
-        <Card colorScheme="blue" className="space-y-8">
-          <FormField label="제목">
-            <input
-              className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-              value={post.title}
-              onChange={handleChange('title')}
-              placeholder="포스트 제목"
-            />
-          </FormField>
-
-          <FormField label="Slug" hint="비워두면 제목에서 자동 생성됩니다.">
-            <input
-              className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-mono transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue"
-              value={post.slug}
-              onChange={handleChange('slug')}
-              placeholder="my-post-slug"
-            />
-            {post.slug && slugify(post.slug) !== post.slug && (
-              <p className="mt-1 text-xs text-amber-600">
-                저장 시 <span className="font-mono font-semibold">{slugify(post.slug) || '(자동 생성)'}</span>으로 변환됩니다.
-              </p>
-            )}
-          </FormField>
-
-          <FormField label="요약">
-            <textarea
-              className="min-h-24 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-shadow duration-200 focus:outline-none focus:ring-1 focus:ring-ms-blue focus:border-ms-blue resize-none"
-              value={post.excerpt}
-              onChange={handleChange('excerpt')}
-              placeholder="한 줄 요약"
-            />
-          </FormField>
-
-          <FormField label="HTML 본문">
-            <HtmlEditor
-              value={post.htmlBody}
-              onChange={(value) =>
-                setPost((prev) => ({
-                  ...prev,
-                  htmlBody: value,
-                }))
-              }
-              onUploadImage={uploadHtmlImage}
-              storageKey={storageKey}
-            />
-          </FormField>
-        </Card>
-
-        <aside className="space-y-8">
-          <PostMetaSidebar
-            post={post}
-            tagsInput={tagsInput}
-            youtubeInput={youtubeInput}
-            youtubeError={youtubeError}
-            isUploading={isUploading}
-            isNew={isNew}
-            onChange={handleChange}
-            seriesOptions={seriesOptions}
-            isCreatingNewSeries={isCreatingNewSeries}
-            newSeriesName={newSeriesName}
-            onSeriesSelectChange={handleSeriesSelectChange}
-            onStartNewSeries={handleStartNewSeries}
-            onCancelNewSeries={handleCancelNewSeries}
-            onNewSeriesNameChange={handleNewSeriesNameChange}
-            onSeriesOrderChange={handleSeriesOrderChange}
-            onTagsChange={setTagsInput}
-            onYoutubeChange={handleYoutubeChange}
-            onThumbnailUpload={uploadThumbnail}
-            onAttachmentUploadingChange={setIsAttachmentUploading}
-            linkedCalendarEventId={linkedCalendarEventId}
-            calendarEvents={calendarEvents}
-            onLinkedCalendarEventChange={setLinkedCalendarEventId}
-            postId={postId}
-            draftSessionId={draftSessionId}
-            categories={CATEGORIES}
-          />
-        </aside>
       </div>
 
       <ConfirmModal
@@ -694,7 +730,7 @@ function PostEditor() {
         onCancel={() => setShowDeleteModal(false)}
         loading={deleting}
       />
-    </div>
+    </>
   )
 }
 
