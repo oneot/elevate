@@ -1,0 +1,172 @@
+name: Post thumbnails
+
+# 공개 사이트에 새로 게시된 글과 내용이 바뀐 글의 카드 썸네일을 AI(GitHub Copilot CLI)가 본문 전체를 읽고 만들어 PR로 올린다.
+# 사람이 PR을 확인해 병합하면 공개 사이트가 배포되고, 'Sync post thumbnails to admin'이 관리자도 다시 배포한다.
+# 생성(AI) job은 저장소 읽기 권한만 가지며, 검사를 통과한 결과만 별도 publish job이 PR로 올린다.
+# 자세한 내용: tools/post-thumbs/README.md
+
+on:
+    schedule:
+        # 15분마다 (정각을 피해 2·17·32·47분). 대상이 없으면 약 30초 만에 끝나고 AI를 부르지 않는다.
+        - cron: "2,17,32,47 * * * *"
+    workflow_dispatch:
+        inputs:
+            key:
+                description: "다시 만들 글 <앱>/<slug> (예: m365/test). 비우면 새 글과 내용이 바뀐 글을 찾는다"
+                required: false
+                default: ""
+            feedback:
+                description: "다시 만들 때 AI에게 전할 요청 (선택)"
+                required: false
+                default: ""
+
+permissions: {}
+
+concurrency:
+    group: post-thumbnails
+    cancel-in-progress: false
+
+jobs:
+    plan:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        permissions:
+            contents: read
+            issues: read
+        outputs:
+            items: ${{ steps.plan.outputs.items }}
+            count: ${{ steps.plan.outputs.count }}
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+
+            # 글 내용 지문을 수정 시각별로 남겨 바뀌지 않은 글의 본문을 매번 받지 않는다.
+            - uses: actions/cache@v4
+              with:
+                  path: tools/post-thumbs/.cache
+                  key: post-thumbs-hashes-${{ github.run_id }}
+                  restore-keys: post-thumbs-hashes-
+
+            - name: Find new and edited posts
+              id: plan
+              run: node tools/post-thumbs/plan.mjs
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  FORCE_KEY: ${{ inputs.key }}
+                  MAX_PER_RUN: "2"
+
+    generate:
+        needs: plan
+        if: needs.plan.outputs.count != '0'
+        # 기존 썸네일과 같은 글꼴(SF Pro, Apple SD Gothic Neo)로 그리기 위해 macOS에서 실행한다.
+        runs-on: macos-latest
+        timeout-minutes: 45
+        permissions:
+            contents: read
+            copilot-requests: write
+        strategy:
+            fail-fast: false
+            max-parallel: 2
+            matrix:
+                item: ${{ fromJSON(needs.plan.outputs.items) }}
+        defaults:
+            run:
+                working-directory: tools/post-thumbs
+        env:
+            KEY: ${{ matrix.item.key }}
+            ID: ${{ matrix.item.id }}
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+                  cache: npm
+                  cache-dependency-path: tools/post-thumbs/package-lock.json
+
+            - name: Install tools
+              run: |
+                  npm ci
+                  npx playwright install chromium
+                  npm install -g @github/copilot
+
+            - name: Prepare post
+              run: node prepare.mjs "$KEY"
+              env:
+                  REASON: ${{ matrix.item.reason }}
+                  FEEDBACK: ${{ inputs.feedback }}
+
+            # 쓰기는 이 폴더 안에서만, 명령은 렌더러만 허용한다. 결과 검사는 다음 단계에서 따로 한다.
+            # 모델은 품질을 위해 고정한다 (기본 Claude Opus 5.5, 저장소 변수 THUMBNAIL_MODEL로 바꿀 수 있다).
+            - name: Design thumbnail with Copilot
+              timeout-minutes: 30
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  THUMBNAIL_MODEL: ${{ vars.THUMBNAIL_MODEL || 'claude-opus-5.5' }}
+              run: |
+                  copilot -p "$(cat "work/$ID/task.md")" --model "$THUMBNAIL_MODEL" --no-ask-user \
+                      --allow-tool='write' --allow-tool='shell(node render.mjs:*)' --share="work/$ID/transcript.md"
+
+            - name: Validate result
+              run: node validate.mjs "$KEY"
+
+            - name: Upload thumbnail
+              uses: actions/upload-artifact@v4
+              with:
+                  name: thumb-${{ matrix.item.id }}
+                  if-no-files-found: error
+                  retention-days: 7
+                  path: |
+                      tools/post-thumbs/scenes/auto/${{ matrix.item.category }}/${{ matrix.item.slug }}.js
+                      tools/post-thumbs/sources/${{ matrix.item.category }}/${{ matrix.item.slug }}.json
+                      Elevate.Web/src/assets/post-thumbs/${{ matrix.item.category }}/${{ matrix.item.slug }}-960.webp
+                      Elevate.Web/src/assets/post-thumbs/${{ matrix.item.category }}/${{ matrix.item.slug }}-480.webp
+                      tools/post-thumbs/work/${{ matrix.item.id }}/summary.md
+
+            - name: Upload Copilot log
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: log-${{ matrix.item.id }}
+                  if-no-files-found: ignore
+                  retention-days: 14
+                  path: |
+                      tools/post-thumbs/work/${{ matrix.item.id }}/
+                      tools/post-thumbs/review/
+
+    publish:
+        needs: [plan, generate]
+        if: always() && needs.plan.result == 'success' && needs.plan.outputs.count != '0'
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        permissions:
+            contents: write
+            pull-requests: write
+            issues: write
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+
+            - name: Download thumbnails
+              uses: actions/download-artifact@v4
+              continue-on-error: true
+              with:
+                  pattern: thumb-*
+                  path: artifacts
+
+            - name: Open pull requests
+              run: node tools/post-thumbs/publish.mjs
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  ITEMS: ${{ needs.plan.outputs.items }}
+                  ARTIFACTS: ${{ github.workspace }}/artifacts
+                  FEEDBACK: ${{ inputs.feedback }}
+                  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
