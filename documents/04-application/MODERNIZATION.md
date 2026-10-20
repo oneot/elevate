@@ -299,7 +299,7 @@ SDK 내부의 React 개발 모드 경고와 큰 청크/Speech SDK 빌드 경고�
   `render.py`를 Node(`render.mjs`, Playwright + sharp)로 옮겼고, 기존 80개를 다시 그려 평균 픽셀 차 0.35~0.51/255로 같은 결과임을 확인했다.
   기존 썸네일이 macOS 글꼴(SF Pro, Apple SD Gothic Neo)로 그려졌으므로 생성 job은 macOS 러너에서 돈다.
 - **workflow** (`.github/workflows/post-thumbnails.yml`, 15분 간격 + 수동 실행. 대상이 없으면 약 30초 만에 끝나고 AI를 부르지 않는다):
-  plan(썸네일·PR 브랜치·실패 이슈가 없는 새 글, 최대 2개) → generate(macOS, 읽기 권한만, Copilot CLI는 `node render.mjs`와 이 폴더 쓰기만 허용)
+  plan(썸네일·PR 브랜치·실패 이슈가 없는 새 글, 최대 2개) → generate(macOS, 읽기 권한만, Copilot CLI는 렌더러 `thumb-render`와 그 글의 장면·summary 쓰기만 허용)
   → validate(장면 1개 등록, 네트워크·외부 URL 금지, audit 0, WebP 크기, 바뀐 파일은 장면·이미지 2장뿐) → publish(별도 job, 다시 검사 후
   `thumbnail/<앱>/<slug>` 브랜치와 PR, 실패는 `thumbnail-failed` 이슈). 다시 만들기는 수동 실행의 `key`·`feedback`으로 한다.
 - **글 수정 반영**: 썸네일마다 그린 글 버전을 `tools/post-thumbs/sources/<앱>/<slug>.json`에 남긴다(공개 사이트에 보이는 제목·요약과
@@ -314,7 +314,12 @@ SDK 내부의 React 개발 모드 경고와 큰 청크/Speech SDK 빌드 경고�
 - **검증**: 도구 단위 테스트 19개(본문 정리, 내용 지문, 새 글·수정 글 고르기, 장면·WebP·변경 파일 검사, WebP 저장), Admin Vitest 147개·소스 검사 2개·lint·CI fixture 빌드·예산 검사
   (초기 목록 JavaScript 572,717 bytes). 로컬에서 plan(테스트 글 `m365/test2`, `m365/test` 선택) → prepare → 장면 작성(AI 단계 대신 직접) →
   render·validate·export → publish dry run(PR 본문, 실패 이슈)을 확인했다. 수정 흐름은 기록 지문을 바꿔 plan이 '내용 바뀜'으로 고르는지,
-  수정 시각만 바뀐 글은 건너뛰는지, prepare(지금 이미지 전달)·validate(기록 저장)·publish(지금/새 버전 비교 본문)까지 확인했다. Copilot CLI 실제 실행은 Actions에서 첫 실행으로 확인한다.
+  수정 시각만 바뀐 글은 건너뛰는지, prepare(지금 이미지 전달)·validate(기록 저장)·publish(지금/새 버전 비교 본문)까지 확인했다.
+- **첫 실행과 권한 수정**: Actions 첫 실행(테스트 글 2개, 글마다 약 2~3분)에서 썸네일 PR #285·#286이 만들어졌지만,
+  렌더 허용 규칙 `shell(node render.mjs:*)`가 맞지 않아 AI가 렌더 이미지를 보지 못하고 장면을 썼다(Copilot CLI는 `git`·`gh` 밖의 명령을
+  이름으로만 구분). 렌더러를 `thumb-render`라는 이름으로 PATH에 두어 그 명령만 허용하고, 쓰기는 그 글의 장면·`summary.md` 두 파일만
+  실제 경로로 허용했다. 로컬 Copilot CLI 1.0.100에서 `thumb-render` 허용, `node -e`·`node render.mjs`·다른 파일 쓰기·셸 리디렉션 거부,
+  렌더 PNG를 view 도구로 읽는 것을 확인했다.
 
 ## 회귀 검증과 배포 경계
 

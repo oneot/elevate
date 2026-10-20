@@ -27,8 +27,11 @@ flowchart LR
 2. **generate** (macOS 러너): `prepare.mjs`가 글 본문 전체를 `work/<앱>__<slug>/post.md`로 쓰고 `TASK.md`로 작업 지시를 만듭니다.
    내용이 바뀐 글은 지금 이미지(`previous-960.webp`)와 이전 장면을 함께 줍니다.
    GitHub Copilot CLI가 `STYLE_GUIDE.md`·같은 앱의 기존 장면·본문을 읽고 `scenes/auto/<앱>/<slug>.js`를 쓴 뒤,
-   `node render.mjs zoom|review`로 그려 이미지를 직접 보며 다듬고 `export`합니다. 이 job의 토큰은 저장소 읽기와 Copilot 요청만 할 수 있습니다.
-   Copilot이 쓸 수 있는 명령은 `node render.mjs`뿐이고, 파일은 이 폴더 안에만 쓸 수 있습니다.
+   렌더러로 그려(`zoom`·`review`) 이미지를 직접 보며 다듬고 `export`합니다. 이 job의 토큰은 저장소 읽기와 Copilot 요청만 할 수 있습니다.
+   Copilot이 실행할 수 있는 명령은 렌더러뿐이고(workflow가 `node render.mjs`를 `thumb-render`라는 이름으로 PATH에 둡니다),
+   파일은 그 글의 장면과 `work/<앱>__<slug>/summary.md`만 만들고 고칠 수 있습니다(셸 리디렉션도 막힘).
+   Copilot CLI는 `git`·`gh` 밖의 명령을 이름으로만 구분하므로 `shell(node render.mjs:*)` 같은 규칙은 맞지 않고,
+   쓰기 규칙은 실제 경로(`pwd -P`)로 적어야 합니다.
 3. **validate** (`validate.mjs`): 장면이 그 글 하나만 등록하는지, 네트워크·외부 URL 코드가 없는지 확인하고 다시 그려 audit 경고 0을 확인합니다.
    WebP 크기(960×540, 480×270)를 보고, 통과하면 글 버전 기록(`sources/<앱>/<slug>.json`)을 저장합니다.
    저장소에서 바뀐 파일이 장면·버전 기록·이미지 2장뿐인지도 봅니다.
