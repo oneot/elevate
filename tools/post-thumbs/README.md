@@ -47,6 +47,7 @@ flowchart LR
    연(또는 갱신한) PR 목록만 다음 단계로 넘기므로, 생성·검사에 실패한 글은 병합 대상에 들어가지 않습니다.
 5. **merge** (`merge.mjs`, 사람 개입 없음): PR마다 그 브랜치에서 `Repository checks`(`web-checks.yml`: Web·Admin·서버·도구 검사)를 실행하고 기다립니다.
    GITHUB_TOKEN으로 만든 PR에는 pull_request 검사가 돌지 않으므로 workflow_dispatch로 실행하며, 결과는 PR 커밋의 검사로 보입니다.
+   검사가 실패하면 실패한 job만 한 번 다시 실행합니다(`npm ci` 중 네트워크 끊김 같은 일시 오류 대비). GitHub API의 일시 오류(5xx·네트워크)도 10초 간격으로 다시 시도합니다.
    - 검사가 통과하고 PR이 publish가 올린 커밋 그대로면 main에 병합(merge commit)하고 브랜치를 지웁니다. 고른 순서대로 하나씩 병합하며,
      PR마다 그 글의 파일만 바꾸므로 서로 충돌하지 않습니다. 바로 앞 PR을 병합한 직후 GitHub가 잠시 405로 거절하면 10초 간격으로 세 번까지 다시 시도합니다.
    - 검사 실패·시간 초과(30분), 그 사이 브랜치 변경, 충돌이면 병합하지 않고 라벨 `thumbnail-merge-blocked`와 댓글(검사 링크)을 남깁니다. 실행도 실패로 표시됩니다.

@@ -10,17 +10,26 @@ const published = (number, key, head) => ({
 
 /**
  * GitHub REST 흉내. 검사 run은 polls번 조회되면 끝난다. 시간은 sleep으로만 흐른다.
- * @param {{ prs: object[], checks?: Record<string, string|{ conclusion: string, polls: number }>,
+ * checks[브랜치]는 결과 하나('success'), 시도별 결과 배열(['failure', 'success'], 실패한 job 다시 실행 때 다음 값),
+ * 또는 { conclusion, polls }다. staleAfterRerun번은 다시 실행을 요청한 뒤에도 이전 시도의 끝난 결과를 돌려준다.
+ * @param {{ prs: object[], checks?: Record<string, string|string[]|{ conclusion: string, polls: number }>,
  *   states?: Record<number, object>, mergeErrors?: Record<number, { status: number, times?: number, message?: string }>,
- *   failDispatch?: string[], dispatchReturnsRun?: boolean, oldRuns?: object[] }} setup
+ *   failDispatch?: string[], dispatchErrors?: Record<string, { status: number, times: number }>,
+ *   dispatchReturnsRun?: boolean, oldRuns?: object[], staleAfterRerun?: number }} setup
  */
-function fakeGitHub({ prs, checks = {}, states = {}, mergeErrors = {}, failDispatch = [], dispatchReturnsRun = true, oldRuns = [] }) {
+function fakeGitHub({
+  prs, checks = {}, states = {}, mergeErrors = {}, failDispatch = [], dispatchErrors = {}, dispatchReturnsRun = true, oldRuns = [], staleAfterRerun = 0,
+}) {
   const clock = { now: Date.parse('2026-10-21T01:00:00Z') }
   const calls = []
   const pulls = Object.fromEntries(prs.map((pr) => [pr.number, { state: 'open', merged: false, head: { sha: pr.sha, ref: pr.branch }, ...states[pr.number] }]))
   const runs = new Map(oldRuns.map((run) => [run.id, { ...run }]))
   let nextRun = 500
   const error = (status, message) => Object.assign(new Error(message), { status })
+  const startAttempt = (run) => {
+    const spec = run.outcomes[run.run_attempt - 1] ?? run.outcomes.at(-1)
+    Object.assign(run, { status: 'queued', conclusion: null, final: typeof spec === 'string' ? spec : spec.conclusion, polls: typeof spec === 'string' ? 2 : spec.polls })
+  }
 
   async function api(method, path, body) {
     calls.push({ method, path, body })
@@ -28,24 +37,41 @@ function fakeGitHub({ prs, checks = {}, states = {}, mergeErrors = {}, failDispa
     if (method === 'POST' && (match = /\/actions\/workflows\/([^/]+)\/dispatches$/.exec(path))) {
       const workflow = match[1]
       if (failDispatch.includes(workflow)) throw error(500, `${workflow} dispatch 실패`)
+      if (dispatchErrors[workflow]?.times > 0) {
+        dispatchErrors[workflow].times -= 1
+        throw error(dispatchErrors[workflow].status, `${workflow} 일시 오류`)
+      }
       const id = nextRun++
       const html_url = `https://github.com/${REPO}/actions/runs/${id}`
       if (workflow === 'web-checks.yml') {
         const pr = Object.values(pulls).find((entry) => entry.head.ref === body.ref)
         const spec = checks[body.ref] ?? 'success'
-        runs.set(id, {
-          id, html_url, head_sha: pr.head.sha, created_at: new Date(clock.now).toISOString(), status: 'queued', conclusion: null,
-          final: typeof spec === 'string' ? spec : spec.conclusion, polls: typeof spec === 'string' ? 2 : spec.polls,
-        })
+        const run = { id, html_url, head_sha: pr.head.sha, created_at: new Date(clock.now).toISOString(), run_attempt: 1, outcomes: [spec].flat() }
+        startAttempt(run)
+        runs.set(id, run)
       }
       return dispatchReturnsRun ? { workflow_run_id: id, run_url: `https://api.github.com/repos/${REPO}/actions/runs/${id}`, html_url } : null
     }
+    if (method === 'POST' && (match = /\/actions\/runs\/(\d+)\/rerun-failed-jobs$/.exec(path))) {
+      const run = runs.get(Number(match[1]))
+      if (run.status !== 'completed') throw error(403, 'This workflow is already running')
+      run.stale = { ...run, stale: undefined, reads: staleAfterRerun }
+      run.run_attempt += 1
+      startAttempt(run)
+      return null
+    }
     if (method === 'GET' && (match = /\/actions\/runs\/(\d+)$/.exec(path))) {
       const run = runs.get(Number(match[1]))
+      if (run.stale?.reads > 0) {
+        run.stale.reads -= 1
+        const { reads, outcomes, final, polls, stale, ...old } = run.stale
+        return old
+      }
       run.polls -= 1
       if (run.polls <= 0) Object.assign(run, { status: 'completed', conclusion: run.final })
       else run.status = 'in_progress'
-      return { ...run }
+      const { outcomes, final, polls, stale, ...visible } = run
+      return visible
     }
     if (method === 'GET' && /\/actions\/workflows\/web-checks\.yml\/runs\?/.test(path)) {
       const query = new URLSearchParams(path.split('?')[1])
@@ -111,7 +137,7 @@ describe('merging thumbnail PRs without a person', () => {
 
     assert.deepEqual(result.merged.map((pr) => pr.number), [22])
     assert.deepEqual(result.blocked.map((pr) => pr.number), [21])
-    assert.match(result.blocked[0].reason, /Repository checks가 통과하지 않았습니다 \(실패\)/)
+    assert.match(result.blocked[0].reason, /Repository checks가 통과하지 않았습니다 \(실패, 2번 실행\)/)
     assert.deepEqual(gh.find('PUT', /\/merge$/).map((call) => call.path), [`/repos/${REPO}/pulls/22/merge`])
     assert.deepEqual(gh.find('POST', /\/repos\/[^/]+\/[^/]+\/labels$/).map((call) => call.body.name), ['thumbnail-merge-blocked'])
     assert.deepEqual(gh.find('POST', /\/issues\/21\/labels$/).map((call) => call.body), [{ labels: ['thumbnail-merge-blocked'] }])
@@ -129,7 +155,45 @@ describe('merging thumbnail PRs without a person', () => {
 
     assert.deepEqual(result.merged, [])
     assert.match(result.blocked[0].reason, /취소됨/)
+    assert.equal(gh.find('POST', /rerun-failed-jobs$/).length, 0, '취소된 검사는 다시 실행하지 않는다')
     assert.equal(gh.find('POST', /\/(deploy|sync-admin-thumbnails)\.yml\/dispatches$/).length, 0)
+  })
+
+  it('reruns the failed jobs once and merges when the rerun passes', async () => {
+    const prs = [published(35, 'm365/flaky-install', sha(1))]
+    const gh = fakeGitHub({ prs, checks: { 'thumbnail/m365/flaky-install': ['failure', 'success'] } })
+    const result = await run(gh, prs)
+
+    assert.deepEqual(result.merged.map((pr) => pr.number), [35])
+    assert.deepEqual(gh.find('POST', /rerun-failed-jobs$/).map((call) => call.path), [`/repos/${REPO}/actions/runs/500/rerun-failed-jobs`])
+  })
+
+  it('keeps the PR blocked when the checks fail again after the rerun', async () => {
+    const prs = [published(36, 'm365/really-broken', sha(2))]
+    const gh = fakeGitHub({ prs, checks: { 'thumbnail/m365/really-broken': ['failure', 'failure'] } })
+    const result = await run(gh, prs)
+
+    assert.match(result.blocked[0].reason, /실패, 2번 실행/)
+    assert.equal(gh.find('POST', /rerun-failed-jobs$/).length, 1, '한 번만 다시 실행한다')
+    assert.equal(gh.find('PUT', /\/merge$/).length, 0)
+  })
+
+  it('waits for the rerun to finish instead of reading the old failed attempt again', async () => {
+    const prs = [published(37, 'm365/slow-rerun', sha(3))]
+    const gh = fakeGitHub({ prs, checks: { 'thumbnail/m365/slow-rerun': ['failure', 'success'] }, staleAfterRerun: 2 })
+    const result = await run(gh, prs)
+
+    assert.deepEqual(result.merged.map((pr) => pr.number), [37])
+    assert.deepEqual(result.blocked, [])
+  })
+
+  it('retries a checks request that hit a temporary server error', async () => {
+    const prs = [published(38, 'm365/api-hiccup', sha(4))]
+    const gh = fakeGitHub({ prs, dispatchErrors: { 'web-checks.yml': { status: 502, times: 1 } } })
+    const result = await run(gh, prs)
+
+    assert.deepEqual(result.merged.map((pr) => pr.number), [38])
+    assert.equal(gh.find('POST', /web-checks\.yml\/dispatches$/).length, 2)
   })
 
   it('does not merge when the branch changed after publishing', async () => {
@@ -202,7 +266,7 @@ describe('merging thumbnail PRs without a person', () => {
     assert.match(result.errors[0], /thumbnail\/m365\/x/)
   })
 
-  it('reports a deploy that could not be started', async () => {
+  it('reports a deploy that could not be started after a few tries', async () => {
     const prs = [published(95, 'forms/deploy', sha(4))]
     const gh = fakeGitHub({ prs, failDispatch: ['deploy.yml'] })
     const result = await run(gh, prs)
@@ -210,5 +274,6 @@ describe('merging thumbnail PRs without a person', () => {
     assert.deepEqual(result.merged.map((pr) => pr.number), [95])
     assert.deepEqual(result.deployed, ['sync-admin-thumbnails.yml'])
     assert.match(result.errors[0], /deploy\.yml 실행 요청 실패/)
+    assert.equal(gh.find('POST', /deploy\.yml\/dispatches$/).length, 3, '서버 오류는 세 번까지 시도한다')
   })
 })

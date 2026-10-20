@@ -185,7 +185,8 @@ export function mergeDecision({ pr, expectedSha, checks }) {
   if (pr.head?.sha !== expectedSha) return { action: 'block', reason: '썸네일을 올린 뒤 PR 브랜치가 바뀌었습니다.' }
   if (!checks || checks.conclusion !== 'success') {
     const result = checks ? CHECK_RESULTS[checks.conclusion] || checks.conclusion || '알 수 없음' : '없음'
-    return { action: 'block', reason: `Repository checks가 통과하지 않았습니다 (${result}).` }
+    const runs = checks?.attempts > 1 ? `, ${checks.attempts}번 실행` : ''
+    return { action: 'block', reason: `Repository checks가 통과하지 않았습니다 (${result}${runs}).` }
   }
   if (checks.sha && checks.sha !== expectedSha) return { action: 'block', reason: '검사한 커밋이 PR 커밋과 다릅니다.' }
   return { action: 'merge', reason: 'Repository checks 통과' }
