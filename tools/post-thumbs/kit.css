@@ -6,6 +6,9 @@
    glossy iridescent 3D objects behind the UI (.deco, see kit.js), frosted-glass
    windows and cards with a bright white rim, large radii and wide, soft
    shadows; white glass pills with a black icon dot. v1 lives in kit.v1.css.
+   v3 'fluid' (default, end of this file): brighter stage, fluid 3D forms in
+   rich analogous colours, the app tile and small floating pieces. The rules
+   above stay as they are, so render.html?skin=v2 still draws the v2 cards.
    ===================================================================== */
 :root {
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", sans-serif;
@@ -309,3 +312,82 @@ ul, ol { list-style: none; }
 /* Accent fills win over the generic dark glass parts above (same specificity, later rule). */
 .dark .bubble--me, .dark .chip--solid, .dark .btn--primary, .dark .pill--tint { background: var(--grad); color: #fff; }
 .dark .pill--tint .pi { background: rgba(255, 255, 255, .22); color: #fff; }
+
+/* =====================================================================
+   v3 'fluid' skin (default; kit.js adds .fluid to every stage unless ?skin=v2)
+   After the Microsoft 365 icon refresh ("Fluid forms, vibrant colors", 2025):
+   soft folds and curves instead of hard solids, rich analogous gradients,
+   soft 3D light, the app's letter plate kept and woven into the composition.
+   - Stage: the same layout, lit by brighter glows of the app ramp
+     (--f1..--f4 = assets/fluid/palette.json, light -> deep).
+   - Deco: fluid forms (assets/fluid/<app>/<form>.webp: fold, ribbon, sphere,
+     bubbles; make_fluid.py) instead of the glass objects.
+   - .k-tilebox/.tile: the app icon on a frosted tile, optionally on a pedestal.
+   - .k-float: small floating glass pieces around the main UI.
+   ===================================================================== */
+.tD.fluid:not(.dark) {
+  /* Accent fills run from the brand tint into a lighter analogous colour (the dark stage keeps its solid fill for white text). */
+  --grad: linear-gradient(135deg, rgb(var(--tint)) 0%, color-mix(in srgb, rgb(var(--tint)) 52%, var(--f2)) 100%);
+  --glass: linear-gradient(160deg, rgba(255, 255, 255, .9) 0%, rgba(255, 255, 255, .74) 55%, rgba(255, 255, 255, .66) 100%);
+  background:
+    radial-gradient(58% 86% at 0% 0%, rgba(255, 255, 255, .92), rgba(255, 255, 255, 0) 64%),
+    linear-gradient(135deg, color-mix(in srgb, var(--f1) 24%, #fff) 0%, color-mix(in srgb, var(--f2) 40%, #fff) 50%, color-mix(in srgb, var(--f3) 58%, #fff) 100%);
+}
+.tD.fluid::before {
+  background:
+    radial-gradient(32% 42% at 86% 86%, var(--f3), transparent 70%),
+    radial-gradient(26% 36% at 100% 34%, var(--f2), transparent 70%),
+    radial-gradient(30% 32% at 50% 108%, var(--f1), transparent 70%),
+    radial-gradient(22% 30% at 6% 100%, var(--f4), transparent 70%),
+    radial-gradient(18% 26% at 12% 4%, color-mix(in srgb, var(--f1) 60%, #fff), transparent 70%);
+  filter: blur(3.6cqw) saturate(140%);
+  opacity: .82;
+}
+.tD.fluid.dark::before { opacity: .9; }
+.fluid .glass3d { filter: drop-shadow(0 2.2cqw 2.6cqw rgba(var(--tint), .3)) drop-shadow(0 .6cqw .9cqw rgba(20, 22, 30, .1)); }
+.fluid .glass3d.far { filter: blur(.32cqw) drop-shadow(0 1.2cqw 1.6cqw rgba(var(--tint), .24)); }
+.fluid.dark .glass3d { filter: drop-shadow(0 2.4cqw 3cqw rgba(4, 10, 20, .45)); }
+.fluid.dark .glass3d.far { filter: blur(.32cqw) drop-shadow(0 1.2cqw 1.6cqw rgba(4, 10, 20, .4)); }
+.fluid .card__top { background: linear-gradient(90deg, rgb(var(--tint)), var(--f2) 60%, var(--f3)); }
+.fluid .bars > i.on { background: linear-gradient(180deg, color-mix(in srgb, var(--f2) 70%, rgb(var(--tint))), rgb(var(--tint))); }
+
+/* App tile: the refreshed icon (letter plate) on frosted glass, floating over a corner of the main UI. */
+.k-tilebox { position: absolute; z-index: 6; width: var(--s, 10cqw); aspect-ratio: 1; }
+.k-tile {
+  position: absolute; inset: 0; display: grid; place-items: center; border-radius: 27%;
+  background: linear-gradient(155deg, rgba(255, 255, 255, .92), rgba(255, 255, 255, .6));
+  -webkit-backdrop-filter: blur(2cqw) saturate(180%); backdrop-filter: blur(2cqw) saturate(180%);
+  box-shadow: inset 0 0 0 .2cqw rgba(255, 255, 255, .95), inset 0 -1cqw 1.6cqw rgba(255, 255, 255, .3), 0 0 0 .12cqw rgba(20, 22, 30, .05),
+    0 2.6cqw 4.4cqw -1.6cqw rgba(var(--tint), .5), 0 .9cqw 1.8cqw -.9cqw rgba(20, 22, 30, .2);
+}
+.k-tile img { width: 64%; height: auto; filter: drop-shadow(0 .5cqw .7cqw rgba(var(--tint), .32)); }
+/* Pedestal under the tile (the article's white plinths). */
+.k-plinth {
+  position: absolute; left: -22%; right: -22%; top: 70%; height: 52%; border-radius: 24% / 40%;
+  background: linear-gradient(180deg, #fff 0%, #f5f6f9 30%, #e4e7ed 100%);
+  box-shadow: inset 0 .25cqw 0 #fff, inset 0 -.8cqw 1.2cqw rgba(20, 22, 30, .05), 0 2.6cqw 3.8cqw -1.8cqw rgba(20, 22, 30, .3);
+}
+.dark .k-tile {
+  background: linear-gradient(155deg, rgba(255, 255, 255, .36), rgba(255, 255, 255, .14));
+  box-shadow: inset 0 0 0 .18cqw rgba(255, 255, 255, .42), 0 2.6cqw 4.4cqw -1.6cqw rgba(4, 10, 20, .5);
+}
+.dark .k-plinth { background: linear-gradient(180deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, .2)); box-shadow: inset 0 .2cqw 0 rgba(255, 255, 255, .5), 0 2.6cqw 3.8cqw -1.8cqw rgba(4, 10, 20, .5); }
+
+/* Small floating pieces (the article's constellation of icons and mini charts). */
+.k-float {
+  position: absolute; z-index: 5; width: var(--fs, 6.4cqw); aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%;
+  background: linear-gradient(155deg, rgba(255, 255, 255, .92), rgba(255, 255, 255, .62));
+  -webkit-backdrop-filter: blur(1.6cqw) saturate(180%); backdrop-filter: blur(1.6cqw) saturate(180%);
+  box-shadow: inset 0 0 0 .18cqw rgba(255, 255, 255, .95), 0 0 0 .12cqw rgba(20, 22, 30, .05), 0 1.8cqw 3.2cqw -1.2cqw rgba(var(--tint), .45);
+}
+.k-float--sq { border-radius: 28%; }
+.k-float .ico { --s: calc(var(--fs, 6.4cqw) * .5); background: linear-gradient(135deg, var(--f2), rgb(var(--tint))); }
+.k-float img { width: 62%; height: auto; }
+.k-float b {
+  font-family: var(--display); font-size: calc(var(--fs, 6.4cqw) * .36); font-weight: 750; letter-spacing: -0.04em; white-space: nowrap;
+  background: linear-gradient(135deg, var(--f2), rgb(var(--tint))); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.k-float.far { filter: blur(.22cqw); opacity: .92; }
+.dark .k-float { background: linear-gradient(155deg, rgba(255, 255, 255, .3), rgba(255, 255, 255, .12)); box-shadow: inset 0 0 0 .16cqw rgba(255, 255, 255, .35), 0 1.8cqw 3.2cqw -1.2cqw rgba(4, 10, 20, .5); }
+.dark .k-float .ico { background: linear-gradient(135deg, #fff, rgb(var(--tint))); }
+.dark .k-float b { background: linear-gradient(135deg, #fff, rgb(var(--tint))); -webkit-background-clip: text; background-clip: text; }

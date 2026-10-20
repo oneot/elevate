@@ -4,6 +4,8 @@
    key = "<display category>/<slug>" (the post URL path).
    K = helpers below, c = category palette (name, icon, tint, ...).
    Coordinates are cqw: x 0–100 (left→right), y 0–56.25 (top→bottom).
+   Skin: v3 'fluid' by default (fluid forms, vivid analogous colours, app tile);
+   render.html?skin=v2 draws the soft-glass skin of the first 80 cards.
    ===================================================================== */
 (function () {
   const CAT = {
@@ -29,14 +31,20 @@
     const a = hex(heroA);
     return `rgb(${a.map((v, i) => Math.round(v * 0.85 + t[i] * 0.15)).join(',')})`;
   };
+  // Fluid ramps (assets/fluid/palette.json, served as palette.js): the same colours as the fluid forms.
+  const FLUID = window.FLUID_PALETTE || {};
   for (const [key, c] of Object.entries(CAT)) {
     c.key = key;
     c.d2 = c.d2 || mixD2(c.tint, c.heroA);
+    const f = FLUID[key] || c.m;
+    c.f = [f[0], f[1], f[2], f[f.length - 1]];
   }
+  const SKIN = typeof location !== 'undefined' && new URLSearchParams(location.search).get('skin') === 'v2' ? 'v2' : 'fluid';
 
   const vars = (c) => [
     `--tint:${c.tint}`, `--heroA:${c.heroA}`, `--heroB:${c.heroB}`, `--d2:${c.d2}`,
     `--m1:${c.m[0]}`, `--m2:${c.m[1]}`, `--m3:${c.m[2]}`, `--m4:${c.m[3]}`,
+    `--f1:${c.f[0]}`, `--f2:${c.f[1]}`, `--f3:${c.f[2]}`, `--f4:${c.f[3]}`,
     c.solid && `--solid:${c.solid}`,
   ].filter(Boolean).join(';');
 
@@ -151,12 +159,34 @@
     cursor(o) {
       return `<svg class="cursor" style="left:${u(o.x)};top:${u(o.y)}" viewBox="0 0 24 24"><path d="M5 2.5 L5 19.5 L9.6 15.2 L12.6 21.6 L15.3 20.4 L12.3 14.1 L18.6 14.1 Z" fill="#1d1d1f" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
     },
+    /**
+     * App tile (v3): the refreshed app icon with its letter plate on a frosted glass tile, floating over a corner
+     * of the main UI like the cards of the Microsoft 365 icon refresh. o: {x|right, y|bottom, s (size, default 10),
+     * app ('teams' … for another app), rotate, z, plinth (stands on a small white pedestal)}
+     */
+    tile(o = {}) {
+      const src = !o.app ? current.icon : CAT[o.app] ? CAT[o.app].icon : o.app;
+      const st = [pos(o), o.s != null && `--s:${u(o.s)}`].filter(Boolean).join(';');
+      return `<div class="k-tilebox ${o.cls || ''}" style="${st}">${o.plinth ? '<span class="k-plinth"></span>' : ''}<div class="k-tile"><img src="${src}" alt=""></div></div>`;
+    },
+    /**
+     * Small floating glass piece around the main UI (v3 'constellation'): a Fluent icon, an app icon or a short
+     * number in the app gradient. o: {x|right, y|bottom, s (size, default 6.4), icon | app | text, square, far (blurred), z}
+     */
+    float(o = {}) {
+      const app = o.app && (o.app === true ? current : CAT[o.app]);
+      const inner = app ? `<img src="${app.icon}" alt="">` : o.icon ? K.ico(o.icon) : o.text != null ? `<b>${o.text}</b>` : '';
+      const st = [pos(o), o.s != null && `--fs:${u(o.s)}`].filter(Boolean).join(';');
+      return `<div class="k-float ${o.square ? 'k-float--sq' : ''} ${o.far ? 'far' : ''} ${o.cls || ''}" style="${st}">${inner}</div>`;
+    },
   };
 
   window.CAT = CAT;
   window.K = K;
+  window.SKIN = SKIN;
   window.SCENES = {};
-  window.scene = (key, render, opts = {}) => { window.SCENES[key] = { render, ...opts }; };
+  // render.html sets AUTO_SCENES while it loads scenes/auto (AI scenes get the stricter v3 audit).
+  window.scene = (key, render, opts = {}) => { window.SCENES[key] = { render, ...opts, auto: Boolean(window.AUTO_SCENES) }; };
 
   // ---------- Decor: glossy 3D glass objects behind the UI (assets/glass/<cat>/<shape>.webp, 640px) ----------
   const hash = (str) => {
@@ -168,17 +198,54 @@
   // Placement for variant 0 (big object bottom-right, small one top-left); other variants mirror it.
   const BIG = { blob: { o: [-11, -14], w: 44, r: 0 }, torus: { o: [-12, -15], w: 42, r: 0 }, orb: { o: [-10, -13], w: 38, r: 0 }, pebble: { o: [-12, -12], w: 44, r: -10 }, capsule: { o: [-7, -12], w: 40, r: 0 } };
   const SMALL = { blob: { o: [2.6, 2.2], w: 10.5 }, torus: { o: [2.4, 2], w: 10 }, orb: { o: [3, 2.6], w: 7.6 }, pebble: { o: [2.4, 2.4], w: 10.5 }, capsule: { o: [2, 1.6], w: 10 } };
-  /** One glass object. o: {x|right, y|bottom, w, rotate, far (blurred), z, flip} */
-  K.glass = (shape, o = {}) => {
+  /** One glass object (v2). o: {x|right, y|bottom, w, rotate, far (blurred), z, flip} */
+  const glassV2 = (shape, o = {}) => {
     const st = [pos(o), o.flip && 'scale:-1 1'].filter(Boolean).join(';');
     return `<img class="glass3d ${o.far ? 'far' : ''}" src="assets/glass/${current.key}/${shape}.webp" alt="" style="${st}">`;
   };
+
+  // ---------- v3 fluid forms (assets/fluid/<cat>/<form>.webp, make_fluid.py) ----------
+  const FORMS = ['fold', 'ribbon', 'sphere', 'bubbles'];
+  const SMALL_FORMS = ['sphere', 'bubbles', 'fold'];
+  // Scenes written for the glass objects keep working: each glass shape maps to the closest fluid form.
+  const FROM_GLASS = { orb: 'sphere', pebble: 'sphere', blob: 'bubbles', torus: 'fold', capsule: 'ribbon' };
+  const formName = (shape) => (FORMS.includes(shape) ? shape : FROM_GLASS[shape] || 'sphere');
+  // Placement for variant 0 (big form bottom-right, small one top-left); other variants mirror it.
+  const BIG_FORM = { fold: { o: [-8, -12], w: 52 }, ribbon: { o: [-14, -4], w: 66 }, sphere: { o: [-7, -10], w: 36 }, bubbles: { o: [-6, -9], w: 40 } };
+  const SMALL_FORM = { fold: { o: [2.2, 2], w: 11 }, ribbon: { o: [1.6, 2.6], w: 14 }, sphere: { o: [3, 2.6], w: 7.6 }, bubbles: { o: [2.4, 2], w: 10 } };
+  /** One fluid form. shape: fold | ribbon | sphere | bubbles. o: {x|right, y|bottom, w, rotate, far (blurred), z, flip} */
+  K.form = (shape, o = {}) => {
+    const st = [pos(o), o.flip && 'scale:-1 1'].filter(Boolean).join(';');
+    return `<img class="glass3d form3d ${o.far ? 'far' : ''}" src="assets/fluid/${current.key}/${formName(shape)}.webp" alt="" style="${st}">`;
+  };
+  /** Glass object of the current skin (v3 draws the matching fluid form). */
+  K.glass = (shape, o = {}) => (SKIN === 'fluid' ? K.form(shape, o) : glassV2(shape, o));
+  const decoFluid = (key, opt) => {
+    const h = hash(key);
+    const v = opt && opt.v != null ? opt.v : h % 4;
+    if (opt === false) return { v, html: '' };
+    if (Array.isArray(opt)) return { v, html: opt.map(([shape, o]) => K.form(shape, o)).join('') };
+    if (opt && Array.isArray(opt.items)) return { v, html: opt.items.map(([shape, o]) => K.form(shape, o)).join('') };
+    const fx = v & 1; const fy = (v >> 1) & 1;
+    const big = formName((opt && opt.big) || FORMS[(h >>> 4) % FORMS.length]);
+    let small = formName((opt && opt.small) || SMALL_FORMS[(h >>> 9) % SMALL_FORMS.length]);
+    if (small === big) small = SMALL_FORMS[(SMALL_FORMS.indexOf(big) + 1) % SMALL_FORMS.length];
+    const b = BIG_FORM[big]; const sm = SMALL_FORM[small];
+    // Mirrored to the other side, a form is also flipped so its fold still opens towards the stage.
+    const place = (off, w, far, mirrorX, mirrorY, flip) => ({ [mirrorX ? 'x' : 'right']: off[0], [mirrorY ? 'y' : 'bottom']: off[1], w, far, flip });
+    const html = [
+      opt && opt.small === false ? '' : K.form(small, place(sm.o, sm.w, true, !fx, !fy, !!fx)),
+      opt && opt.big === false ? '' : K.form(big, place(b.o, b.w, false, !!fx, !!fy, !!fx)),
+    ].join('');
+    return { v, html };
+  };
   const decoFor = (key, opt) => {
+    if (SKIN === 'fluid') return decoFluid(key, opt);
     if (opt === false) return { v: hash(key) % 4, html: '' };
     const h = hash(key);
     const v = opt && opt.v != null ? opt.v : h % 4;
-    if (Array.isArray(opt)) return { v, html: opt.map(([shape, o]) => K.glass(shape, o)).join('') };
-    if (opt && Array.isArray(opt.items)) return { v, html: opt.items.map(([shape, o]) => K.glass(shape, o)).join('') };
+    if (Array.isArray(opt)) return { v, html: opt.map(([shape, o]) => glassV2(shape, o)).join('') };
+    if (opt && Array.isArray(opt.items)) return { v, html: opt.items.map(([shape, o]) => glassV2(shape, o)).join('') };
     const fx = v & 1; const fy = (v >> 1) & 1;
     const big = (opt && opt.big) || SHAPES[(h >>> 4) % SHAPES.length];
     let small = (opt && opt.small) || SHAPES[(h >>> 9) % SHAPES.length];
@@ -186,8 +253,8 @@
     const b = BIG[big]; const sm = SMALL[small];
     const place = (off, w, far, mirrorX, mirrorY, r) => ({ [mirrorX ? 'x' : 'right']: off[0], [mirrorY ? 'y' : 'bottom']: off[1], w, far, rotate: r || undefined });
     const html = [
-      opt && opt.small === false ? '' : K.glass(small, place(sm.o, sm.w, true, !fx, !fy)),
-      opt && opt.big === false ? '' : K.glass(big, place(b.o, b.w, false, !!fx, !!fy, b.r)),
+      opt && opt.small === false ? '' : glassV2(small, place(sm.o, sm.w, true, !fx, !fy)),
+      opt && opt.big === false ? '' : glassV2(big, place(b.o, b.w, false, !!fx, !!fy, b.r)),
     ].join('');
     return { v, html };
   };
@@ -202,6 +269,6 @@
     // Scene CSS is scoped to its own stage with native CSS nesting.
     const css = s && s.css ? `<style>[data-scene="${key}"] { ${s.css} }</style>` : '';
     const deco = decoFor(key, s ? s.deco : false);
-    return `<div class="tD${c.isDark ? ' dark' : ''}" data-scene="${key}" data-v="${deco.v}" style="${vars(c)}">${css}<div class="deco">${deco.html}</div>${inner}</div>`;
+    return `<div class="tD${c.isDark ? ' dark' : ''}${SKIN === 'fluid' ? ' fluid' : ''}" data-scene="${key}" data-v="${deco.v}" style="${vars(c)}">${css}<div class="deco">${deco.html}</div>${inner}</div>`;
   };
 })();
