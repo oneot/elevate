@@ -1,0 +1,20 @@
+{
+  "name": "elevate-post-thumbs",
+  "private": true,
+  "type": "module",
+  "description": "Elevate 블로그 카드용 'UI 미니어처' 썸네일 렌더러와 AI 썸네일 생성 도구",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "data": "node data.mjs",
+    "render": "node render.mjs",
+    "plan": "node plan.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@fluentui/svg-icons": "1.1.344",
+    "playwright": "1.64.0",
+    "sharp": "^0.35.5"
+  }
+}
