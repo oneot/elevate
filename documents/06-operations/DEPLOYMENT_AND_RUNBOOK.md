@@ -110,6 +110,8 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
    `admin`은 `main`보다 뒤처질 수 있으므로 병합 전 차이를 확인한다. 이 workflow는 `Elevate.Admin/**`,
    공개 사이트 정적 썸네일(`Elevate.Web/src/assets/post-thumbs/**`), 공개 사이트 화면용 제목·요약
    (`Elevate.Web/src/constants/postText.js`) 변경 때 실행된다. 뒤의 두 파일은 관리자 빌드에 함께 들어간다.
+   AI 썸네일 PR이 `main`에 병합되면 `.github/workflows/sync-admin-thumbnails.yml`이 `admin` 브랜치에 이미지 폴더만 맞추고
+   관리자 배포를 직접 실행한다(`main`의 다른 변경은 가져오지 않는다).
 3. 빌드 값은 GitHub secrets에서 주입한다: `ADMIN_VITE_API_BASE_URL`, `ADMIN_VITE_AZURE_AD_CLIENT_ID`,
    `ADMIN_VITE_AZURE_AD_AUTHORITY`, `ADMIN_VITE_AZURE_AD_API_SCOPE`, `ADMIN_VITE_AZURE_AD_REDIRECT_URI`,
    `AZURE_STATIC_WEB_APPS_API_TOKEN_ADMIN`.
@@ -121,7 +123,7 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
   앱은 끝 슬래시 없는 현재 origin을 보낸다(예: `https://admin.microsoft-elevate.com`).
 - Function App CORS에 `https://admin.microsoft-elevate.com`을 추가했다. 기본 호스트 origin도 유지한다.
 - Storage(`stelvdevimiruajbu5bya`) Blob 서비스 CORS에도 `https://admin.microsoft-elevate.com`을 추가했다(2026-10-20 17:2x).
-  본문 이미지·첨부·자동 썸네일은 브라우저가 사용자 위임 SAS로 Blob에 바로 PUT하므로 이 설정이 없으면 업로드만 실패한다.
+  본문 이미지·첨부는 브라우저가 사용자 위임 SAS로 Blob에 바로 PUT하므로 이 설정이 없으면 업로드만 실패한다.
   - 규칙 1개: 메서드 `OPTIONS, PUT, GET, HEAD`, 허용 헤더 `content-type, x-ms-blob-type, x-ms-version, authorization, x-ms-*`,
     노출 헤더 `etag, last-modified, x-ms-*`, Max-Age 3600초
   - 허용 origin: `https://white-sea-0567ed600.4.azurestaticapps.net`, `http://localhost:5173`, `https://admin.microsoft-elevate.com`
@@ -142,8 +144,8 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
    (저장 category `m365`·`copilot-studio`, 태그 `word`·`github`, slug는 서버가 제목으로 생성).
 3. 기존 글 편집 저장, 본문 이미지·첨부 업로드가 동작한다. 기존 글의 썸네일·slug·태그·시리즈는 바뀌지 않는다.
    편집 화면의 썸네일 미리보기가 공개 사이트 카드 이미지와 같다.
-4. 자동 썸네일: 테스트 글을 '게시'로 저장하면 '본문 내용으로 썸네일을 만들었습니다.'가 표시되고 편집 화면에 썸네일 미리보기가 나온다.
-   다시 저장해도 썸네일은 바뀌지 않는다. 게시한 글은 공개 사이트에 바로 보이므로 확인 후 보관으로 바꾸거나 삭제한다.
+4. 썸네일: 테스트 글을 '게시'로 저장해도 관리자는 썸네일을 만들지 않는다(요청에 `thumbnail` 없음). 보통 20~35분 안에 `Post thumbnails`가
+   그 글의 썸네일 PR을 연다(아래 '게시글 썸네일 자동 생성'). 게시한 글은 공개 사이트에 바로 보이므로 확인 후 보관으로 바꾸거나 삭제한다.
 5. 첨부파일을 올리고 '링크 복사' 후 본문에 붙여 넣으면 파일 이름으로 된 링크가 들어간다. 게시 후 공개 사이트에서 그 링크로 원래 파일 이름으로 내려받아진다.
 6. 로그아웃하면 같은 호스트로 돌아와 '로그아웃되었습니다' 안내와 '다시 로그인' 버튼이 보인다.
 
@@ -155,7 +157,27 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 | 이미지·첨부 업로드 실패 (콘솔에 Blob CORS 오류) | Storage Blob CORS 허용 origin에 접속한 관리자 호스트가 있는지 (위 '인증·CORS 전제') |
 | 목록 순서가 공개 사이트 앱 목록과 다름 | 브라우저 콘솔의 `[AdminPostsProvider] 공개 사이트 시리즈 순서 조회 실패`. 공개 API `GET /api/public/series` 응답과 Function App CORS. 받지 못해도 목록은 게시일순이며 같은 시각 글만 순서가 달라진다. 공개 사이트 '전체 게시글'은 같은 시각 글을 데이터베이스 순서로 보여 주므로 그 부분은 원래 다를 수 있다 |
 | 목록 카드가 썸네일 대신 유리 타일 | 정적 썸네일이 없는 글이면 상세 조회(`GET /api/admin/posts/{id}`) 응답의 `thumbnail.variants`와 Blob 읽기. 공개 사이트 정적 썸네일을 새로 넣었다면 Admin이 다시 배포됐는지 |
-| '썸네일을 자동으로 만들지 못했습니다' | 브라우저 콘솔의 `[PostEditor] auto thumbnail failed` 오류, Blob 업로드 SAS·CORS. 글은 저장되며 다음 게시 저장 때 다시 만든다 |
+| 게시했는데 썸네일 PR이 오지 않음 | Actions의 `Post thumbnails` 실행 기록(plan 출력), `thumbnail-failed` 이슈, 브랜치 `thumbnail/<앱>/<slug>`가 이미 있는지 (아래 표) |
+
+## 게시글 썸네일 자동 생성
+
+게시된 글의 카드 썸네일은 `.github/workflows/post-thumbnails.yml`이 15분마다(매시 2·17·32·47분) 만든다.
+대상이 없으면 확인만 하고 약 30초 만에 끝나며 AI를 부르지 않는다. 게시 후 PR이 열리기까지 보통 20~35분, 병합 후 반영까지 약 5분이다.
+새 글과, 이미지를 그린 뒤 제목·요약·본문이 바뀐 글(`tools/post-thumbs/sources/`의 내용 지문과 비교)이 대상이다.
+GitHub Copilot CLI가 글 본문 전체를 읽고 'UI 미니어처' 키트(`tools/post-thumbs`)로 장면을 설계·렌더·검수한 뒤,
+별도 job이 결과를 검사해 PR(라벨 `thumbnail`)로 올린다. 사람이 PR을 병합하면 공개 사이트와 관리자에 반영된다.
+구조와 로컬 사용법은 `tools/post-thumbs/README.md`에 있다.
+
+| 상황 | 조치 |
+| --- | --- |
+| 처음 켤 때 | Settings → Actions → General → Workflow permissions에서 "Allow GitHub Actions to create and approve pull requests"를 켠다. 꺼져 있으면 브랜치만 올라가고 실패 이슈에 PR 만들기 링크가 남는다 |
+| 썸네일 확인 | PR 본문의 이미지와 AI 설명을 보고 병합한다. 병합 뒤 `Deploy to GitHub Pages`와 `Sync post thumbnails to admin`(→ 관리자 배포)이 돈다 |
+| 다시 만들기 | Actions → Post thumbnails → Run workflow에 `key`(`<앱>/<slug>`)와 `feedback`을 넣는다. 열린 PR은 새 이미지로 바뀐다 |
+| 쓰지 않기 | PR을 닫는다. 같은 내용으로는 자동으로 다시 만들지 않고, 글이 다시 바뀌면 새 버전을 만든다 |
+| 글 수정 | 제목·요약·본문을 고치면 다음 실행이 '썸네일 새 버전' PR(지금 이미지와 새 이미지 비교)을 연다. 병합 전까지는 지금 이미지가 보인다. 게시 상태 변경·내용 없는 저장은 대상이 아니다 |
+| 실패 | `썸네일 자동 생성 실패: <key>` 이슈(라벨 `thumbnail-failed`)와 실행 아티팩트 `log-<앱>__<slug>`(Copilot 작업 기록·렌더 이미지)를 본다. 이슈를 닫으면 다음 실행 때 다시 시도한다 |
+| 비용 | 비밀값 없이 `GITHUB_TOKEN`(`copilot-requests: write`)으로 Copilot CLI를 쓰며, 개인 소유 저장소라 저장소 소유자의 Copilot 이용량에서 차감된다. 모델은 Claude Opus 5.5(저장소 변수 `THUMBNAIL_MODEL`로 변경)이고, 한 번에 최대 2개 글, 대상이 없으면 AI를 부르지 않는다 |
+| 멈추기 | Actions → Post thumbnails → Disable workflow |
 
 ## GitHub Pages Smoke Test
 

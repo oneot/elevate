@@ -1,0 +1,6 @@
+node_modules/
+# 실행할 때 만들어지는 파일 (공개 API 목록, 렌더 확인용 이미지, 생성 작업 폴더, 지문 캐시)
+data/
+review/
+work/
+.cache/

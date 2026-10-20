@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>Elevate thumbnails</title>
+<link rel="stylesheet" href="kit.css" />
+<style>
+  body.review { width: 1180px; padding: 36px 48px 48px; }
+  .rv-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px; }
+  .rv-head h1 { font-size: 34px; font-weight: 400; letter-spacing: -0.045em; }
+  .rv-head span { font-size: 15px; color: #6e6e73; }
+  .rv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px 28px; }
+  .rv-card .thumb { width: 100%; border-radius: 16px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .05); }
+  .rv-body { display: flex; flex-direction: column; gap: 6px; padding: 13px 2px 0; }
+  .rv-title { font-size: 17px; font-weight: 600; line-height: 1.42; letter-spacing: -0.015em; word-break: keep-all; }
+  .rv-excerpt { font-size: 14px; line-height: 1.55; color: #6e6e73; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .rv-key { font: 600 11.5px/1.3 var(--mono); color: #a1a6ad; }
+  body.export { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; width: 2000px; }
+  body.zoom { padding: 0; }
+  body.zoom .thumb { width: 960px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="kit.js"></script>
+<script>
+  const CATS = ['m365', 'copilot', 'copilot-studio', 'teams', 'onenote', 'forms', 'onedrive', 'powerpoint', 'excel', 'word', 'minecraft', 'github', 'azure'];
+  for (const cat of CATS) document.write(`<script src="scenes/${cat}.js"><\/script>`);
+</script>
+<script>
+  const q = new URLSearchParams(location.search);
+  const mode = q.get('mode') || 'review';
+  const cat = q.get('cat');
+  const keys = q.get('keys') ? q.get('keys').split(',') : null;
+  document.body.className = mode;
+
+  const esc = (s) => String(s || '').replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch]));
+
+  // AI가 만든 장면(scenes/auto/<cat>/<slug>.js). 목록은 render.mjs의 서버가 만들어 준다.
+  const loadScript = (src) => new Promise((resolve, reject) => {
+    const el = document.createElement('script');
+    el.src = src;
+    el.onload = resolve;
+    el.onerror = () => reject(new Error(`failed to load ${src}`));
+    document.head.append(el);
+  });
+
+  function audit() {
+    const issues = [];
+    document.querySelectorAll('.tD').forEach((stage) => {
+      const key = stage.dataset.scene;
+      const sbox = stage.getBoundingClientRect();
+      // Pills and their text must sit fully inside the stage.
+      stage.querySelectorAll('.pill').forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.left < sbox.left - 0.5 || r.right > sbox.right + 0.5 || r.top < sbox.top - 0.5 || r.bottom > sbox.bottom + 0.5) issues.push(`${key}: pill outside stage — "${el.textContent.trim()}"`);
+      });
+      // Text that is cut off on the right inside its clipping container, or overflowing a nowrap box.
+      const walker = document.createTreeWalker(stage, NodeFilter.SHOW_TEXT);
+      let node;
+      while ((node = walker.nextNode())) {
+        const text = node.textContent.trim();
+        if (!text) continue;
+        const el = node.parentElement;
+        if (el.closest('style')) continue;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const r = range.getBoundingClientRect();
+        if (!r.width) continue;
+        const clip = el.closest('.win, .card, .phone__screen, .slide, .page, .node, .tD');
+        const c = clip.getBoundingClientRect();
+        const visibleV = r.bottom > c.top && r.top < c.bottom;
+        if (visibleV && (r.right > c.right + 1 || r.left < c.left - 1)) issues.push(`${key}: text cut at the edge of .${clip.classList[0]} — "${text.slice(0, 40)}"`);
+        if (el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflow !== 'visible') issues.push(`${key}: text overflows its box — "${text.slice(0, 40)}"`);
+      }
+      if (!window.SCENES[key]) issues.push(`${key}: no scene yet`);
+    });
+    return issues;
+  }
+
+  async function settle() {
+    await document.fonts.ready;
+    const imgs = [...document.images];
+    await Promise.all(imgs.map((img) => (img.complete ? null : new Promise((res) => { img.onload = img.onerror = res; }))));
+    // CSS mask icons: fetch each url once so they are cached before the screenshot.
+    const urls = new Set();
+    document.querySelectorAll('.ico').forEach((el) => {
+      const m = /url\(['"]?([^'")]+)['"]?\)/.exec(el.style.getPropertyValue('--ico'));
+      if (m) urls.add(m[1]);
+    });
+    const missing = [];
+    await Promise.all([...urls].map(async (src) => {
+      const res = await fetch(src);
+      if (!res.ok) missing.push(src);
+    }));
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    return missing;
+  }
+
+  (async () => {
+    const auto = await fetch('scenes/auto/index.json').then((res) => (res.ok ? res.json() : [])).catch(() => []);
+    for (const src of auto) {
+      try { await loadScript(src); } catch (e) { console.error(e.message); }
+    }
+    const posts = await (await fetch('data/posts.json')).json();
+    let list = posts;
+    if (cat) list = list.filter((p) => cat.split(',').includes(p.category));
+    if (keys) list = list.filter((p) => keys.includes(p.key));
+    const root = document.getElementById('root');
+
+    if (mode === 'review') {
+      // 같은 앱 카드들과 비교하는 화면이므로 아직 장면이 없는 다른 새 글은 빼고 보여 준다.
+      list = list.filter((p) => window.SCENES[p.key]);
+      const label = cat ? cat.split(',').map((x) => (window.CAT[x] || {}).name || x).join(' · ') : '전체';
+      root.innerHTML = `<header class="rv-head"><h1>${esc(label)}</h1><span>${list.length}개</span></header>
+        <div class="rv-grid">${list.map((p) => `
+          <article class="rv-card">
+            <div class="thumb">${window.renderScene(p.key, p.category)}</div>
+            <div class="rv-body"><h3 class="rv-title">${esc(p.title)}</h3><p class="rv-excerpt">${esc(p.excerpt)}</p><p class="rv-key">${esc(p.key)}</p></div>
+          </article>`).join('')}</div>`;
+    } else {
+      root.innerHTML = list.map((p) => `<div class="thumb" data-key="${esc(p.key)}">${window.renderScene(p.key, p.category)}</div>`).join('');
+    }
+
+    const missing = await settle();
+    for (const p of list) {
+      const s = window.SCENES[p.key];
+      if (s && s.after) {
+        const stage = document.querySelector(`.tD[data-scene="${p.key}"]`);
+        try { s.after(stage, window.K); } catch (e) { console.error(p.key, e); }
+      }
+    }
+    window.AUDIT = [...missing.map((m) => `missing icon/file: ${m}`), ...audit()];
+    document.body.dataset.ready = '1';
+  })();
+</script>
+</body>
+</html>
