@@ -193,7 +193,7 @@ describe('deciding whether to merge a thumbnail PR', () => {
   })
 
   it('leaves failed, cancelled, timed-out or missing checks for a person', () => {
-    for (const [checks, text] of [[{ conclusion: 'failure' }, '실패'], [{ conclusion: 'cancelled' }, '취소됨'], [{ conclusion: 'timed_out' }, '시간 초과'], [{ conclusion: 'not_started' }, '실행 요청 실패'], [null, '없음']]) {
+    for (const [checks, text] of [[{ conclusion: 'failure' }, '실패'], [{ conclusion: 'cancelled' }, '취소됨'], [{ conclusion: 'timed_out' }, '시간 초과'], [{ conclusion: 'not_started' }, '실행 요청 실패'], [null, '없음'], [{ conclusion: 'failure', attempts: 2 }, '실패, 2번 실행']]) {
       const decision = mergeDecision({ pr: open(), expectedSha: SHA, checks })
       assert.equal(decision.action, 'block')
       assert.match(decision.reason, new RegExp(text))

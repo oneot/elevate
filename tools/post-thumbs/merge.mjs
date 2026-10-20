@@ -3,10 +3,12 @@
  * publish가 열거나 갱신한 썸네일 PR을 사람 없이 병합한다 (GitHub Actions 'Post thumbnails'의 merge 단계).
  *   1. PR 브랜치마다 'Repository checks'(web-checks.yml)를 실행하고 끝나기를 기다린다.
  *      GITHUB_TOKEN으로 만든 PR에는 pull_request 검사가 돌지 않으므로 workflow_dispatch로 실행한다(결과는 PR 커밋에 표시된다).
+ *      검사가 실패하면 실패한 job만 한 번 다시 실행한다(npm 설치 중 네트워크 끊김 같은 일시 오류 대비).
  *   2. 검사가 통과하고 PR이 publish가 올린 커밋 그대로면 main에 병합하고(merge commit) 브랜치를 지운다.
  *      검사 실패·시간 초과, 브랜치 변경, 충돌이면 병합하지 않고 라벨(thumbnail-merge-blocked)과 댓글을 남긴다.
  *   3. 하나라도 병합했으면 공개 사이트 배포(deploy.yml)와 관리자 썸네일 동기화(sync-admin-thumbnails.yml)를 한 번씩 실행한다.
  *      GITHUB_TOKEN으로 병합한 커밋은 push 이벤트로 다른 workflow를 깨우지 않는다(workflow_dispatch는 예외).
+ *   GitHub API의 일시 오류(5xx·네트워크)는 10초 간격으로 다시 시도한다.
  * 환경 변수:
  *   PRS                     publish 출력 (JSON 배열: { key, title, number, url, branch, sha })
  *   RUN_URL                 이 실행의 주소
@@ -23,7 +25,12 @@ import { ensureLabel, github, repository } from './lib/github.mjs'
 
 const MINUTE = 60_000
 const MERGE_ATTEMPTS = 4
-const MERGE_RETRY_MS = 10_000
+const RETRY_MS = 10_000
+/** 검사가 실패하면 실패한 job만 이만큼 다시 실행한다 (npm 설치 중 네트워크 끊김 같은 일시 오류 대비). */
+const CHECK_RERUNS = 1
+
+/** HTTP 응답이 없거나(네트워크) 5xx면 잠시 뒤 다시 시도할 만하다. */
+const isTransient = (error) => error.status === undefined || error.status >= 500
 
 /**
  * @param {{
@@ -50,13 +57,30 @@ export async function mergeThumbnails({
 
   const runLine = runUrl ? `\n- 실행: ${runUrl}` : ''
 
+  async function withRetry(action, { attempts = 3, retryable = isTransient, what = '요청' } = {}) {
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        return await action()
+      } catch (error) {
+        if (!retryable(error) || attempt >= attempts) throw error
+        log(`${what}을 잠시 뒤 다시 시도합니다 — ${error.message}`)
+        await sleep(RETRY_MS)
+      }
+    }
+  }
+
   async function runChecks(pr) {
     const since = now()
     let runId = null
     let url = null
+    let reruns = 0
+    let staleAttempt = 0 // 다시 실행을 요청한 시도 번호. 그보다 새 시도가 끝나야 결과로 본다.
     try {
       // 최근 API는 만든 run의 번호를 돌려준다. 돌려주지 않으면 같은 커밋의 run을 찾는다.
-      const dispatched = await api('POST', `/repos/${repo}/actions/workflows/${CHECKS_WORKFLOW}/dispatches`, { ref: pr.branch })
+      const dispatched = await withRetry(
+        () => api('POST', `/repos/${repo}/actions/workflows/${CHECKS_WORKFLOW}/dispatches`, { ref: pr.branch }),
+        { what: `${pr.key} 검사 실행 요청` },
+      )
       runId = dispatched?.workflow_run_id ?? null
       url = dispatched?.html_url ?? null
     } catch (error) {
@@ -76,7 +100,20 @@ export async function mergeThumbnails({
         if (runId) {
           const run = await api('GET', `/repos/${repo}/actions/runs/${runId}`)
           url = run.html_url || url
-          if (run.status === 'completed') return { conclusion: run.conclusion, sha: run.head_sha, url }
+          const attempt = run.run_attempt || 1
+          if (run.status === 'completed' && attempt > staleAttempt) {
+            const finished = { conclusion: run.conclusion, sha: run.head_sha, url, attempts: attempt }
+            if (run.conclusion !== 'failure' || reruns >= CHECK_RERUNS) return finished
+            try {
+              await withRetry(() => api('POST', `/repos/${repo}/actions/runs/${runId}/rerun-failed-jobs`), { what: `${pr.key} 검사 다시 실행` })
+            } catch (error) {
+              log(`${pr.key}: 실패한 검사를 다시 실행하지 못했습니다 — ${error.message}`)
+              return finished
+            }
+            reruns += 1
+            staleAttempt = attempt
+            log(`${pr.key}: Repository checks가 실패해 실패한 job만 한 번 다시 실행합니다(일시 오류 대비) — ${url}`)
+          }
         }
       } catch (error) {
         log(`${pr.key}: 검사 상태를 읽지 못했습니다(다시 시도) — ${error.message}`)
@@ -115,18 +152,12 @@ export async function mergeThumbnails({
   }
 
   // sha를 함께 보내 검사한 커밋 그대로일 때만 병합한다. 바로 앞 PR을 병합한 직후에는 GitHub가 병합 가능 여부를
-  // 다시 계산하는 동안 405(Base branch was modified 등)를 줄 수 있어 잠시 뒤 다시 시도한다. 409(커밋 바뀜)는 다시 하지 않는다.
-  async function mergeWithRetry(pr) {
-    for (let attempt = 1; ; attempt += 1) {
-      try {
-        return await api('PUT', `/repos/${repo}/pulls/${pr.number}/merge`, { merge_method: 'merge', sha: pr.sha })
-      } catch (error) {
-        if (error.status !== 405 || attempt >= MERGE_ATTEMPTS) throw error
-        log(`${pr.key}: 병합을 잠시 뒤 다시 시도합니다 — ${error.message}`)
-        await sleep(MERGE_RETRY_MS)
-      }
-    }
-  }
+  // 다시 계산하는 동안 405(Base branch was modified 등)를 줄 수 있어 잠시 뒤 다시 시도한다(5xx·네트워크 오류도).
+  // 409(커밋 바뀜)·422는 다시 하지 않는다.
+  const mergeWithRetry = (pr) => withRetry(
+    () => api('PUT', `/repos/${repo}/pulls/${pr.number}/merge`, { merge_method: 'merge', sha: pr.sha }),
+    { attempts: MERGE_ATTEMPTS, retryable: (error) => error.status === 405 || isTransient(error), what: `${pr.key} 병합` },
+  )
 
   // 1. 모든 PR의 검사를 함께 실행하고 기다린다.
   const checks = new Map(await Promise.all(valid.map(async (pr) => [pr.number, await runChecks(pr)])))
@@ -172,7 +203,7 @@ export async function mergeThumbnails({
   if (result.merged.length) {
     for (const workflow of DEPLOY_WORKFLOWS) {
       try {
-        await api('POST', `/repos/${repo}/actions/workflows/${workflow}/dispatches`, { ref: 'main' })
+        await withRetry(() => api('POST', `/repos/${repo}/actions/workflows/${workflow}/dispatches`, { ref: 'main' }), { what: `${workflow} 실행 요청` })
         result.deployed.push(workflow)
       } catch (error) {
         result.errors.push(`${workflow} 실행 요청 실패: ${error.message}`)

@@ -207,7 +207,9 @@ GitHub Copilot CLI가 글 본문 전체를 읽고 'UI 미니어처' 키트(`tool
 - 검사가 통과하고 PR이 publish가 올린 커밋 그대로면 병합하고 브랜치를 지운다. 병합 요청에 커밋 SHA를 함께 보낸다.
 - 하나라도 병합하면 `Deploy to GitHub Pages`와 `Sync post thumbnails to admin`을 직접 실행한다. GITHUB_TOKEN으로 병합한 커밋은 push 이벤트를 만들지 않기 때문이다.
 
-검사 실패·시간 초과(30분), 브랜치 변경, 충돌이면 병합하지 않고 PR에 라벨 `thumbnail-merge-blocked`와 댓글을 남긴다. 생성·검사(validate)에 실패한 글은 PR 없이 실패 이슈만 남으므로 병합 대상이 아니다.
+검사 실패·시간 초과(30분), 브랜치 변경, 충돌이면 병합하지 않고 PR에 라벨 `thumbnail-merge-blocked`와 댓글을 남긴다.
+검사가 실패하면 먼저 실패한 job만 한 번 다시 실행한다(`npm ci` 네트워크 끊김 같은 일시 오류 대비). 다시 실행해도 실패할 때만 병합을 멈춘다.
+생성·검사(validate)에 실패한 글은 PR 없이 실패 이슈만 남으므로 병합 대상이 아니다.
 `Post thumbnails`는 한 번에 하나씩만 돌고, 한 실행 안에서는 PR을 하나씩 병합한 뒤 배포를 한 번만 실행한다.
 여러 실행이 이어지면 공개 사이트 배포는 `pages` 동시 실행 그룹에서 마지막 것만 끝까지 돈다. 관리자 동기화는 차례로 돌고 바뀐 것이 없으면 배포하지 않는다.
 구조와 로컬 사용법은 `tools/post-thumbs/README.md`에 있다.
