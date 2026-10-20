@@ -157,7 +157,7 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 | 이미지·첨부 업로드 실패 (콘솔에 Blob CORS 오류) | Storage Blob CORS 허용 origin에 접속한 관리자 호스트가 있는지 (위 '인증·CORS 전제') |
 | 목록 순서가 공개 사이트 앱 목록과 다름 | 브라우저 콘솔의 `[AdminPostsProvider] 공개 사이트 시리즈 순서 조회 실패`. 공개 API `GET /api/public/series` 응답과 Function App CORS. 받지 못해도 목록은 게시일순이며 같은 시각 글만 순서가 달라진다. 공개 사이트 '전체 게시글'은 같은 시각 글을 데이터베이스 순서로 보여 주므로 그 부분은 원래 다를 수 있다 |
 | 목록 카드가 썸네일 대신 유리 타일 | 정적 썸네일이 없는 글이면 상세 조회(`GET /api/admin/posts/{id}`) 응답의 `thumbnail.variants`와 Blob 읽기. 공개 사이트 정적 썸네일을 새로 넣었다면 Admin이 다시 배포됐는지 |
-| 게시했는데 썸네일 PR이 오지 않음 | Actions의 `Post thumbnails` 실행 기록(plan 출력), `thumbnail-failed` 이슈, 브랜치 `thumbnail/<앱>/<slug>`가 이미 있는지 (아래 표) |
+| 게시했는데 썸네일 PR이 오지 않음 | Actions의 `Post thumbnails` 실행 기록(plan 출력, 15분마다 `schedule` 실행이 있는지), `thumbnail-failed` 이슈, 브랜치 `thumbnail/<앱>/<slug>`가 이미 있는지 (아래 표) |
 
 ## 게시글 썸네일 자동 생성
 
@@ -176,6 +176,7 @@ GitHub Copilot CLI가 글 본문 전체를 읽고 'UI 미니어처' 키트(`tool
 | 쓰지 않기 | PR을 닫는다. 같은 내용으로는 자동으로 다시 만들지 않고, 글이 다시 바뀌면 새 버전을 만든다 |
 | 글 수정 | 제목·요약·본문을 고치면 다음 실행이 '썸네일 새 버전' PR(지금 이미지와 새 이미지 비교)을 연다. 병합 전까지는 지금 이미지가 보인다. 게시 상태 변경·내용 없는 저장은 대상이 아니다 |
 | 실패 | `썸네일 자동 생성 실패: <key>` 이슈(라벨 `thumbnail-failed`)와 실행 아티팩트 `log-<앱>__<slug>`(Copilot 작업 기록·렌더 이미지)를 본다. 이슈를 닫으면 다음 실행 때 다시 시도한다 |
+| 15분마다 실행되지 않음 | 실행 기록에 `schedule` 실행이 없으면 workflow 파일의 cron 줄을 마지막으로 바꾼 커밋의 작성자 이메일이 GitHub 계정에 연결돼 있는지 본다. 예약 실행은 그 계정으로 돌기 때문에, 연결되지 않은 이메일(예: 회사 이메일)로 커밋하면 돌지 않을 수 있다. 연결된 이메일로 cron 줄을 다시 커밋하고, 그동안은 Run workflow로 수동 실행한다 |
 | 비용 | 비밀값 없이 `GITHUB_TOKEN`(`copilot-requests: write`)으로 Copilot CLI를 쓰며, 개인 소유 저장소라 저장소 소유자의 Copilot 이용량에서 차감된다. 모델은 Claude Opus 5.5(저장소 변수 `THUMBNAIL_MODEL`로 변경)이고, 한 번에 최대 2개 글, 대상이 없으면 AI를 부르지 않는다 |
 | 멈추기 | Actions → Post thumbnails → Disable workflow |
 

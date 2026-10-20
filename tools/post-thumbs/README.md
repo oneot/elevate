@@ -59,6 +59,8 @@ flowchart LR
   꺼져 있으면 publish가 브랜치까지만 올리고 실패 이슈에 PR 만들기 링크를 남깁니다.
 - 비밀값은 필요 없습니다. Copilot CLI는 `GITHUB_TOKEN`(`copilot-requests: write`)으로 인증하며,
   개인 소유 저장소이므로 사용량은 저장소 소유자(oneot)의 Copilot 이용량에서 차감됩니다.
+- workflow 파일의 cron 줄은 GitHub 계정에 연결된 이메일로 커밋합니다. 예약 실행은 그 줄을 마지막으로 바꾼 커밋의 작성자 계정으로 돌기 때문에,
+  연결되지 않은 이메일(예: 회사 이메일)로 커밋하면 15분마다 실행되지 않을 수 있습니다(처음 켤 때 겪음).
 - Actions 분 사용량: 공개 저장소의 GitHub 호스트 러너는 무료입니다(macOS 포함). 새 글이 없으면 plan만 30초쯤 돌고 끝납니다.
 
 ### 보안
