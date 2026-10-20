@@ -5,12 +5,11 @@ import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import App from '../src/App.jsx'
 import { createPost, getPost, listAllPosts, updatePost } from '../src/services/postsApi.js'
-import { renderAutoThumbnail } from '../src/utils/autoThumbnail.js'
 import { getPublishedSeriesOrder } from '../src/services/publicSeriesApi.js'
 import { POST_TEXT_OVERRIDES } from '../../Elevate.Web/src/constants/postText.js'
 
-const { msalInstance, uploadState, uploadThumbnailFile } = vi.hoisted(() => ({
-  msalInstance: {}, uploadState: { uploading: false }, uploadThumbnailFile: vi.fn(),
+const { msalInstance, uploadState } = vi.hoisted(() => ({
+  msalInstance: {}, uploadState: { uploading: false },
 }))
 vi.mock('../src/hooks/useAuth.js', () => ({
   useAuth: () => ({
@@ -23,9 +22,8 @@ vi.mock('../src/hooks/useAuth.js', () => ({
   }),
 }))
 vi.mock('../src/hooks/usePostUpload.js', () => ({
-  usePostUpload: () => ({ ...uploadState, uploadThumbnailFile, uploadHtmlImage: vi.fn() }),
+  usePostUpload: () => ({ ...uploadState, uploadHtmlImage: vi.fn() }),
 }))
-vi.mock('../src/utils/autoThumbnail.js', () => ({ renderAutoThumbnail: vi.fn() }))
 vi.mock('../src/components/editor/index.js', async () => ({
   HtmlEditor: ({ value, onChange }) => (
     <textarea aria-label="HTML body" value={value} onChange={(event) => onChange(event.target.value)} />
@@ -40,13 +38,6 @@ vi.mock('../src/services/postsApi.js', () => ({
   listPosts: vi.fn(), updatePost: vi.fn(),
 }))
 vi.mock('../src/services/publicSeriesApi.js', () => ({ getPublishedSeriesOrder: vi.fn() }))
-
-const GENERATED_FILE = new File(['png'], 'auto-thumbnail.png', { type: 'image/png' })
-const GENERATED_THUMBNAIL = {
-  url: 'https://images.example.test/uploads/thumb.jpg',
-  signedUrl: 'https://images.example.test/uploads/thumb.jpg?sig=1',
-  variants: { thumb: { url: 'a', width: 480 }, card: { url: 'b', width: 960 }, hero: { url: 'c', width: 1440 } },
-}
 
 let root
 let host
@@ -115,8 +106,6 @@ beforeEach(() => {
   getPublishedSeriesOrder.mockResolvedValue(new Map())
   createPost.mockResolvedValue({ id: 'created-1' })
   updatePost.mockResolvedValue({ id: 'post-1', status: 'published', slug: 'existing-post', updatedAt: '2026-10-20T01:00:00Z' })
-  renderAutoThumbnail.mockResolvedValue(GENERATED_FILE)
-  uploadThumbnailFile.mockResolvedValue(GENERATED_THUMBNAIL)
   host = document.createElement('div')
   document.body.append(host)
   root = createRoot(host)
@@ -208,8 +197,7 @@ it.each([
   const [payload] = createPost.mock.calls[0]
   expect(payload).toMatchObject({ category, tags, title: 'New guide', status: 'archived', htmlBody: '<p>Guide body</p>' })
   expect(payload).not.toHaveProperty('slug')
-  expect(payload.thumbnail).toBeNull()
-  expect(renderAutoThumbnail).not.toHaveBeenCalled()
+  expect(payload).not.toHaveProperty('thumbnail')
   expect(currentPath).toBe('/posts/created-1')
 })
 
@@ -233,16 +221,16 @@ it.each([
   expect(host.querySelector('[role="alert"]').textContent).toContain(messageText)
 })
 
-it('creates the thumbnail from the post content when a new post is published', async () => {
+it('publishes a new post without drawing a thumbnail in the browser', async () => {
   await renderRoute('/posts/new?app=word')
   await fillNewPost({ title: '공동 작업 가이드', excerpt: '링크 하나로 함께 편집합니다.', body: '<h2>공유하기</h2><p>본문</p>' })
   await act(() => setValue(statusSelect(), 'published'))
   await save()
-  expect(renderAutoThumbnail).toHaveBeenCalledWith({
-    app: 'word', title: '공동 작업 가이드', excerpt: '링크 하나로 함께 편집합니다.', html: '<h2>공유하기</h2><p>본문</p>',
+  // 게시된 글의 썸네일은 GitHub Actions 'Post thumbnails'가 본문을 읽고 만든다.
+  expect(createPost.mock.calls[0][0]).toEqual({
+    title: '공동 작업 가이드', category: 'm365', excerpt: '링크 하나로 함께 편집합니다.',
+    htmlBody: '<h2>공유하기</h2><p>본문</p>', status: 'published', tags: ['word'],
   })
-  expect(uploadThumbnailFile).toHaveBeenCalledWith(GENERATED_FILE, { alt: '공동 작업 가이드' })
-  expect(createPost.mock.calls[0][0]).toMatchObject({ status: 'published', thumbnail: GENERATED_THUMBNAIL, category: 'm365', tags: ['word'] })
 })
 
 it('saves an existing post with only the editable fields and keeps its first thumbnail', async () => {
@@ -251,9 +239,8 @@ it('saves an existing post with only the editable fields and keeps its first thu
   const loadsBeforeSave = listAllPosts.mock.calls.length
   await act(() => setValue(titleInput(), 'Edited title'))
   await save()
-  expect(renderAutoThumbnail).not.toHaveBeenCalled()
   expect(updatePost).toHaveBeenCalledWith('post-1', {
-    title: 'Edited title', excerpt: '', htmlBody: '<p>Existing content</p>', status: 'published', thumbnail: null,
+    title: 'Edited title', excerpt: '', htmlBody: '<p>Existing content</p>', status: 'published',
   }, { msalInstance })
   expect(host.textContent).toContain('업데이트되었습니다.')
   expect(listAllPosts.mock.calls.length).toBeGreaterThan(loadsBeforeSave)
@@ -271,30 +258,23 @@ it('fills the title and summary the public site shows and saves them for posts t
   expect(excerptInput().value).toBe(excerpt[1])
   await save()
   expect(updatePost).toHaveBeenCalledWith('post-1', {
-    title: title[1], excerpt: excerpt[1], htmlBody: '<p>Agent team</p>', status: 'published', thumbnail: null,
+    title: title[1], excerpt: excerpt[1], htmlBody: '<p>Agent team</p>', status: 'published',
   }, { msalInstance })
 })
 
-it('creates a thumbnail only once when an existing post without one is published', async () => {
+it('publishes an existing post without a thumbnail and leaves the image to the thumbnail pipeline', async () => {
   getPost.mockResolvedValue({
     id: 'post-2', title: 'Hidden post', category: 'copilot-studio', slug: 'github-classroom-start', htmlBody: '<p>Body</p>',
     tags: ['github'], status: 'archived', series: '', thumbnail: null, thumbnailUrl: '',
   })
-  updatePost.mockResolvedValue({
-    id: 'post-2', status: 'published', thumbnail: GENERATED_THUMBNAIL, thumbnailUrl: GENERATED_THUMBNAIL.signedUrl,
-  })
+  updatePost.mockResolvedValue({ id: 'post-2', status: 'published' })
   await renderRoute('/posts/post-2')
+  expect(host.querySelector('.ea-thumb-preview')).toBeNull()
   await act(() => setValue(statusSelect(), 'published'))
   await save()
-  expect(renderAutoThumbnail).toHaveBeenCalledWith(expect.objectContaining({ app: 'github', title: 'Hidden post' }))
-  expect(updatePost.mock.calls[0][1]).toMatchObject({ status: 'published', thumbnail: GENERATED_THUMBNAIL })
-  expect(host.textContent).toContain('본문 내용으로 썸네일을 만들었습니다.')
-  expect(host.querySelector('.ea-thumb-preview img').getAttribute('src')).toBe(GENERATED_THUMBNAIL.signedUrl)
-
-  await act(() => setValue(titleInput(), 'Edited after publishing'))
-  await save()
-  expect(renderAutoThumbnail).toHaveBeenCalledTimes(1)
-  expect(updatePost.mock.calls[1][1].thumbnail).toBeNull()
+  expect(updatePost.mock.calls[0][1]).toEqual({ title: 'Hidden post', excerpt: '', htmlBody: '<p>Body</p>', status: 'published' })
+  expect(host.textContent).toContain('업데이트되었습니다.')
+  expect(host.querySelector('.ea-thumb-preview')).toBeNull()
 })
 
 it('shows the public card image first and never replaces a thumbnail the public site already has', async () => {
@@ -311,8 +291,7 @@ it('shows the public card image first and never replaces a thumbnail the public 
 
   await act(() => setValue(statusSelect(), 'published'))
   await save()
-  expect(renderAutoThumbnail).not.toHaveBeenCalled()
-  expect(updatePost.mock.calls[0][1]).toMatchObject({ status: 'published', thumbnail: null })
+  expect(updatePost.mock.calls[0][1]).not.toHaveProperty('thumbnail')
 })
 
 it('explains instead of showing a broken image when the preview cannot load', async () => {
@@ -321,17 +300,6 @@ it('explains instead of showing a broken image when the preview cannot load', as
   await act(() => preview.dispatchEvent(new Event('error')))
   expect(host.querySelector('.ea-thumb-preview img')).toBeNull()
   expect(host.querySelector('.ea-thumb-preview').textContent).toBe('미리보기를 불러오지 못했습니다.')
-})
-
-it('still saves the post and explains when the thumbnail cannot be created', async () => {
-  vi.spyOn(console, 'error').mockImplementation(() => {})
-  renderAutoThumbnail.mockRejectedValue(new Error('canvas unavailable'))
-  await renderRoute('/posts/new?app=excel')
-  await fillNewPost({ title: 'Grades' })
-  await act(() => setValue(statusSelect(), 'published'))
-  await save()
-  expect(createPost.mock.calls[0][0]).toMatchObject({ status: 'published', thumbnail: null })
-  expect(host.textContent).toContain('썸네일을 자동으로 만들지 못했습니다.')
 })
 
 it('keeps an existing draft as draft when it stays 보관', async () => {
@@ -346,7 +314,6 @@ it('keeps an existing draft as draft when it stays 보관', async () => {
   await act(() => setValue(statusSelect(), 'archived'))
   await save()
   expect(updatePost.mock.calls[0][1].status).toBe('draft')
-  expect(renderAutoThumbnail).not.toHaveBeenCalled()
 })
 
 it('does not open an editable form for posts outside the managed apps', async () => {

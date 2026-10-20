@@ -1,5 +1,4 @@
 import { apiFetch } from '../lib/apiClient.js'
-import { stripThumbnailSignedUrls } from '../utils/thumbnailPayload.js'
 
 /**
  * API 응답 객체를 에디터에서 사용하는 형태로 변환한다.
@@ -34,11 +33,11 @@ function toEditorPost(apiPost) {
  * 새 게시글 생성 페이로드. 관리자 화면은 제목·요약·본문·게시 상태만 다루며,
  * slug는 보내지 않아 서버가 제목에서 중복 없는 값을 만든다.
  * tags에는 앱 분류용 태그(예: Word → ['word'])만 담는다 (서버는 배열을 필수로 받는다).
- * thumbnail은 게시할 때 자동으로 만든 썸네일이 있을 때만 포함한다.
- * @param {{ title: string, category: string, excerpt?: string, htmlBody?: string, status: string, tags?: string[], thumbnail?: object }} post
+ * 썸네일은 보내지 않는다. 게시된 글의 썸네일은 GitHub Actions 'Post thumbnails'가 공개 사이트 이미지로 만든다.
+ * @param {{ title: string, category: string, excerpt?: string, htmlBody?: string, status: string, tags?: string[] }} post
  */
 function toCreatePayload(post) {
-  const payload = {
+  return {
     title: post.title,
     category: post.category,
     excerpt: post.excerpt || '',
@@ -46,26 +45,21 @@ function toCreatePayload(post) {
     tags: Array.isArray(post.tags) ? post.tags : [],
     status: post.status,
   }
-  if (post.thumbnail?.url) payload.thumbnail = stripThumbnailSignedUrls(post.thumbnail)
-  return payload
 }
 
 /**
  * 기존 게시글 수정 페이로드. 화면에서 고칠 수 있는 제목·요약·본문·게시 상태만 보낸다.
  * 서버는 보내지 않은 category·slug·tags·series·youtube·thumbnail을 그대로 유지하므로
  * 앱 분류와 공개 주소, 기존 썸네일이 수정으로 바뀌지 않는다.
- * thumbnail은 썸네일이 없던 글을 게시하며 자동으로 만든 경우에만 포함한다.
- * @param {{ title: string, excerpt?: string, htmlBody?: string, status: string, thumbnail?: object }} post
+ * @param {{ title: string, excerpt?: string, htmlBody?: string, status: string }} post
  */
 function toUpdatePayload(post) {
-  const payload = {
+  return {
     title: post.title,
     excerpt: post.excerpt || '',
     contentMarkdown: post.htmlBody || '',
     status: post.status,
   }
-  if (post.thumbnail?.url) payload.thumbnail = stripThumbnailSignedUrls(post.thumbnail)
-  return payload
 }
 
 export const _test = {

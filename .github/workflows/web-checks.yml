@@ -7,6 +7,7 @@ on:
       - 'Elevate.Web/**'
       - 'Elevate.Admin/**'
       - 'Elevate.Server/**'
+      - 'tools/**'
       - '.github/workflows/**'
       - '.nvmrc'
 
@@ -71,6 +72,23 @@ jobs:
           VITE_AZURE_AD_REDIRECT_URI: https://admin.example.test
           VITE_AZURE_AD_API_SCOPE: api://00000000-0000-0000-0000-000000000000/access_as_user
       - run: npm run check:bundle
+
+  thumbnail-tools-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools/post-thumbs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: tools/post-thumbs/package-lock.json
+      - run: npm ci
+      - name: Thumbnail pipeline unit tests (no browser, no network)
+        run: npm test
 
   server-checks:
     runs-on: ubuntu-latest

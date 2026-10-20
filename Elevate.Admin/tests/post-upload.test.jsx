@@ -4,14 +4,12 @@ import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { usePostUpload } from '../src/hooks/usePostUpload.js'
 import { requestUploadSas, registerAsset } from '../src/services/assetsApi.js'
-import { createImageVariantBlob, optimizeThumbnailForUpload, uploadBlobWithSas } from '../src/utils/imageUpload.js'
+import { uploadBlobWithSas } from '../src/utils/imageUpload.js'
 
 vi.mock('../src/services/assetsApi.js', () => ({ requestUploadSas: vi.fn(), registerAsset: vi.fn() }))
 vi.mock('../src/utils/imageUpload.js', async (importOriginal) => ({
   ...await importOriginal(),
   uploadBlobWithSas: vi.fn(),
-  optimizeThumbnailForUpload: vi.fn(),
-  createImageVariantBlob: vi.fn(),
 }))
 
 let root
@@ -19,7 +17,7 @@ let host
 let upload
 const msalInstance = {}
 const image = new File(['image-fixture'], 'image.gif', { type: 'image/gif' })
-const generated = new File(['png-fixture'], 'auto-thumbnail.png', { type: 'image/png' })
+const photo = new File(['photo-fixture'], 'photo.jpg', { type: 'image/jpeg' })
 
 function Probe() {
   const result = usePostUpload({ msalInstance, postId: 'post-1' })
@@ -38,13 +36,6 @@ beforeEach(async () => {
     blobUrl: `https://image.example.test/${fileName}`,
   }))
   registerAsset.mockImplementation(async ({ blobUrl }) => ({ blobUrl, signedUrl: `${blobUrl}?sig=1` }))
-  optimizeThumbnailForUpload.mockImplementation(async (file) => file)
-  createImageVariantBlob.mockImplementation(async (_file, spec) => ({
-    blob: new Blob([spec.key], { type: 'image/webp' }),
-    type: 'image/webp',
-    width: spec.maxWidth,
-    height: Math.round((spec.maxWidth * 9) / 16),
-  }))
   host = document.createElement('div')
   document.body.append(host)
   root = createRoot(host)
@@ -57,50 +48,33 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-it('keeps saving blocked until both the generated thumbnail and inline image uploads complete', async () => {
+it('keeps saving blocked until every inline image upload completes', async () => {
   const complete = []
   const deferred = () => new Promise((resolve) => complete.push(resolve))
   uploadBlobWithSas.mockImplementationOnce(deferred).mockImplementationOnce(deferred)
-  let thumbnail
-  let inline
-  await act(async () => { thumbnail = upload.uploadThumbnailFile(generated, { alt: '제목' }) })
-  await act(async () => { inline = upload.uploadHtmlImage(image) })
+  let first
+  let second
+  await act(async () => { first = upload.uploadHtmlImage(image) })
+  await act(async () => { second = upload.uploadHtmlImage(photo) })
   expect(upload.uploading).toBe(true)
-  await act(async () => { complete[1](); await inline })
+  await act(async () => { complete[1](); await second })
   expect(upload.uploading).toBe(true)
-  await act(async () => { complete[0](); await thumbnail })
+  await act(async () => { complete[0](); await first })
   expect(upload.uploading).toBe(false)
-  // 원본 1 + 카드용 3 + 본문 이미지 1
-  expect(registerAsset).toHaveBeenCalledTimes(5)
+  await expect(first).resolves.toBe('https://image.example.test/image.gif?sig=1')
+  expect(registerAsset).toHaveBeenCalledTimes(2)
+  expect(registerAsset).toHaveBeenCalledWith(expect.objectContaining({ postId: 'post-1', contentType: 'image/gif' }), { msalInstance })
 })
 
-it('returns a thumbnail object with every card variant the public site needs', async () => {
-  let thumbnail
-  await act(async () => { thumbnail = await upload.uploadThumbnailFile(generated, { alt: '공동 작업 안내' }) })
-  expect(thumbnail).toMatchObject({
-    url: 'https://image.example.test/auto-thumbnail.png',
-    signedUrl: 'https://image.example.test/auto-thumbnail.png?sig=1',
-    alt: '공동 작업 안내',
-    mimeType: 'image/png',
-  })
-  expect(Object.keys(thumbnail.variants)).toEqual(['thumb', 'card', 'hero'])
-  expect(thumbnail.variants.hero).toMatchObject({ width: 1440, height: 810, type: 'image/webp', url: 'https://image.example.test/auto-thumbnail-hero.webp' })
-  expect(registerAsset).toHaveBeenCalledWith(expect.objectContaining({ postId: 'post-1' }), { msalInstance })
-})
-
-it('fails instead of saving a thumbnail without card variants', async () => {
-  createImageVariantBlob.mockRejectedValueOnce(new Error('encode failed'))
+it('rejects files that are not images and never uploads a thumbnail from the admin', async () => {
+  const text = new File(['notes'], 'notes.txt', { type: 'text/plain' })
   await act(async () => {
-    await expect(upload.uploadThumbnailFile(generated)).rejects.toThrow('encode failed')
+    await expect(upload.uploadHtmlImage(text)).rejects.toThrow('지원하지 않는 이미지 형식입니다')
   })
   expect(upload.uploading).toBe(false)
-})
-
-it('rejects a thumbnail format that cannot produce variants', async () => {
-  await act(async () => {
-    await expect(upload.uploadThumbnailFile(image)).rejects.toThrow('썸네일 크기별 이미지를 만들 수 없습니다')
-  })
-  expect(upload.uploading).toBe(false)
+  expect(requestUploadSas).not.toHaveBeenCalled()
+  // 게시된 글의 썸네일은 GitHub Actions 'Post thumbnails'가 만든다.
+  expect(upload.uploadThumbnailFile).toBeUndefined()
 })
 
 it('releases inline-upload state and preserves its error for the editor', async () => {

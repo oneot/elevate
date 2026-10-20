@@ -1,7 +1,8 @@
 /**
  * 공개 사이트가 기존 글에 미리 만들어 둔 카드 썸네일('UI 미니어처', Elevate.Web/src/assets/post-thumbs).
  * 공개 카드는 이 이미지를 DB에 저장된 썸네일보다 먼저 쓴다 (Elevate.Web/src/utils/postThumbs.js).
- * 관리자 목록 카드와 편집 화면 미리보기도 같은 순서로 보여 주고, 이 이미지가 있는 글에는 자동 썸네일을 만들지 않는다.
+ * 관리자 목록 카드와 편집 화면 미리보기도 같은 순서로 보여 준다. 이 이미지가 없는 게시된 글은 GitHub Actions
+ * 'Post thumbnails'가 본문을 읽고 만들어 PR로 올린다 (tools/post-thumbs).
  * 이미지 파일은 화면에 보일 때만 내려받는다.
  */
 // base로 키를 './<앱>/<slug>-<폭>.webp'로 줄여 목록 JS에 들어가는 주소표를 작게 유지한다.

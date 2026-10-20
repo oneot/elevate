@@ -283,6 +283,39 @@ SDK 내부의 React 개발 모드 경고와 큰 청크/Speech SDK 빌드 경고�
   CI fixture 빌드와 예산 검사(초기 목록 JavaScript 573,096 bytes). 로컬 Edge(공개 API 데이터를 넣은 모의 API)에서 13개 앱 목록 전체의
   제목·요약·순서가 운영 공개 사이트와 같고, '전체 게시글'은 첫 13건까지 같고 같은 시각 그룹(2026-03-11)에서 위 이유로 달라짐을 확인했다.
 
+### AI 썸네일 파이프라인 (2026-10-20, 7차)
+
+사용자 요청: 관리자에서 게시하면 브라우저가 만들던 썸네일이 본문 요약 수준이라 의미가 없다. 본문 전체를 이해하고 맥락에 맞는 이미지를 그리도록,
+시간이 걸려도 좋으니 GitHub Actions 같은 것으로 다시 구성한다. 사용자 결정: 썸네일마다 PR로 올려 확인 후 반영하고,
+게시글이 수정되면 썸네일도 새 버전으로 다시 만든다(2차 요청의 '첫 썸네일은 바꾸지 않는다'를 대신함).
+
+- **엔진**: 처음 검토한 GitHub Models는 2026-07-30에 종료됐다. 대신 GitHub Copilot CLI를 Actions에서 실행한다
+  (`copilot -p`, `GITHUB_TOKEN` + `copilot-requests: write`, 비밀값 없음, 개인 소유 저장소라 소유자의 Copilot 이용량 사용).
+  모델은 사용자가 고른 Claude Opus 5.5로 고정했다(품질 우선, 저장소 변수 `THUMBNAIL_MODEL`로 변경 가능).
+  기존 80개를 만든 에이전트 작업과 같은 방식이다: `STYLE_GUIDE.md`·같은 앱 장면·본문 전체를 읽고 장면을 쓴 뒤,
+  렌더한 이미지를 직접 보며 다듬는다.
+- **키트를 저장소로**: `tools/post-thumbs`에 kit(`kit.js`, `kit.css`, `render.html`), 기존 장면 13개 파일(80개 글), 앱 아이콘, 마스코트,
+  유리 오브젝트(관리자에서 옮긴 640px WebP)를 넣었다. Fluent 아이콘은 npm(`@fluentui/svg-icons@1.1.344`)으로 받는다.
+  `render.py`를 Node(`render.mjs`, Playwright + sharp)로 옮겼고, 기존 80개를 다시 그려 평균 픽셀 차 0.35~0.51/255로 같은 결과임을 확인했다.
+  기존 썸네일이 macOS 글꼴(SF Pro, Apple SD Gothic Neo)로 그려졌으므로 생성 job은 macOS 러너에서 돈다.
+- **workflow** (`.github/workflows/post-thumbnails.yml`, 15분 간격 + 수동 실행. 대상이 없으면 약 30초 만에 끝나고 AI를 부르지 않는다):
+  plan(썸네일·PR 브랜치·실패 이슈가 없는 새 글, 최대 2개) → generate(macOS, 읽기 권한만, Copilot CLI는 `node render.mjs`와 이 폴더 쓰기만 허용)
+  → validate(장면 1개 등록, 네트워크·외부 URL 금지, audit 0, WebP 크기, 바뀐 파일은 장면·이미지 2장뿐) → publish(별도 job, 다시 검사 후
+  `thumbnail/<앱>/<slug>` 브랜치와 PR, 실패는 `thumbnail-failed` 이슈). 다시 만들기는 수동 실행의 `key`·`feedback`으로 한다.
+- **글 수정 반영**: 썸네일마다 그린 글 버전을 `tools/post-thumbs/sources/<앱>/<slug>.json`에 남긴다(공개 사이트에 보이는 제목·요약과
+  본문 전체 글자의 SHA-256). plan은 공개 API 수정 시각이 기록과 다를 때만 본문을 받아 지문을 비교하고(Actions 캐시로 재사용),
+  다르면 '썸네일 새 버전' PR을 연다. 게시 상태 변경·내용 없는 저장은 대상이 아니다. 같은 내용으로 만든 PR 브랜치가 있으면(검토 중·닫음) 건너뛴다.
+  사람이 만든 기존 80개에도 지금 내용으로 기록을 만들어(`baseline.mjs`) 이후 수정이 감지된다.
+- **관리자 반영**: PR이 `main`에 병합되면 `sync-admin-thumbnails.yml`이 `admin` 브랜치에 이미지 폴더만 맞추고 관리자 배포를 직접 실행한다
+  (`GITHUB_TOKEN` push는 다른 workflow를 깨우지 않음).
+- **관리자 정리**: 게시할 때 브라우저 Canvas로 만들던 자동 썸네일과 썸네일 업로드 코드를 지웠다(`autoThumbnail`·`thumbnailLayout`·
+  `thumbnailContent`·`thumbnailIcons`·`thumbnailVariants`·`thumbnailPayload`, 업로드 훅의 썸네일 부분). 저장 요청에는 썸네일을 보내지 않는다.
+  편집 화면 chunk가 83.9 KB에서 48.8 KB로 줄었다. 이미 만들어진 DB 썸네일(테스트 글 2건)은 그대로 두고, AI 썸네일이 병합되면 정적 이미지가 우선한다.
+- **검증**: 도구 단위 테스트 19개(본문 정리, 내용 지문, 새 글·수정 글 고르기, 장면·WebP·변경 파일 검사, WebP 저장), Admin Vitest 147개·소스 검사 2개·lint·CI fixture 빌드·예산 검사
+  (초기 목록 JavaScript 572,717 bytes). 로컬에서 plan(테스트 글 `m365/test2`, `m365/test` 선택) → prepare → 장면 작성(AI 단계 대신 직접) →
+  render·validate·export → publish dry run(PR 본문, 실패 이슈)을 확인했다. 수정 흐름은 기록 지문을 바꿔 plan이 '내용 바뀜'으로 고르는지,
+  수정 시각만 바뀐 글은 건너뛰는지, prepare(지금 이미지 전달)·validate(기록 저장)·publish(지금/새 버전 비교 본문)까지 확인했다. Copilot CLI 실제 실행은 Actions에서 첫 실행으로 확인한다.
+
 ## 회귀 검증과 배포 경계
 
 아래 세 앱 검증 수치는 PR #272 당시 기록이다. 웹챗 후속 변경은 별도 Web 회귀와
