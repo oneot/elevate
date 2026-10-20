@@ -107,7 +107,8 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 
 1. Admin 변경을 `main`에 병합한다.
 2. `main`을 `admin` 브랜치에 병합해 push하면 `.github/workflows/deploy-admin-azure-swa.yml`이 빌드·번들 예산 검사 후 배포한다.
-   `admin`은 `main`보다 뒤처질 수 있으므로 병합 전 차이를 확인한다.
+   `admin`은 `main`보다 뒤처질 수 있으므로 병합 전 차이를 확인한다. 이 workflow는 `Elevate.Admin/**`와
+   공개 사이트 정적 썸네일(`Elevate.Web/src/assets/post-thumbs/**`, 관리자 목록 카드가 빌드에 포함) 변경 때 실행된다.
 3. 빌드 값은 GitHub secrets에서 주입한다: `ADMIN_VITE_API_BASE_URL`, `ADMIN_VITE_AZURE_AD_CLIENT_ID`,
    `ADMIN_VITE_AZURE_AD_AUTHORITY`, `ADMIN_VITE_AZURE_AD_API_SCOPE`, `ADMIN_VITE_AZURE_AD_REDIRECT_URI`,
    `AZURE_STATIC_WEB_APPS_API_TOKEN_ADMIN`.
@@ -118,6 +119,15 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 - Entra 앱 등록의 SPA 리디렉션 URI: 두 호스트의 origin을 끝 슬래시 있는 형태와 없는 형태로 모두 등록했다.
   앱은 끝 슬래시 없는 현재 origin을 보낸다(예: `https://admin.microsoft-elevate.com`).
 - Function App CORS에 `https://admin.microsoft-elevate.com`을 추가했다. 기본 호스트 origin도 유지한다.
+- Storage(`stelvdevimiruajbu5bya`) Blob 서비스 CORS에도 `https://admin.microsoft-elevate.com`을 추가했다(2026-10-20 17:2x).
+  본문 이미지·첨부·자동 썸네일은 브라우저가 사용자 위임 SAS로 Blob에 바로 PUT하므로 이 설정이 없으면 업로드만 실패한다.
+  - 규칙 1개: 메서드 `OPTIONS, PUT, GET, HEAD`, 허용 헤더 `content-type, x-ms-blob-type, x-ms-version, authorization, x-ms-*`,
+    노출 헤더 `etag, last-modified, x-ms-*`, Max-Age 3600초
+  - 허용 origin: `https://white-sea-0567ed600.4.azurestaticapps.net`, `http://localhost:5173`, `https://admin.microsoft-elevate.com`
+  - 확인: 관리자 origin에서 `PUT` preflight(헤더 `content-type,x-ms-blob-cache-control,x-ms-blob-type`)가 200이고
+    `Access-Control-Allow-Origin`이 그 origin이어야 한다. 목록에 없는 origin은 403이다.
+- `rg-elv-dev`에는 ReadOnly 잠금이 있다. 관리자 호스트를 추가하는 등 Function App·Storage CORS를 바꿀 때는
+  잠금을 잠시 풀고, 기존 규칙에 origin만 더한 뒤 바로 ReadOnly로 다시 건다.
 - MSAL 캐시는 `sessionStorage`이므로 두 호스트의 로그인 상태는 공유되지 않는다. 호스트마다 한 번씩 로그인한다.
 
 ### 배포 후 확인
@@ -125,6 +135,7 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 두 호스트에서 각각 다음을 확인한다. 테스트 글은 보관 상태로 만들고 확인 후 삭제한다.
 
 1. 접속 → Microsoft 로그인 → 같은 호스트로 돌아와 `전체 게시글`과 13개 앱 개수가 표시된다.
+   브라우저 탭 아이콘이 오리 이미지이고, 앱 목록 카드 썸네일이 공개 사이트 같은 앱 목록의 카드 이미지와 같다.
 2. Word와 GitHub에서 새 글을 보관 상태로 저장하면 각 앱 목록의 '보관' 필터에 나타난다
    (저장 category `m365`·`copilot-studio`, 태그 `word`·`github`, slug는 서버가 제목으로 생성).
 3. 기존 글 편집 저장, 본문 이미지·첨부 업로드가 동작한다. 기존 글의 썸네일·slug·태그·시리즈는 바뀌지 않는다.
@@ -139,6 +150,8 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 | `AADSTS50011` | 로그인 요청의 `redirect_uri`와 Entra SPA 리디렉션 URI가 끝 슬래시까지 같은지 |
 | 로그인 후 다른 호스트로 이동 | 배포 산출물이 이번 변경 이후 빌드인지 (이전 빌드는 secret 주소로 고정) |
 | 목록에서 CORS 오류 | Function App CORS에 접속한 origin이 있는지 |
+| 이미지·첨부 업로드 실패 (콘솔에 Blob CORS 오류) | Storage Blob CORS 허용 origin에 접속한 관리자 호스트가 있는지 (위 '인증·CORS 전제') |
+| 목록 카드가 썸네일 대신 유리 타일 | 정적 썸네일이 없는 글이면 상세 조회(`GET /api/admin/posts/{id}`) 응답의 `thumbnail.variants`와 Blob 읽기. 공개 사이트 정적 썸네일을 새로 넣었다면 Admin이 다시 배포됐는지 |
 | '썸네일을 자동으로 만들지 못했습니다' | 브라우저 콘솔의 `[PostEditor] auto thumbnail failed` 오류, Blob 업로드 SAS·CORS. 글은 저장되며 다음 게시 저장 때 다시 만든다 |
 
 ## GitHub Pages Smoke Test

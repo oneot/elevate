@@ -24,6 +24,17 @@ React + Vite로 빌드하며, `admin` 브랜치 push 때 Azure Static Web Apps�
 | `/posts/:postId` | 게시글 편집·삭제 |
 | `/category/:categoryId` | 이전 주소. `/apps/:categoryId`로 이동한다 |
 
+목록 카드 이미지는 공개 사이트 카드(`DocsPostCard`)와 같은 규칙과 같은 `<img sizes>`로 고릅니다
+(`src/hooks/useCardImage.js`, `src/utils/postImages.js`).
+
+1. 공개 사이트가 미리 만든 정적 썸네일(`Elevate.Web/src/assets/post-thumbs/<앱>/<slug>-480|960.webp`).
+2. 없으면 DB 썸네일 variants(480·960px). 관리자 목록 API 요약에는 썸네일이 없으므로 이런 글만 상세를 조회하고,
+   같은 세션에서 30분 동안 재사용합니다(읽기 SAS 1시간). 이미지가 실패하면 한 번 새 서명 주소를 받고, 그래도 실패하면 3번으로 넘어갑니다.
+3. 둘 다 없으면 앱 유리 타일.
+
+게시 상태는 썸네일을 가리지 않도록 카드 아래 날짜 옆에 표시합니다.
+브라우저 아이콘은 오리 이미지로 만든 `public/favicon.ico`(16·32·48px), `favicon-192.png`, `apple-touch-icon.png`(180px, 흰 배경)입니다.
+
 제거한 기능: Sub category(Agenthon, Update, MEE, 행사 소식, 프로그램 소식) 목록·작성,
 달력 이벤트 편집과 게시글 연결, Management(활동 영상) 목록·편집,
 편집 화면의 slug·태그·시리즈(분류)·미디어(YouTube, 썸네일 업로드) 입력.
@@ -58,8 +69,8 @@ React + Vite로 빌드하며, `admin` 브랜치 push 때 Azure Static Web Apps�
 (`src/utils/autoThumbnail.js`). 썸네일이 이미 있으면 다시 만들지 않으므로, 이후 글을 고쳐도 첫 썸네일이 유지됩니다.
 
 - 기존 글: 공개 카드는 공개 사이트가 미리 만든 썸네일(`Elevate.Web/src/assets/post-thumbs`)을 DB 썸네일보다 먼저 씁니다.
-  편집 화면 미리보기도 같은 순서로 보여 주고(`src/utils/publicThumbs.js`), 이 이미지가 있는 글에는 자동 썸네일을 만들지 않습니다.
-  이 이미지는 빌드 때 Admin 산출물에 함께 들어가며 미리보기를 볼 때만 내려받습니다.
+  목록 카드와 편집 화면 미리보기도 같은 순서로 보여 주고(`src/utils/publicThumbs.js`), 이 이미지가 있는 글에는 자동 썸네일을 만들지 않습니다.
+  이 이미지는 빌드 때 Admin 산출물에 함께 들어가며 화면에 보일 때만 내려받습니다. 그래서 이 폴더가 바뀌면 Admin도 다시 배포합니다.
   개발 서버가 이 폴더를 읽도록 `vite.config.js`의 `server.fs.allow`에 추가했습니다.
 
 - 모양: 공개 사이트 기존 썸네일(`Elevate.Web/src/assets/post-thumbs`)을 만든 'UI 미니어처' kit v2(소프트 글래스)와
@@ -105,8 +116,10 @@ React + Vite로 빌드하며, `admin` 브랜치 push 때 Azure Static Web Apps�
   `/`로 시작하는 경로일 때만 쓰고, 다른 호스트 값은 무시합니다.
 - Entra 앱 등록의 SPA 리디렉션 URI에는 두 호스트의 origin이 등록되어 있어야 합니다.
   Entra는 끝 슬래시까지 정확히 비교하므로 앱이 보내는 값(끝 슬래시 없음)을 그대로 등록합니다.
-- API 토큰 검증, CORS 허용 origin은 Server/Azure 설정입니다. 사용자 지정 도메인 origin
-  `https://admin.microsoft-elevate.com`이 Function App CORS에 있어야 합니다.
+- API 토큰 검증, CORS 허용 origin은 Server/Azure 설정입니다. 관리자 호스트의 origin
+  (`https://admin.microsoft-elevate.com`, 기본 호스트)은 Function App CORS와 Storage Blob CORS에 모두 있어야 합니다.
+  이미지·첨부·자동 썸네일 업로드는 브라우저가 사용자 위임 SAS로 Blob에 바로 PUT하므로 Blob CORS가 빠지면 업로드만 실패합니다.
+  현재 값과 확인 방법은 [배포 런북](../documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md#인증cors-전제-2026-10-20-코디네이터-확인)에 있습니다.
 
 ## 환경 변수
 
@@ -138,11 +151,13 @@ npm run sync:post-content   # Web 본문 CSS를 바꾼 뒤 편집기용 복사�
 `check:bundle`은 `index.html`과 기본 목록(`src/pages/AppPosts.jsx`)의 정적 의존성을 합산하고
 편집기(Tiptap) 즉시 로딩을 실패로 처리합니다. 앱 아이콘·유리 타일·유리 오브젝트 이미지는 JS에 인라인하지 않습니다
 (`vite.config.js`의 `assetsInlineLimit: 0`). 자동 썸네일 코드는 편집 화면 chunk에만 들어갑니다.
+목록 카드가 쓰는 정적 썸네일 주소표(약 17 KB)는 초기 목록 JavaScript에 들어갑니다.
 
 ## 배포
 
 1. 변경은 `main`에 병합합니다.
 2. 운영 반영은 `main`을 `admin` 브랜치로 병합해 push할 때 `.github/workflows/deploy-admin-azure-swa.yml`이 수행합니다.
-3. 배포 후 두 호스트에서 각각 로그인·목록·앱별 새 글 저장(보관)·게시와 자동 썸네일·편집·로그아웃을 확인합니다.
+   `Elevate.Admin/**` 또는 공개 사이트 정적 썸네일(`Elevate.Web/src/assets/post-thumbs/**`)이 바뀌었을 때 실행됩니다.
+3. 배포 후 두 호스트에서 각각 로그인·목록(카드 썸네일이 공개 사이트와 같은지)·앱별 새 글 저장(보관)·게시와 자동 썸네일·편집·로그아웃을 확인합니다.
 
 자세한 운영 절차는 [배포 런북](../documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md#관리자-배포와-도메인)을 참고합니다.
