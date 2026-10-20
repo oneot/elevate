@@ -4,6 +4,12 @@ const { getAssetsContainer, getPostsContainer } = require('../services/cosmosCli
 const { issueBlobUploadSas, issueBlobAttachSas, getBlobReadSasUrl, deleteBlobByUrl } = require('../services/storageClient');
 const { parsePositiveInt, sendError } = require('../utils/http');
 const { toSlugBase } = require('../utils/slug');
+const {
+  stripBlobSas,
+  stripBlobSasFromContent,
+  enrichContentWithSas,
+  enrichThumbnailWithSas,
+} = require('../services/postContent');
 
 const allowedStatuses = new Set(['draft', 'published', 'archived']);
 const allowedMimeTypes = new Set([
@@ -36,69 +42,6 @@ const allowedAttachMimeTypes = new Set([
 const maxAttachSizeBytes = 50 * 1024 * 1024;
 const attachCategoryPartition = '_attach';
 const draftAttachTtlMs = 24 * 60 * 60 * 1000;
-
-var BLOB_SAS_PATTERN = /(https?:\/\/[^"'\s]*\.blob\.core\.windows\.net\/[^"'\s?]*)\?[^"'\s]*/g;
-var BLOB_BARE_PATTERN = /https?:\/\/[^"'\s]*\.blob\.core\.windows\.net\/[^"'\s?]*/g;
-
-function isBlobUrl(url) {
-  return typeof url === 'string' && url.indexOf('.blob.core.windows.net/') !== -1;
-}
-
-function stripBlobSas(url) {
-  if (!isBlobUrl(url)) return url;
-  try {
-    var parsed = new URL(url);
-    return parsed.origin + parsed.pathname;
-  } catch (e) {
-    return url;
-  }
-}
-
-function stripBlobSasFromHtml(html) {
-  if (!html) return html;
-  BLOB_SAS_PATTERN.lastIndex = 0;
-  return html.replace(BLOB_SAS_PATTERN, '$1');
-}
-
-async function enrichHtmlWithSas(html) {
-  if (!html) return html;
-  BLOB_SAS_PATTERN.lastIndex = 0;
-  var normalized = html.replace(BLOB_SAS_PATTERN, '$1');
-  BLOB_BARE_PATTERN.lastIndex = 0;
-  var matches = normalized.match(BLOB_BARE_PATTERN);
-  if (!matches || matches.length === 0) return normalized;
-  var uniqueUrls = matches.filter(function(v, i, a) { return a.indexOf(v) === i; });
-  var signed = await Promise.all(uniqueUrls.map(function(u) { return getBlobReadSasUrl(u); }));
-  var result = normalized;
-  uniqueUrls.forEach(function(url, i) {
-    if (signed[i]) {
-      result = result.split(url).join(signed[i]);
-    }
-  });
-  return result;
-}
-
-async function enrichThumbnailWithSas(thumbnail) {
-  if (!thumbnail) return thumbnail;
-  var enriched = Object.assign({}, thumbnail);
-  if (isBlobUrl(thumbnail.url)) {
-    var signedUrl = await getBlobReadSasUrl(thumbnail.url);
-    if (signedUrl) enriched.signedUrl = signedUrl;
-  }
-
-  if (thumbnail.variants && typeof thumbnail.variants === 'object') {
-    var entries = await Promise.all(Object.entries(thumbnail.variants).map(async function(entry) {
-      var key = entry[0];
-      var variant = entry[1];
-      if (!variant || !isBlobUrl(variant.url)) return [key, variant];
-      var variantSignedUrl = await getBlobReadSasUrl(variant.url);
-      return [key, variantSignedUrl ? Object.assign({}, variant, { signedUrl: variantSignedUrl }) : variant];
-    }));
-    enriched.variants = Object.fromEntries(entries);
-  }
-
-  return enriched;
-}
 
 function normalizeThumbnailForStorage(thumbnail) {
   if (!thumbnail) return null;
@@ -557,7 +500,7 @@ exports.getAdminPostDetail = async (req, res) => {
       baseResponse.thumbnail = await enrichThumbnailWithSas(baseResponse.thumbnail);
     }
     if (baseResponse.contentMarkdown) {
-      baseResponse.contentMarkdown = await enrichHtmlWithSas(baseResponse.contentMarkdown);
+      baseResponse.contentMarkdown = await enrichContentWithSas(baseResponse.contentMarkdown);
     }
     return res.json(baseResponse);
   } catch (error) {
@@ -596,7 +539,7 @@ exports.createPost = async (req, res) => {
       category: req.body.category,
       title: req.body.title,
       excerpt: req.body.excerpt || '',
-      contentMarkdown: stripBlobSasFromHtml(req.body.contentMarkdown),
+      contentMarkdown: stripBlobSasFromContent(req.body.contentMarkdown),
       tags: req.body.tags,
       series: req.body.series || null,
       seriesOrder: req.body.seriesOrder ?? null,
@@ -666,7 +609,7 @@ exports.updatePost = async (req, res) => {
       slug,
       title: req.body.title !== undefined ? req.body.title : existing.title,
       excerpt: req.body.excerpt !== undefined ? req.body.excerpt : existing.excerpt,
-      contentMarkdown: stripBlobSasFromHtml(incomingContent),
+      contentMarkdown: stripBlobSasFromContent(incomingContent),
       tags: req.body.tags !== undefined ? req.body.tags : existing.tags,
       series: req.body.series !== undefined ? (req.body.series || null) : existing.series,
       seriesOrder: req.body.seriesOrder !== undefined ? (req.body.seriesOrder ?? null) : (existing.seriesOrder ?? null),

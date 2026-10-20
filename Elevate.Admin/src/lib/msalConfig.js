@@ -1,10 +1,20 @@
 import { LogLevel } from '@azure/msal-browser'
+import { resolveRedirectUri } from './redirectUri.js'
+
+const currentOrigin = typeof window === 'undefined' ? '' : window.location.origin
+
+/**
+ * 로그인/로그아웃 후 돌아올 주소. 현재 접속한 호스트(origin) 기준이므로 기본 호스트와
+ * 사용자 지정 도메인에서 같은 빌드가 동작한다. VITE_AZURE_AD_REDIRECT_URI는 같은 호스트일 때만
+ * 적용되는 선택적 override다 (redirectUri.js 참조).
+ */
+const redirectUri = resolveRedirectUri(import.meta.env.VITE_AZURE_AD_REDIRECT_URI, currentOrigin)
 
 /**
  * MSAL PublicClientApplication 초기화 설정.
  *
- * auth.clientId / authority / redirectUri 는 환경 변수에서 주입되므로
- * 배포 환경별로 .env 파일을 통해 관리한다.
+ * auth.clientId / authority 는 환경 변수에서 주입되므로 배포 환경별로 .env 파일을 통해 관리한다.
+ * redirectUri / postLogoutRedirectUri 는 현재 origin 기준이다.
  * navigateToLoginRequestUrl: true — 로그인 완료 후 원래 요청 URL로 복귀.
  * cacheLocation: 'sessionStorage' — 탭 단위 세션으로 범위를 제한해
  * 동일 브라우저의 다른 탭과 인증 상태를 공유하지 않는다.
@@ -13,8 +23,8 @@ export const msalConfig = {
   auth: {
     clientId: import.meta.env.VITE_AZURE_AD_CLIENT_ID,
     authority: import.meta.env.VITE_AZURE_AD_AUTHORITY,
-    redirectUri: import.meta.env.VITE_AZURE_AD_REDIRECT_URI,
-    postLogoutRedirectUri: import.meta.env.VITE_AZURE_AD_REDIRECT_URI,
+    redirectUri,
+    postLogoutRedirectUri: redirectUri,
     navigateToLoginRequestUrl: true,
   },
   cache: {

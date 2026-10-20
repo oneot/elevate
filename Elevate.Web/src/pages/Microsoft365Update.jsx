@@ -2,7 +2,7 @@
  * @file Microsoft365Update.jsx
  * @description Microsoft 365 업데이트 소식 목록 페이지.
  *
- * `update` 카테고리의 게시글을 최대 100개 불러온 뒤 클라이언트 사이드에서
+ * `update` 카테고리의 게시글을 모두 불러온 뒤 클라이언트 사이드에서
  * 태그 필터링과 페이지네이션을 수행한다. 공통 로직은 useCategoryPostList 훅에서 처리한다.
  */
 import React from 'react';
@@ -26,6 +26,7 @@ export default function Microsoft365Update() {
     selectedTags,
     loading,
     error,
+    retry,
     filteredPosts,
     paginatedPosts,
     currentPage,
@@ -73,6 +74,7 @@ export default function Microsoft365Update() {
         posts={paginatedPosts}
         loading={loading}
         error={error}
+        onRetry={retry}
         countLabel={!loading && selectedTags.length > 0 ? `${filteredPosts.length}개의 게시글이 일치합니다.` : undefined}
         activeQuery={qParam}
         skeletonCount={POST_LIST_PAGE_SIZE}

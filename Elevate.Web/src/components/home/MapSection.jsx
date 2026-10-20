@@ -2,6 +2,9 @@
  * @file MapSection.jsx
  * @description 홈페이지 히어로 섹션 — 한국 지도 인터랙션과 교육청 링크를 포함한다.
  *
+ * 768px 이상에서는 왼쪽 문구·오른쪽 지도로 나란히 놓고 화면 폭에 맞춰 함께 줄어들며,
+ * 그보다 좁은 화면(모바일)에서는 문구 아래에 지도를 세로로 쌓는다.
+ * 문구는 항상 왼쪽 정렬이며, 중간 화면(768~1359px)에서는 문구와 지도를 한 묶음으로 화면 가운데에 둔다.
  * 사용자가 지도의 교육청 핀 위에 마우스를 올리면 툴팁이 표시되고,
  * 클릭 시 해당 교육청의 Microsoft 365 포털로 이동한다.
  * 모바일(coarse pointer)에서는 confirm 다이얼로그로 이동 의사를 확인한다.
@@ -12,6 +15,13 @@ import MapTooltip from './MapTooltip';
 import { offices, officeNames } from '../../constants/offices';
 import { normalizeUrl } from '../../utils/url';
 import feelingsMonster from '../../assets/FeelingsMonster.png';
+
+// useHeroAnimation이 `.hero-text > *`의 opacity/transform을 순서대로 풀어 준다.
+const heroReveal = (delay) => ({
+    opacity: 0,
+    transform: 'translateY(30px)',
+    transition: `opacity 1s ease-out ${delay}s, transform 1s ease-out ${delay}s`,
+});
 
 const MapSection = () => {
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: '' });
@@ -81,74 +91,60 @@ const MapSection = () => {
     };
 
     return (
-        <section id="map-section" className="relative min-h-screen flex flex-col lg:flex-row items-center justify-center max-w-7xl mx-auto px-6 pt-24 pb-12 gap-12">
-            
-            <div className="lg:w-1/2 z-10 hero-text">
-                <div style={{ opacity: 0, transform: 'translateY(30px)', transition: 'all 1s ease-out' }} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-ms-blue text-xs font-bold mb-6 tracking-wide uppercase shadow-sm">
-                    <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                    </span>
-                    AI for ALL
+        <section id="map-section" className="ehome-hero">
+            <div className="ehome-wrap ehome-hero__inner">
+                <div className="ehome-hero__text hero-text">
+                    <h1 className="ehome-hero__title" style={heroReveal(0.1)}>
+                        <span>교실의 미래,</span>
+                        <span><span className="ehome-hero__gradient">Microsoft AI</span>가</span>
+                        <span>함께합니다.</span>
+                    </h1>
+
+                    <p className="ehome-hero__lead" style={heroReveal(0.25)}>
+                        모두를 위한 AI 교육 환경,<br />M365와 Copilot으로 바로 시작해 보세요!<br />
+                        <strong>교육용 계정 생성을 위해 지도에서 교육청을 선택해주세요.</strong>
+                    </p>
+
+                    {/* 계정 도움말 카드 — 기존 유리 카드 디자인 그대로 */}
+                    <div className="ehome-hero__help w-full max-w-[420px]" style={heroReveal(0.4)}>
+                        <a
+                            href="/m365/signup"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ehome-help-card py-4 group relative overflow-hidden bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] border border-white/60 border-b-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_1px_2px_rgba(255,255,255,0.9)] flex items-center gap-5 w-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-white/50 hover:shadow-[0_20px_50px_rgba(0,0,0,0.3),inset_0_1px_2px_rgba(255,255,255,1)] cursor-pointer card-link outline-none"
+                        >
+                            <div className="ehome-help-card__icon w-16 h-16 bg-white/60 rounded-2xl p-2 shadow-sm border border-white/80 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 shrink-0">
+                                <img src={feelingsMonster} alt="Student icon" decoding="async" className="w-full h-full object-contain" />
+                            </div>
+                            <div className="flex flex-col items-start text-left w-full">
+                                <h3 className="ehome-card-title ehome-card-title--sm break-keep">
+                                    교육용 계정 관련 도움이 필요하신가요?
+                                </h3>
+                                <div className="ehome-help-card__more w-full mt-2 overflow-hidden">
+                                    <div className="text-sm font-bold flex justify-start transition-all duration-800 ease-[cubic-bezier(0.16,1,0.3,1)] text-blue-600 group-hover:translate-x-[calc(97%-85px)] group-hover:text-blue-900">
+                                        더 알아보기 →
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
                 </div>
 
-                <h1 style={{ opacity: 0, transform: 'translateY(30px)', transition: 'all 1s ease-out 0.15s' }} className="text-5xl lg:text-7xl font-bold leading-[1.1] mb-6 text-slate-900 tracking-tight">
-                    교실의 미래,<br/>
-                    <span className="text-gradient">Microsoft AI</span>가<br/>
-                    함께합니다.
-                </h1>
-
-                <p style={{ opacity: 0, transform: 'translateY(30px)', transition: 'all 1s ease-out 0.3s' }} className="text-lg text-slate-500 mb-8 max-w-lg leading-relaxed font-medium">
-                    모두를 위한 AI 교육 환경,<br/>M365와 Copilot으로 바로 시작해 보세요!<br/>
-                    <span className="text-slate-900 font-bold underline decoration-ms-blue/30 decoration-4 underline-offset-4">
-                        교육용 계정 생성을 위해 지도에서 교육청을 선택해주세요.
-                    </span>
-                </p>
-
-                <div style={{ opacity: 0, transform: 'translateY(30px)', transition: 'all 1s ease-out 0.45s' }} className="w-full max-w-[420px]">
-    <a 
-        href="https://microsoft-elevate.com/m365/signup"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="py-4 group relative overflow-hidden bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] border border-white/60 border-b-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_1px_2px_rgba(255,255,255,0.9)] flex items-center gap-5 w-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-white/50 hover:shadow-[0_20px_50px_rgba(0,0,0,0.3),inset_0_1px_2px_rgba(255,255,255,1)] cursor-pointer card-link outline-none"
-    >
-        <div className="w-16 h-16 bg-white/60 rounded-2xl p-2 shadow-sm border border-white/80 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 shrink-0">
-            <img src={feelingsMonster} alt="Student icon" decoding="async" className="w-full h-full object-contain" />
-        </div>
-        <div className="flex flex-col items-start text-left w-full">
-            <h3 className="text-lg font-extrabold text-slate-900 leading-snug">
-                교육용 계정 관련 도움이 필요하신가요?
-            </h3>
-            <div className="w-full mt-2 overflow-hidden">
-                <div className="text-sm font-bold 
-                    flex justify-start
-                    transition-all duration-800 ease-[cubic-bezier(0.16,1,0.3,1)]
-                    text-blue-600
-                    group-hover:translate-x-[calc(97%-85px)]
-                    group-hover:text-blue-900"
+                {/* 오른쪽(모바일은 아래) 지도 영역 */}
+                <div
+                    ref={mapContainerRef}
+                    className="ehome-map map-container"
+                    style={{ opacity: 0, transform: 'scale(0.95)', transition: 'opacity 1.2s ease-out 0.3s, transform 1.2s ease-out 0.3s' }}
                 >
-                    더 알아보기 →
+                    <KoreaMap
+                        hoveredRegion={hoveredRegion}
+                        onPointEnter={handleMapPointEnter}
+                        onPointMove={handleMapPointMove}
+                        onPointLeave={handleMapPointLeave}
+                        onPointClick={handleMapPointClick}
+                    />
+                    <MapTooltip tooltip={tooltip} />
                 </div>
-            </div>
-        </div>
-    </a>
-</div>
-            </div>
-
-            {/* 오른쪽 지도 영역 */}
-            <div 
-                ref={mapContainerRef}
-                className="lg:w-1/2 relative flex justify-center items-center h-[500px] lg:h-[750px] w-full map-container"
-                style={{ opacity: 0, transform: 'scale(0.95)', transition: 'all 1.2s ease-out 0.3s' }}
-            >
-                <KoreaMap 
-                    hoveredRegion={hoveredRegion}
-                    onPointEnter={handleMapPointEnter}
-                    onPointMove={handleMapPointMove}
-                    onPointLeave={handleMapPointLeave}
-                    onPointClick={handleMapPointClick}
-                />
-                <MapTooltip tooltip={tooltip} />
             </div>
         </section>
     );

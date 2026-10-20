@@ -12,6 +12,7 @@ const PostListLayout = ({
   posts,
   loading,
   error,
+  onRetry,
   countLabel,
   currentPage,
   totalPages,
@@ -64,23 +65,30 @@ const PostListLayout = ({
               </>
             )}
             {!loading && error && (
-              <div className="flex flex-col items-center gap-3 py-12 text-center">
+              <div className="flex flex-col items-center gap-3 py-12 text-center" role="alert">
                 <span className="text-4xl">⚠️</span>
                 <p className="text-slate-600 text-sm">게시글을 불러오지 못했습니다.</p>
                 <p className="text-slate-400 text-xs">{error}</p>
+                {onRetry && (
+                  <button type="button" className="text-ms-blue text-sm hover:underline" onClick={onRetry}>
+                    다시 시도
+                  </button>
+                )}
               </div>
             )}
             <div className="mb-4 text-sm text-slate-600 min-h-6 flex items-center">
-              {!loading && countLabel && <span>{countLabel}</span>}
+              {!loading && !error && countLabel && <span>{countLabel}</span>}
             </div>
             {!loading && !error && (
               <PostGrid posts={posts} activeQuery={activeQuery} />
             )}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={onPageChange}
-            />
+            {!loading && !error && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={onPageChange}
+              />
+            )}
           </section>
 
           {hasSeriesSidebar && (

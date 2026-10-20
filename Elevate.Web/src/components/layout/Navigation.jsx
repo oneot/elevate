@@ -1,8 +1,11 @@
 /**
  * @file Navigation.jsx
- * @description 홈 페이지 최상단에 고정되는 내비게이션 바 (현재 Home.jsx에서만 사용).
+ * @description 홈 페이지 최상단에 고정되는 내비게이션 바 (Home.jsx, 블로그 목록/상세 화면에서 사용).
  *
- * 5개 드롭다운 메뉴와 우측 문의하기 CTA 버튼으로 구성된다.
+ * 블로그 화면은 fixed={false}로 렌더링해 헤더가 문서 흐름에 놓이고,
+ * 스크롤하면 Apple Developer처럼 자연스럽게 위로 사라진다.
+ *
+ * 드롭다운 메뉴(NAV_ITEMS 중 hidden이 아닌 것)와 우측 문의하기 CTA 버튼으로 구성된다.
  * - 데스크톱: 마우스 오버 시 드롭다운, 마우스 이탈 시 자동 닫힘
  * - 모바일: 햄버거 버튼 → 풀화면 오버레이 패널 + 아코디언
  * - Escape 키, 라우트 이동 시 드롭다운/오버레이 자동 닫힘
@@ -11,6 +14,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Logo from '../common/Logo';
 import { NAV_ITEMS } from '../../constants/navItems';
+
+const VISIBLE_NAV_ITEMS = NAV_ITEMS.filter((menu) => !menu.hidden);
 
 /**
  * 내부/외부 링크를 통합 렌더링하는 보조 컴포넌트.
@@ -88,9 +93,11 @@ const ChevronIcon = ({ open }) => (
 /**
  * 상단 고정 내비게이션 바 컴포넌트.
  *
+ * @param {Object} props
+ * @param {boolean} [props.fixed=true] - false면 화면 상단에 고정하지 않고 페이지와 함께 스크롤된다.
  * @returns {JSX.Element}
  */
-const Navigation = () => {
+const Navigation = ({ fixed = true }) => {
     // 현재 열린 데스크톱 드롭다운 메뉴의 label (null이면 모두 닫힘)
     const [openMenu, setOpenMenu] = useState(null);
     // 모바일 오버레이 열림 여부
@@ -218,13 +225,13 @@ const Navigation = () => {
 
     return (
         <>
-            <nav className="fixed w-full z-50 top-0 left-0 bg-white/85 backdrop-blur-md border-b border-gray-100">
+            <nav className={`${fixed ? 'fixed' : 'relative'} w-full z-50 top-0 left-0 bg-white/85 backdrop-blur-md border-b border-gray-100`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 md:h-20 flex items-center justify-between gap-3">
                     <Logo />
 
                     {/* ── 데스크톱 메뉴 목록 (md 이상) ── */}
                     <ul className="hidden md:flex items-center gap-1 text-sm">
-                        {NAV_ITEMS.map((menu) => (
+                        {VISIBLE_NAV_ITEMS.map((menu) => (
                             <li
                                 key={menu.label}
                                 className="relative"
@@ -233,17 +240,40 @@ const Navigation = () => {
                                 onMouseEnter={() => handleMenuEnter(menu.label)}
                                 onMouseLeave={handleMenuLeave}
                             >
-                                {/* 최상위 메뉴 버튼 — hover(마우스) + onClick(키보드/터치) 모두 지원 */}
-                                <button
-                                    type="button"
-                                    aria-expanded={openMenu === menu.label}
-                                    aria-haspopup="true"
-                                    onClick={() => setOpenMenu((prev) => prev === menu.label ? null : menu.label)}
-                                    className="flex items-center gap-1 px-3 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"
-                                >
-                                    {menu.label}
-                                    <ChevronIcon open={openMenu === menu.label} />
-                                </button>
+                                {/* 최상위 메뉴 — menu.to가 있으면 이름은 링크, 화살표는 드롭다운 토글 */}
+                                {menu.to ? (
+                                    <div className="flex items-center rounded-lg hover:bg-slate-100 transition-colors">
+                                        <Link
+                                            to={menu.to}
+                                            onClick={() => setOpenMenu(null)}
+                                            className="pl-3 pr-1 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 rounded-lg"
+                                        >
+                                            {menu.label}
+                                        </Link>
+                                        <button
+                                            type="button"
+                                            aria-expanded={openMenu === menu.label}
+                                            aria-haspopup="true"
+                                            aria-label={`${menu.label} 하위 메뉴`}
+                                            onClick={() => setOpenMenu((prev) => prev === menu.label ? null : menu.label)}
+                                            className="pl-0.5 pr-3 py-2.5 rounded-lg"
+                                        >
+                                            <ChevronIcon open={openMenu === menu.label} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    /* 최상위 메뉴 버튼 — hover(마우스) + onClick(키보드/터치) 모두 지원 */
+                                    <button
+                                        type="button"
+                                        aria-expanded={openMenu === menu.label}
+                                        aria-haspopup="true"
+                                        onClick={() => setOpenMenu((prev) => prev === menu.label ? null : menu.label)}
+                                        className="flex items-center gap-1 px-3 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"
+                                    >
+                                        {menu.label}
+                                        <ChevronIcon open={openMenu === menu.label} />
+                                    </button>
+                                )}
 
                                 {/* 드롭다운 패널 */}
                                 {openMenu === menu.label && (
@@ -321,7 +351,7 @@ const Navigation = () => {
 
                     {/* 아코디언 메뉴 목록 */}
                     <ul className="flex-1 px-4 py-4 space-y-1">
-                        {NAV_ITEMS.map((menu) => (
+                        {VISIBLE_NAV_ITEMS.map((menu) => (
                             <li key={menu.label}>
                                 {/* 최상위 메뉴 토글 버튼 */}
                                 <button
@@ -337,6 +367,14 @@ const Navigation = () => {
                                 {/* 하위 항목 (아코디언 펼침) */}
                                 {expandedMobile === menu.label && (
                                     <ul className="pl-4 mt-1 mb-2 space-y-0.5">
+                                        {menu.to && (
+                                            <li>
+                                                <NavLink
+                                                    item={{ label: `${menu.label} 전체 보기`, to: menu.to }}
+                                                    onClick={() => setMobileOpen(false)}
+                                                />
+                                            </li>
+                                        )}
                                         {menu.items.map((item) => (
                                             <li key={item.label}>
                                                 <NavLink

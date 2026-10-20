@@ -1,7 +1,7 @@
+/.env
 Elevate.Web/.env
 .DS_Store
 .vscode
-documents
 infra
 TODO.md
 .env.production

@@ -1,27 +1,16 @@
 import { Link } from 'react-router-dom'
-import { AlertCircle } from 'lucide-react'
-import { Card } from '../components/ui/index.js'
 
 function NotFound() {
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center animate-fadeIn">
-      <Card colorScheme="orange" className="max-w-md mx-auto">
-        <div className="space-y-4 py-8">
-          <div className="flex justify-center">
-            <div className="p-4 rounded-full bg-ms-orange/10">
-              <AlertCircle className="w-12 h-12 text-ms-orange" />
-            </div>
-          </div>
-          <h2 className="text-2xl font-bold text-slate-900">페이지를 찾을 수 없습니다</h2>
-          <p className="text-sm text-slate-500">요청하신 페이지가 존재하지 않습니다.</p>
-          <Link
-            to="/"
-            className="inline-block rounded-lg bg-ms-blue px-6 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-ms-blue/90 hover:shadow-elevation-4 hover:-translate-y-0.5"
-          >
-            포스트 목록으로
-          </Link>
+    <div className="ea-container ea-section">
+      <div className="ea-empty" role="status">
+        <span className="ea-drop" aria-hidden="true" />
+        <strong>페이지를 찾을 수 없습니다</strong>
+        <span>요청하신 페이지가 없거나 관리자에서 더 이상 제공하지 않는 화면입니다.</span>
+        <div className="ea-empty__actions">
+          <Link to="/apps/all" className="ea-btn ea-btn--primary ea-btn--sm">전체 게시글로 이동</Link>
         </div>
-      </Card>
+      </div>
     </div>
   )
 }

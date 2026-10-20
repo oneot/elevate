@@ -1,47 +1,101 @@
-/**
- * @file client.js
- * @description Azure Functions REST API와 통신하는 공통 fetch 래퍼.
- *
- * 모든 API 요청은 이 모듈의 `apiFetch`를 통해 호출된다.
- * 베이스 URL은 `VITE_API_BASE_URL` 환경변수로 지정한다.
- * 프로덕션에서 미설정 시 명시적으로 오류를 throw하며, 개발 환경에서는 기본값(func-elv-server-ep-dev)으로 fallback한다.
- */
-
 const _rawBase =
   import.meta.env.VITE_API_BASE_URL ||
   (import.meta.env.PROD
     ? (() => { throw new Error('[api/client] VITE_API_BASE_URL is not set in production.'); })()
     : 'https://func-elv-server-ep-dev.azurewebsites.net/api/public');
 
-/** 개발/프로덕션 환경의 API 베이스 URL (trailing slash 제거) */
 export const API_BASE = _rawBase.replace(/\/$/, '');
+export const API_REQUEST_TIMEOUT_MS = 15_000;
+const RETRY_DELAY_MS = 300;
+const RETRYABLE_STATUSES = new Set([502, 503, 504]);
+
+export class ApiError extends Error {
+  constructor(message, { code, status } = {}) {
+    super(message);
+    this.name = 'ApiError';
+    this.code = code;
+    this.status = status;
+  }
+}
 
 /**
- * API 엔드포인트에 fetch 요청을 보내고 JSON을 반환한다.
- *
- * HTTP 오류(4xx/5xx) 시 서버 응답 본문의 `message`와 `code`를 포함한
- * Error 객체를 throw한다. 응답 본문이 JSON이 아닌 경우에도 안전하게 처리한다.
- *
- * @param {string} path - `API_BASE`에 이어 붙일 경로 (예: `/posts?page=1`)
- * @param {RequestInit} [options={}] - fetch 옵션 (signal, method, headers 등)
- * @returns {Promise<any|null>} 응답 JSON, 또는 204 No Content이면 null
- * @throws {Error} HTTP 오류 또는 네트워크 오류 시
+ * The deadline includes response bodies and the single transient GET retry.
+ * Caller cancellation remains distinct from a timeout and never triggers a retry.
+ * @param {string} path
+ * @param {RequestInit} [options]
  */
 export async function apiFetch(path, options = {}) {
-  const url = `${API_BASE}${path}`;
-  const res = await fetch(url, options);
+  const { signal, ...requestOptions } = options;
+  if (signal?.aborted) throw signal.reason;
 
-  if (!res.ok) {
-    // res.json()이 실패하는 경우(응답 본문이 없거나 JSON이 아닌 경우)에도
-    // 빈 객체로 fallback하여 항상 Error 객체를 throw할 수 있도록 한다.
-    const body = await res.json().catch(() => ({}));
-    const err = new Error(body.message || `HTTP ${res.status}`);
-    err.status = res.status;
-    err.code = body.code;
-    throw err;
+  const controller = new AbortController();
+  const cancel = () => controller.abort(signal.reason);
+  signal?.addEventListener('abort', cancel, { once: true });
+  const timeout = setTimeout(() => controller.abort(new ApiError(
+    '서버 응답 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.',
+    { code: 'RequestTimeout' },
+  )), API_REQUEST_TIMEOUT_MS);
+  let retryTimer;
+  let onAbort;
+  const aborted = new Promise((_, reject) => {
+    onAbort = () => reject(controller.signal.reason);
+    controller.signal.addEventListener('abort', onAbort, { once: true });
+  });
+
+  async function request() {
+    for (let attempt = 0; ; attempt += 1) {
+      if (controller.signal.aborted) throw controller.signal.reason;
+      try {
+        const res = await fetch(`${API_BASE}${path}`, { ...requestOptions, signal: controller.signal });
+        if (controller.signal.aborted) throw controller.signal.reason;
+        if (res.ok && res.status === 204) return null;
+
+        let body;
+        try {
+          body = await res.json();
+        } catch (error) {
+          if (controller.signal.aborted) throw controller.signal.reason;
+          if (error.name !== 'SyntaxError') throw error;
+          if (res.ok) {
+            throw new ApiError('서버 응답 형식이 올바르지 않습니다.', { code: 'InvalidResponse' });
+          }
+        }
+
+        if (controller.signal.aborted) throw controller.signal.reason;
+        if (!res.ok) {
+          throw new ApiError(body?.message || `서버 요청에 실패했습니다. (HTTP ${res.status})`, {
+            status: res.status,
+            code: body?.code,
+          });
+        }
+        return body;
+      } catch (error) {
+        if (controller.signal.aborted) throw controller.signal.reason;
+        const networkError = error instanceof TypeError;
+        const retryable = networkError || RETRYABLE_STATUSES.has(error.status);
+        if (attempt === 0 && (requestOptions.method || 'GET').toUpperCase() === 'GET' && retryable) {
+          await Promise.race([
+            new Promise((resolve) => { retryTimer = setTimeout(resolve, RETRY_DELAY_MS); }),
+            aborted,
+          ]);
+          continue;
+        }
+        if (networkError) {
+          throw new ApiError('서버에 연결하지 못했습니다. 네트워크 연결을 확인한 뒤 다시 시도해 주세요.', {
+            code: 'NetworkError',
+          });
+        }
+        throw error;
+      }
+    }
   }
 
-  // 204 No Content: 응답 본문이 없으므로 res.json() 호출 없이 null을 반환한다.
-  if (res.status === 204) return null;
-  return res.json();
+  try {
+    return await Promise.race([request(), aborted]);
+  } finally {
+    clearTimeout(timeout);
+    clearTimeout(retryTimer);
+    signal?.removeEventListener('abort', cancel);
+    controller.signal.removeEventListener('abort', onAbort);
+  }
 }

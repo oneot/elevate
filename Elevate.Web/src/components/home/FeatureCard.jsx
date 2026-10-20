@@ -5,7 +5,7 @@
  * `colorScheme` prop으로 그라디언트/그림자/텍스트 색상 테마를 선택한다.
  * Tailwind JIT를 위해 `colorSchemes` 객체에 전체 클래스명이 하드코딩되어 있다.
  * `iconType`에 따라 이미지 또는 emoji 아이콘을 렌더링하며,
- * `description`은 HTML을 허용하여 `dangerouslySetInnerHTML`로 렌더링된다.
+ * `description`은 줄 배열로 받아 한 줄씩 보여 준다 (줄이 카드보다 길면 줄바꿈 대신 말줄임).
  */
 import { Link } from 'react-router-dom';
 
@@ -14,11 +14,11 @@ import { Link } from 'react-router-dom';
  * 
  * @param {Object} props
  * @param {string} props.title - 카드 제목
- * @param {string} props.description - 카드 설명
+ * @param {string|string[]} props.description - 카드 설명 (배열이면 항목마다 한 줄)
  * @param {string} props.icon - 아이콘 이미지 경로 또는 emoji 문자열
  * @param {('image'|'emoji')} props.iconType - 아이콘 타입 ('image' 또는 'emoji')
  * @param {string} props.to - 라우팅 경로
- * @param {('orange'|'blue'|'indigo'|'green'|'emerald'|'violet'|'slate')} props.colorScheme - 색상 테마
+ * @param {('orange'|'blue'|'indigo'|'green'|'emerald'|'teal'|'sky'|'violet'|'slate')} props.colorScheme - 색상 테마
  * @param {string} [props.ctaLabel='더 알아보기 →'] - CTA 버튼 텍스트
  * @param {string} props.ariaLabel - 접근성을 위한 aria-label
  * @param {string} [props.iconSize='w-10 h-10'] - 이미지 아이콘 크기 (iconType이 'image'일 때만 적용)
@@ -68,6 +68,18 @@ const FeatureCard = ({
             titleColor: 'text-emerald-700',
             ctaColor: 'text-emerald-600'
         },
+        teal: {
+            gradient: 'bg-gradient-to-br from-white to-teal-50',
+            shadow: 'shadow-teal-100',
+            titleColor: 'text-teal-700',
+            ctaColor: 'text-teal-600'
+        },
+        sky: {
+            gradient: 'bg-gradient-to-br from-white to-sky-50',
+            shadow: 'shadow-sky-100',
+            titleColor: 'text-sky-700',
+            ctaColor: 'text-sky-600'
+        },
         violet: {
             gradient: 'bg-gradient-to-br from-white to-violet-50',
             shadow: 'shadow-violet-100',
@@ -76,9 +88,9 @@ const FeatureCard = ({
         },
         slate: {
             gradient: 'bg-gradient-to-br from-white to-slate-100',
-            shadow: 'shadow-md',
-            titleColor: 'text-slate-800',
-            ctaColor: 'text-slate-500'
+            shadow: 'shadow-slate-200',
+            titleColor: 'text-slate-900',
+            ctaColor: 'text-slate-700'
         }
     };
 
@@ -90,24 +102,27 @@ const FeatureCard = ({
             aria-label={ariaLabel} 
             className={`card-link block h-full touch-manipulation row-span-1 ${wrapperClassName}`}
         >
-            <div className={`reveal-card clean-card rounded-[2rem] p-5 sm:p-6 group fade-in-section h-full flex flex-col justify-between ${colors.gradient} shadow-soft hover:shadow-hover transition-all duration-300`}>
-                <div>
-                    <div className={`w-14 h-14 rounded-2xl bg-white flex items-center justify-center mb-4 shadow-lg ${colors.shadow} border border-white ${iconType === 'emoji' ? 'text-3xl' : ''} transition-all duration-300 ease-out group-hover:scale-105 sm:group-hover:scale-110 ${iconType === 'emoji' ? 'group-hover:-translate-y-0.5 group-hover:bg-slate-50' : ''}`}>
-                        {iconType === 'emoji' ? (
-                            icon
-                        ) : (
-                            <img 
-                                src={icon} 
-                                alt={title} 
-                                decoding="async"
-                                className={`${iconSize} group-hover:scale-110 transition-transform`} 
-                            />
-                        )}
-                    </div>
-                    <h3 className={`text-xl font-bold ${colors.titleColor}`}>{title}</h3>
-                    <p className="text-sm text-slate-500" dangerouslySetInnerHTML={{ __html: description }} />
+            <div className={`ehome-card reveal-card clean-card rounded-[2rem] p-5 sm:p-6 group fade-in-section h-full ${colors.gradient} shadow-soft hover:shadow-hover transition-all duration-300`}>
+                <div className={`w-14 h-14 rounded-2xl bg-white flex items-center justify-center mb-4 shadow-lg ${colors.shadow} border border-white ${iconType === 'emoji' ? 'text-3xl' : ''} transition-all duration-300 ease-out group-hover:scale-105 sm:group-hover:scale-110 ${iconType === 'emoji' ? 'group-hover:-translate-y-0.5 group-hover:bg-slate-50' : ''}`}>
+                    {iconType === 'emoji' ? (
+                        icon
+                    ) : (
+                        <img 
+                            src={icon} 
+                            alt={title} 
+                            decoding="async"
+                            className={`${iconSize} group-hover:scale-110 transition-transform`} 
+                        />
+                    )}
                 </div>
-                <div className={`card-cta mt-6 sm:mt-0 ${colors.ctaColor} text-xs font-bold 
+                <h3 className={`ehome-card-title ${colors.titleColor}`}>{title}</h3>
+                <p className="ehome-card-copy">
+                    {[].concat(description).map((line) => (
+                        <span key={line} className="ehome-card-line">{line}</span>
+                    ))}
+                </p>
+                {/* 오른쪽 아래, 설명 마지막 줄과 같은 줄 (카드가 좁으면 그 아래 줄) — styles/home.css .ehome-card-cta */}
+                <div className={`ehome-card-cta card-cta ${colors.ctaColor} text-xs font-bold 
                     opacity-100 translate-x-0 
                     sm:opacity-0 sm:translate-x-[-10px] 
                     sm:group-hover:opacity-100 sm:group-hover:translate-x-0 

@@ -1,27 +1,46 @@
 /**
  * @file PostDetail.jsx
- * @description 개별 게시글 상세 페이지.
+ * @description 개별 게시글 상세 페이지 (Apple Developer Documentation 스타일 레이아웃).
  *
  * URL 파라미터(`/:category/:postId`)로 게시글을 API에서 가져와 렌더링한다.
- * GlassDocLayout을 기반으로 하며, 좌측(TOC)·우측(SeriesNavigator) 사이드바를 지원한다.
+ * DocsShell을 기반으로 하며, 같은 카테고리의 게시글 목록(최신순)과 목차(TOC)를 왼쪽 내비게이터에 모은다.
  *
  * - `AbortController`로 라우트 전환 시 진행 중인 fetch를 취소한다.
  * - HTML 콘텐츠는 `sanitizeHtml`(DOMPurify)로 소독 후 `dangerouslySetInnerHTML`로 렌더링한다.
- * - 렌더링 후 `injectHeadingIds`로 heading id를 주입하여 좌측 TableOfContents와 연동한다.
- * - 게시글이 시리즈에 속하면 우측에 SeriesNavigator를, 하단 footer에 이전/다음 버튼을 표시한다.
+ * - heading id는 preparePostHtml에서 미리 주입되며, 같은 id로 내비게이터 목차와 스크롤 스파이를 만든다.
+ * - 현재 글은 카테고리 글 목록 안에서 펼쳐지고, 그 아래에 목차가 중첩된다 (Apple 문서의 현재 페이지 하위 항목처럼).
+ * - 본문 하단에 작성일 기준 이전(더 오래된)/다음(더 최근) 글 카드를 표시한다.
+ * - 화면에서만 나눈 카테고리(M365의 Word/PowerPoint/Forms/OneDrive, Copilot Studio의 GitHub/Azure)는
+ *   서버 카테고리로 조회하고, 글이 속한 화면 카테고리와 URL이 다르면 올바른 주소로 바꾼다
+ *   (예: /m365/forms-share → /forms/forms-share, /copilot-studio/github-pages → /github/github-pages).
+ * - 제목과 부제목은 화면용으로 다듬은 문구(constants/postText.js)를 쓴다.
+ * - 사이드바 제목(카테고리 이름) 앞에는 앱 아이콘을 둔다. 아이콘이 없는 카테고리·섹션은 글자만 보여 준다.
+ *   전체 게시글로 가는 길은 문서 바·브레드크럼·상단 '블로그' 메뉴가 맡아 사이드바에 뒤로 가기 링크를 두지 않는다.
  */
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import GlassDocLayout from '../components/layout/GlassDocLayout';
-import TableOfContents from '../components/posts/TableOfContents';
-import SeriesNavigator from '../components/posts/SeriesNavigator';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import DocsShell from '../components/elevate-docs/DocsShell';
+import DocsHero, { DocsArticleSkeleton } from '../components/elevate-docs/DocsHero';
+import DocsNavigator, { NavHeader, NavSkeleton } from '../components/elevate-docs/DocsNavigator';
+import DocsPrevNext from '../components/elevate-docs/DocsPrevNext';
+import { DocsLoadError } from '../components/elevate-docs/DocsList';
+import { scrollToElementSettled, useCategoryPosts, usePostOutline, useScrollSpy } from '../components/elevate-docs/docsHooks';
+import { getDocsMeta, getDocsSection, getTintStyle } from '../components/elevate-docs/docsMeta';
 import { getPost, getLatestAgenthonPost } from '../api/posts';
+import { useApiResource } from '../hooks/useApiResource';
 import { preparePostHtml, injectHeadingIds, injectLinkHandlers, injectCollapsibleCodeBlocks, optimizeEmbeddedMedia } from '../utils/html';
 import { formatDateKo } from '../utils/url';
-import { POST_DETAIL_VALID_CATEGORIES, CATEGORY_DISPLAY_NAMES, getCategoryListRoute } from '../constants/categories';
+import {
+    POST_DETAIL_VALID_CATEGORIES,
+    POST_LIST_CATEGORIES,
+    CATEGORY_DISPLAY_NAMES,
+    getApiCategory,
+    getCategoryListRoute,
+    getDisplayCategory,
+    toDisplayPost,
+} from '../constants/categories';
 import { DEFAULT_OG_IMAGE, SITE_NAME, canonicalUrl } from '../constants/seo';
-import { useSeriesNavigation } from '../hooks/useSeriesNavigation';
 import NotFound from './NotFound';
 
 const VALID_CATEGORIES = POST_DETAIL_VALID_CATEGORIES;
@@ -50,7 +69,7 @@ const PostContent = memo(function PostContent({ html, navigate }) {
     }, [html, navigate]);
 
     return (
-        <article>
+        <article className="edoc-article">
             <div
                 ref={contentRef}
                 className="prose prose-slate max-w-none post-content"
@@ -59,6 +78,22 @@ const PostContent = memo(function PostContent({ html, navigate }) {
         </article>
     );
 });
+
+function headingsToNavNodes(headings, onSelectHeading) {
+    return headings.map((heading) => ({
+        id: `toc:${heading.id}`,
+        label: heading.text,
+        kind: 'toc',
+        onSelect: () => onSelectHeading(heading.id),
+        children: heading.children.length ? headingsToNavNodes(heading.children, onSelectHeading) : undefined,
+    }));
+}
+
+const SECTION_ROOTS = {
+    update: { label: '최신 정보', to: '/update' },
+    program: { label: '프로그램 소식', to: '/program-news' },
+    agenthon: { label: '에이전톤', to: '/agenthon' },
+};
 
 /**
  * @param {object}  props
@@ -72,104 +107,102 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
     // categoryProp이 있으면 URL 파라미터보다 우선한다 (고정 URL 라우트용)
     const normalizedCategory = (categoryProp || categoryParam)?.toLowerCase();
 
-    // useLatest 모드일 때 getLatestAgenthonPost()로 최신 게시글을 직접 로드한다.
-    // 목록 API + 상세 API 2단계 호출이 이미 캡슐화되어 있으므로 중복 구현 없이 재사용한다.
-    const [resolvedPostId, setResolvedPostId] = useState(postIdParam ?? null);
-    const [loadingLatest, setLoadingLatest] = useState(useLatest);
-    const [post, setPost] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [notFound, setNotFound] = useState(false);
-
-    useEffect(() => {
-        // useLatest 모드는 현재 agenthon 카테고리에서만 지원한다.
-        // 다른 카테고리에서 useLatest=true로 재사용할 경우 잘못된 게시글을 로드하지 않도록 가드한다.
-        if (!useLatest || !normalizedCategory) return;
-        if (normalizedCategory !== 'agenthon') return;
-        let cancelled = false;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setLoadingLatest(true);
-        getLatestAgenthonPost()
-            .then((post) => {
-                if (cancelled) return;
-                if (post?.slug) {
-                    setResolvedPostId(post.slug);
-                } else {
-                    // 최신 게시글이 없으면 notFound 처리하여 무한 로딩 방지
-                    setResolvedPostId(null);
-                    setNotFound(true);
-                    setLoading(false);
-                }
-            })
-            .catch(() => {
-                if (cancelled) return;
-                setResolvedPostId(null);
-                setNotFound(true);
-                setLoading(false);
-            })
-            .finally(() => { if (!cancelled) setLoadingLatest(false); });
-        return () => { cancelled = true; };
-    }, [normalizedCategory, useLatest]);
-
-    // URL 파라미터가 변경될 때 resolvedPostId를 동기화한다 (일반 /:category/:postId 라우트용)
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        if (!useLatest) setResolvedPostId(postIdParam ?? null);
-    }, [postIdParam, useLatest]);
-
-    const postId = resolvedPostId;
+    const apiCategory = getApiCategory(normalizedCategory);
+    const isValidCategory = VALID_CATEGORIES.includes(normalizedCategory)
+        && (!useLatest || normalizedCategory === 'agenthon');
+    const loadPost = useCallback(async (signal) => {
+        const postData = useLatest
+            ? await getLatestAgenthonPost({ signal })
+            : await getPost(apiCategory, postIdParam, { signal });
+        return postData ? toDisplayPost(postData) : null;
+    }, [apiCategory, postIdParam, useLatest]);
+    const { data: post, loading, error, retry } = useApiResource(
+        isValidCategory && (useLatest || postIdParam) ? loadPost : null,
+    );
+    const postId = useLatest ? post?.slug : postIdParam;
+    const isReady = !loading && !error && Boolean(post);
     const preparedContentHtml = useMemo(
         () => preparePostHtml(post?.contentMarkdown || ''),
         [post?.contentMarkdown]
     );
 
-    useEffect(() => {
-        if (!normalizedCategory || !postId) return;
-        // AbortController: 라우트 전환 시 이전 fetch를 취소하여 응답이 뒤늦게 도착해도
-        // 현재 페이지의 상태를 덮어쓰지 않도록 한다.
-        const controller = new AbortController();
-        async function load() {
-            setLoading(true);
-            setNotFound(false);
-            try {
-                const postData = await getPost(normalizedCategory, postId, { signal: controller.signal });
-                setPost(postData);
-            } catch (err) {
-                if (err.name === 'AbortError') return;
-                if (err.status === 404) {
-                    setNotFound(true);
-                } else {
-                    console.error('PostDetail fetch error:', err);
-                    setNotFound(true);
-                }
-            } finally {
-                setLoading(false);
-            }
-        }
-        load();
-        return () => controller.abort();
-    }, [normalizedCategory, postId]);
+    // 글이 실제로 속한 화면 카테고리 (예: m365 서버 글 중 Forms 글 → forms)
+    const displayCategory = (post && getDisplayCategory(post)) || normalizedCategory;
 
-    const {
-        availableSeriesOptions,
-        selectedSeriesKey,
-        prevPost,
-        nextPost,
-        hasSeriesNavigator,
-        updateSeriesQuery,
-        buildPostHref,
-        backToListHref,
-    } = useSeriesNavigation(normalizedCategory, post);
+    // URL 카테고리가 글의 화면 카테고리와 다르면 올바른 주소로 교체한다.
+    useEffect(() => {
+        if (useLatest || !post || post.slug !== postIdParam) return;
+        if (displayCategory !== normalizedCategory && VALID_CATEGORIES.includes(displayCategory)) {
+            navigate(`/${displayCategory}/${post.slug}`, { replace: true });
+        }
+    }, [useLatest, post, postIdParam, displayCategory, normalizedCategory, navigate]);
+
+    // 같은 카테고리의 게시글 (최신순) — 사이드바와 이전/다음 글에 사용
+    // 이전 글 = 더 먼저 쓴 글(목록에서 아래), 다음 글 = 더 최근에 쓴 글(목록에서 위)
+    const { postsMap, errorsMap, ensure: ensureCategoryPosts } = useCategoryPosts();
+    useEffect(() => {
+        if (isReady && displayCategory) ensureCategoryPosts(displayCategory);
+    }, [isReady, displayCategory, ensureCategoryPosts]);
+    const categoryPostsLoaded = Boolean(postsMap[displayCategory]);
+    const categoryPosts = useMemo(() => postsMap[displayCategory] || [], [postsMap, displayCategory]);
+    const currentIndex = post ? categoryPosts.findIndex((item) => item.id === post.id) : -1;
+    const prevPost = currentIndex > -1 && currentIndex < categoryPosts.length - 1 ? categoryPosts[currentIndex + 1] : null;
+    const nextPost = currentIndex > 0 ? categoryPosts[currentIndex - 1] : null;
+    const backToListHref = getCategoryListRoute(displayCategory);
+    const buildPostHref = useCallback((item) => `/${item.category}/${item.slug}`, []);
+
+    const outline = usePostOutline(isReady ? preparedContentHtml : '');
+    const headingIds = useMemo(() => outline.headings.map((heading) => heading.id), [outline.headings]);
+    const [activeHeadingId, lockHeading] = useScrollSpy(headingIds);
+
+    const scrollToHeading = useCallback((id) => {
+        const element = document.getElementById(id);
+        if (!element) return;
+        lockHeading(id);
+        scrollToElementSettled(element);
+    }, [lockHeading]);
+
+    const scrollToTop = useCallback(() => {
+        lockHeading('');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [lockHeading]);
+
+    const navSections = useMemo(() => {
+        if (!post) return [];
+        const tocNodes = headingsToNavNodes(outline.tree, scrollToHeading);
+        const currentNode = {
+            id: `post:${post.id}`,
+            label: post.title,
+            emphasis: true,
+            defaultExpanded: true,
+            onSelect: scrollToTop,
+            children: tocNodes.length ? tocNodes : undefined,
+        };
+        const toNode = (item) => (
+            item.id === post.id ? currentNode : { id: `post:${item.id}`, label: item.title, to: buildPostHref(item) }
+        );
+        if (currentIndex > -1) {
+            return [{ id: 'posts', nodes: categoryPosts.map(toNode) }];
+        }
+        if (!categoryPostsLoaded || categoryPosts.length === 0) {
+            return [{ id: 'current', nodes: [currentNode] }];
+        }
+        return [
+            { id: 'current', heading: '이 글의 목차', nodes: [currentNode] },
+            { id: 'posts', heading: '이 카테고리의 다른 글', nodes: categoryPosts.map(toNode) },
+        ];
+    }, [post, outline.tree, scrollToHeading, scrollToTop, categoryPosts, categoryPostsLoaded, currentIndex, buildPostHref]);
 
     // 유효하지 않은 카테고리인 경우 404 페이지를 직접 렌더링 (<Navigate to="*">는 잘못된 상대 경로로 이동)
-    if (!VALID_CATEGORIES.includes(normalizedCategory)) {
+    if (!isValidCategory) {
         return <NotFound />;
     }
 
-    if (notFound) {
+    if (error?.status === 404 || (!loading && !error && !post)) {
         return <NotFound />;
     }
 
-    const categoryDisplayName = CATEGORY_DISPLAY_NAMES[normalizedCategory];
+    const categoryDisplayName = CATEGORY_DISPLAY_NAMES[displayCategory] || CATEGORY_DISPLAY_NAMES[normalizedCategory];
     // 로딩 중에는 URL의 postId를 임시 제목으로 사용한다.
     const postTitle = post?.title || postId;
     const pageTitle = `${postTitle ?? ''} | ${categoryDisplayName} | Microsoft Elevate`;
@@ -177,79 +210,64 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
     const pageUrl = canonicalUrl(useLatest ? '/agenthon' : `/${normalizedCategory}/${postId || ''}`);
     const ogImage = getStableOgImage(post?.thumbnail);
 
-    // GlassDocLayout에 전달할 breadcrumb 목록.
-    // 로딩이 완료되기 전에는 마지막 항목이 postId(슬러그)로 표시된다.
-    // getCategoryListRoute로 카테고리별 실제 목록 경로를 사용하여 존재하지 않는 링크를 방지한다.
-    const crumbs = [
-        { label: 'Home', to: '/' },
-        { type: 'sep' },
-        { label: categoryDisplayName, to: getCategoryListRoute(normalizedCategory) },
-        { type: 'sep' },
-        { label: postTitle },
-    ];
+    const docsMeta = getDocsMeta(displayCategory);
+    const section = getDocsSection(displayCategory);
+    const sectionRoot = SECTION_ROOTS[section];
 
-    // 게시글 로드 완료 시 좌측 TOC를 표시한다.
-    const leftAside = !loading && !loadingLatest && post
-        ? <TableOfContents contentMarkdown={preparedContentHtml} postTitle={post.title} sticky={false} />
-        : null;
+    const crumbs = sectionRoot
+        ? [{ label: sectionRoot.label, to: sectionRoot.to }]
+        : [
+            { label: 'Blog', to: '/all' },
+            ...(backToListHref !== '/' ? [{ label: categoryDisplayName, to: backToListHref }] : []),
+        ];
 
-    // 시리즈가 있을 때만 우측 SeriesNavigator를 표시한다.
-    const rightAside = !loading && !loadingLatest && post && hasSeriesNavigator
-        ? (
-            <SeriesNavigator
-                seriesOptions={availableSeriesOptions}
-                selectedSeries={selectedSeriesKey}
-                onSeriesChange={updateSeriesQuery}
-                category={normalizedCategory}
-                currentPostId={post.id}
-                buildPostHref={buildPostHref}
-                previousPost={prevPost}
-                nextPost={nextPost}
-                backToListHref={backToListHref}
-                sticky={false}
-            />
-        )
-        : null;
+    const heroMeta = post ? [
+        formatDateKo(post.publishedAt),
+        outline.minutes ? `약 ${outline.minutes}분 분량` : null,
+    ] : [];
 
-    // 시리즈가 있을 때 footer에 이전/다음/목록 버튼을 표시한다.
-    // 모바일에서 rightAside(SeriesNavigator)가 숨겨지므로 footer로 대체 내비게이션을 제공한다.
-    const footer = (prevPost || nextPost)
-        ? (
-            <div>
-                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                    시리즈 이동
-                </div>
-                <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center justify-center rounded-xl border border-white/60 bg-white/70 backdrop-blur px-2.5 py-2">
-                    {prevPost && (
-                        <Link
-                            to={buildPostHref(prevPost)}
-                            className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
-                        >
-                            이전 글
-                        </Link>
+    const searchBase = POST_LIST_CATEGORIES.includes(displayCategory) ? `/${displayCategory}` : '/all';
+    const search = {
+        placeholder: searchBase === '/all' ? '블로그 검색' : `${categoryDisplayName}에서 검색`,
+        onSubmit: (q) => {
+            if (q) navigate(`${searchBase}?q=${encodeURIComponent(q)}`);
+        },
+    };
+
+    const navigator = isReady ? (
+        <DocsNavigator
+            header={(
+                <>
+                    <NavHeader
+                        title={categoryDisplayName}
+                        titleTo={backToListHref !== '/' ? backToListHref : undefined}
+                        iconSrc={docsMeta.icon || undefined}
+                        subtitle={categoryPostsLoaded ? `게시글 ${categoryPosts.length}개 · 최신순` : undefined}
+                    />
+                    {errorsMap[displayCategory] && (
+                        <div className="edoc-nav__note" role="alert">
+                            <p>{errorsMap[displayCategory]}</p>
+                            <button type="button" className="edoc-textlink" onClick={() => ensureCategoryPosts(displayCategory)}>
+                                목록 다시 시도
+                            </button>
+                        </div>
                     )}
-                    <Link
-                        to={backToListHref}
-                        className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
-                    >
-                        목록으로
-                    </Link>
-                    {nextPost && (
-                        <Link
-                            to={buildPostHref(nextPost)}
-                            className="h-9 rounded-md border border-white/70 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-ms-blue/40 hover:text-ms-blue transition-colors text-center inline-flex items-center justify-center"
-                        >
-                            다음 글
-                        </Link>
-                    )}
-                </div>
-            </div>
-        )
-        : null;
+                </>
+            )}
+            sections={navSections}
+            activeId={activeHeadingId ? `toc:${activeHeadingId}` : `post:${post.id}`}
+            resetKey={post.id}
+        />
+    ) : loading ? <NavSkeleton /> : (
+        <DocsNavigator
+            sections={[]}
+            emptyLabel="게시글을 불러오지 못했습니다."
+        />
+    );
 
     return (
         <>
-            {/* Helmet은 GlassDocLayout 외부에 위치해도 React Portal로 <head>에 주입된다. */}
+            {/* Helmet은 DocsShell 외부에 위치해도 React Portal로 <head>에 주입된다. */}
             <Helmet>
                 <title>{pageTitle}</title>
                 <meta name="description" content={pageDescription} />
@@ -269,70 +287,62 @@ const PostDetail = ({ categoryProp, useLatest = false }) => {
                 <meta name="twitter:image" content={ogImage} />
             </Helmet>
 
-            <GlassDocLayout
-                crumbs={crumbs}
-                leftAside={leftAside}
-                rightAside={rightAside}
-                reserveLeftAside
-                reserveRightAside
-                footer={footer}
+            <DocsShell
+                section={section}
+                tintStyle={getTintStyle(displayCategory)}
+                navigator={navigator}
+                search={search}
+                fabLabel="목차"
             >
-                {(loading || loadingLatest) && (
-                    <div className="min-h-[520px] py-8 text-center text-slate-500">
-                        로딩 중...
+                {loading && <DocsArticleSkeleton />}
+                {!loading && error && (
+                    <div className="edoc-container edoc-section">
+                        <DocsLoadError message={error.message} onRetry={retry} />
                     </div>
                 )}
 
-                {!loading && !loadingLatest && post && (
+                {isReady && (
                     <>
-                        {/* Post Title */}
-                        <h1
-                            id="post-title"
-                            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gradient mb-4 tracking-tight leading-tight"
-                        >
-                            {post.title}
-                        </h1>
+                        <DocsHero
+                            compact
+                            category={displayCategory}
+                            titleId="post-title"
+                            crumbs={crumbs}
+                            eyebrow={categoryDisplayName}
+                            eyebrowIcon={docsMeta.icon}
+                            title={post.title}
+                            abstract={post.excerpt}
+                            meta={heroMeta}
+                        />
 
-                        {/* Meta */}
-                        <div className="mb-6 flex items-center gap-4 text-sm text-slate-500">
-                            <span className="inline-block px-4 py-2 bg-ms-blue/10 text-ms-blue rounded-full font-medium">
-                                {categoryDisplayName}
-                            </span>
-                            <span>{formatDateKo(post.publishedAt)}</span>
+                        <div className="edoc-container edoc-article-wrap">
+                            {/* 유튜브 임베드 카드 (frontmatter에 youtube 필드가 있을 때) */}
+                            {post.youtube && (
+                                <div className="edoc-video">
+                                    <iframe
+                                        src={`https://www.youtube.com/embed/${post.youtube}`}
+                                        title="YouTube video player"
+                                        frameBorder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                </div>
+                            )}
+
+                            <PostContent html={preparedContentHtml} navigate={navigate} />
+
+                            <DocsPrevNext
+                                prev={prevPost}
+                                next={nextPost}
+                                buildHref={buildPostHref}
+                                // /agenthon은 목록이 아니라 최신 글 화면이라, 에이전톤 글은 전체 게시글로 돌려보낸다.
+                                backTo={displayCategory === 'agenthon' ? '/all' : backToListHref}
+                                backLabel={displayCategory === 'agenthon' ? '전체 게시글' : `${categoryDisplayName} 목록으로`}
+                            />
                         </div>
-
-                        {/* Tags */}
-                        {Array.isArray(post.tags) && post.tags.length > 0 && (
-                            <div className="mb-8 flex flex-wrap gap-2 text-sm">
-                                {post.tags.map((tag) => (
-                                    <span
-                                        key={tag}
-                                        className="px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-600"
-                                    >
-                                        {tag}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* 유튜브 임베드 카드 (frontmatter에 youtube 필드가 있을 때) */}
-                        {post.youtube && (
-                            <div className="mb-8 rounded-2xl overflow-hidden aspect-video bg-black flex items-center justify-center shadow-lg">
-                                <iframe
-                                    src={`https://www.youtube.com/embed/${post.youtube}`}
-                                    title="YouTube video player"
-                                    frameBorder="0"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                    className="w-full h-full"
-                                />
-                            </div>
-                        )}
-
-                        <PostContent html={preparedContentHtml} navigate={navigate} />
                     </>
                 )}
-            </GlassDocLayout>
+            </DocsShell>
         </>
     );
 };

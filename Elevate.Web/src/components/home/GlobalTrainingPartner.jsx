@@ -14,16 +14,16 @@ const GlobalTrainingPartner = () => {
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-indigo-100 via-violet-50 to-transparent rounded-full translate-x-1/4 -translate-y-1/4 z-0"></div>
                 <div className="relative z-10 flex flex-col lg:flex-row items-center gap-8">
                     <div className="lg:w-8/12 relative z-10">
-                        <span className="inline-block py-1 px-3 rounded-md bg-indigo-50 text-indigo-800 font-bold text-xs uppercase mb-4 tracking-wider border border-indigo-100">
+                        <span className="ehome-label inline-block py-1 px-3 rounded-md bg-indigo-50 text-indigo-800 text-xs uppercase mb-4 border border-indigo-100">
                             Partner Program
                         </span>
-                        <h2 className="text-4xl lg:text-5xl font-bold mb-6 text-slate-900">
+                        <h2 className="ehome-title text-4xl lg:text-5xl mb-6">
                             마이크로소프트 <br className="md:hidden" />공인 교육 파트너<br/>
-                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-violet-900">
+                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-violet-900 font-bold">
                                 Global Training Partner
                             </span>
                         </h2>
-                        <p className="text-slate-600 text-base mb-10 leading-relaxed font-medium">
+                        <p className="ehome-copy text-base mb-10">
                             Global Training Partner는 <span className="text-violet-800 font-bold">Microsoft 교육 프로그램을 공식적으로 운영</span>할 수 있는 파트너 제도입니다.
                             <br className="hidden md:block" />
                             Microsoft AI Skilling 기반 연수 프로그램을 운영하며 함께 성장할 EduTech 기업을 기다립니다.
