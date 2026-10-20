@@ -2,7 +2,10 @@
 
 Elevate 블로그(microsoft-elevate.com) 게시글 카드 썸네일을 **"UI 미니어처"** 스타일로 만든다.
 각 썸네일은 게시글이 다루는 기능 화면을 **크고 단순하게 다시 그린 제품 샷**이다.
-품질 기준은 이미 공개된 80개 카드다. 작업 전에 `node render.mjs review <앱>`으로 같은 앱 카드를 먼저 본다.
+새 카드는 **v3 플루이드** 스킨으로 그린다(아래 'v3 플루이드'). Microsoft 365 아이콘 리프레시("Fluid forms, vibrant colors")처럼
+부드럽게 접히는 3D 형태, 인접색이 선명하게 이어지는 그라데이션, 새 스타일 앱 아이콘 타일로 같은 제품 샷을 더 밝고 경쾌하게 보여 준다.
+먼저 공개된 80개 카드(v2 소프트 글래스)는 그대로 두며, 그 장면들은 글 내용을 구체적으로 보여 주는 밀도·말투의 기준이다.
+작업 전에 `node render.mjs review <앱>`으로 같은 앱 카드를 먼저 본다(지금 키트로 그리므로 v3 스킨으로 보인다. 구성은 v3 규칙을 따른다).
 새 글의 장면은 GitHub Actions 'Post thumbnails'에서 AI가 이 가이드와 `TASK.md`를 따라 만든다 (README.md).
 
 ## 폴더
@@ -17,8 +20,9 @@ tools/post-thumbs/
   data/posts.json          공개 글 목록 (key, title, excerpt …). `node data.mjs`로 만든다 (저장소에 넣지 않음)
   work/<cat>__<slug>/post.md  AI가 읽는 글 본문 전체 (`node prepare.mjs`, 저장소에 넣지 않음)
   node_modules/@fluentui/svg-icons/icons/  Fluent System Icons (20,000+ SVG, `npm ci`). 페이지에서는 icons/<이름>.svg
-  app/                     카테고리 앱 아이콘
-  assets/glass/<cat>/      유리 오브젝트 (640px WebP), assets/mascots/ GitHub 마스코트
+  app/                     카테고리 앱 아이콘 (새 스타일, 글자판)
+  assets/fluid/<cat>/      v3 유동 형태 (fold, ribbon, sphere, bubbles WebP). `python3 make_fluid.py`로 만든다. palette.json = 앱별 색 램프
+  assets/glass/<cat>/      v2 유리 오브젝트 (640px WebP), assets/mascots/ GitHub 마스코트
   review/                  렌더 결과 (저장소에 넣지 않음)
 ```
 
@@ -26,12 +30,13 @@ tools/post-thumbs/
 
 ```
 node render.mjs review <cat>        # review/<cat>.png : 실제 카드 크기(≈342px) 2배 해상도
-node render.mjs zoom <cat>/<slug>   # review/zoom_<cat>__<slug>.png : 960px 확대본
+node render.mjs zoom <cat>/<slug>   # review/zoom_<cat>__<slug>.png : 960px 확대본, review/card_<cat>__<slug>.png : 실제 카드 480px
 node render.mjs export <cat>/<slug> # Elevate.Web/src/assets/post-thumbs/<cat>/<slug>-960.webp, -480.webp
+node render.mjs … --skin v2         # 처음 80개 카드의 v2 스킨으로 그린다 (기본은 v3)
 ```
 - 글꼴은 macOS 시스템 글꼴(SF Pro, Apple SD Gothic Neo)이다. 기존 카드와 같게 그리려면 macOS에서 렌더한다(Actions도 macOS 러너).
 - 렌더 후 **반드시 view 도구로 이미지를 열어** 실제 카드 크기에서 확인한다.
-- 출력되는 `! audit:` 경고(잘린 글자, 무대 밖 pill, 없는 아이콘)는 모두 해결한다. 다른 카테고리의 "no scene yet"은 무시.
+- 출력되는 `! audit:` 경고(잘린 글자, 무대 밖 pill, 없는 아이콘, AI 장면의 v3 규칙)는 모두 해결한다. 다른 카테고리의 "no scene yet"은 무시.
 
 ## 장면 등록
 
@@ -75,6 +80,9 @@ node render.mjs export <cat>/<slug> # Elevate.Web/src/assets/post-thumbs/<cat>/<
 | `K.cursor({x,y})` | 마우스 포인터 (끝점 x,y) |
 | `K.mascot(name,{x,y,right,bottom,w,z,rotate,flip})` | GitHub 마스코트 머리 (`assets/mascots/`: `mona-*`, `copilot-*`, `ducky-*`). `flip:true` 좌우 반전. 창 뒤에서 내다보게 하려면 창에 `z:2`, 마스코트에 `z:1` |
 | `K.pos({...})` | 위치 style 문자열 |
+| `K.tile({x,y,right,bottom,s,app,plinth,rotate,z})` | **v3 앱 타일**: 새 스타일 앱 아이콘(글자판)을 얹은 유리 타일. 장면당 1개, 주 화면 모서리에 걸쳐 띄운다(`s` 기본 10). `plinth:true`면 흰 받침대 위에 선다 |
+| `K.float({x,y,right,bottom,s,icon,app,text,square,far,z})` | **v3 떠 있는 조각**: 작은 유리 원(또는 `square`)에 Fluent 아이콘·앱 아이콘(`app:true`/`'teams'`)·짧은 숫자(`text`)를 앱 그라데이션으로. 0–2개 |
+| `K.form(shape,{x,y,right,bottom,w,rotate,flip,far,z})` | **v3 유동 형태** 직접 놓기: `fold`(접힌 시트) `ribbon`(리본) `sphere`(구) `bubbles`(방울). 보통은 장면 옵션 `deco`로 충분 |
 
 kit.css 클래스: `.row .col .grow .pad .sep .soft .hl(강조 테두리) .t-num .t-h .t-h2 .t-b .t-m .t-s .t-xs .t-tint .nowrap`,
 `.toggle(.on) .check(.on) .radio(.on) .progress>i(--p)`, `.code`(토큰 `.ln .k .s .f .c .n .t .a`), `.term`(`.p .m .y .b`),
@@ -84,20 +92,33 @@ kit.css 클래스: `.row .col .grow .pad .sep .soft .hl(강조 테두리) .t-num
 ## 디자인 규칙 (꼭 지킬 것)
 
 1. **한 장면 = 한 가지 메시지.** 글의 핵심 기능 화면 하나를 크게. 그 기능의 "결과/핵심 요소"(점수, 강조된 행, 생성된 결과, 설정 스위치 등)가 초점이 되게 한다.
-2. **구성**: 주 창(또는 휴대폰·슬라이드·문서) 1개가 무대 너비의 70–85%를 차지하고, 보통 아래나 오른쪽 가장자리로 살짝 잘려 나가 깊이를 준다. 보조 요소는 최대 1–2개(떠 있는 카드·팝오버·메뉴). **pill은 장면당 정확히 1개** (짧게, 한국어 12자 안팎, 글의 효용).
+2. **구성 (v3)**: 주 화면(창·휴대폰·슬라이드·문서) 1개가 무대 너비의 **58–72%**를 차지하고, 보통 아래나 한쪽 가장자리로 살짝 잘려 깊이를 준다.
+   반대쪽(약 1/3)은 비워 큰 유동 형태가 보이게 하고, 보조 요소(떠 있는 카드·팝오버·메뉴) 최대 1–2개는 그 형태 위에 걸치게 둔다.
+   **pill은 장면당 정확히 1개** (짧게, 한국어 12자 안팎, 글의 효용).
 3. **같은 카테고리 안에서 구성을 반복하지 않는다.** 창 위치(왼쪽/오른쪽/가운데), 휴대폰, 카드 여러 장+연결선, 대화 상자, 어두운 창 등을 섞는다. pill 위치도 다양하게(오른쪽 위가 기본, 왼쪽 아래 등).
-4. **글자**: 핵심 라벨 ≥ 2.4cqw, 보조 ≥ 1.85cqw, 큰 숫자 6–7cqw. 한 장면의 글자 덩어리는 12–15개 이하. 나머지는 `K.skel` 막대로. 말줄임·잘린 글자 금지 (audit 경고 0).
+4. **글자 (480px 카드 기준)**: 핵심 라벨 ≥ 2.6cqw, 보조 ≥ 2.0cqw, 어떤 글자도 1.8cqw 미만 금지(아바타 이니셜·차트 눈금 포함). 큰 숫자 6–8cqw.
+   한 장면의 글자 덩어리는 **12개 안팎**(16개를 넘으면 audit 경고). 나머지는 `K.skel` 막대로. 말줄임·잘린 글자 금지 (audit 경고 0).
+   480px로 줄인 `review/card_<id>.png`에서 핵심 글자 2–3개가 바로 읽혀야 한다.
 5. **내용은 글 본문(post.md)에 근거**: 실제 제품(한국어 UI)의 메뉴·버튼 이름을 쓴다 (예: Teams "게시물/파일/과제/성적", Forms "새 양식/새 퀴즈/응답", Excel "홈/삽입/데이터"). 예시 데이터는 학교 맥락(학년·반·수행평가·현장체험학습·학부모 상담 등). 실존 인물 이름·사진·외부 로고 이미지 금지 (아바타는 성 한 글자나 "1반" 같은 이니셜).
-6. **색**: 강조는 카테고리 색 `rgb(var(--tint))` 하나. 의미 색(초록 완료, 주황 주의, 빨강 오류, 분홍)은 점·칩 정도로만. 배경은 kit의 무대 배경을 그대로 쓴다 (덮지 말 것).
+6. **색 (v3)**: 강조는 앱 색 `rgb(var(--tint))`과 인접색 그라데이션 `var(--grad)`(앱 색 → 밝은 인접색). 무대와 유동 형태의 색 램프는 `--f1`(밝은)–`--f4`(깊은)이다.
+   의미 색(초록 완료, 주황 주의, 빨강 오류, 분홍)은 점·칩 정도로만. 배경은 kit의 무대 배경을 그대로 쓴다 (덮지 말 것). 주 화면은 유리라 뒤의 색이 은은하게 비친다.
 7. **다듬기**: 창 안 여백 2.6–3.4cqw, 요소 간격 일정하게, 정렬 맞춤. 창이 무대 밖으로 나갈 땐 의도적으로 한쪽만. 장식용 아이콘 남발 금지.
 8. 외부 이미지·폰트·네트워크 사용 금지 (icons/, app/ 만).
+9. **앱 타일 (v3)**: `K.tile()`을 **정확히 1개**. 크기 9–12cqw로 주 화면의 위쪽 모서리(왼쪽 위가 기본)에 반쯤 걸쳐 띄운다.
+   새 스타일 앱 아이콘(글자판)이 앱 정체성을 맡으므로, 타일이 걸친 창은 제목 표시줄 아이콘을 끄고(`icon: false`) 그만큼 왼쪽 여백을 둔다.
+   가운데 정렬 구성(개념·소개 글)이면 `plinth: true`로 받침대 위에 세워도 된다. 다른 앱이 주인공이면 `app: 'teams'`처럼 바꾼다.
+10. **유동 형태 (v3)**: 무대 뒤의 큰 형태 1개와 작은 형태 1개는 kit이 자동으로 깐다. 장면 옵션 `deco: { big, v }`로 글에 맞는 형태와 자리를 고른다.
+    `fold`(접힌 시트: 문서·페이지·쓰기), `ribbon`(리본: 흐름·연결·자동화·AI), `sphere`(구: 결과·데이터·초점), `bubbles`(방울: 사람·소통·협업).
+    `v`는 큰 형태 기준 0 오른쪽 아래, 1 왼쪽 아래, 2 오른쪽 위, 3 왼쪽 위. 비워 둔 쪽에 오게 고르고, 핵심 글자 바로 뒤에는 두지 않는다.
+11. **놀이 요소 (v3)**: `K.float()` 0–2개(최대 3)를 주 화면 가장자리 바깥에 띄워 글과 관련된 작은 조각을 보여 준다(완료 체크, 반짝임, 알림 수, 다른 앱 아이콘 등).
+    핵심 글자를 가리지 않는다. 하나쯤은 `far: true`로 흐리게 해 깊이를 줘도 된다. 장식용 아이콘 남발 금지.
 
 ## 작업 순서
 
 1. `node render.mjs review <앱>`으로 같은 앱의 기존 카드와 참고 장면 3개를 본다.
-2. 글 본문 전체(`work/<cat>__<slug>/post.md`)를 읽고, 글마다 "무엇을 보여 줄지"(초점 요소 + pill 문구)를 정한다.
-3. 장면을 작성하고 `review`로 렌더해 확인 → 다듬기를 반복. 필요하면 `zoom`으로 세부 확인.
-4. 모든 장면이 시안 수준(정돈·가독·관련성)이 될 때까지 고친다.
+2. 글 본문 전체(`work/<cat>__<slug>/post.md`)를 읽고, 글마다 "무엇을 보여 줄지"(초점 요소 + pill 문구)와 어울리는 유동 형태(`deco`)를 정한다.
+3. 장면을 작성하고 `zoom`으로 렌더해 960px(`zoom_`)과 480px 카드(`card_`)를 모두 본다 → 다듬기를 반복. `review`로 같은 앱 카드들 사이에서도 본다.
+4. 모든 장면이 시안 수준(정돈·가독·관련성·v3 느낌)이 될 때까지 고친다.
 
 ## 테마·마스코트 (2026-10-19 추가)
 
@@ -106,7 +127,72 @@ kit.css 클래스: `.row .col .grow .pad .sep .soft .hl(강조 테두리) .t-num
 - **마스코트**: GitHub 장면은 Mona·Copilot·Ducky를 장면마다 1–2마리만 넣는다. 창 가장자리에서 내다보거나 카드 위에 앉히고, 핵심 글자는 가리지 않는다.
 - 한 카테고리만 다시 내보내기: `node render.mjs export --cat copilot-studio,github`
 
-## v2 소프트 글래스 스킨 (2026-10-20)
+## v3 플루이드 (2026-10-21, 새 카드 기준)
+
+사용자 요청: "앞으로 만들어지는 디자인들에서 이런 느낌이 나오면 좋을 것 같은데" + Microsoft Design, [Fluid forms, vibrant colors](https://microsoft.design/articles/fluid-forms-vibrant-colors/) (2025).
+지금 카드의 장점(글 내용을 구체적으로 보여 주는 UI 미니어처)은 그대로 두고, 그 주변 세계를 글의 느낌으로 진화시켰다.
+
+| 글의 핵심 | kit 반영 |
+| --- | --- |
+| 유동적인 형태: 날카로운 모서리·딱딱한 덩어리 대신 부드러운 접힘과 곡선 | 무대 뒤 3D 형태를 접힌 시트·리본·구·방울로 (`assets/fluid`, `make_fluid.py`, 유리 오브젝트와 같은 numpy 레이마칭) |
+| 풍부하고 선명한 색: 인접색이 과감하게 이어지는 그라데이션, Copilot은 여러 색 | 앱별 색 램프 `--f1..--f4`(palette.json)로 무대·형태를 칠하고, 강조 채움 `--grad`도 인접색으로 잇는다. Copilot·M365는 Copilot 여러 색 |
+| 단순함: 작은 크기에서도 읽힘 | 주 화면을 조금 줄이고 글자를 키웠다(규칙 2·4). AI 장면은 480px 카드 기준 audit를 받는다 |
+| 입체감과 놀이성: 부드러운 3D, 빛과 그림자, 떠 있는 아이콘·미니 차트, 받침대·성좌 | 유동 형태의 스튜디오 조명, `K.float`, `K.tile({ plinth: true })` |
+| 앱 정체성: 새 스타일 앱 아이콘(글자판) 유지 | `K.tile`: 앱 아이콘을 유리 타일에 얹어 주 화면 모서리에 띄운다. 공개 사이트의 썸네일 없는 카드(앱 아이콘 + 선명한 유동 그라데이션)와 같은 언어 |
+
+- **스킨**: kit.js가 모든 무대에 `.fluid`를 붙인다. `--skin v2`(render.html?skin=v2)는 처음 80개 카드의 v2 스킨으로 그리며, 원래 키트와 바이트까지 같다.
+  처음 80개 카드 이미지는 v2 그대로 둔다. 기존 장면의 `deco`는 그대로 쓰이고 유리 모양 이름은 가까운 유동 형태로 바뀐다(orb·pebble→sphere, blob→bubbles, torus→fold, capsule→ribbon).
+- **AI 장면 audit (scenes/auto만)**: 1.8cqw 미만 글자, 글자 덩어리 16개 초과, pill ≠ 1, 앱 타일 ≠ 1, `K.float` 3개 초과, 무대 밖 타일. 사람이 쓴 80개 장면에는 적용하지 않는다.
+- **다크(Copilot Studio)**: 무대는 다크 그대로, 유동 형태·타일·조각도 같은 규칙이다. 장면 색은 `&.dark { … }`로 따로 준다(밝은 칠 위 흰 글자 금지).
+- **kit 클래스**: v3 클래스는 `k-` 접두사(`.k-tile .k-tilebox .k-plinth .k-float`)다. 장면 CSS의 클래스 이름과 겹치지 않는다.
+- **유동 형태 다시 만들기**: `python3 make_fluid.py [앱…] [--shapes fold,ribbon] [--sheet]` (numpy, Pillow). 형태는 한 번만 추적해 `.cache/fluid`에 두고 앱마다 색만 칠한다.
+
+예시 (word/wordonline3를 v3 규칙으로 다시 그린 것, audit 경고 0):
+
+```js
+(() => {
+  scene('word/wordonline3', (K) => {
+    const msg = (av, c, who, text) => `<div class="cm">${K.avatar(av, { s: 4.4, c })}<div class="ct"><b>${who}</b><p>${text}</p></div></div>`;
+    return K.win({
+      x: 7, y: 9.5, w: 62, h: 50, title: '수행평가 안내', icon: false,
+      barRight: `<span class="tb on">${K.ico('comment', { s: 2.8 })}메모</span>${K.btn('공유', { primary: true, icon: 'share' })}`,
+      body: `<div class="cv"><div class="page pg">
+        ${K.skel('46%', { h: 2.6, tint: true })}
+        ${K.skel('92%')}${K.skel('80%')}
+        <p class="mk">제출 기한: 10월 23일</p>
+        ${K.skel('90%')}${K.skel('70%')}
+      </div></div>`,
+    })
+      + K.card({
+        x: 50, y: 20, w: 42, cls: 'th',
+        body: `${msg('김', 'rgb(var(--tint))', '김 선생님', '기한을 하루 늦출까요?')}
+          ${msg('이', '#7b61c9', '이 선생님', '좋아요, 반영할게요!')}`,
+      })
+      + K.tile({ x: 2.4, y: 3.4, s: 11 })
+      + K.float({ right: 6, y: 6.5, icon: 'comment_checkmark' })
+      + K.pill({ right: 4, bottom: 4.4, icon: 'comment', text: '메모로 함께 다듬기' });
+  }, {
+    deco: { big: 'fold', small: 'sphere', v: 0 },
+    css: `
+      .tb { display: inline-flex; align-items: center; gap: .7cqw; height: 4.6cqw; padding: 0 1.3cqw; border-radius: 1.2cqw; font-size: 2.4cqw; font-weight: 650; }
+      .tb.on { background: color-mix(in srgb, rgb(var(--tint)) 10%, #fff); color: rgb(var(--tint)); }
+      .win__bar { padding-left: 12cqw; }
+      .win__bar .btn { padding: 1cqw 1.9cqw; font-size: 2.3cqw; }
+      .cv { height: 100%; padding: 3cqw 0 0 5cqw; background: rgba(243, 243, 246, .7); }
+      .pg { width: 40cqw; height: 100%; display: flex; flex-direction: column; gap: 1.9cqw; padding: 4.4cqw 4.4cqw 0; border-radius: 1cqw 1cqw 0 0; }
+      .pg .skel:first-child { margin-bottom: 1cqw; }
+      .mk { align-self: flex-start; padding: .4cqw .8cqw; border-radius: .4cqw; background: color-mix(in srgb, rgb(var(--tint)) 16%, #fff); box-shadow: inset 0 -.35cqw 0 rgb(var(--tint)); font-size: 2.8cqw; font-weight: 750; white-space: nowrap; }
+      .th { z-index: 3; padding: 2.6cqw; display: flex; flex-direction: column; gap: 2.2cqw; }
+      .cm { display: flex; gap: 1.5cqw; align-items: center; }
+      .ct { display: flex; flex-direction: column; gap: .4cqw; }
+      .ct b { font-size: 2.1cqw; font-weight: 700; color: var(--ink-3); }
+      .ct p { font-size: 2.65cqw; font-weight: 650; color: var(--ink); white-space: nowrap; }
+    `,
+  });
+})();
+```
+
+## v2 소프트 글래스 스킨 (2026-10-20, 처음 80개 카드)
 
 사용자 레퍼런스(이리데센트 유리 오브젝트, 흐린 그라데이션 카드, 글래스모피즘 패널, 검정 원형 버튼)에 맞춘 스킨. 장면 내용·배치는 v1 그대로이고 스킨만 바뀌었다.
 
