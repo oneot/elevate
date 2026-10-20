@@ -5,7 +5,9 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../src/App.jsx'
 import { getPost, listAllPosts } from '../src/services/postsApi.js'
+import { getPublishedSeriesOrder } from '../src/services/publicSeriesApi.js'
 import { BASE_CATEGORIES } from '../src/constants/apps.js'
+import { POST_TEXT_OVERRIDES } from '../../Elevate.Web/src/constants/postText.js'
 import { _test as cardImages } from '../src/hooks/useCardImage.js'
 import { CARD_IMAGE_SIZES } from '../src/utils/postImages.js'
 import { getPostThumbImageProps } from '../../Elevate.Web/src/utils/postThumbs.js'
@@ -27,6 +29,7 @@ vi.mock('../src/services/postsApi.js', () => ({
   createPost: vi.fn(), deletePost: vi.fn(), getPost: vi.fn(), listAllPosts: vi.fn(),
   listPosts: vi.fn(), updatePost: vi.fn(),
 }))
+vi.mock('../src/services/publicSeriesApi.js', () => ({ getPublishedSeriesOrder: vi.fn() }))
 
 function post(id, category, extra = {}) {
   return {
@@ -75,6 +78,7 @@ beforeEach(() => {
   auth.login = vi.fn(() => Promise.resolve())
   auth.logout = vi.fn(() => Promise.resolve())
   listAllPosts.mockImplementation(({ category }) => Promise.resolve(POSTS[category] || []))
+  getPublishedSeriesOrder.mockResolvedValue(new Map())
   getPost.mockReset()
   cardImages.reset()
   host = document.createElement('div')
@@ -140,6 +144,7 @@ describe('app post lists', () => {
     expect(host.textContent).not.toContain('공개 사이트에서 보기')
     expect(host.querySelector('.ea-hero__eyebrow')).toBeNull()
     expect(host.querySelector('.ea-hero__meta').textContent).toContain('게시 1 · 보관 0')
+    expect(host.querySelector('.ea-hero__meta').textContent).toContain('최근 게시순')
   })
 
   it('shows the public site and Admin as white glass pills in the header', async () => {
@@ -173,6 +178,72 @@ describe('app post lists', () => {
     expect(cardTitles()).toHaveLength(8)
     expect(host.querySelector('[role="alert"]').textContent).toContain('Teams 게시글을 불러오지 못했습니다.')
     expect(console.error).toHaveBeenCalledWith(expect.stringContaining('teams'), expect.any(Error))
+  })
+})
+
+describe('public-site titles and order', () => {
+  const tidied = POST_TEXT_OVERRIDES.find(({ title }) => title[0] === 'AI Creative Agent Team 제작하기')
+  const listOnly = (posts) => listAllPosts.mockImplementation(({ category }) => Promise.resolve(posts[category] || []))
+  const cardExcerpts = () => [...host.querySelectorAll('.ea-card__excerpt')].map((node) => node.textContent)
+
+  it('shows the titles and excerpts the public site shows and still finds posts by their stored text', async () => {
+    listOnly({
+      'copilot-studio': [post('copilotstudio', 'copilot-studio', { title: tidied.title[0], excerpt: tidied.excerpt[0] })],
+      teams: POSTS.teams,
+    })
+    await render('/apps/copilot-studio')
+    expect(cardTitles()).toEqual([tidied.title[1]])
+    expect(cardExcerpts()).toEqual([tidied.excerpt[1]])
+    await render('/apps/all?q=%EC%A0%9C%EC%9E%91%ED%95%98%EA%B8%B0')
+    expect(cardTitles()).toEqual([tidied.title[1]])
+  })
+
+  // 공개 블로그는 게시일 최신순이고, 같은 시각에 올린 시리즈 글은 시리즈 순서가 큰 글이 먼저다.
+  const SAME_TIME = '2026-03-09T00:00:00.000Z'
+  const ordered = {
+    m365: [
+      post('signup', 'm365', { title: 'M365 계정', publishedAt: '2026-02-02T00:00:00.000Z', updatedAt: '2026-10-19T00:00:00Z' }),
+      post('wordonline1', 'm365', { title: '가 Word 1', tags: ['word'], publishedAt: SAME_TIME }),
+      post('wordonline2', 'm365', { title: '나 Word 2', tags: ['word'], publishedAt: SAME_TIME }),
+      post('word-draft', 'm365', { title: '새 Word 글', tags: ['word'], status: 'draft', publishedAt: null, updatedAt: '2026-10-01T00:00:00Z' }),
+    ],
+    teams: [post('teams-class', 'teams', { title: 'Teams 수업', publishedAt: '2026-10-12T04:29:02.469Z', updatedAt: '2026-01-01T00:00:00Z' })],
+  }
+
+  it('orders posts by publish time like the public blog, using the public series order for posts published together', async () => {
+    listOnly(ordered)
+    getPublishedSeriesOrder.mockResolvedValue(new Map([['wordonline1', 2], ['wordonline2', 1]]))
+    await render('/apps/all')
+    expect(cardTitles()).toEqual(['Teams 수업', '새 Word 글', '가 Word 1', '나 Word 2', 'M365 계정'])
+    expect(host.querySelector('.ea-hero__meta').textContent).toContain('최근 게시순')
+    // 카드에는 계속 마지막 수정 시각을 보여 준다.
+    expect(host.querySelector('.ea-card__meta').textContent).toContain('수정')
+    expect(getPublishedSeriesOrder).toHaveBeenCalledTimes(1)
+    expect(listAllPosts).toHaveBeenCalledTimes(BASE_CATEGORIES.length)
+  })
+
+  it('still lists posts by publish time when the public series order cannot be loaded', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    listOnly(ordered)
+    getPublishedSeriesOrder.mockRejectedValue(new Error('public API unavailable'))
+    await render('/apps/all')
+    // 같은 게시 시각 안에서는 공개 사이트의 마지막 기준(서버 제목 역순)으로 정렬한다.
+    expect(cardTitles()).toEqual(['Teams 수업', '새 Word 글', '나 Word 2', '가 Word 1', 'M365 계정'])
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('시리즈 순서'), expect.any(Error))
+  })
+
+  it('does not wait more than a few seconds for the public series order', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+      listOnly(ordered)
+      getPublishedSeriesOrder.mockReturnValue(new Promise(() => {}))
+      await render('/apps/all')
+      expect(cardTitles()).toEqual([])
+      await act(() => vi.advanceTimersByTimeAsync(4000))
+      expect(cardTitles()).toEqual(['Teams 수업', '새 Word 글', '나 Word 2', '가 Word 1', 'M365 계정'])
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
 

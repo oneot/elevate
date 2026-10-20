@@ -9,6 +9,10 @@ function pngSize(path) {
   return [png.readUInt32BE(16), png.readUInt32BE(20)]
 }
 
+it('names the browser tab after the admin site', () => {
+  expect(html).toMatch(/<title>Admin \| Microsoft Elevate<\/title>/)
+})
+
 it('links browser icons that ship with the build (public/)', () => {
   const hrefs = [...html.matchAll(/<link rel="(?:icon|apple-touch-icon)"[^>]*href="([^"]+)"/g)].map(([, href]) => href)
   expect(hrefs).toEqual(['/favicon.ico', '/favicon-192.png', '/apple-touch-icon.png'])
