@@ -4,8 +4,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, it } from 'node:test'
 import sharp from 'sharp'
-import { contentHash, htmlToOutline, parseKey, thumbPaths, toPublicPost } from '../lib/posts.mjs'
-import { checkExcerpt, checkScene, checkWebps, classifyPost, failureTitle, keyFromFailureTitle, mergeDecision, pickChecksRun, pickExcerptExamples, planPosts, publishedPrProblem, unexpectedChanges, webpSize } from '../lib/pipeline.mjs'
+import { contentHash, hashWithExcerpt, htmlToOutline, parseKey, thumbPaths, toPublicPost } from '../lib/posts.mjs'
+import { checkExcerpt, checkScene, checkWebps, classifyPost, failureTitle, hashCacheHit, keyFromFailureTitle, mergeDecision, pickChecksRun, pickExcerptExamples, planPosts, publishedPrProblem, unexpectedChanges, webpSize } from '../lib/pipeline.mjs'
+import { POST_TEXT_OVERRIDES } from '../../../Elevate.Web/src/constants/postText.js'
 import { getActionsIdToken, writeExcerpt } from '../lib/excerpt.mjs'
 import { checkExcerptFiles, listAutoScenes, writeWebps } from '../render.mjs'
 
@@ -94,6 +95,18 @@ describe('content fingerprint', () => {
     const code = (last) => `<pre><code>${Array.from({ length: 30 }, (_, i) => `line ${i}`).join('\n')}\n${last}</code></pre>`
     assert.notEqual(contentHash({ ...base, html: code('end A') }), contentHash({ ...base, html: code('end B') }))
   })
+
+  it('hashes an AI excerpt the way plan will read it back from the public API once it is written', () => {
+    const raw = { id: 'p1', category: 'teams', slug: 'class-team', title: '수업용 팀 만들기', excerpt: '', tags: [], publishedAt: '2026-10-21T00:00:00Z', updatedAt: 't1' }
+    const [original, tidied] = POST_TEXT_OVERRIDES.find((entry) => entry.excerpt).excerpt
+    for (const excerpt of ['수업용 팀을 만들고 학생을 초대해 첫 수업을 준비합니다.', original]) {
+      const shown = toPublicPost({ ...raw, excerpt })
+      assert.equal(hashWithExcerpt({ title: shown.title, html: base.html }, excerpt), contentHash({ ...shown, html: base.html }))
+    }
+    // 공개 사이트 덮어쓰기 표의 원래 문구와 같은 요약은 다듬은 부제목으로 보이므로, 원문 그대로 계산하면 지문이 어긋난다.
+    assert.notEqual(tidied, original)
+    assert.notEqual(hashWithExcerpt({ title: raw.title, html: base.html }, original), contentHash({ title: raw.title, excerpt: original, html: base.html }))
+  })
 })
 
 describe('choosing posts to illustrate', () => {
@@ -118,6 +131,32 @@ describe('choosing posts to illustrate', () => {
     assert.deepEqual(classifyPost(state({ updatedAt: 't2', currentHash: H2 })), { reason: 'edited' })
     assert.equal(classifyPost(state({ updatedAt: 't2', currentHash: H2, branch: { exists: true, contentHash: H2 } })), null)
     assert.deepEqual(classifyPost(state({ updatedAt: 't2', currentHash: H2, branch: { exists: true, contentHash: H1 } })), { reason: 'edited' })
+  })
+
+  it('does not redraw a post whose PR branch was made for the same save, even if its excerpt was not written', () => {
+    // 요약 기재가 실패하면 지금 지문(옛 요약)이 브랜치 기록의 지문(AI 요약)과 다르다. AI 요약 기재는 수정 시각을 바꾸지 않는다.
+    const branch = { exists: true, contentHash: H2, postUpdatedAt: 't2' }
+    const fresh = state({ hasThumb: false, source: null, branch, updatedAt: 't2' })
+    assert.equal(classifyPost(fresh), null)
+    assert.equal(classifyPost(state({ updatedAt: 't2', branch })), null)
+    // 그 뒤 다시 저장하면 지문으로 판단한다: 브랜치와 같으면 그대로 두고, 다르면 다시 그린다.
+    assert.deepEqual(classifyPost({ ...fresh, updatedAt: 't3' }), { need: 'hash' })
+    assert.equal(classifyPost({ ...fresh, updatedAt: 't3', currentHash: H2 }), null)
+    assert.deepEqual(classifyPost({ ...fresh, updatedAt: 't3', currentHash: H1 }), { reason: 'new' })
+    assert.deepEqual(classifyPost(state({ updatedAt: 't3', branch, currentHash: 'sha256:3' })), { reason: 'edited' })
+  })
+
+  it('reuses a cached fingerprint only while the save time, title and excerpt are the same', () => {
+    const post = { key: 'teams/class-team', updatedAt: 't1', title: '수업용 팀 만들기', excerpt: '사람이 쓴 요약입니다.' }
+    const entry = { updatedAt: 't1', title: post.title, excerpt: post.excerpt, contentHash: H1 }
+    assert.equal(hashCacheHit(entry, post), true)
+    // AI 요약 기재는 수정 시각을 바꾸지 않는다.
+    assert.equal(hashCacheHit(entry, { ...post, excerpt: 'AI가 본문을 읽고 쓴 요약입니다.' }), false)
+    assert.equal(hashCacheHit(entry, { ...post, title: '팀 만들기' }), false)
+    assert.equal(hashCacheHit(entry, { ...post, updatedAt: 't2' }), false)
+    // 이전 형식(수정 시각만 남긴 항목)이나 빈 항목은 쓰지 않는다.
+    assert.equal(hashCacheHit({ updatedAt: 't1', contentHash: H1 }, post), false)
+    assert.equal(hashCacheHit(undefined, post), false)
   })
 
   it('leaves images without a version record and posts with an open failure issue alone', () => {

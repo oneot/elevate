@@ -7,6 +7,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { BASE_CATEGORIES, toDisplayPost } from '../../../Elevate.Web/src/constants/categories.js'
+import { getDisplayExcerpt } from '../../../Elevate.Web/src/constants/postText.js'
 
 /** tools/post-thumbs (끝 '/' 없음). */
 export const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)))
@@ -106,6 +107,15 @@ export function contentHash({ title, excerpt, html }) {
   const body = htmlToOutline(html, { maxLength: Infinity, maxCodeLines: Infinity })
   const digest = createHash('sha256').update(JSON.stringify([title || '', excerpt || '', body])).digest('hex')
   return `sha256:${digest}`
+}
+
+/**
+ * AI 요약을 게시글에 기재한 뒤의 지문. plan이 공개 API에서 다시 계산할 값과 같도록,
+ * 요약도 공개 사이트에 보이는 문구(postText.js: 서버 원래 문구와 같을 때만 다듬은 부제목)로 바꿔 계산한다.
+ * @param {{ title: string, html: string }} content  prepare가 쓴 work/<id>/content.json (title은 화면 제목)
+ */
+export function hashWithExcerpt(content, excerpt) {
+  return contentHash({ title: content.title, excerpt: getDisplayExcerpt({ excerpt }) || '', html: content.html })
 }
 
 const ENTITIES = { nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" }

@@ -205,7 +205,7 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 | 건너뜀 | AI가 읽은 뒤 저장된 글(요청의 `expectedUpdatedAt`과 다름)·읽고 쓰는 사이 저장된 글(Cosmos ETag 다름)·게시가 아닌 글은 409, 없는 글·slug가 다르면 404 |
 | 앱 설정 | 기본값이 코드에 있어 설정할 것이 없다. 바꿀 때만 `AUTOMATION_OIDC_AUDIENCE`, `AUTOMATION_GITHUB_REPOSITORY`, `AUTOMATION_GITHUB_REPOSITORY_ID`, `AUTOMATION_GITHUB_WORKFLOW`, `AUTOMATION_GITHUB_REF` |
 | 바깥 연결 | 토큰 서명을 확인하려고 GitHub 공개 키(`https://token.actions.githubusercontent.com/.well-known/jwks`)를 읽는다 |
-| 배포 | 이 입구가 들어간 서버 코드를 배포해야 동작한다. 그 전에는 publish가 404를 받아 요약만 건너뛴다 |
+| 배포 | 이 입구가 들어간 서버 코드를 배포해야 동작한다. 그 전에는 publish가 404를 받아 요약만 건너뛴다. **서버를 먼저 배포한 뒤 관리자를 배포한다**: 관리자에는 요약 칸이 없으므로, 관리자를 먼저 배포하면 그 사이 게시한 새 글은 요약이 빈 채로 남고 그 글을 다시 저장해야 채워진다 |
 
 ## 게시글 썸네일 자동 생성
 
