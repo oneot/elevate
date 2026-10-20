@@ -9,7 +9,7 @@ Web과 Admin은 각각의 잠금 파일로 `npm ci --legacy-peer-deps`를 실행
 
 `main` → GitHub Pages와 `admin` → Azure Static Web Apps 배포 경계는 유지한다.
 이 변경은 Azure Functions의 실배포 Node 버전이나 GitHub/Azure 설정을 변경하지 않는다.
-Server 배포 자동화는 현재 저장소에서 확인되지 않았으므로 별도 운영 확인이 필요하다.
+Server 배포 자동화는 저장소에 없다. 수동 배포 방법과 현재 운영 버전은 아래 '서버(Function App) 배포'에 기록한다.
 
 ### 배포 전 실패를 확인할 항목
 
@@ -160,6 +160,34 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 | 목록 카드가 썸네일 대신 유리 타일 | 정적 썸네일이 없는 글이면 상세 조회(`GET /api/admin/posts/{id}`) 응답의 `thumbnail.variants`와 Blob 읽기. 공개 사이트 정적 썸네일을 새로 넣었다면 Admin이 다시 배포됐는지 |
 | 게시했는데 썸네일 PR이 오지 않음 | 저장 때마다 Actions에 `Post thumbnails on save` 실행이 생기는지 본다. 없으면 Function App 로그의 `[thumbnailTrigger]` 경고(HTTP 401·403은 토큰 만료·권한)와 앱 설정 `THUMBNAIL_DISPATCH_TOKEN`. 있으면 이어진 `Post thumbnails` 실행 기록(plan 출력), `thumbnail-failed` 이슈, 브랜치 `thumbnail/<앱>/<slug>`가 이미 있는지 (아래 표) |
 
+## 서버(Function App) 배포
+
+서버(`Elevate.Server`)는 저장소 workflow로 배포하지 않고, 운영자가 Azure CLI로 직접 배포한다.
+
+| 항목 | 값 |
+| --- | --- |
+| 대상 | Function App `func-elv-server-ep-dev` (리소스 그룹 `rg-elv-dev`, ReadOnly 잠금) |
+| 방법 | `az functionapp deployment source config-zip --build-remote` (원격 빌드, 패키지에서 실행). 잠금을 잠시 풀고 배포한 뒤 바로 다시 건다 |
+| 현재 운영 | `main` 5eb21e8 (2026-10-21 00:29 KST 배포, 패키지 `20261020152852.zip`). 이전 운영은 a501460 (2026-08-21) |
+| 되돌리기 | 이전 패키지 `20260820181540.zip`이 `SitePackages`에 남아 있다. `packagename.txt`를 그 이름으로 바꾸고 재시작한다(잠금 해제 필요) |
+
+### 2026-10-21 배포 기록 (코디네이터 수행)
+
+- 이번 배포로 10-18 모더나이즈(24a6c2b)의 서버 변경이 처음 운영에 나갔다.
+  - 본문 Blob 주소 서명 처리를 `services/postContent.js`로 통합했다.
+  - 잘못된 JSON 요청을 400으로 응답한다.
+  - 숫자가 아닌 파라미터는 400으로 거절한다(예: `limit=3x`, 의도된 변경).
+- 저장 시 썸네일 작업 요청(`services/thumbnailTrigger.js`)도 함께 배포했다.
+- 회귀 대조(SAS 서명을 뺀 비교): 공개 목록 190건, tags, activity-videos, calendar-events, 글 상세 163건이 배포 전과 같았다. 본문 이미지 서명과 읽기도 확인했다.
+- 앱 설정 `THUMBNAIL_DISPATCH_TOKEN`을 추가했다. 값은 문서·저장소에 남기지 않는다.
+  - GitHub fine-grained 토큰 이름은 `THUMBNAIL_DISPATCH_TOKEN`이다.
+  - 소유자는 `oneot`, 대상 저장소는 `oneot/elevate` 하나다.
+  - 권한은 Actions 읽기·쓰기와 Metadata 읽기만 있다.
+  - **만료는 2027-10-20 0시(KST)다.** 그 전에 아래 '게시글 썸네일 자동 생성'의 '토큰 갱신' 절차로 교체한다.
+- 저장 트리거 확인 범위
+  - 확인함: 서버 코드로 GitHub 실행 요청을 보내 접수되는 것(확인용 실행은 취소).
+  - 확인 안 함(2026-10-21 기준): 관리자에서 실제 글을 '게시'로 저장했을 때 실행이 생기는 것. 다음 실제 글 게시 때 확인한다.
+
 ## 게시글 썸네일 자동 생성
 
 관리자에서 글을 '게시' 상태로 저장(새 글·수정)하면 서버가 `.github/workflows/post-thumbnails-on-save.yml`을 실행한다.
@@ -175,7 +203,7 @@ GitHub Copilot CLI가 글 본문 전체를 읽고 'UI 미니어처' 키트(`tool
 | 상황 | 조치 |
 | --- | --- |
 | 처음 켤 때 | ① Settings → Actions → General → Workflow permissions에서 "Allow GitHub Actions to create and approve pull requests"를 켠다. 꺼져 있으면 브랜치만 올라가고 실패 이슈에 PR 만들기 링크가 남는다. ② 서버 토큰: fine-grained 토큰(`oneot/elevate`만, Repository permissions는 Actions: Read and write만, 만료일 지정)을 만들어 Function App `func-elv-server-ep-dev` 앱 설정 `THUMBNAIL_DISPATCH_TOKEN`에 넣는다(`rg-elv-dev` ReadOnly 잠금은 잠시 풀고 바로 다시 건다). ③ 이 설정을 읽는 서버 코드(`services/thumbnailTrigger.js`)가 배포됐는지 확인한다. 만드는 방법은 `tools/post-thumbs/README.md`의 '필요한 설정' |
-| 토큰 갱신 | 만료 전에 새 토큰을 만들어 `THUMBNAIL_DISPATCH_TOKEN`을 바꾼다. 게시 글을 저장해 `Post thumbnails on save` 실행이 생기면 된다. 만료되면 저장은 되지만 Function App 로그에 `[thumbnailTrigger] dispatch failed ... HTTP 401`이 남는다 |
+| 토큰 갱신 | 만료(2027-10-20 0시 KST) 전에 GitHub → Settings → Developer settings → Fine-grained tokens → `THUMBNAIL_DISPATCH_TOKEN` → **Regenerate token**으로 새 값을 만든다(권한은 그대로). 그 값으로 `THUMBNAIL_DISPATCH_TOKEN` 앱 설정을 바꾼다(`rg-elv-dev` 잠금 해제·복구, 값은 출력하지 않기). 게시 글을 저장해 `Post thumbnails on save` 실행이 생기면 된다. 만료되면 저장은 되지만 Function App 로그에 `[thumbnailTrigger] dispatch failed ... HTTP 401`이 남는다 |
 | 썸네일 확인 | PR 본문의 이미지와 AI 설명을 보고 병합한다. 병합 뒤 `Deploy to GitHub Pages`와 `Sync post thumbnails to admin`(→ 관리자 배포)이 돈다 |
 | 다시 만들기 | Actions → Post thumbnails → Run workflow에 `key`(`<앱>/<slug>`)와 `feedback`을 넣는다. 열린 PR은 새 이미지로 바뀐다 |
 | 쓰지 않기 | PR을 닫는다. 같은 내용으로는 자동으로 다시 만들지 않고, 글이 다시 바뀌면 새 버전을 만든다 |
