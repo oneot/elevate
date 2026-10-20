@@ -166,7 +166,7 @@ async function reportFailure(item, reason) {
         '',
         detail,
         '',
-        '- 이 이슈를 닫으면 다음 정기 실행(15분 간격) 때 다시 만듭니다.',
+        "- 이 이슈를 닫으면 다음에 관리자에서 글을 '게시'로 저장할 때(어느 글이든) 다시 만듭니다.",
         `- 바로 다시 하려면 Actions → **Post thumbnails** → Run workflow에서 \`key\`에 \`${item.key}\`를 넣어 실행하세요.`,
       ].join('\n'),
     })

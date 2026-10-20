@@ -1,0 +1,47 @@
+name: Post thumbnails on save
+
+# 관리자에서 글을 '게시' 상태로 저장하면 서버(Elevate.Server)가 이 workflow를 실행한다(Function App 설정 THUMBNAIL_DISPATCH_TOKEN).
+# 마지막 저장 뒤 몇 분(저장소 변수 THUMBNAIL_WAIT_MINUTES, 기본 10분) 동안 다시 저장이 없으면 'Post thumbnails'를 실행한다.
+# 그 사이 다시 저장하면 기다리던 실행은 취소되고 마지막 저장의 실행만 남는다. 연속 저장을 AI 작업 한 번으로 묶는다.
+# 'Post thumbnails'는 새 글과 내용이 바뀐 글만 고르므로, 내용이 그대로인 저장은 AI를 부르지 않는다.
+# 정기 실행이 없으므로 글이 없는 동안에는 아무것도 돌지 않는다. 자세한 내용: tools/post-thumbs/README.md
+
+on:
+    workflow_dispatch:
+        inputs:
+            post:
+                description: "저장된 글 (<category>/<slug>, 기록용)"
+                required: false
+                default: ""
+
+run-name: "글 저장: ${{ inputs.post || '수동 실행' }}"
+
+permissions: {}
+
+concurrency:
+    group: post-thumbnails-on-save
+    cancel-in-progress: true
+
+jobs:
+    start:
+        runs-on: ubuntu-latest
+        timeout-minutes: 70
+        permissions:
+            actions: write
+        steps:
+            - name: Wait for more saves
+              env:
+                  WAIT_MINUTES: ${{ vars.THUMBNAIL_WAIT_MINUTES || '10' }}
+              run: |
+                  case "$WAIT_MINUTES" in
+                      '' | *[!0-9]*) WAIT_MINUTES=10 ;;
+                  esac
+                  if [ "$WAIT_MINUTES" -gt 60 ]; then WAIT_MINUTES=60; fi
+                  echo "마지막 저장 뒤 ${WAIT_MINUTES}분 기다립니다. 그 사이 다시 저장하면 이 실행은 취소됩니다."
+                  sleep $((WAIT_MINUTES * 60))
+
+            # GITHUB_TOKEN으로 실행한 workflow_dispatch는 다른 workflow를 실행할 수 있다(push 등 다른 이벤트는 안 됨).
+            - name: Start Post thumbnails
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: gh workflow run post-thumbnails.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"

@@ -298,7 +298,7 @@ SDK 내부의 React 개발 모드 경고와 큰 청크/Speech SDK 빌드 경고�
   유리 오브젝트(관리자에서 옮긴 640px WebP)를 넣었다. Fluent 아이콘은 npm(`@fluentui/svg-icons@1.1.344`)으로 받는다.
   `render.py`를 Node(`render.mjs`, Playwright + sharp)로 옮겼고, 기존 80개를 다시 그려 평균 픽셀 차 0.35~0.51/255로 같은 결과임을 확인했다.
   기존 썸네일이 macOS 글꼴(SF Pro, Apple SD Gothic Neo)로 그려졌으므로 생성 job은 macOS 러너에서 돈다.
-- **workflow** (`.github/workflows/post-thumbnails.yml`, 15분 간격 + 수동 실행. 대상이 없으면 약 30초 만에 끝나고 AI를 부르지 않는다):
+- **workflow** (`.github/workflows/post-thumbnails.yml`, 관리자 저장 시 실행 + 수동 실행. 대상이 없으면 약 30초 만에 끝나고 AI를 부르지 않는다):
   plan(썸네일·PR 브랜치·실패 이슈가 없는 새 글, 최대 2개) → generate(macOS, 읽기 권한만, Copilot CLI는 렌더러 `thumb-render`와 그 글의 장면·summary 쓰기만 허용)
   → validate(장면 1개 등록, 네트워크·외부 URL 금지, audit 0, WebP 크기, 바뀐 파일은 장면·이미지 2장뿐) → publish(별도 job, 다시 검사 후
   `thumbnail/<앱>/<slug>` 브랜치와 PR, 실패는 `thumbnail-failed` 이슈). 다시 만들기는 수동 실행의 `key`·`feedback`으로 한다.
@@ -320,6 +320,20 @@ SDK 내부의 React 개발 모드 경고와 큰 청크/Speech SDK 빌드 경고�
   이름으로만 구분). 렌더러를 `thumb-render`라는 이름으로 PATH에 두어 그 명령만 허용하고, 쓰기는 그 글의 장면·`summary.md` 두 파일만
   실제 경로로 허용했다. 로컬 Copilot CLI 1.0.100에서 `thumb-render` 허용, `node -e`·`node render.mjs`·다른 파일 쓰기·셸 리디렉션 거부,
   렌더 PNG를 view 도구로 읽는 것을 확인했다.
+- **저장 시 실행** (사용자 결정): 처음에는 15분마다 새 글을 찾는 예약 실행을 두었으나 바꿨다. 이유는 세 가지다.
+  - 글이 몇 달 없을 수 있는데 그동안에도 하루 96번 실행 기록이 쌓인다.
+  - 공개 저장소는 60일 동안 커밋이 없으면 예약 실행을 자동으로 끈다. 글은 DB에 저장되므로 커밋이 생기지 않는다.
+  - 실제로 예약 실행이 한 번도 돌지 않았다. cron을 넣은 커밋의 작성자 이메일이 GitHub 계정에 연결되지 않았던 것으로 추정한다.
+
+  지금은 관리자에서 글을 '게시'로 저장하면 서버(`Elevate.Server/src/services/thumbnailTrigger.js`, `adminController`의 생성·수정 뒤)가
+  `post-thumbnails-on-save.yml`을 실행한다(GitHub API workflow_dispatch). 서버 동작은 다음과 같다.
+  - 토큰 `THUMBNAIL_DISPATCH_TOKEN`은 Function App 앱 설정에 둔다. 이 저장소의 Actions 쓰기 권한만 있는 fine-grained 토큰이다.
+  - 토큰이 없으면 아무것도 하지 않는다. 요청이 실패하거나 5초를 넘겨도 저장은 성공한다.
+  - 관리자 화면에는 토큰이 없다.
+
+  이 workflow는 마지막 저장 뒤 10분 기다렸다가 `Post thumbnails`를 실행한다. 그 사이 다시 저장하면 concurrency로 앞 실행을 취소해,
+  연속 저장을 AI 작업 한 번으로 묶는다. 서버 테스트 12개를 추가했다: 요청 형식, 게시 글만, 토큰 없음, 오류·시간 초과에도 예외 없음,
+  컨트롤러의 생성·수정·보관 흐름, 실패해도 저장 성공.
 
 ## 회귀 검증과 배포 경계
 

@@ -1,14 +1,13 @@
 name: Post thumbnails
 
 # 공개 사이트에 새로 게시된 글과 내용이 바뀐 글의 카드 썸네일을 AI(GitHub Copilot CLI)가 본문 전체를 읽고 만들어 PR로 올린다.
+# 관리자에서 글을 '게시'로 저장하면 'Post thumbnails on save'가 마지막 저장 몇 분 뒤 이 workflow를 실행한다. 수동 실행도 된다.
+# 정기 실행은 두지 않는다(글이 없는 동안 실행 기록이 쌓이지 않고, 공개 저장소의 60일 비활성 자동 중지도 받지 않는다).
 # 사람이 PR을 확인해 병합하면 공개 사이트가 배포되고, 'Sync post thumbnails to admin'이 관리자도 다시 배포한다.
 # 생성(AI) job은 저장소 읽기 권한만 가지며, 검사를 통과한 결과만 별도 publish job이 PR로 올린다.
 # 자세한 내용: tools/post-thumbs/README.md
 
 on:
-    schedule:
-        # 15분마다 (정각을 피해 2·17·32·47분). 대상이 없으면 약 30초 만에 끝나고 AI를 부르지 않는다.
-        - cron: "2,17,32,47 * * * *"
     workflow_dispatch:
         inputs:
             key:
