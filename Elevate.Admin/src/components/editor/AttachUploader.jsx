@@ -3,6 +3,7 @@ import { requestAttachUploadSas, registerFile, getFiles, deleteFile } from '../.
 import { uploadBlobWithSas } from '../../utils/imageUpload.js'
 import { ensureWindowsCompatibleZipFile } from '../../utils/zipCompat.js'
 import { useAuth } from '../../hooks/useAuth.js'
+import { copyAttachmentLink, displayFileName } from '../../utils/attachmentLink.js'
 
 /**
  * 브라우저가 MIME 타입을 올바르게 감지하지 못하는 Office 포맷을 위한
@@ -46,8 +47,12 @@ export default function AttachUploader({ postId, draftSessionId, onUploadingChan
   const [files, setFiles] = useState([])      // [{ id, fileName, blobUrl, signedUrl, isDeleting }]
   const [loadingFiles, setLoadingFiles] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const [copiedId, setCopiedId] = useState(null)
   const [error, setError] = useState(null)
+  const copiedTimerRef = useRef(null)
   const canUpload = Boolean(postId || draftSessionId)
+
+  useEffect(() => () => clearTimeout(copiedTimerRef.current), [])
 
   useEffect(() => {
     let cancelled = false
@@ -96,8 +101,10 @@ export default function AttachUploader({ postId, draftSessionId, onUploadingChan
     onUploadingChange?.(true)
     try {
       const uploadFile = await ensureWindowsCompatibleZipFile(file)
+      // macOS의 한글 파일 이름(NFD)은 Windows에서 자모가 풀려 보이므로 NFC로 맞춰 등록한다.
+      const fileName = displayFileName(uploadFile.name) || uploadFile.name
       const sas = await requestAttachUploadSas(
-        { fileName: uploadFile.name, contentType, sizeBytes: uploadFile.size },
+        { fileName, contentType, sizeBytes: uploadFile.size },
         { msalInstance }
       )
       await uploadBlobWithSas(sas.uploadUrl, uploadFile, contentType)
@@ -106,7 +113,7 @@ export default function AttachUploader({ postId, draftSessionId, onUploadingChan
           postId: draftSessionId ? null : postId || null,
           draftSessionId: draftSessionId || null,
           blobUrl: sas.blobUrl,
-          fileName: uploadFile.name,
+          fileName,
           contentType,
           sizeBytes: uploadFile.size,
         },
@@ -114,7 +121,7 @@ export default function AttachUploader({ postId, draftSessionId, onUploadingChan
       )
       const blobUrl = result?.url || sas.blobUrl
       const signedUrl = result?.signedUrl || null
-      setFiles(prev => [...prev, { id: result.fileId, fileName: uploadFile.name, blobUrl, signedUrl, isDeleting: false }])
+      setFiles(prev => [...prev, { id: result.fileId, fileName, blobUrl, signedUrl, isDeleting: false }])
       setStatus('done')
     } catch (err) {
       setError(getUploadErrorMessage(err))
@@ -137,11 +144,15 @@ export default function AttachUploader({ postId, draftSessionId, onUploadingChan
     }
   }
 
-  async function copyToClipboard(text) {
+  async function handleCopyLink(file) {
     try {
-      await navigator.clipboard.writeText(text)
+      await copyAttachmentLink(file)
+      setError(null)
+      setCopiedId(file.id)
+      clearTimeout(copiedTimerRef.current)
+      copiedTimerRef.current = setTimeout(() => setCopiedId(null), 2000)
     } catch {
-      setError('URL 복사에 실패했습니다. 브라우저 권한을 확인해 주세요.')
+      setError('링크 복사에 실패했습니다. 브라우저 권한을 확인해 주세요.')
     }
   }
 
@@ -186,7 +197,9 @@ export default function AttachUploader({ postId, draftSessionId, onUploadingChan
               key={f.id}
               className={`flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs${f.isDeleting ? ' opacity-50' : ''}`}
             >
-              <span className="flex-1 truncate font-medium text-neutral-700">{f.fileName}</span>
+              <span className="flex-1 truncate font-medium text-neutral-700" title={displayFileName(f.fileName)}>
+                {displayFileName(f.fileName)}
+              </span>
               {f.isDeleting ? (
                 <span className="shrink-0 text-xs text-neutral-400">삭제 중...</span>
               ) : confirmDeleteId === f.id ? (
@@ -211,10 +224,10 @@ export default function AttachUploader({ postId, draftSessionId, onUploadingChan
                 <span className="flex items-center gap-1 shrink-0">
                   <button
                     type="button"
-                    onClick={() => copyToClipboard(f.signedUrl || f.blobUrl)}
+                    onClick={() => handleCopyLink(f)}
                     className="rounded px-2 py-1 text-ms-blue hover:bg-ms-blue/10 transition-colors font-semibold"
                   >
-                    URL 복사
+                    {copiedId === f.id ? '복사됨 ✓' : '링크 복사'}
                   </button>
                   <button
                     type="button"
