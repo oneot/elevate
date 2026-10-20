@@ -122,18 +122,24 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 
 ### 배포 후 확인
 
-두 호스트에서 각각 다음을 확인한다. 테스트 글은 임시저장으로 만들고 확인 후 삭제한다.
+두 호스트에서 각각 다음을 확인한다. 테스트 글은 보관 상태로 만들고 확인 후 삭제한다.
 
 1. 접속 → Microsoft 로그인 → 같은 호스트로 돌아와 `전체 게시글`과 13개 앱 개수가 표시된다.
-2. Word와 GitHub에서 새 글을 임시저장하면 각 앱 목록에 나타난다(저장 category `m365`·`copilot-studio`, 태그 `word`·`github`).
-3. 기존 글 편집 저장, 썸네일·본문 이미지·첨부 업로드가 동작한다.
-4. 로그아웃하면 같은 호스트로 돌아와 '로그아웃되었습니다' 안내와 '다시 로그인' 버튼이 보인다.
+2. Word와 GitHub에서 새 글을 보관 상태로 저장하면 각 앱 목록의 '보관' 필터에 나타난다
+   (저장 category `m365`·`copilot-studio`, 태그 `word`·`github`, slug는 서버가 제목으로 생성).
+3. 기존 글 편집 저장, 본문 이미지·첨부 업로드가 동작한다. 기존 글의 썸네일·slug·태그·시리즈는 바뀌지 않는다.
+   편집 화면의 썸네일 미리보기가 공개 사이트 카드 이미지와 같다.
+4. 자동 썸네일: 테스트 글을 '게시'로 저장하면 '본문 내용으로 썸네일을 만들었습니다.'가 표시되고 편집 화면에 썸네일 미리보기가 나온다.
+   다시 저장해도 썸네일은 바뀌지 않는다. 게시한 글은 공개 사이트에 바로 보이므로 확인 후 보관으로 바꾸거나 삭제한다.
+5. 첨부파일을 올리고 '링크 복사' 후 본문에 붙여 넣으면 파일 이름으로 된 링크가 들어간다. 게시 후 공개 사이트에서 그 링크로 원래 파일 이름으로 내려받아진다.
+6. 로그아웃하면 같은 호스트로 돌아와 '로그아웃되었습니다' 안내와 '다시 로그인' 버튼이 보인다.
 
 | 증상 | 확인할 것 |
 | --- | --- |
 | `AADSTS50011` | 로그인 요청의 `redirect_uri`와 Entra SPA 리디렉션 URI가 끝 슬래시까지 같은지 |
 | 로그인 후 다른 호스트로 이동 | 배포 산출물이 이번 변경 이후 빌드인지 (이전 빌드는 secret 주소로 고정) |
 | 목록에서 CORS 오류 | Function App CORS에 접속한 origin이 있는지 |
+| '썸네일을 자동으로 만들지 못했습니다' | 브라우저 콘솔의 `[PostEditor] auto thumbnail failed` 오류, Blob 업로드 SAS·CORS. 글은 저장되며 다음 게시 저장 때 다시 만든다 |
 
 ## GitHub Pages Smoke Test
 
@@ -156,6 +162,10 @@ done
 ```
 
 Use the GitHub Pages deployment `page_url` as `GITHUB_PAGES_PAGE_URL` when validating a just-finished workflow run.
+
+본문 스타일을 바꾼 배포 후에는 글 상세 한 곳(예: `https://microsoft-elevate.com/copilot-studio/copilotstudio`)에서
+인라인 코드(흰 키캡), 인용(안내 아이콘이 있는 흰 카드), 코드 블록(점 3개가 있는 어두운 창)과 '코드 펼치기'·'복사' 버튼을 확인한다.
+관리자 편집기는 같은 CSS 복사본(`Elevate.Admin/src/styles/post-content.css`)을 쓰므로 `admin` 배포 후 같은 모양이어야 한다.
 
 ## Intermittent `/m365` Failure Capture
 
