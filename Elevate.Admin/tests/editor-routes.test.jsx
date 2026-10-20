@@ -71,7 +71,6 @@ function setValue(element, value) {
 }
 
 const titleInput = () => host.querySelector('[placeholder="게시글 제목"]')
-const excerptInput = () => host.querySelector('[placeholder="목록 카드에 표시되는 한 줄 요약"]')
 const bodyInput = () => host.querySelector('textarea[aria-label="HTML body"]')
 const selectWith = (value) => [...host.querySelectorAll('select')]
   .find((select) => [...select.options].some((option) => option.value === value))
@@ -80,9 +79,8 @@ const statusSelect = () => selectWith('published')
 const saveButton = () => [...host.querySelectorAll('button')]
   .find((button) => /^(저장|저장 중\.\.\.|이미지 업로드 중\.\.\.|첨부 업로드 중\.\.\.)$/.test(button.textContent.trim()))
 
-async function fillNewPost({ title = 'New guide', body = '<p>Guide body</p>', excerpt } = {}) {
+async function fillNewPost({ title = 'New guide', body = '<p>Guide body</p>' } = {}) {
   await act(() => setValue(titleInput(), title))
-  if (excerpt !== undefined) await act(() => setValue(excerptInput(), excerpt))
   await act(() => setValue(bodyInput(), body))
 }
 
@@ -131,7 +129,7 @@ it('starts a clean post draft after leaving an existing editor while keeping the
   expect(createPost).not.toHaveBeenCalled()
 })
 
-it('offers only the title, summary, body, app, publish state and attachments', async () => {
+it('offers only the title, body, app, publish state and attachments', async () => {
   await renderRoute('/posts/new?app=word')
   expect([...statusSelect().options].map((option) => [option.value, option.textContent]))
     .toEqual([['published', '게시'], ['archived', '보관']])
@@ -139,6 +137,9 @@ it('offers only the title, summary, body, app, publish state and attachments', a
   expect(host.querySelector('[placeholder="Azure, CosmosDB"]')).toBeNull()
   expect(host.querySelector('[placeholder^="https://www.youtube.com"]')).toBeNull()
   expect(host.querySelector('input[type="file"]')).toBeNull()
+  // 요약은 게시 후 AI가 본문을 읽고 기재하므로 입력 칸이 없다.
+  expect(host.querySelector('[placeholder="목록 카드에 표시되는 한 줄 요약"]')).toBeNull()
+  expect([...host.querySelectorAll('label')].map((node) => node.textContent.trim())).not.toContain('요약')
   expect(host.textContent).not.toMatch(/Slug|시리즈|YouTube|태그|분류|미디어|공개 사이트에서 보기|처음 게시할 때/)
   // 새 글에는 아직 썸네일이 없으므로 썸네일 칸을 보여 주지 않는다.
   expect(host.querySelector('.ea-thumb-preview')).toBeNull()
@@ -223,12 +224,12 @@ it.each([
 
 it('publishes a new post without drawing a thumbnail in the browser', async () => {
   await renderRoute('/posts/new?app=word')
-  await fillNewPost({ title: '공동 작업 가이드', excerpt: '링크 하나로 함께 편집합니다.', body: '<h2>공유하기</h2><p>본문</p>' })
+  await fillNewPost({ title: '공동 작업 가이드', body: '<h2>공유하기</h2><p>본문</p>' })
   await act(() => setValue(statusSelect(), 'published'))
   await save()
-  // 게시된 글의 썸네일은 GitHub Actions 'Post thumbnails'가 본문을 읽고 만든다.
+  // 게시된 글의 썸네일과 요약은 GitHub Actions 'Post thumbnails'의 AI가 본문을 읽고 만든다.
   expect(createPost.mock.calls[0][0]).toEqual({
-    title: '공동 작업 가이드', category: 'm365', excerpt: '링크 하나로 함께 편집합니다.',
+    title: '공동 작업 가이드', category: 'm365',
     htmlBody: '<h2>공유하기</h2><p>본문</p>', status: 'published', tags: ['word'],
   })
 })
@@ -240,13 +241,13 @@ it('saves an existing post with only the editable fields and keeps its first thu
   await act(() => setValue(titleInput(), 'Edited title'))
   await save()
   expect(updatePost).toHaveBeenCalledWith('post-1', {
-    title: 'Edited title', excerpt: '', htmlBody: '<p>Existing content</p>', status: 'published',
+    title: 'Edited title', htmlBody: '<p>Existing content</p>', status: 'published',
   }, { msalInstance })
   expect(host.textContent).toContain('업데이트되었습니다.')
   expect(listAllPosts.mock.calls.length).toBeGreaterThan(loadsBeforeSave)
 })
 
-it('fills the title and summary the public site shows and saves them for posts tidied on the public site', async () => {
+it('fills the title the public site shows and saves it without touching the summary', async () => {
   const { title, excerpt } = POST_TEXT_OVERRIDES.find((entry) => entry.title[0] === 'AI Creative Agent Team 제작하기')
   getPost.mockResolvedValue({
     id: 'post-1', title: title[0], excerpt: excerpt[0], category: 'copilot-studio', slug: 'copilotstudio',
@@ -255,10 +256,10 @@ it('fills the title and summary the public site shows and saves them for posts t
   })
   await renderRoute('/posts/post-1')
   expect(titleInput().value).toBe(title[1])
-  expect(excerptInput().value).toBe(excerpt[1])
   await save()
+  // 요약은 보내지 않으므로 서버에 있는 요약(사람이 쓴 것이든 AI가 기재한 것이든)이 그대로 남는다.
   expect(updatePost).toHaveBeenCalledWith('post-1', {
-    title: title[1], excerpt: excerpt[1], htmlBody: '<p>Agent team</p>', status: 'published',
+    title: title[1], htmlBody: '<p>Agent team</p>', status: 'published',
   }, { msalInstance })
 })
 
@@ -272,7 +273,7 @@ it('publishes an existing post without a thumbnail and leaves the image to the t
   expect(host.querySelector('.ea-thumb-preview')).toBeNull()
   await act(() => setValue(statusSelect(), 'published'))
   await save()
-  expect(updatePost.mock.calls[0][1]).toEqual({ title: 'Hidden post', excerpt: '', htmlBody: '<p>Body</p>', status: 'published' })
+  expect(updatePost.mock.calls[0][1]).toEqual({ title: 'Hidden post', htmlBody: '<p>Body</p>', status: 'published' })
   expect(host.textContent).toContain('업데이트되었습니다.')
   expect(host.querySelector('.ea-thumb-preview')).toBeNull()
 })

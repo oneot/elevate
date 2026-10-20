@@ -29,7 +29,7 @@ export function keyFromFailureTitle(title) {
  * @param {{
  *   hasThumb: boolean,                      main에 공개 사이트 이미지가 있는지
  *   source: { contentHash: string, postUpdatedAt: string|null } | null,  main의 버전 기록
- *   branch: { exists: boolean, contentHash: string|null },              PR 브랜치 thumbnail/<key>와 그 버전 기록
+ *   branch: { exists: boolean, contentHash: string|null, postUpdatedAt?: string|null },  PR 브랜치 thumbnail/<key>와 그 버전 기록
  *   failed: boolean,                        열린 실패 이슈가 있는지
  *   updatedAt: string|null,                 공개 API의 글 수정 시각
  *   currentHash?: string,                   지금 글 내용 지문 (필요할 때만 계산해 다시 부른다)
@@ -39,18 +39,31 @@ export function keyFromFailureTitle(title) {
 export function classifyPost({ hasThumb, source, branch = { exists: false, contentHash: null }, failed, updatedAt, currentHash }) {
   if (failed) return null
   // 이미 만든 PR 브랜치가 지금 내용으로 만든 것이면(검토 중이거나 닫음) 다시 만들지 않는다.
+  // 브랜치를 만든 뒤 글을 다시 저장하지 않았으면(수정 시각이 같으면) 지금 내용으로 만든 것이다. AI 요약 기재는 수정 시각을
+  // 바꾸지 않으므로, 요약 기재가 실패해 지문이 브랜치 기록과 달라도 병합 보류·닫힌 PR의 글을 실행마다 다시 그리지 않는다.
+  const branchIsCurrent = branch.exists && Boolean(updatedAt) && branch.postUpdatedAt === updatedAt
   const madeForCurrent = () => branch.exists && (!branch.contentHash || branch.contentHash === currentHash)
   if (!hasThumb) {
     if (!branch.exists) return { reason: 'new' }
+    if (branchIsCurrent) return null
     if (currentHash === undefined) return { need: 'hash' }
     return madeForCurrent() ? null : { reason: 'new' }
   }
   // 버전 기록이 없는 이미지는 바뀌었는지 알 수 없으므로 건드리지 않는다.
   if (!source) return null
   if (updatedAt && source.postUpdatedAt === updatedAt) return null
+  if (branchIsCurrent) return null
   if (currentHash === undefined) return { need: 'hash' }
   if (currentHash === source.contentHash) return null
   return madeForCurrent() ? null : { reason: 'edited' }
+}
+
+/**
+ * plan의 지문 캐시(.cache/hashes.json) 항목을 지금 글에 다시 쓸 수 있는지.
+ * 본문은 수정 시각이 같으면 같지만, AI 요약 기재는 수정 시각을 바꾸지 않으므로 화면 제목·요약까지 같아야 한다.
+ */
+export function hashCacheHit(entry, post) {
+  return Boolean(entry?.contentHash) && entry.updatedAt === post.updatedAt && entry.title === post.title && entry.excerpt === post.excerpt
 }
 
 function toItem(post, reason) {
@@ -132,6 +145,39 @@ export function checkWebps({ large, small }) {
 export function unexpectedChanges(changedPaths, allowedPaths) {
   const allowed = new Set(allowedPaths)
   return changedPaths.filter((path) => !allowed.has(path))
+}
+
+/** AI 요약 한 줄 규칙. 사람이 다듬은 기존 요약 80개는 33~55자(중앙값 44자)이고 모두 '~니다.'로 끝난다. */
+export const EXCERPT_MIN = 25
+export const EXCERPT_MAX = 70
+
+/**
+ * AI가 쓴 요약 한 줄을 검사한다 (순수 함수).
+ * @returns {string[]} 문제 목록 (없으면 빈 배열)
+ */
+export function checkExcerpt(text, { title = '' } = {}) {
+  const excerpt = String(text ?? '').trim()
+  if (!excerpt) return ['요약이 비어 있습니다.']
+  const problems = []
+  if (/[\r\n]/.test(excerpt)) problems.push('요약은 한 줄이어야 합니다.')
+  const length = [...excerpt].length
+  if (length < EXCERPT_MIN || length > EXCERPT_MAX) problems.push(`요약은 ${EXCERPT_MIN}~${EXCERPT_MAX}자여야 합니다(지금 ${length}자).`)
+  if (!excerpt.endsWith('니다.')) problems.push("요약은 '~니다.'로 끝나야 합니다.")
+  else if ((excerpt.match(/니다\./g) || []).length > 1) problems.push('요약은 한 문장이어야 합니다.')
+  if (/[<>#*`[\]|]/.test(excerpt) || /^["'“‘「]/.test(excerpt)) problems.push('요약에 마크다운·HTML·따옴표 꾸밈을 쓰지 않습니다.')
+  if (title && excerpt.replace(/[\s.]/g, '') === String(title).replace(/[\s.]/g, '')) problems.push('요약이 제목과 같습니다.')
+  return problems
+}
+
+/**
+ * AI에게 보여 줄 요약 예시: 규칙에 맞는 기존 요약을 같은 앱에서 먼저(최신순), 모자라면 다른 앱에서 고른다.
+ * @param {Array<{ key: string, category: string, title: string, excerpt: string }>} posts 공개 사이트 표시 기준 글 목록
+ */
+export function pickExcerptExamples(posts, { key, category, limit = 6 }) {
+  const good = posts.filter((post) => post.key !== key && checkExcerpt(post.excerpt, { title: post.title }).length === 0)
+  const same = good.filter((post) => post.category === category)
+  const others = good.filter((post) => post.category !== category)
+  return [...same, ...others].slice(0, limit).map((post) => ({ title: post.title, excerpt: post.excerpt.trim() }))
 }
 
 /**

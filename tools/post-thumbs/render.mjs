@@ -6,6 +6,7 @@
  *   node render.mjs zoom <앱>/<slug> …        → review/zoom_<앱>__<slug>.png  960px 확대본
  *   node render.mjs export [<앱>/<slug> …] [--cat a,b] [--out DIR]
  *                                            → DIR/<앱>/<slug>-960.webp, -480.webp (기본 DIR: Elevate.Web/src/assets/post-thumbs)
+ *   node render.mjs excerpt <앱>/<slug> …     → work/<id>/excerpt.txt(AI 요약 한 줄)가 규칙에 맞는지 검사 (브라우저 없음)
  *
  * 글 목록은 data/posts.json을 쓴다 (없으면 공개 API에서 만든다. 새로 받으려면 `node data.mjs`).
  * 장면은 scenes/<앱>.js와 AI가 만든 scenes/auto/<앱>/<slug>.js를 모두 불러온다.
@@ -19,6 +20,7 @@ import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { chromium } from 'playwright'
 import { APPS, ROOT, THUMBS_DIR, fetchPublishedPosts, parseKey, writePostsData } from './lib/posts.mjs'
+import { checkExcerpt } from './lib/pipeline.mjs'
 
 const ICONS = join(ROOT, 'node_modules/@fluentui/svg-icons/icons')
 const REVIEW = join(ROOT, 'review')
@@ -123,12 +125,39 @@ function parseArgs(argv) {
     else options.targets.push(rest[i])
   }
   if (!['review', 'zoom', 'export'].includes(mode)) {
-    throw new Error('사용법: node render.mjs review <앱…|all> | zoom <앱>/<slug>… | export [<앱>/<slug>…] [--cat a,b] [--out DIR]')
+    throw new Error('사용법: node render.mjs review <앱…|all> | zoom <앱>/<slug>… | export [<앱>/<slug>…] [--cat a,b] [--out DIR] | excerpt <앱>/<slug>…')
   }
   return options
 }
 
+/**
+ * AI가 쓴 요약 한 줄(work/<id>/excerpt.txt)을 검사한다. 생성 단계의 AI는 렌더러(thumb-render)만 실행할 수 있어
+ * 스스로 확인할 수 있도록 여기에 둔다. 같은 규칙으로 validate.mjs와 publish.mjs가 다시 검사한다.
+ */
+export function checkExcerptFiles(targets, root = ROOT) {
+  if (!targets.length) throw new Error('사용법: node render.mjs excerpt <앱>/<slug>')
+  let issues = 0
+  for (const target of targets) {
+    const { key, id } = parseKey(target)
+    const file = join(root, 'work', id, 'excerpt.txt')
+    if (!existsSync(file)) {
+      console.log(`  ! excerpt: work/${id}/excerpt.txt가 없습니다.`)
+      issues += 1
+      continue
+    }
+    const content = join(root, 'work', id, 'content.json')
+    const title = existsSync(content) ? JSON.parse(readFileSync(content, 'utf8')).title : ''
+    const text = readFileSync(file, 'utf8').trim()
+    const problems = checkExcerpt(text, { title })
+    for (const problem of problems) console.log(`  ! excerpt: ${problem}`)
+    if (problems.length) issues += problems.length
+    else console.log(`${key} 요약 검사 통과 (${[...text].length}자): ${text}`)
+  }
+  return issues ? 1 : 0
+}
+
 export async function main(argv = process.argv.slice(2)) {
+  if (argv[0] === 'excerpt') return checkExcerptFiles(argv.slice(1))
   const options = parseArgs(argv)
   await ensurePostsData()
   mkdirSync(REVIEW, { recursive: true })

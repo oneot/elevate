@@ -15,9 +15,10 @@
 import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
-import { REPO_ROOT, SITE_URL, parseKey, thumbPaths } from './lib/posts.mjs'
+import { AUTOMATION_API, REPO_ROOT, SITE_URL, parseKey, thumbPaths } from './lib/posts.mjs'
 import { BRANCH_PREFIX, FAILURE_LABEL, MERGE_BLOCKED_LABEL, PR_LABEL, checkScene, checkWebps, failureTitle } from './lib/pipeline.mjs'
 import { ensureLabel, github, repository } from './lib/github.mjs'
+import { writeExcerpt } from './lib/excerpt.mjs'
 
 const items = JSON.parse(process.env.ITEMS || '[]')
 const artifacts = process.env.ARTIFACTS || join(REPO_ROOT, 'artifacts')
@@ -45,18 +46,19 @@ function readArtifact(item) {
   ]
   if (problems.length) throw new Error(`${item.key} 아티팩트 검사 실패: ${problems.join(' / ')}`)
   const note = join(dir, `tools/post-thumbs/work/${item.id}/summary.md`)
-  return { paths, files, note: existsSync(note) ? readFileSync(note, 'utf8').trim() : '' }
+  return { paths, files, source, note: existsSync(note) ? readFileSync(note, 'utf8').trim() : '' }
 }
 
 const TITLES = { new: '썸네일', edited: '썸네일 새 버전', manual: '썸네일 다시 만들기' }
 const REASONS = { new: '새로 게시된 글', edited: '글 내용(제목·요약·본문)이 바뀜', manual: '수동 실행으로 다시 만들기' }
 
-function prBody(item, sha, note, paths, previousSha) {
+function prBody(item, sha, note, paths, previousSha, excerpt) {
   const { category, slug } = parseKey(item.key)
   const raw = (ref) => `https://raw.githubusercontent.com/${repo}/${ref}/${paths.large}`
   const image = previousSha
     ? ['| 지금 | 새 버전 |', '| --- | --- |', `| ![지금 썸네일](${raw(previousSha)}) | ![새 썸네일](${raw(sha)}) |`].join('\n')
     : `![${item.title} 썸네일](${raw(sha)})`
+  const cell = (text) => String(text).replace(/\|/g, '\\|').replace(/\n/g, ' ')
   return [
     `## ${item.title}`,
     '',
@@ -66,9 +68,10 @@ function prBody(item, sha, note, paths, previousSha) {
     '| --- | --- |',
     `| 게시글 | [${SITE_URL}/${item.key}](${SITE_URL}/${item.key}) |`,
     `| 만든 이유 | ${REASONS[item.reason] || REASONS.new} |`,
+    `| 요약(AI) | ${excerpt?.text ? `${cell(excerpt.text)} — ${cell(excerpt.note)}` : `없음 — ${cell(excerpt?.note || '기재하지 않음')}`} |`,
     `| 장면 파일 | \`${paths.scene}\` |`,
     runUrl ? `| 만든 실행 | [Actions 실행](${runUrl}) (AI 작업 기록은 아티팩트 \`log-${item.id}\`) |` : null,
-    feedback ? `| 반영한 요청 | ${feedback.replace(/\|/g, '\\|').replace(/\n/g, ' ')} |` : null,
+    feedback ? `| 반영한 요청 | ${cell(feedback)} |` : null,
     '',
     '### AI 설명',
     '',
@@ -92,11 +95,11 @@ async function closeFailureIssue(item, message) {
   }
 }
 
-async function openPullRequest(item, artifact) {
+async function openPullRequest(item, artifact, excerpt) {
   const branch = `${BRANCH_PREFIX}${item.key}`
   if (dryRun) {
     const previous = item.reason === 'new' ? null : '<main sha>'
-    console.log(`[dry run] ${branch}에 ${Object.values(artifact.paths).join(', ')}를 커밋하고 PR을 엽니다.\n${prBody(item, '<sha>', artifact.note, artifact.paths, previous)}`)
+    console.log(`[dry run] ${branch}에 ${Object.values(artifact.paths).join(', ')}를 커밋하고 PR을 엽니다.\n${prBody(item, '<sha>', artifact.note, artifact.paths, previous, excerpt)}`)
     return
   }
   git('fetch', '--quiet', 'origin', 'main')
@@ -120,7 +123,7 @@ async function openPullRequest(item, artifact) {
   git('push', '--quiet', '--force', 'origin', `HEAD:refs/heads/${branch}`)
   git('switch', '--quiet', '--detach', 'origin/main')
 
-  const body = prBody(item, sha, artifact.note, artifact.paths, previousSha)
+  const body = prBody(item, sha, artifact.note, artifact.paths, previousSha, excerpt)
   const [open] = await github('GET', `/repos/${repo}/pulls?state=open&head=${encodeURIComponent(`${owner}:${branch}`)}`)
   let pr = open
   if (pr) {
@@ -179,13 +182,33 @@ async function reportFailure(item, reason) {
   console.log(`${item.key}: 실패 이슈를 남겼습니다 — ${reason}`)
 }
 
+/**
+ * AI 요약 한 줄을 게시글에 기재한다(서버 automation 입구, GitHub OIDC). PR보다 먼저 해서 PR 본문에 결과를 남긴다.
+ * 기재하지 못해도 썸네일 PR은 그대로 연다. 버전 기록의 지문은 AI 요약으로 계산했으므로,
+ * 기재하지 못한 글은 다음에 저장할 때 내용이 바뀐 것으로 보여 썸네일과 요약을 다시 만든다.
+ */
+async function writeItemExcerpt(item, source) {
+  const text = String(source.excerpt || '').trim()
+  if (dryRun) {
+    console.log(`[dry run] 요약 기재: PUT ${AUTOMATION_API}/posts/${source.id}/excerpt ← ${text || '(없음)'}`)
+    return { text, status: 'dry-run', note: text ? '(dry run) 게시글에 기재할 예정' : '기재하지 않음' }
+  }
+  const result = await writeExcerpt({ source, baseUrl: AUTOMATION_API })
+  const label = { written: '기재', skipped: '건너뜀', failed: '실패' }[result.status]
+  summary(`- ${item.key}: 요약 ${label} — ${result.note}`)
+  console.log(`${item.key}: 요약 ${label} — ${result.note}`)
+  if (result.status === 'failed') console.log(`::warning title=요약 기재 실패::${item.key} — ${result.note}`)
+  return { text, ...result }
+}
+
 let failed = 0
 const published = []
 for (const item of items) {
   try {
     const artifact = readArtifact(item)
     if (artifact) {
-      const pr = await openPullRequest(item, artifact)
+      const excerpt = await writeItemExcerpt(item, artifact.source)
+      const pr = await openPullRequest(item, artifact, excerpt)
       if (pr) published.push(pr)
     } else {
       await reportFailure(item, 'AI 생성 또는 검사 단계가 결과를 남기지 못했습니다.')

@@ -6,20 +6,21 @@
  *
  * 내용이 바뀌었는지는 sources/<앱>/<slug>.json(썸네일을 그린 글 버전)의 지문과 지금 글의 지문을 비교한다.
  * 공개 API의 수정 시각이 기록과 같으면 본문을 받지 않고, 다르면 본문을 받아 지문을 계산한다
- * (.cache/hashes.json에 수정 시각별로 남겨 다음 실행에서 다시 받지 않는다. Actions에서는 actions/cache로 이어진다).
- * PR 브랜치(thumbnail/<앱>/<slug>)가 지금 내용으로 만든 것이면 검토 중이거나 닫은 것이므로 다시 만들지 않는다.
+ * (.cache/hashes.json에 수정 시각·화면 제목·요약과 함께 남겨 다음 실행에서 다시 받지 않는다. Actions에서는 actions/cache로 이어진다.
+ *  AI 요약 기재는 수정 시각을 바꾸지 않으므로 요약이 달라지면 다시 계산한다).
+ * PR 브랜치(thumbnail/<앱>/<slug>)가 지금 내용으로 만든 것이면(그 뒤 저장하지 않았거나 지문이 같으면) 검토 중이거나 닫은 것이므로 다시 만들지 않는다.
  * 결과를 출력하고, Actions에서는 GITHUB_OUTPUT에 items(JSON 배열)와 count를 쓴다.
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
 import { REPO_ROOT, ROOT, contentHash, fetchPostHtml, fetchPublishedPosts, readSource, thumbPaths } from './lib/posts.mjs'
-import { BRANCH_PREFIX, FAILURE_LABEL, keyFromFailureTitle, planPosts } from './lib/pipeline.mjs'
+import { BRANCH_PREFIX, FAILURE_LABEL, hashCacheHit, keyFromFailureTitle, planPosts } from './lib/pipeline.mjs'
 import { github, repository } from './lib/github.mjs'
 
 const git = (...args) => execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()
 
-/** PR 브랜치별 버전 기록: key → { exists: true, contentHash } */
+/** PR 브랜치별 버전 기록: key → { exists: true, contentHash, postUpdatedAt } */
 function readBranches() {
   const branches = new Map()
   let names = []
@@ -32,13 +33,13 @@ function readBranches() {
   }
   for (const name of names) {
     const key = name.slice(BRANCH_PREFIX.length)
-    let hash = null
+    let record = {}
     try {
-      hash = JSON.parse(git('show', `origin/${name}:${thumbPaths(key).source}`)).contentHash || null
+      record = JSON.parse(git('show', `origin/${name}:${thumbPaths(key).source}`)) || {}
     } catch {
       // 버전 기록이 없는 브랜치: 내용과 상관없이 검토 중으로 본다.
     }
-    branches.set(key, { exists: true, contentHash: hash })
+    branches.set(key, { exists: true, contentHash: record.contentHash || null, postUpdatedAt: record.postUpdatedAt || null })
   }
   return branches
 }
@@ -53,10 +54,9 @@ const cacheFile = join(ROOT, '.cache/hashes.json')
 const cache = existsSync(cacheFile) ? JSON.parse(readFileSync(cacheFile, 'utf8')) : {}
 
 async function hashOf(post) {
-  const cached = cache[post.key]
-  if (cached && cached.updatedAt === post.updatedAt) return cached.contentHash
+  if (hashCacheHit(cache[post.key], post)) return cache[post.key].contentHash
   const hash = contentHash({ title: post.title, excerpt: post.excerpt, html: await fetchPostHtml(post) })
-  cache[post.key] = { updatedAt: post.updatedAt, contentHash: hash }
+  cache[post.key] = { updatedAt: post.updatedAt, title: post.title, excerpt: post.excerpt, contentHash: hash }
   return hash
 }
 
