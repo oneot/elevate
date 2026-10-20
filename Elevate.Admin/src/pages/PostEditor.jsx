@@ -9,7 +9,6 @@ import { isApiConfigured } from '../lib/apiClient.js'
 import { createPost, deletePost, getPost, updatePost } from '../services/postsApi.js'
 import { linkDraftFilesToPost } from '../services/assetsApi.js'
 import { formatDate } from '../utils/formatters.js'
-import { renderAutoThumbnail } from '../utils/autoThumbnail.js'
 import { getPublicThumbImage } from '../utils/publicThumbs.js'
 import { withDisplayText } from '../utils/postText.js'
 import {
@@ -45,8 +44,6 @@ const emptyPost = {
 }
 
 const ATTACHMENT_LINK_WARNING = '첨부파일 연결에 실패했습니다. 저장된 게시글에서 다시 확인해 주세요.'
-const THUMBNAIL_WARNING = '썸네일을 자동으로 만들지 못했습니다. 다음에 게시 상태로 저장하면 다시 만듭니다.'
-const THUMBNAIL_CREATED = '본문 내용으로 썸네일을 만들었습니다.'
 
 /** 새 글 주소의 앱 (?app=, 이전 주소 호환용 ?category=). */
 function getInitialApp(searchParams) {
@@ -59,10 +56,6 @@ function hasBodyContent(html) {
   const value = String(html || '')
   if (/<(img|iframe|video)\b/i.test(value)) return true
   return value.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').trim().length > 0
-}
-
-function hasThumbnail(post) {
-  return Boolean(post.thumbnail?.url || post.thumbnailUrl)
 }
 
 function withNotes(base, notes) {
@@ -137,7 +130,7 @@ function PostEditor() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
-  const { uploading: isUploading, uploadThumbnailFile, uploadHtmlImage } = usePostUpload({ msalInstance, postId })
+  const { uploading: isUploading, uploadHtmlImage } = usePostUpload({ msalInstance, postId })
 
   useEffect(() => {
     setDraftSessionId(isNew ? getDraftSessionId(draftAttachmentStorageKey) : '')
@@ -281,13 +274,6 @@ function PostEditor() {
   const publicThumb = isNew ? null : getPublicThumbImage(pageApp, post.slug)
   const previewImage = publicThumb || (post.thumbnailUrl ? { src: post.thumbnailUrl, srcSet: '' } : null)
 
-  /** 썸네일이 없는 글을 게시할 때 한 번만 만든다. 이미 있으면 글을 고쳐도 바꾸지 않는다. */
-  const createThumbnailIfNeeded = async (title) => {
-    if (!isPublished(post.status) || hasThumbnail(post) || publicThumb || !pageApp) return null
-    const file = await renderAutoThumbnail({ app: pageApp, title, excerpt: post.excerpt, html: post.htmlBody })
-    return uploadThumbnailFile(file, { alt: title })
-  }
-
   const handleSave = async () => {
     setError('')
     setMessage('')
@@ -325,14 +311,6 @@ function PostEditor() {
 
     setSaving(true)
     const notes = []
-    let thumbnail = null
-    try {
-      thumbnail = await createThumbnailIfNeeded(title)
-      if (thumbnail) notes.push(THUMBNAIL_CREATED)
-    } catch (thumbnailError) {
-      console.error('[PostEditor] auto thumbnail failed', thumbnailError)
-      notes.push(THUMBNAIL_WARNING)
-    }
 
     try {
       if (isNew) {
@@ -343,7 +321,6 @@ function PostEditor() {
           htmlBody: post.htmlBody,
           status: post.status,
           tags: applyAppTag([], selectedApp),
-          thumbnail,
         }, { msalInstance })
         const newId = created?.id || created?.postId
         let draftAttachmentLinkState = null
@@ -379,7 +356,6 @@ function PostEditor() {
           excerpt: post.excerpt,
           htmlBody: post.htmlBody,
           status: post.status,
-          thumbnail,
         }, { msalInstance })
         try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
         // 저장 중에 고친 입력은 덮어쓰지 않고, 서버가 정한 시각·상태·썸네일만 반영한다.
