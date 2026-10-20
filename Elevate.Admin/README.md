@@ -105,8 +105,10 @@ React + Vite로 빌드하며, `admin` 브랜치 push 때 Azure Static Web Apps�
   `/`로 시작하는 경로일 때만 쓰고, 다른 호스트 값은 무시합니다.
 - Entra 앱 등록의 SPA 리디렉션 URI에는 두 호스트의 origin이 등록되어 있어야 합니다.
   Entra는 끝 슬래시까지 정확히 비교하므로 앱이 보내는 값(끝 슬래시 없음)을 그대로 등록합니다.
-- API 토큰 검증, CORS 허용 origin은 Server/Azure 설정입니다. 사용자 지정 도메인 origin
-  `https://admin.microsoft-elevate.com`이 Function App CORS에 있어야 합니다.
+- API 토큰 검증, CORS 허용 origin은 Server/Azure 설정입니다. 관리자 호스트의 origin
+  (`https://admin.microsoft-elevate.com`, 기본 호스트)은 Function App CORS와 Storage Blob CORS에 모두 있어야 합니다.
+  이미지·첨부·자동 썸네일 업로드는 브라우저가 사용자 위임 SAS로 Blob에 바로 PUT하므로 Blob CORS가 빠지면 업로드만 실패합니다.
+  현재 값과 확인 방법은 [배포 런북](../documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md#인증cors-전제-2026-10-20-코디네이터-확인)에 있습니다.
 
 ## 환경 변수
 

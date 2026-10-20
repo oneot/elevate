@@ -118,6 +118,15 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 - Entra 앱 등록의 SPA 리디렉션 URI: 두 호스트의 origin을 끝 슬래시 있는 형태와 없는 형태로 모두 등록했다.
   앱은 끝 슬래시 없는 현재 origin을 보낸다(예: `https://admin.microsoft-elevate.com`).
 - Function App CORS에 `https://admin.microsoft-elevate.com`을 추가했다. 기본 호스트 origin도 유지한다.
+- Storage(`stelvdevimiruajbu5bya`) Blob 서비스 CORS에도 `https://admin.microsoft-elevate.com`을 추가했다(2026-10-20 17:2x).
+  본문 이미지·첨부·자동 썸네일은 브라우저가 사용자 위임 SAS로 Blob에 바로 PUT하므로 이 설정이 없으면 업로드만 실패한다.
+  - 규칙 1개: 메서드 `OPTIONS, PUT, GET, HEAD`, 허용 헤더 `content-type, x-ms-blob-type, x-ms-version, authorization, x-ms-*`,
+    노출 헤더 `etag, last-modified, x-ms-*`, Max-Age 3600초
+  - 허용 origin: `https://white-sea-0567ed600.4.azurestaticapps.net`, `http://localhost:5173`, `https://admin.microsoft-elevate.com`
+  - 확인: 관리자 origin에서 `PUT` preflight(헤더 `content-type,x-ms-blob-cache-control,x-ms-blob-type`)가 200이고
+    `Access-Control-Allow-Origin`이 그 origin이어야 한다. 목록에 없는 origin은 403이다.
+- `rg-elv-dev`에는 ReadOnly 잠금이 있다. 관리자 호스트를 추가하는 등 Function App·Storage CORS를 바꿀 때는
+  잠금을 잠시 풀고, 기존 규칙에 origin만 더한 뒤 바로 ReadOnly로 다시 건다.
 - MSAL 캐시는 `sessionStorage`이므로 두 호스트의 로그인 상태는 공유되지 않는다. 호스트마다 한 번씩 로그인한다.
 
 ### 배포 후 확인
@@ -139,6 +148,7 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 | `AADSTS50011` | 로그인 요청의 `redirect_uri`와 Entra SPA 리디렉션 URI가 끝 슬래시까지 같은지 |
 | 로그인 후 다른 호스트로 이동 | 배포 산출물이 이번 변경 이후 빌드인지 (이전 빌드는 secret 주소로 고정) |
 | 목록에서 CORS 오류 | Function App CORS에 접속한 origin이 있는지 |
+| 이미지·첨부 업로드 실패 (콘솔에 Blob CORS 오류) | Storage Blob CORS 허용 origin에 접속한 관리자 호스트가 있는지 (위 '인증·CORS 전제') |
 | '썸네일을 자동으로 만들지 못했습니다' | 브라우저 콘솔의 `[PostEditor] auto thumbnail failed` 오류, Blob 업로드 SAS·CORS. 글은 저장되며 다음 게시 저장 때 다시 만든다 |
 
 ## GitHub Pages Smoke Test
