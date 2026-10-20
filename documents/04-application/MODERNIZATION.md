@@ -339,6 +339,22 @@ SDK 내부의 React 개발 모드 경고와 큰 청크/Speech SDK 빌드 경고�
   - 코디네이터가 Function App 앱 설정에 토큰을 넣고 서버를 `main` 5eb21e8로 배포했다. 운영은 그동안 08-21 버전이었으므로, 10-18 모더나이즈의 서버 변경도 이때 처음 나갔다.
   - 공개 API 회귀 대조와 이전 버전으로 되돌리는 방법은 [런북](../06-operations/DEPLOYMENT_AND_RUNBOOK.md)의 '서버(Function App) 배포'에 있다.
   - 테스트 글 2개가 삭제돼 그 썸네일 PR(#285·#286)은 닫았다. 관리자 실제 저장으로 실행이 시작되는지는 다음 실제 글 게시 때 확인한다.
+- **자동 병합** (사용자 요청: "PR 자동 머지까지 하도록 해서 인간 개입 없이 자동으로 생성 되는 프로세스로 바꿔줘")
+  - `Post thumbnails`에 merge job(`tools/post-thumbs/merge.mjs`)을 더했다.
+    - publish가 연 PR마다 그 브랜치에서 `Repository checks`(`web-checks.yml`, workflow_dispatch 추가)를 실행한다. 통과하고 PR이 publish 커밋 그대로면 커밋 SHA를 붙여 병합하고 브랜치를 지운다.
+    - 하나라도 병합하면 `Deploy to GitHub Pages`와 `Sync post thumbnails to admin`을 한 번씩 직접 실행한다.
+  - GitHub 동작 때문에 직접 실행이 필요하다. GITHUB_TOKEN으로 만든 PR에는 pull_request 검사가 돌지 않고, GITHUB_TOKEN으로 병합한 커밋은 push 이벤트로 배포를 깨우지 않는다. workflow_dispatch만 예외다.
+  - GitHub 자동 병합 기능('Allow auto-merge')은 branch protection이 없는 이 저장소에서 기다릴 필수 검사가 없으므로 쓰지 않았다.
+  - 병합하지 않는 경우와 처리
+    - 검사 실패·시간 초과(30분), 브랜치 변경, 충돌: 라벨 `thumbnail-merge-blocked`와 댓글(검사 링크)을 남기고 실행을 실패로 표시한다.
+    - 생성·validate 실패: 기존처럼 실패 이슈만 남고 PR이 없으므로 병합 대상이 아니다.
+  - 저장소 변수 `THUMBNAIL_AUTO_MERGE=false`로 끌 수 있다(사람이 병합).
+  - 검증: 도구 테스트 19개에서 36개로 늘렸다.
+    - 병합 판단(통과·실패·취소·시간 초과·브랜치 변경·닫힌 PR), 검사 run 고르기, PR 정보 검증을 추가했다.
+    - 가짜 GitHub API로 흐름 전체를 시험했다. 순서대로 병합, 배포 한 번, 실패 PR 라벨·댓글, 병합 없으면 배포 없음, 시간 초과, run 번호 없는 응답, 병합 거부, 잘못된 브랜치, 배포 요청 실패를 다룬다.
+    - 연달아 병합할 때 GitHub가 잠시 405를 주면 다시 시도하고, 409(커밋 바뀜)는 다시 시도하지 않는 것도 시험한다.
+    - 판단을 일부러 망가뜨리면 테스트가 실패하는 것도 확인했다.
+  - 이 변경을 병합하기 전에 열린 썸네일 PR은 merge job이 없던 실행에서 만들어졌으므로 자동으로 병합되지 않는다.
 
 ## 회귀 검증과 배포 경계
 
