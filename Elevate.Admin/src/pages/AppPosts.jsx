@@ -183,7 +183,7 @@ export default function AppPosts() {
   } else {
     body = (
       <div className="ea-grid">
-        {visible.map((post) => <PostCard key={post.id} post={post} showApp={isAll} />)}
+        {visible.map((post, index) => <PostCard key={post.id} post={post} priority={index < 3} showApp={isAll} />)}
       </div>
     )
   }
