@@ -4,8 +4,11 @@ import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../src/App.jsx'
-import { listAllPosts } from '../src/services/postsApi.js'
+import { getPost, listAllPosts } from '../src/services/postsApi.js'
 import { BASE_CATEGORIES } from '../src/constants/apps.js'
+import { _test as cardImages } from '../src/hooks/useCardImage.js'
+import { CARD_IMAGE_SIZES } from '../src/utils/postImages.js'
+import { getPostThumbImageProps } from '../../Elevate.Web/src/utils/postThumbs.js'
 
 const { auth } = vi.hoisted(() => ({
   auth: { msalInstance: {}, isAuthenticated: true, inProgress: 'none', login: null, logout: null },
@@ -72,6 +75,8 @@ beforeEach(() => {
   auth.login = vi.fn(() => Promise.resolve())
   auth.logout = vi.fn(() => Promise.resolve())
   listAllPosts.mockImplementation(({ category }) => Promise.resolve(POSTS[category] || []))
+  getPost.mockReset()
+  cardImages.reset()
   host = document.createElement('div')
   document.body.append(host)
   root = createRoot(host)
@@ -168,6 +173,91 @@ describe('app post lists', () => {
     expect(cardTitles()).toHaveLength(8)
     expect(host.querySelector('[role="alert"]').textContent).toContain('Teams 게시글을 불러오지 못했습니다.')
     expect(console.error).toHaveBeenCalledWith(expect.stringContaining('teams'), expect.any(Error))
+  })
+})
+
+const BLOB = 'https://stelvdevimiruajbu5bya.blob.core.windows.net/images/thumbnails/azure-deploy'
+function dbThumbnail(sig) {
+  const variant = (name, width) => ({
+    url: `${BLOB}/${name}`, signedUrl: `${BLOB}/${name}?sig=${sig}`, width, height: width * 9 / 16,
+  })
+  return {
+    url: `${BLOB}/orig.jpg`, signedUrl: `${BLOB}/orig.jpg?sig=${sig}`,
+    variants: { thumb: variant('thumb.webp', 480), card: variant('card.webp', 960), hero: variant('hero.webp', 1440) },
+  }
+}
+
+const cardImage = (title) => [...host.querySelectorAll('.ea-card')]
+  .find((card) => card.querySelector('.ea-card__title').textContent === title)
+  ?.querySelector('.ea-card__media > img')
+const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)))
+
+describe('post card images', () => {
+  it('shows the same card image as the public site for posts it already illustrates', async () => {
+    await render('/apps/all')
+    for (const [title, app, slug] of [['github-pages title', 'github', 'github-pages'], ['wordonline1 title', 'word', 'wordonline1']]) {
+      const expected = getPostThumbImageProps(app, slug, CARD_IMAGE_SIZES)
+      const image = cardImage(title)
+      expect(image.getAttribute('src')).toBe(expected.src)
+      expect(image.getAttribute('srcset')).toBe(expected.srcSet)
+      expect(image.getAttribute('sizes')).toBe(CARD_IMAGE_SIZES)
+    }
+    const images = [...host.querySelectorAll('.ea-card__media > img')]
+    expect(images).toHaveLength(8)
+    expect(images.slice(0, 3).map((image) => image.getAttribute('loading'))).toEqual(['eager', 'eager', 'eager'])
+    expect(images.slice(0, 3).map((image) => image.getAttribute('fetchpriority'))).toEqual(['high', 'high', 'high'])
+    expect(images.slice(3).every((image) => image.getAttribute('loading') === 'lazy')).toBe(true)
+    // 공개 사이트 정적 썸네일이 없는 글만 상세를 조회한다.
+    expect(getPost.mock.calls.map(([id]) => id)).toEqual(['azure-deploy'])
+  })
+
+  it('shows the uploaded thumbnail variants for posts without a public-site image and reuses them', async () => {
+    let resolve
+    getPost.mockReturnValueOnce(new Promise((next) => { resolve = next }))
+    await render('/apps/azure')
+    expect(host.querySelector('.ea-card__media > .ea-card__placeholder')).not.toBeNull()
+
+    const thumbnail = dbThumbnail('first')
+    await act(async () => resolve({ id: 'azure-deploy', thumbnail }))
+    await settle()
+    const image = cardImage('azure-deploy title')
+    expect(image.getAttribute('src')).toBe(thumbnail.variants.card.signedUrl)
+    expect(image.getAttribute('srcset')).toBe(`${thumbnail.variants.thumb.signedUrl} 480w, ${thumbnail.variants.card.signedUrl} 960w`)
+    expect(image.getAttribute('sizes')).toBe(CARD_IMAGE_SIZES)
+    expect(getPost).toHaveBeenCalledWith('azure-deploy', { msalInstance: auth.msalInstance })
+
+    await render('/apps/all')
+    await render('/apps/azure')
+    await settle()
+    expect(cardImage('azure-deploy title').getAttribute('src')).toBe(thumbnail.variants.card.signedUrl)
+    expect(getPost).toHaveBeenCalledTimes(1)
+  })
+
+  it('falls back to the app glass tile when a post has no thumbnail', async () => {
+    getPost.mockResolvedValue({ id: 'azure-deploy', thumbnail: null })
+    await render('/apps/azure')
+    await settle()
+    expect(host.querySelector('.ea-card__media > img')).toBeNull()
+    expect(host.querySelector('.ea-card__media > .ea-art--card')).not.toBeNull()
+  })
+
+  it('fetches fresh signed URLs once when the thumbnail fails to load, then shows the glass tile', async () => {
+    getPost
+      .mockResolvedValueOnce({ id: 'azure-deploy', thumbnail: dbThumbnail('expired') })
+      .mockResolvedValueOnce({ id: 'azure-deploy', thumbnail: dbThumbnail('fresh') })
+    await render('/apps/azure')
+    await settle()
+    expect(cardImage('azure-deploy title').getAttribute('src')).toContain('sig=expired')
+
+    await act(() => cardImage('azure-deploy title').dispatchEvent(new Event('error')))
+    await settle()
+    expect(cardImage('azure-deploy title').getAttribute('src')).toContain('sig=fresh')
+    expect(getPost).toHaveBeenCalledTimes(2)
+
+    await act(() => cardImage('azure-deploy title').dispatchEvent(new Event('error')))
+    expect(cardImage('azure-deploy title')).toBeNull()
+    expect(host.querySelector('.ea-card__media > .ea-art--card')).not.toBeNull()
+    expect(getPost).toHaveBeenCalledTimes(2)
   })
 })
 

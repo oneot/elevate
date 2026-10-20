@@ -1266,17 +1266,28 @@ body {
   transition: translate 0.9s var(--ea-out);
 }
 
-.ea-card__status {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 3;
+/* 공개 카드(.edoc-card__media img)와 같은 채움·확대. */
+.ea-card__media > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s var(--ea-out);
+}
+
+.ea-card__placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
 }
 
 @media (hover: hover) {
   .ea-card__link:hover .ea-card__media {
     transform: translateY(-3px);
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04), 0 18px 36px -18px rgba(15, 23, 42, 0.38);
+  }
+
+  .ea-card__link:hover .ea-card__media > img {
+    transform: scale(1.03);
   }
 
   .ea-card__link:hover .ea-card__media::after {
@@ -1349,6 +1360,12 @@ body {
   padding-top: 4px;
   color: var(--ea-ink-4);
   font-size: 12.5px;
+}
+
+.ea-card__meta .ea-status {
+  height: 20px;
+  padding: 0 8px;
+  font-size: 11.5px;
 }
 
 /* 게시 상태 표시 */

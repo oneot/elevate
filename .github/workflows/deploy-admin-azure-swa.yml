@@ -5,6 +5,8 @@ on:
         branches: [admin]
         paths:
             - "Elevate.Admin/**"
+            # 목록 카드·편집 미리보기가 공개 사이트 정적 썸네일을 빌드에 포함한다 (src/utils/publicThumbs.js).
+            - "Elevate.Web/src/assets/post-thumbs/**"
             - ".github/workflows/deploy-admin-azure-swa.yml"
     workflow_dispatch:
 
