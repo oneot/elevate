@@ -74,31 +74,26 @@ React + Vite로 빌드하며, `admin` 브랜치 push 때 Azure Static Web Apps�
 | 상태 | **게시**(공개)와 **보관**(비공개) 두 가지. 새 글의 기본값은 보관이며 서버에는 `archived`로 저장합니다. 서버의 `draft` 글은 보관으로 보이고, 보관을 유지하면 `draft` 그대로 둡니다 |
 | slug | 입력하지 않습니다. 새 글을 만들 때 서버가 제목으로 만듭니다(영문·숫자만 사용, 없으면 `post`, 겹치면 `-2`, `-3` …). 저장 후에는 바뀌지 않습니다 |
 | 태그·시리즈 | 편집하지 않습니다. 새 글에는 앱 태그만 자동으로 붙고, 기존 글의 태그·시리즈는 수정 요청에 보내지 않아 그대로 남습니다 |
-| 썸네일 | 직접 올리지 않습니다. 아래 자동 썸네일이 처음 게시할 때 한 번 만들고, 편집 화면에서는 공개 카드에 표시되는 이미지를 미리보기로만 보여 줍니다. 썸네일이 아직 없으면 칸을 보여 주지 않습니다 |
+| 썸네일 | 관리자에서 만들거나 올리지 않습니다. 게시된 글은 아래 'AI 썸네일'이 만들어 PR로 올리고, 편집 화면에서는 공개 카드에 표시되는 이미지를 미리보기로만 보여 줍니다. 썸네일이 아직 없으면 칸을 보여 주지 않습니다 |
 | 첨부파일 | '링크 복사' 후 본문에 붙여 넣으면 파일 이름이 링크 글자로 들어갑니다(주소는 서명 없는 Blob URL, 서버가 읽을 때 서명). 다른 입력란에 붙여 넣으면 URL이 들어갑니다. macOS에서 올린 한글 파일 이름(NFD)은 NFC로 맞춰 등록합니다 |
 
-### 자동 썸네일
+### AI 썸네일
 
-게시 상태로 저장할 때 글에 썸네일이 없으면 브라우저 Canvas로 썸네일을 만들어 올린 뒤 함께 저장합니다
-(`src/utils/autoThumbnail.js`). 썸네일이 이미 있으면 다시 만들지 않으므로, 이후 글을 고쳐도 첫 썸네일이 유지됩니다.
+게시된 글의 카드 썸네일은 GitHub Actions **Post thumbnails**(`.github/workflows/post-thumbnails.yml`)가 만듭니다.
+관리자에서 게시한 뒤 15분 간격의 정기 실행이 썸네일 없는 새 글을 찾고, GitHub Copilot CLI가 본문 전체를 읽어
+기존 80개와 같은 'UI 미니어처' 장면을 설계·렌더·검수한 뒤 PR로 올립니다. PR을 병합하면 공개 사이트와 관리자에 반영됩니다.
+그 사이 카드에는 앱 유리 타일이 보입니다. 게시한 글의 제목·요약·본문을 고치면 다음 정기 실행이 새 버전을 만들어
+'썸네일 새 버전' PR(지금 이미지와 나란히)로 올립니다. 병합하기 전까지는 지금 썸네일이 그대로 보입니다.
+게시 상태만 바꾸거나 내용 없이 저장하면 새로 만들지 않습니다. 원할 때 다시 만들려면 Actions에서 직접 실행합니다.
+자세한 구조와 운영 방법은 [tools/post-thumbs/README.md](../tools/post-thumbs/README.md)에 있습니다.
 
-- 기존 글: 공개 카드는 공개 사이트가 미리 만든 썸네일(`Elevate.Web/src/assets/post-thumbs`)을 DB 썸네일보다 먼저 씁니다.
-  목록 카드와 편집 화면 미리보기도 같은 순서로 보여 주고(`src/utils/publicThumbs.js`), 이 이미지가 있는 글에는 자동 썸네일을 만들지 않습니다.
-  이 이미지는 빌드 때 Admin 산출물에 함께 들어가며 화면에 보일 때만 내려받습니다. 그래서 이 폴더가 바뀌면 Admin도 다시 배포합니다.
+- 공개 카드는 공개 사이트 정적 썸네일(`Elevate.Web/src/assets/post-thumbs`)을 DB 썸네일보다 먼저 씁니다.
+  목록 카드와 편집 화면 미리보기도 같은 순서로 보여 줍니다(`src/utils/publicThumbs.js`).
+  이 이미지는 빌드 때 Admin 산출물에 함께 들어가며 화면에 보일 때만 내려받습니다. 그래서 이 폴더가 바뀌면 Admin도 다시 배포합니다
+  (`main`에 병합되면 `Sync post thumbnails to admin`이 `admin` 브랜치에 이미지만 맞추고 배포).
   개발 서버가 이 폴더를 읽도록 `vite.config.js`의 `server.fs.allow`에 추가했습니다.
-
-- 모양: 공개 사이트 기존 썸네일(`Elevate.Web/src/assets/post-thumbs`)을 만든 'UI 미니어처' kit v2(소프트 글래스)와
-  같은 규칙입니다. 앱 색 파스텔 무대와 흐린 글로우, 창 뒤의 유리 오브젝트, 프로스티드 글래스 창(앱 아이콘·이름, 제목,
-  체크 행), 목차 또는 요약 카드, 검정 원형 아이콘의 흰 유리 알약 하나. Copilot Studio는 kit처럼 밝은 유리 다크 무대입니다.
-- 내용: 제목, 본문 소제목(목차 카드), 목록 항목(체크 행, 첫 행 강조), 첫 문단, 요약에서 고릅니다.
-  알약 문구는 요약 첫 구절이나 제목의 구절 등 말줄임 없이 한 줄에 들어가는 글을 고릅니다. 본문 이미지는 쓰지 않습니다.
-  배치 규칙은 `src/utils/thumbnailLayout.js`(순수 함수, `tests/auto-thumbnail.test.js`)에 있습니다.
-- 파일: 1440×810 PNG를 만들고, 업로드 때 공개 카드용 480·960·1440 WebP variants를 모두 올립니다.
-  variants가 하나라도 실패하면 썸네일 없이 글만 저장하고 경고를 보여 주며, 다음에 게시 상태로 저장할 때 다시 만듭니다.
-- 자산: 유리 오브젝트는 kit의 `assets/glass/<app>/<shape>.png`를 640px WebP로 줄인 것입니다
-  (`src/assets/glass`, 13개 앱 × 5개, 약 1.5 MB). 썸네일을 만들 때 필요한 2개만 내려받습니다.
-  알약·카드 아이콘은 Fluent UI System Icons(MIT)의 경로를 옮겼습니다(`src/utils/thumbnailIcons.js`).
-- `ctx.filter`를 지원하지 않는 브라우저(일부 Safari)에서는 흐림을 축소·확대로 근사해 같은 구성으로 만듭니다.
+- 예전에 브라우저에서 만들던 자동 썸네일(Canvas)은 본문 요약 수준이라 없앴습니다. 그때 만들어진 DB 썸네일은 그대로 남고,
+  AI 썸네일이 병합되면 정적 이미지가 우선합니다.
 
 ## 앱과 서버 category
 
@@ -133,7 +128,7 @@ React + Vite로 빌드하며, `admin` 브랜치 push 때 Azure Static Web Apps�
   Entra는 끝 슬래시까지 정확히 비교하므로 앱이 보내는 값(끝 슬래시 없음)을 그대로 등록합니다.
 - API 토큰 검증, CORS 허용 origin은 Server/Azure 설정입니다. 관리자 호스트의 origin
   (`https://admin.microsoft-elevate.com`, 기본 호스트)은 Function App CORS와 Storage Blob CORS에 모두 있어야 합니다.
-  이미지·첨부·자동 썸네일 업로드는 브라우저가 사용자 위임 SAS로 Blob에 바로 PUT하므로 Blob CORS가 빠지면 업로드만 실패합니다.
+  본문 이미지·첨부 업로드는 브라우저가 사용자 위임 SAS로 Blob에 바로 PUT하므로 Blob CORS가 빠지면 업로드만 실패합니다.
   현재 값과 확인 방법은 [배포 런북](../documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md#인증cors-전제-2026-10-20-코디네이터-확인)에 있습니다.
 
 ## 환경 변수
@@ -165,7 +160,7 @@ npm run sync:post-content   # Web 본문 CSS를 바꾼 뒤 편집기용 복사�
 
 `check:bundle`은 `index.html`과 기본 목록(`src/pages/AppPosts.jsx`)의 정적 의존성을 합산하고
 편집기(Tiptap) 즉시 로딩을 실패로 처리합니다. 앱 아이콘·유리 타일·유리 오브젝트 이미지는 JS에 인라인하지 않습니다
-(`vite.config.js`의 `assetsInlineLimit: 0`). 자동 썸네일 코드는 편집 화면 chunk에만 들어갑니다.
+(`vite.config.js`의 `assetsInlineLimit: 0`).
 목록 카드가 쓰는 정적 썸네일 주소표(약 17 KB)는 초기 목록 JavaScript에 들어갑니다.
 공개 사이트 화면 문구표(약 26 KB)는 별도 chunk로 두고 목록을 불러올 때 함께 받습니다.
 
@@ -175,6 +170,6 @@ npm run sync:post-content   # Web 본문 CSS를 바꾼 뒤 편집기용 복사�
 2. 운영 반영은 `main`을 `admin` 브랜치로 병합해 push할 때 `.github/workflows/deploy-admin-azure-swa.yml`이 수행합니다.
    `Elevate.Admin/**`, 공개 사이트 정적 썸네일(`Elevate.Web/src/assets/post-thumbs/**`),
    공개 사이트 화면 문구(`Elevate.Web/src/constants/postText.js`)가 바뀌었을 때 실행됩니다.
-3. 배포 후 두 호스트에서 각각 로그인·목록(카드 썸네일이 공개 사이트와 같은지)·앱별 새 글 저장(보관)·게시와 자동 썸네일·편집·로그아웃을 확인합니다.
+3. 배포 후 두 호스트에서 각각 로그인·목록(카드 썸네일이 공개 사이트와 같은지)·앱별 새 글 저장(보관)·게시·편집·로그아웃을 확인합니다.
 
 자세한 운영 절차는 [배포 런북](../documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md#관리자-배포와-도메인)을 참고합니다.
