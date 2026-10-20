@@ -2,12 +2,19 @@
  * 생성 파이프라인의 순수 함수 (단위 테스트 대상).
  * - 어떤 글의 썸네일을 만들지 고르기
  * - AI가 쓴 장면 파일과 WebP 결과 검사
+ * - 썸네일 PR을 자동으로 병합할지 정하기
  */
 import { parseKey } from './posts.mjs'
 
 export const FAILURE_LABEL = 'thumbnail-failed'
 export const PR_LABEL = 'thumbnail'
 export const BRANCH_PREFIX = 'thumbnail/'
+/** 자동 병합하지 못한 썸네일 PR에 붙이는 라벨 (사람이 확인한다). */
+export const MERGE_BLOCKED_LABEL = 'thumbnail-merge-blocked'
+/** 병합 전에 PR 브랜치에서 실행하는 저장소 검사 ('Repository checks'). */
+export const CHECKS_WORKFLOW = 'web-checks.yml'
+/** 병합한 뒤 실행하는 배포. GITHUB_TOKEN으로 병합한 커밋은 push 이벤트로 이 workflow들을 깨우지 않는다. */
+export const DEPLOY_WORKFLOWS = ['deploy.yml', 'sync-admin-thumbnails.yml']
 
 export const failureTitle = (key) => `썸네일 자동 생성 실패: ${key}`
 
@@ -125,4 +132,61 @@ export function checkWebps({ large, small }) {
 export function unexpectedChanges(changedPaths, allowedPaths) {
   const allowed = new Set(allowedPaths)
   return changedPaths.filter((path) => !allowed.has(path))
+}
+
+/**
+ * publish가 넘긴 PR 정보가 이 파이프라인이 만든 썸네일 PR인지 확인한다.
+ * 브랜치는 thumbnail/<key>여야 한다. 병합 뒤 그 브랜치를 지우므로 다른 브랜치를 건드리지 않게 한다.
+ * @returns {string|null} 문제가 있으면 이유
+ */
+export function publishedPrProblem(pr) {
+  try {
+    const { key } = parseKey(pr?.key)
+    if (!Number.isInteger(pr.number) || pr.number < 1) return 'PR 번호가 올바르지 않습니다.'
+    if (pr.branch !== `${BRANCH_PREFIX}${key}`) return `브랜치가 ${BRANCH_PREFIX}${key}가 아닙니다.`
+    if (!/^[0-9a-f]{40}$/.test(pr.sha || '')) return '커밋 SHA가 올바르지 않습니다.'
+    return null
+  } catch (error) {
+    return error.message
+  }
+}
+
+/** 방금 실행을 요청한 검사 run을 고른다: 같은 커밋, 요청 시각(시계 차이 허용) 이후, 가장 최근. */
+export function pickChecksRun(runs, { sha, since, skewMs = 2 * 60_000 }) {
+  return (runs || [])
+    .filter((run) => run.head_sha === sha && Date.parse(run.created_at) >= since - skewMs)
+    .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0] || null
+}
+
+const CHECK_RESULTS = {
+  failure: '실패',
+  cancelled: '취소됨',
+  timed_out: '시간 초과',
+  startup_failure: '시작 실패',
+  action_required: '승인 필요',
+  skipped: '건너뜀',
+  neutral: '판정 없음',
+  stale: '오래됨',
+  not_started: '실행 요청 실패',
+}
+
+/**
+ * 썸네일 PR을 지금 병합할지 정한다 (순수 함수).
+ * - 이미 닫혔거나 병합된 PR은 건너뛴다.
+ * - publish가 올린 커밋에서 바뀌었거나, 검사가 통과하지 않았거나, 검사한 커밋이 다르면 병합하지 않는다(사람이 확인).
+ * @param {{ pr: object|null, expectedSha: string, checks: { conclusion: string, sha?: string }|null }} input
+ *   pr은 GitHub의 PR 응답, checks는 'Repository checks' 결과
+ * @returns {{ action: 'merge'|'block'|'skip', reason: string }}
+ */
+export function mergeDecision({ pr, expectedSha, checks }) {
+  if (!pr || pr.state !== 'open') {
+    return { action: 'skip', reason: pr?.merged ? '이미 병합된 PR입니다.' : '열려 있지 않은 PR입니다.' }
+  }
+  if (pr.head?.sha !== expectedSha) return { action: 'block', reason: '썸네일을 올린 뒤 PR 브랜치가 바뀌었습니다.' }
+  if (!checks || checks.conclusion !== 'success') {
+    const result = checks ? CHECK_RESULTS[checks.conclusion] || checks.conclusion || '알 수 없음' : '없음'
+    return { action: 'block', reason: `Repository checks가 통과하지 않았습니다 (${result}).` }
+  }
+  if (checks.sha && checks.sha !== expectedSha) return { action: 'block', reason: '검사한 커밋이 PR 커밋과 다릅니다.' }
+  return { action: 'merge', reason: 'Repository checks 통과' }
 }
