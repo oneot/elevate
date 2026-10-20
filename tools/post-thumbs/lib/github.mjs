@@ -30,13 +30,12 @@ export async function github(method, path, body) {
   return data
 }
 
-/** 라벨이 없으면 만든다. */
-export async function ensureLabel(name, description, color) {
-  const repo = repository()
+/** 라벨이 없으면 만든다. api·repo는 테스트에서 바꿔 끼운다. */
+export async function ensureLabel(name, description, color, { api = github, repo = repository() } = {}) {
   try {
-    await github('GET', `/repos/${repo}/labels/${encodeURIComponent(name)}`)
+    await api('GET', `/repos/${repo}/labels/${encodeURIComponent(name)}`)
   } catch (error) {
     if (error.status !== 404) throw error
-    await github('POST', `/repos/${repo}/labels`, { name, description, color })
+    await api('POST', `/repos/${repo}/labels`, { name, description, color })
   }
 }

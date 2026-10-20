@@ -10,12 +10,13 @@
  *   DRY_RUN=1   아무것도 올리지 않고 할 일과 PR 본문만 출력한다 (로컬 점검용)
  * 이 단계는 생성 단계(AI 실행)와 분리된 job에서만 저장소에 쓰기 권한을 가진다.
  * 아티팩트 파일은 다시 검사하고, 장면 파일·글 버전 기록·WebP 두 장만 커밋한다.
+ * 연(또는 갱신한) PR 목록을 step 출력 prs로 남긴다. 다음 merge 단계(merge.mjs)가 검사 후 자동으로 병합한다.
  */
 import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
 import { REPO_ROOT, SITE_URL, parseKey, thumbPaths } from './lib/posts.mjs'
-import { BRANCH_PREFIX, FAILURE_LABEL, PR_LABEL, checkScene, checkWebps, failureTitle } from './lib/pipeline.mjs'
+import { BRANCH_PREFIX, FAILURE_LABEL, MERGE_BLOCKED_LABEL, PR_LABEL, checkScene, checkWebps, failureTitle } from './lib/pipeline.mjs'
 import { ensureLabel, github, repository } from './lib/github.mjs'
 
 const items = JSON.parse(process.env.ITEMS || '[]')
@@ -75,9 +76,11 @@ function prBody(item, sha, note, paths, previousSha) {
     '',
     '### 확인과 반영',
     '',
-    '- 병합하면 공개 사이트 카드에 이 썸네일이 표시되고, 관리자 목록에도 반영됩니다(`Sync post thumbnails to admin`이 관리자를 다시 배포).',
-    `- 다시 만들려면 Actions → **Post thumbnails** → Run workflow에서 \`key\`에 \`${category}/${slug}\`, \`feedback\`에 바라는 점을 적어 실행하세요. 이 PR이 새 썸네일로 바뀝니다.`,
-    `- 쓰지 않으려면 PR을 닫으세요. 같은 내용으로는 자동으로 다시 만들지 않고, 글이 다시 바뀌면 그때 새로 만듭니다(브랜치 \`${BRANCH_PREFIX}${item.key}\`를 지우면 다음 실행 때 다시 만듭니다).`,
+    '- 이 PR 브랜치에서 Repository checks가 통과하면 자동으로 병합합니다. 그다음 공개 사이트(`Deploy to GitHub Pages`)와 관리자(`Sync post thumbnails to admin`) 배포가 실행됩니다.',
+    `- 검사에 실패하거나 병합할 수 없으면 병합하지 않고 라벨 \`${MERGE_BLOCKED_LABEL}\`과 댓글로 알립니다. 확인한 뒤 직접 병합하거나 닫으세요.`,
+    '- 저장소 변수 `THUMBNAIL_AUTO_MERGE`가 `false`이면 자동 병합하지 않습니다. 사람이 확인해 병합하면 배포는 그대로 실행됩니다.',
+    `- 다시 만들려면 Actions → **Post thumbnails** → Run workflow에서 \`key\`에 \`${category}/${slug}\`, \`feedback\`에 바라는 점을 적어 실행하세요. 열려 있는 PR은 새 썸네일로 바뀌고, 이미 병합됐으면 새 PR이 열려 같은 방식으로 병합됩니다.`,
+    '- 병합된 썸네일을 빼려면 병합 커밋을 되돌리는(revert) PR을 올리세요.',
   ].filter((line) => line !== null).join('\n')
 }
 
@@ -139,6 +142,7 @@ async function openPullRequest(item, artifact) {
   await closeFailureIssue(item, `썸네일을 만들었습니다: #${pr.number}`)
   summary(`- ${item.key}: [#${pr.number}](${pr.html_url}) ${open ? '갱신' : '생성'}`)
   console.log(`${item.key}: ${pr.html_url}`)
+  return { key: item.key, title: item.title, number: pr.number, url: pr.html_url, branch, sha }
 }
 
 async function reportFailure(item, reason) {
@@ -176,11 +180,16 @@ async function reportFailure(item, reason) {
 }
 
 let failed = 0
+const published = []
 for (const item of items) {
   try {
     const artifact = readArtifact(item)
-    if (artifact) await openPullRequest(item, artifact)
-    else await reportFailure(item, 'AI 생성 또는 검사 단계가 결과를 남기지 못했습니다.')
+    if (artifact) {
+      const pr = await openPullRequest(item, artifact)
+      if (pr) published.push(pr)
+    } else {
+      await reportFailure(item, 'AI 생성 또는 검사 단계가 결과를 남기지 못했습니다.')
+    }
   } catch (error) {
     failed += 1
     console.error(error.message)
@@ -191,4 +200,6 @@ for (const item of items) {
     }
   }
 }
+// 실패한 글은 PR이 없으므로 병합 대상에 들어가지 않는다.
+if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `prs=${JSON.stringify(published)}\n`)
 if (failed) process.exitCode = 1

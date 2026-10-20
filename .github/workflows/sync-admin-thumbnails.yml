@@ -3,6 +3,8 @@ name: Sync post thumbnails to admin
 # 공개 사이트 썸네일(Elevate.Web/src/assets/post-thumbs)이 main에 병합되면 관리자 배포 브랜치(admin)에도
 # 같은 파일만 맞추고 관리자를 다시 배포한다. 관리자 목록 카드가 이 이미지를 빌드에 포함하기 때문이다.
 # main의 다른 변경은 admin으로 가져오지 않는다 (관리자 코드 배포는 기존처럼 main → admin 병합).
+# 사람이 병합하면 push로, 'Post thumbnails'가 자동 병합하면 그 merge 단계가 직접 실행한다(GITHUB_TOKEN 병합은 push를 만들지 않음).
+# 실행할 때 main의 썸네일 폴더 전체를 맞추므로 여러 번 연달아 실행돼도 결과는 같다.
 
 on:
     push:
