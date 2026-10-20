@@ -285,8 +285,10 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
 
   editorRef.current = editor
 
+  // React가 숨겨 둔 화면을 다시 연결하면(Suspense 등) 이 이펙트가 Tiptap이 이미 파괴한 이전 인스턴스로
+  // 먼저 실행될 수 있다. 파괴된 인스턴스는 건너뛰고, Tiptap이 다시 만든 인스턴스로 이어서 동기화한다.
   useEffect(() => {
-    if (!editor) return
+    if (!editor || editor.isDestroyed) return
     const current = editor.getHTML()
     const next = value || ''
     if (current !== next) {
@@ -299,6 +301,7 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
     const handler = () => {
       clearTimeout(autoSaveTimerRef.current)
       autoSaveTimerRef.current = setTimeout(() => {
+        if (editor.isDestroyed) return
         const html = editor.getHTML()
         try {
           localStorage.setItem(storageKey, html)
