@@ -38,7 +38,9 @@ export const CATEGORY_DISPLAY_NAMES = {
  * 서버 데이터의 category는 그대로 두고 화면에서만 나누므로 운영 데이터에는 영향이 없다.
  * 글은 slug → 기존 시리즈 이름 → 태그 순서로 맞춰 본다.
  * - Word / PowerPoint / Forms / OneDrive: M365 글을 시리즈(없으면 태그)로 나눈다.
- * - GitHub / Azure: Copilot Studio 글 중 배포·바이브 코딩 글을 slug로 옮긴다.
+ * - GitHub / Azure: Copilot Studio 글 중 배포·바이브 코딩 글을 slug로 옮기고,
+ *   관리자에서 새로 쓰는 글은 앱 태그(github / azure)로 나눈다.
+ * 관리자(Elevate.Admin/src/constants/apps.js)도 같은 규칙으로 앱별 목록과 새 글을 만든다.
  */
 export const CATEGORY_SPLIT_RULES = [
   { category: 'word', from: 'm365', series: 'Word Online 입문 가이드', tag: 'word' },
@@ -49,8 +51,9 @@ export const CATEGORY_SPLIT_RULES = [
     category: 'github',
     from: 'copilot-studio',
     slugs: ['github-pages', 'agent-to-website', 'github-copilot', 'copilot-studio-multi-model-ai-agent-github-pages'],
+    tag: 'github',
   },
-  { category: 'azure', from: 'copilot-studio', slugs: ['secret-key-azure-function-github-pages'] },
+  { category: 'azure', from: 'copilot-studio', slugs: ['secret-key-azure-function-github-pages'], tag: 'azure' },
 ];
 
 /** 화면 카테고리를 서버 API 카테고리로 바꾼다 (예: 'forms' → 'm365', 'github' → 'copilot-studio'). */
