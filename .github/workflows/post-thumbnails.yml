@@ -3,7 +3,8 @@ name: Post thumbnails
 # 공개 사이트에 새로 게시된 글과 내용이 바뀐 글의 카드 썸네일을 AI(GitHub Copilot CLI)가 본문 전체를 읽고 만들어 PR로 올린다.
 # 관리자에서 글을 '게시'로 저장하면 'Post thumbnails on save'가 마지막 저장 몇 분 뒤 이 workflow를 실행한다. 수동 실행도 된다.
 # 정기 실행은 두지 않는다(글이 없는 동안 실행 기록이 쌓이지 않고, 공개 저장소의 60일 비활성 자동 중지도 받지 않는다).
-# 사람이 PR을 확인해 병합하면 공개 사이트가 배포되고, 'Sync post thumbnails to admin'이 관리자도 다시 배포한다.
+# merge job이 PR 브랜치에서 'Repository checks'를 실행해 통과한 PR만 자동으로 병합하고, 공개 사이트 배포와
+# 'Sync post thumbnails to admin'(관리자 배포)을 직접 실행한다. 저장소 변수 THUMBNAIL_AUTO_MERGE=false이면 사람이 병합한다.
 # 생성(AI) job은 저장소 읽기 권한만 가지며, 검사를 통과한 결과만 별도 publish job이 PR로 올린다.
 # 자세한 내용: tools/post-thumbs/README.md
 
@@ -158,6 +159,8 @@ jobs:
             contents: write
             pull-requests: write
             issues: write
+        outputs:
+            prs: ${{ steps.publish.outputs.prs }}
         steps:
             - uses: actions/checkout@v4
               with:
@@ -175,10 +178,38 @@ jobs:
                   path: artifacts
 
             - name: Open pull requests
+              id: publish
               run: node tools/post-thumbs/publish.mjs
               env:
                   GITHUB_TOKEN: ${{ github.token }}
                   ITEMS: ${{ needs.plan.outputs.items }}
                   ARTIFACTS: ${{ github.workspace }}/artifacts
                   FEEDBACK: ${{ inputs.feedback }}
+                  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+    # 사람 없이 병합한다. publish 일부가 실패해도(실패 이슈) PR이 열린 글은 병합한다.
+    # GITHUB_TOKEN으로 만든 PR에는 pull_request 검사가 돌지 않으므로 PR 브랜치에서 'Repository checks'를 직접 실행해 통과를 확인하고,
+    # GITHUB_TOKEN으로 병합한 커밋은 push 이벤트를 만들지 않으므로 배포 workflow도 직접 실행한다(merge.mjs).
+    merge:
+        needs: publish
+        if: ${{ !cancelled() && needs.publish.outputs.prs != '' && needs.publish.outputs.prs != '[]' && vars.THUMBNAIL_AUTO_MERGE != 'false' }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 40
+        permissions:
+            actions: write
+            contents: write
+            pull-requests: write
+            issues: write
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+
+            - name: Check and merge thumbnail pull requests
+              run: node tools/post-thumbs/merge.mjs
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  PRS: ${{ needs.publish.outputs.prs }}
                   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

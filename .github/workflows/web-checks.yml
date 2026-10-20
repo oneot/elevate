@@ -10,6 +10,9 @@ on:
       - 'tools/**'
       - '.github/workflows/**'
       - '.nvmrc'
+  # 'Post thumbnails'가 자동 병합 전에 썸네일 PR 브랜치에서 실행한다(GITHUB_TOKEN으로 만든 PR에는 pull_request 검사가 돌지 않음).
+  # 결과는 그 브랜치 커밋의 검사로 PR에 표시된다.
+  workflow_dispatch:
 
 permissions:
   contents: read

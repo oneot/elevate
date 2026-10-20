@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { describe, it } from 'node:test'
 import sharp from 'sharp'
 import { contentHash, htmlToOutline, parseKey, thumbPaths, toPublicPost } from '../lib/posts.mjs'
-import { checkScene, checkWebps, classifyPost, failureTitle, keyFromFailureTitle, planPosts, unexpectedChanges, webpSize } from '../lib/pipeline.mjs'
+import { checkScene, checkWebps, classifyPost, failureTitle, keyFromFailureTitle, mergeDecision, pickChecksRun, planPosts, publishedPrProblem, unexpectedChanges, webpSize } from '../lib/pipeline.mjs'
 import { listAutoScenes, writeWebps } from '../render.mjs'
 
 const post = (key, title = `${key} 제목`) => ({ key, title })
@@ -181,6 +181,56 @@ describe('checking what the AI produced', () => {
     const allowed = Object.values(thumbPaths('m365/test'))
     assert.deepEqual(unexpectedChanges(allowed, allowed), [])
     assert.deepEqual(unexpectedChanges([...allowed, 'tools/post-thumbs/kit.js'], allowed), ['tools/post-thumbs/kit.js'])
+  })
+})
+
+describe('deciding whether to merge a thumbnail PR', () => {
+  const SHA = 'a'.repeat(40)
+  const open = (sha = SHA) => ({ state: 'open', merged: false, head: { sha } })
+
+  it('merges an open PR at the published commit whose checks passed on that commit', () => {
+    assert.deepEqual(mergeDecision({ pr: open(), expectedSha: SHA, checks: { conclusion: 'success', sha: SHA } }), { action: 'merge', reason: 'Repository checks 통과' })
+  })
+
+  it('leaves failed, cancelled, timed-out or missing checks for a person', () => {
+    for (const [checks, text] of [[{ conclusion: 'failure' }, '실패'], [{ conclusion: 'cancelled' }, '취소됨'], [{ conclusion: 'timed_out' }, '시간 초과'], [{ conclusion: 'not_started' }, '실행 요청 실패'], [null, '없음']]) {
+      const decision = mergeDecision({ pr: open(), expectedSha: SHA, checks })
+      assert.equal(decision.action, 'block')
+      assert.match(decision.reason, new RegExp(text))
+    }
+  })
+
+  it('does not merge a branch that changed after publishing or checks of another commit', () => {
+    assert.match(mergeDecision({ pr: open('b'.repeat(40)), expectedSha: SHA, checks: { conclusion: 'success' } }).reason, /브랜치가 바뀌었습니다/)
+    assert.match(mergeDecision({ pr: open(), expectedSha: SHA, checks: { conclusion: 'success', sha: 'c'.repeat(40) } }).reason, /검사한 커밋/)
+  })
+
+  it('skips PRs that are already merged or closed', () => {
+    assert.deepEqual(mergeDecision({ pr: { state: 'closed', merged: true, head: { sha: SHA } }, expectedSha: SHA, checks: { conclusion: 'success' } }), { action: 'skip', reason: '이미 병합된 PR입니다.' })
+    assert.equal(mergeDecision({ pr: { state: 'closed', merged: false, head: { sha: SHA } }, expectedSha: SHA, checks: null }).action, 'skip')
+  })
+
+  it('picks the newest checks run started for the commit after the request', () => {
+    const since = Date.parse('2026-10-21T00:10:00Z')
+    const run = (id, sha, at) => ({ id, head_sha: sha, created_at: at })
+    const runs = [
+      run(1, SHA, '2026-10-21T00:00:00Z'), // 요청 전의 오래된 run
+      run(2, SHA, '2026-10-21T00:10:05Z'),
+      run(3, 'b'.repeat(40), '2026-10-21T00:10:06Z'), // 다른 커밋
+      run(4, SHA, '2026-10-21T00:09:30Z'), // 시계 차이 안
+    ]
+    assert.equal(pickChecksRun(runs, { sha: SHA, since }).id, 2)
+    assert.equal(pickChecksRun(runs.slice(0, 1), { sha: SHA, since }), null)
+    assert.equal(pickChecksRun(undefined, { sha: SHA, since }), null)
+  })
+
+  it('accepts only PRs from this pipeline before touching their branches', () => {
+    const pr = { key: 'm365/new-post', number: 12, branch: 'thumbnail/m365/new-post', sha: SHA }
+    assert.equal(publishedPrProblem(pr), null)
+    assert.match(publishedPrProblem({ ...pr, branch: 'main' }), /thumbnail\/m365\/new-post/)
+    assert.match(publishedPrProblem({ ...pr, number: '12' }), /PR 번호/)
+    assert.match(publishedPrProblem({ ...pr, sha: 'abc' }), /SHA/)
+    assert.match(publishedPrProblem({ ...pr, key: 'm365/../x' }), /잘못된 key/)
   })
 })
 
