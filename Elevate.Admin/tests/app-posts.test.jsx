@@ -22,7 +22,7 @@ vi.mock('../src/hooks/useAuth.js', () => ({
 }))
 vi.mock('../src/services/postsApi.js', () => ({
   createPost: vi.fn(), deletePost: vi.fn(), getPost: vi.fn(), listAllPosts: vi.fn(),
-  listPosts: vi.fn(), listSeriesByCategory: vi.fn(), updatePost: vi.fn(),
+  listPosts: vi.fn(), updatePost: vi.fn(),
 }))
 
 function post(id, category, extra = {}) {
@@ -98,6 +98,11 @@ describe('app post lists', () => {
       'PowerPoint', 'Excel', 'Word', 'Minecraft', 'GitHub', 'Azure',
     ])
     expect(host.textContent).not.toMatch(/Sub Category|Management|활동 영상|Agenthon|행사 소식|프로그램 소식/)
+    // 사이드바에는 회색 그룹 제목이나 분류 안내 문구를 두지 않는다.
+    const nav = host.querySelector('#ea-nav')
+    expect(nav.querySelectorAll('.ea-nav__list')).toHaveLength(1)
+    expect(nav.textContent).not.toMatch(/공개 사이트와 같은 규칙/)
+    expect([...nav.querySelectorAll('p')].map((node) => node.textContent)).toEqual([])
     expect(navBadge('전체 게시글')).toBe('9')
     expect(navBadge('M365')).toBe('1')
     expect(navBadge('Word')).toBe('1')
@@ -122,16 +127,33 @@ describe('app post lists', () => {
     expect(cardTitles()).toEqual(titles)
   })
 
-  it('starts a new post for the current app', async () => {
+  it('starts a new post for the current app from a Blog page without a public-site shortcut', async () => {
     await render('/apps/word')
     const newPost = [...host.querySelectorAll('a')].find((link) => link.textContent.includes('새 글 작성'))
     expect(newPost.getAttribute('href')).toBe('/posts/new?app=word')
-    expect(host.textContent).toContain('M365 카테고리 · word 태그로 저장')
+    expect(host.querySelector('.ea-dbar__title').textContent).toBe('Blog')
+    expect(host.textContent).not.toContain('공개 사이트에서 보기')
+    expect(host.querySelector('.ea-hero__eyebrow')).toBeNull()
+    expect(host.querySelector('.ea-hero__meta').textContent).toContain('게시 1 · 보관 0')
+  })
+
+  it('shows the public site and Admin as white glass pills in the header', async () => {
+    await render('/apps/all')
+    const site = host.querySelector('header a[href="https://microsoft-elevate.com/all"]')
+    expect(site.className).toContain('ea-glass-pill')
+    expect(site.textContent).toContain('공개 사이트')
+    expect(host.querySelector('.ea-brand__badge').textContent).toBe('Admin')
   })
 
   it('filters by publishing state and search query kept in the address', async () => {
-    await render('/apps/all?status=draft')
-    expect(cardTitles().sort()).toEqual(['azure-deploy title', 'pptonline1 title'])
+    await render('/apps/all?status=archived')
+    // 보관에는 임시저장(draft)과 보관(archived) 글이 모두 들어간다.
+    expect(cardTitles().sort()).toEqual(['azure-deploy title', 'forms-quiz title', 'pptonline1 title'])
+    expect([...host.querySelectorAll('.ea-card .ea-status')].map((node) => node.textContent)).toEqual(['보관', '보관', '보관'])
+    const filters = [...host.querySelectorAll('[aria-label="게시 상태"] button')].map((node) => node.textContent)
+    expect(filters).toEqual(['전체9', '게시6', '보관3'])
+    await render('/apps/all?status=published')
+    expect(cardTitles()).toHaveLength(6)
     await render('/apps/all?q=%EC%98%A8%EB%9D%BC%EC%9D%B8')
     expect(cardTitles()).toEqual(['Teams 수업 만들기'])
     expect(host.textContent).toContain('‘온라인’ 검색 결과 1개')

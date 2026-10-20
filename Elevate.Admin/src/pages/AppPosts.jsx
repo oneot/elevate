@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { ExternalLink, Plus, RefreshCw } from 'lucide-react'
+import { Plus, RefreshCw } from 'lucide-react'
 import AppHero from '../components/apps/AppHero.jsx'
 import { PostCard, PostGridSkeleton } from '../components/apps/PostCard.jsx'
 import SearchBox from '../components/layout/SearchBox.jsx'
@@ -10,14 +10,13 @@ import NotFound from './NotFound.jsx'
 import { useAdminPosts } from '../hooks/adminPosts.js'
 import { useDbarSlot, usePageApp } from '../hooks/shell.js'
 import { isApiConfigured } from '../lib/apiClient.js'
-import { ALL_APPS_KEY, APP_KEYS, APP_LABELS, getApiCategory, getAppTag, isAppKey } from '../constants/apps.js'
+import { ALL_APPS_KEY, APP_KEYS, APP_LABELS, getApiCategory, isAppKey } from '../constants/apps.js'
 import { getAppMeta } from '../constants/appMeta.js'
-import { STATUS_LABELS } from '../constants/status.js'
-import { PUBLIC_SITE_URL } from '../constants/site.js'
+import { ARCHIVED, PUBLISHED, getStatusLabel, toStatusKey } from '../constants/status.js'
 
 const PAGE_SIZE = 12
 const REFRESH_AFTER_MS = 30_000
-const STATUS_FILTERS = ['all', 'published', 'draft', 'archived']
+const STATUS_FILTERS = ['all', PUBLISHED, ARCHIVED]
 
 function matchesQuery(post, query) {
   if (!query) return true
@@ -28,7 +27,7 @@ function matchesQuery(post, query) {
 
 function countByStatus(posts) {
   return posts.reduce((counts, post) => {
-    const key = STATUS_LABELS[post.status] ? post.status : 'draft'
+    const key = toStatusKey(post.status)
     counts[key] = (counts[key] || 0) + 1
     return counts
   }, {})
@@ -108,7 +107,7 @@ export default function AppPosts() {
   const searched = useMemo(() => appPosts.filter((post) => matchesQuery(post, query)), [appPosts, query])
   const searchedCounts = useMemo(() => countByStatus(searched), [searched])
   const filtered = useMemo(
-    () => (status === 'all' ? searched : searched.filter((post) => (STATUS_LABELS[post.status] ? post.status : 'draft') === status)),
+    () => (status === 'all' ? searched : searched.filter((post) => toStatusKey(post.status) === status)),
     [searched, status],
   )
 
@@ -134,14 +133,11 @@ export default function AppPosts() {
   const meta = getAppMeta(appKey)
   const label = isAll ? '전체 게시글' : meta.name
   const newPostTo = isAll ? '/posts/new' : `/posts/new?app=${appKey}`
-  const appTag = isAll ? null : getAppTag(appKey)
-  const archived = appCounts.archived || 0
   const heroMeta = [
     initialized ? `게시글 ${appPosts.length}개` : '불러오는 중',
     initialized && appPosts.length > 0
-      ? `게시 ${appCounts.published || 0} · 임시저장 ${appCounts.draft || 0}${archived ? ` · 보관 ${archived}` : ''}`
+      ? `게시 ${appCounts[PUBLISHED] || 0} · 보관 ${appCounts[ARCHIVED] || 0}`
       : null,
-    appTag ? `${APP_LABELS[apiCategory]} 카테고리 · ${appTag} 태그로 저장` : null,
     '최근 수정순',
   ]
 
@@ -173,7 +169,7 @@ export default function AppPosts() {
         </EmptyState>
       )
     } else if (status !== 'all') {
-      body = <EmptyState title={`${STATUS_LABELS[status]} 게시글이 없습니다.`} />
+      body = <EmptyState title={`${getStatusLabel(status)} 상태인 게시글이 없습니다.`} />
     } else {
       body = (
         <EmptyState title={`${label} 게시글이 없습니다.`} hint="첫 게시글을 작성해 보세요.">
@@ -206,27 +202,14 @@ export default function AppPosts() {
 
       <AppHero
         app={appKey}
-        eyebrow={isAll ? '게시글 관리' : '앱'}
-        eyebrowIcon={isAll ? undefined : meta.icon}
         title={label}
         abstract={meta.description}
         meta={heroMeta}
         actions={(
-          <>
-            <Link to={newPostTo} className="ea-btn ea-btn--primary">
-              <Plus size={17} aria-hidden="true" />
-              새 글 작성
-            </Link>
-            <a
-              className="ea-btn ea-btn--glass"
-              href={`${PUBLIC_SITE_URL}/${appKey}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              공개 사이트에서 보기
-              <ExternalLink size={15} aria-hidden="true" />
-            </a>
-          </>
+          <Link to={newPostTo} className="ea-btn ea-btn--primary">
+            <Plus size={17} aria-hidden="true" />
+            새 글 작성
+          </Link>
         )}
       />
 
@@ -243,7 +226,7 @@ export default function AppPosts() {
                 aria-pressed={status === key}
                 onClick={() => updateParams({ status: key === 'all' ? '' : key, page: '' })}
               >
-                {key === 'all' ? '전체' : STATUS_LABELS[key]}
+                {key === 'all' ? '전체' : getStatusLabel(key)}
                 {initialized && (
                   <span className="ea-seg__num">{key === 'all' ? searched.length : searchedCounts[key] || 0}</span>
                 )}

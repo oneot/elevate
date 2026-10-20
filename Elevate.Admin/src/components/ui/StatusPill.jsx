@@ -1,11 +1,9 @@
-import { STATUS_LABELS } from '../../constants/status.js'
+import { getStatusLabel, toStatusKey } from '../../constants/status.js'
 
 function StatusPill({ status }) {
-  const normalized = STATUS_LABELS[status] ? status : 'draft'
-
   return (
-    <span className={`ea-status ea-status--${normalized}`}>
-      {STATUS_LABELS[normalized]}
+    <span className={`ea-status ea-status--${toStatusKey(status)}`}>
+      {getStatusLabel(status)}
     </span>
   )
 }

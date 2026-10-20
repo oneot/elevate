@@ -2,8 +2,8 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
 
 const COLLAPSE_THRESHOLD = 15
-// 접힌 상태에서 보여줄 줄 수 (em 단위 max-height 계산에 사용)
-const PREVIEW_LINE_HEIGHT_EM = 1.6
+// 접힌 상태에서 보여줄 줄 수. 줄 높이는 공개 사이트 코드 블록과 같다 (styles/post-content.css의 pre line-height).
+const PREVIEW_LINE_HEIGHT_EM = 1.62
 const PREVIEW_LINES = 3
 
 export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
@@ -72,23 +72,22 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
 
   // display:none 대신 max-height+overflow 클리핑 사용.
   // contentDOMElement를 항상 visible하게 유지해야 브라우저가 커서를 잃지 않아 스크롤이 발생하지 않는다.
+  // 코드 창의 위쪽 여백(점 3개 자리)에 가려지지 않도록 pre가 아니라 code를 줄 수만큼 자른다.
   const collapsedStyle = isCollapsed
-    ? { maxHeight: `${PREVIEW_LINES * PREVIEW_LINE_HEIGHT_EM}em`, overflowY: 'hidden' }
+    ? { display: 'block', maxHeight: `${PREVIEW_LINES * PREVIEW_LINE_HEIGHT_EM}em`, overflowY: 'hidden' }
     : undefined
 
   return (
-    <NodeViewWrapper className="relative my-4">
-      <pre
-        id={contentId}
-        className="hljs rounded-md overflow-x-auto text-sm"
-        style={collapsedStyle}
-      >
+    // 공개 사이트가 코드 블록에 붙이는 틀·버튼과 같은 클래스 (styles/post-content.css)
+    <NodeViewWrapper className="collapsible-code-block relative">
+      <pre id={contentId} className="hljs">
         <NodeViewContent
           as="code"
           className={node.attrs.language ? `language-${node.attrs.language}` : ''}
+          style={collapsedStyle}
         />
       </pre>
-      <div contentEditable={false} className="mt-1 flex items-center gap-2">
+      <div contentEditable={false} className="collapsible-code-actions">
         {shouldCollapse && (
           <button
             type="button"
@@ -96,17 +95,16 @@ export default function CollapsibleCodeBlockView({ node, updateAttributes }) {
             aria-controls={contentId}
             onMouseDown={(e) => e.preventDefault()}
             onClick={handleToggle}
-            className="flex items-center gap-1 text-xs text-neutral-500 transition-colors hover:text-ms-blue border border-neutral-200 rounded px-2 py-0.5"
+            className="collapsible-code-toggle"
           >
-            {isCollapsed ? '코드 펼치기 ▼' : '접기 ▲'}
-            <span className="text-neutral-400">({lineCount}줄)</span>
+            {isCollapsed ? '코드 펼치기 ▼' : '접기 ▲'} ({lineCount}줄)
           </button>
         )}
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={handleCopy}
-          className="flex items-center gap-1 text-xs text-neutral-500 transition-colors hover:text-ms-blue border border-neutral-200 rounded px-2 py-0.5"
+          className="collapsible-code-copy"
         >
           {copyLabel}
         </button>

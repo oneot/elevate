@@ -15,7 +15,7 @@ function toEditorPost(apiPost) {
     id: apiPost.id,
     title: apiPost.title || '',
     slug: apiPost.slug || '',
-    status: apiPost.status || 'draft',
+    status: apiPost.status || 'archived',
     category: apiPost.category || '',
     tags: Array.isArray(apiPost.tags) ? apiPost.tags : [],
     excerpt: apiPost.excerpt || '',
@@ -31,21 +31,13 @@ function toEditorPost(apiPost) {
 }
 
 /**
- * 에디터 상태를 API 요청 페이로드로 변환한다.
- *
- * - slug: 비어 있으면 서버가 자동 생성하므로 값이 있을 때만 포함한다.
- * - series: string 타입일 때만 포함하며, 빈 문자열은 null 로 전송해 시리즈를 해제한다.
- * - thumbnailUrl: 값이 있을 때만 thumbnail 객체를 구성한다.
- *   mimeType/sizeBytes 는 에디터 상태에서 원본 파일 정보가 없으므로 기본값을 사용한다.
- * - youtube: undefined 이면 전송하지 않는다. 빈 문자열은 null 로 전송해 연결을 해제한다.
- * @param {object} post 에디터 상태 객체
+ * 새 게시글 생성 페이로드. 관리자 화면은 제목·요약·본문·게시 상태만 다루며,
+ * slug는 보내지 않아 서버가 제목에서 중복 없는 값을 만든다.
+ * tags에는 앱 분류용 태그(예: Word → ['word'])만 담는다 (서버는 배열을 필수로 받는다).
+ * thumbnail은 게시할 때 자동으로 만든 썸네일이 있을 때만 포함한다.
+ * @param {{ title: string, category: string, excerpt?: string, htmlBody?: string, status: string, tags?: string[], thumbnail?: object }} post
  */
-function toApiPayload(post) {
-  const normalizedSeries = typeof post.series === 'string' ? post.series.trim() : post.series
-  const normalizedSeriesOrder = Number.isInteger(post.seriesOrder) && post.seriesOrder > 0
-    ? post.seriesOrder
-    : null
-
+function toCreatePayload(post) {
   const payload = {
     title: post.title,
     category: post.category,
@@ -54,53 +46,31 @@ function toApiPayload(post) {
     tags: Array.isArray(post.tags) ? post.tags : [],
     status: post.status,
   }
+  if (post.thumbnail?.url) payload.thumbnail = stripThumbnailSignedUrls(post.thumbnail)
+  return payload
+}
 
-  if (post.slug) {
-    payload.slug = post.slug
+/**
+ * 기존 게시글 수정 페이로드. 화면에서 고칠 수 있는 제목·요약·본문·게시 상태만 보낸다.
+ * 서버는 보내지 않은 category·slug·tags·series·youtube·thumbnail을 그대로 유지하므로
+ * 앱 분류와 공개 주소, 기존 썸네일이 수정으로 바뀌지 않는다.
+ * thumbnail은 썸네일이 없던 글을 게시하며 자동으로 만든 경우에만 포함한다.
+ * @param {{ title: string, excerpt?: string, htmlBody?: string, status: string, thumbnail?: object }} post
+ */
+function toUpdatePayload(post) {
+  const payload = {
+    title: post.title,
+    excerpt: post.excerpt || '',
+    contentMarkdown: post.htmlBody || '',
+    status: post.status,
   }
-
-  if (typeof normalizedSeries === 'string') {
-    payload.series = normalizedSeries || null
-  }
-
-  if (post.seriesOrder !== undefined) {
-    payload.seriesOrder = normalizedSeries ? normalizedSeriesOrder : null
-  }
-
-  if (post.thumbnail?.url) {
-    payload.thumbnail = stripThumbnailSignedUrls(post.thumbnail)
-  } else if (post.thumbnailUrl) {
-    payload.thumbnail = {
-      url: post.thumbnailUrl,
-      alt: '',
-      width: 0,
-      height: 0,
-      mimeType: 'image/jpeg',
-      sizeBytes: 0,
-    }
-  }
-
-  if (post.youtube !== undefined) {
-    payload.youtube = post.youtube || null
-  }
-
+  if (post.thumbnail?.url) payload.thumbnail = stripThumbnailSignedUrls(post.thumbnail)
   return payload
 }
 
 export const _test = {
-  toApiPayload,
-}
-
-/**
- * 카테고리별 기존 시리즈 목록을 조회한다.
- * @param {string} category
- * @param {{ msalInstance?: object }} options
- */
-export function listSeriesByCategory(category, options = {}) {
-  const params = new URLSearchParams()
-  if (category) params.set('category', category)
-  const qs = params.toString()
-  return apiFetch(`/series${qs ? `?${qs}` : ''}`, options)
+  toCreatePayload,
+  toUpdatePayload,
 }
 
 /**
@@ -150,28 +120,28 @@ export function getPost(postId, options = {}) {
 
 /**
  * 게시글을 생성한다.
- * @param {object} payload 에디터 상태 객체
+ * @param {object} post toCreatePayload 입력
  * @param {{ msalInstance }} options
  */
-export function createPost(payload, options = {}) {
+export function createPost(post, options = {}) {
   return apiFetch('/posts', {
     ...options,
     method: 'POST',
-    body: JSON.stringify(toApiPayload(payload)),
+    body: JSON.stringify(toCreatePayload(post)),
   }).then(toEditorPost)
 }
 
 /**
  * 게시글을 수정한다.
  * @param {string} postId
- * @param {object} payload 에디터 상태 객체
+ * @param {object} post toUpdatePayload 입력
  * @param {{ msalInstance }} options
  */
-export function updatePost(postId, payload, options = {}) {
+export function updatePost(postId, post, options = {}) {
   return apiFetch(`/posts/${postId}`, {
     ...options,
     method: 'PUT',
-    body: JSON.stringify(toApiPayload(payload)),
+    body: JSON.stringify(toUpdatePayload(post)),
   }).then(toEditorPost)
 }
 

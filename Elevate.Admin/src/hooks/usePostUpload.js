@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { isApiConfigured } from '../lib/apiClient.js'
 import { requestUploadSas, registerAsset } from '../services/assetsApi.js'
 import {
@@ -14,116 +14,83 @@ import {
 import { assertCompleteThumbnailVariants, canCreateThumbnailVariants } from '../utils/thumbnailVariants.js'
 
 /**
- * 게시글 편집기에서 썸네일 및 본문 이미지 업로드를 담당하는 훅.
+ * 게시글 편집기의 이미지 업로드를 담당하는 훅.
+ * - uploadHtmlImage: 본문에 넣을 이미지를 올리고 URL을 돌려준다 (편집기 붙여넣기·끌어 놓기·버튼).
+ * - uploadThumbnailFile: 게시할 때 자동으로 만든 썸네일 파일을 올리고 저장용 thumbnail 객체를 돌려준다.
+ *   공개 사이트 카드는 480·960·1440 variants가 있어야 썸네일을 표시하므로 모두 만들어 올린다.
  *
- * API 미구성 환경(isApiConfigured === false)에서는 Blob SAS 업로드 없이
- * URL.createObjectURL 로 로컬 미리보기만 제공하는 폴백 모드로 동작한다.
+ * API 미구성 환경(isApiConfigured === false)에서는 본문 이미지만 로컬 ObjectURL로 미리 보여 준다.
  *
- * @param {{ msalInstance, postId, setPost, setError, setMessage }} params
+ * @param {{ msalInstance, postId }} params
  */
-export function usePostUpload({ msalInstance, postId, setPost, setError, setMessage }) {
+export function usePostUpload({ msalInstance, postId }) {
   const [pendingUploads, setPendingUploads] = useState(0)
-  const previewUrlRef = useRef(null)
-
-  // 컴포넌트 언마운트 시 마지막으로 생성된 ObjectURL을 해제해 메모리 누수를 방지한다.
-  useEffect(() => {
-    return () => {
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current)
-      }
-    }
-  }, [])
 
   const uploadThumbnailVariants = async (selectedFile) => {
-    if (!canCreateThumbnailVariants(selectedFile)) return {}
-
-    try {
-      const entries = await Promise.all(thumbnailVariantSpecs.map(async (spec) => {
-        const variant = await createImageVariantBlob(selectedFile, spec)
-        const fileName = buildVariantFileName(selectedFile.name, spec.key)
-        const sas = await requestUploadSas({
-          fileName,
-          contentType: variant.type,
-          sizeBytes: variant.blob.size,
-        }, { msalInstance })
-
-        await uploadBlobWithSas(sas.uploadUrl, variant.blob, variant.type, {
-          cacheControl: imageBlobCacheControl,
-        })
-
-        const asset = await registerAsset({
-          postId: postId || null,
-          blobUrl: sas.blobUrl,
-          contentType: variant.type,
-          sizeBytes: variant.blob.size,
-          fileName,
-        }, { msalInstance })
-
-        return [spec.key, {
-          url: asset?.blobUrl || asset?.url || sas.blobUrl,
-          signedUrl: asset?.signedUrl || null,
-          width: variant.width,
-          height: variant.height,
-          type: variant.type,
-          sizeBytes: variant.blob.size,
-        }]
-      }))
-      return assertCompleteThumbnailVariants(Object.fromEntries(entries))
-    } catch (error) {
-      console.warn('[usePostUpload] thumbnail variants skipped', error)
-      return {}
+    if (!canCreateThumbnailVariants(selectedFile)) {
+      throw new Error('이 브라우저에서는 썸네일 크기별 이미지를 만들 수 없습니다.')
     }
+
+    const entries = await Promise.all(thumbnailVariantSpecs.map(async (spec) => {
+      const variant = await createImageVariantBlob(selectedFile, spec)
+      const fileName = buildVariantFileName(selectedFile.name, spec.key)
+      const sas = await requestUploadSas({
+        fileName,
+        contentType: variant.type,
+        sizeBytes: variant.blob.size,
+      }, { msalInstance })
+
+      await uploadBlobWithSas(sas.uploadUrl, variant.blob, variant.type, {
+        cacheControl: imageBlobCacheControl,
+      })
+
+      const asset = await registerAsset({
+        postId: postId || null,
+        blobUrl: sas.blobUrl,
+        contentType: variant.type,
+        sizeBytes: variant.blob.size,
+        fileName,
+      }, { msalInstance })
+
+      return [spec.key, {
+        url: asset?.blobUrl || asset?.url || sas.blobUrl,
+        signedUrl: asset?.signedUrl || null,
+        width: variant.width,
+        height: variant.height,
+        type: variant.type,
+        sizeBytes: variant.blob.size,
+      }]
+    }))
+    return assertCompleteThumbnailVariants(Object.fromEntries(entries))
   }
 
   /**
-   * 썸네일 이미지를 업로드하고 postId에 연결한다.
-   * 업로드 성공 시 setPost 를 통해 thumbnailUrl 을 갱신한다.
-   * @param {File} selectedFile
+   * 자동 생성한 썸네일 파일을 Blob Storage에 올리고 게시글에 저장할 thumbnail 객체를 돌려준다.
+   * 원본(최대 640px)과 공개 카드용 variants를 모두 올려야 성공으로 본다.
+   * @param {File} file
+   * @param {{ width?: number, height?: number, alt?: string }} [details]
+   * @returns {Promise<object>}
    */
-  const uploadThumbnail = async (selectedFile) => {
-    if (!selectedFile) return
-
-    const contentType = normalizeImageMimeType(selectedFile)
+  const uploadThumbnailFile = async (file, details = {}) => {
+    const contentType = normalizeImageMimeType(file)
     if (!supportedImageMimeTypes.has(contentType)) {
-      // throw 대신 setError로 전달해 상위 컴포넌트 catch 블록이 에러를 삼키지 않도록 한다.
-      setError('지원하지 않는 이미지 형식입니다. JPG, PNG, WEBP, GIF, HEIC, HEIF, AVIF 파일만 업로드할 수 있습니다.')
-      return
-    }
-
-    if (!isApiConfigured) {
-      // API 서버가 없는 개발 환경에서는 로컬 ObjectURL로 미리보기만 제공한다.
-      // 기존 ObjectURL이 있으면 먼저 해제해 메모리 누수를 방지한다.
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current)
-      }
-      const previewUrl = URL.createObjectURL(selectedFile)
-      previewUrlRef.current = previewUrl
-      setPost((prev) => ({ ...prev, thumbnailUrl: previewUrl }))
-      setMessage('API 없이 썸네일 미리보기 이미지를 적용했습니다.')
-      return
+      throw new Error('지원하지 않는 썸네일 이미지 형식입니다.')
     }
 
     setPendingUploads((count) => count + 1)
-    setError('')
-    setMessage('')
-
     try {
-      const uploadFile = await optimizeThumbnailForUpload(selectedFile)
+      const uploadFile = await optimizeThumbnailForUpload(file)
       const uploadContentType = normalizeImageMimeType(uploadFile)
-
-      // 1단계: SAS URL 발급
       const sas = await requestUploadSas({
         fileName: uploadFile.name,
         contentType: uploadContentType,
         sizeBytes: uploadFile.size,
       }, { msalInstance })
 
-      // 2단계: Azure Blob Storage에 직접 업로드
       await uploadBlobWithSas(sas.uploadUrl, uploadFile, uploadContentType, {
         cacheControl: imageBlobCacheControl,
       })
 
-      // 3단계: 서버에 자산 등록 — CDN 서명 URL 또는 원본 URL을 응답으로 받는다
       const asset = await registerAsset({
         postId: postId || null,
         blobUrl: sas.blobUrl,
@@ -132,27 +99,17 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
         fileName: uploadFile.name,
       }, { msalInstance })
 
-      const variants = await uploadThumbnailVariants(selectedFile)
-      const thumbnail = {
+      const variants = await uploadThumbnailVariants(file)
+      return {
         url: asset?.blobUrl || asset?.url || sas.blobUrl,
         signedUrl: asset?.signedUrl || null,
-        alt: '',
-        width: 0,
-        height: 0,
+        alt: details.alt || '',
+        width: details.width || 0,
+        height: details.height || 0,
         mimeType: uploadContentType,
         sizeBytes: uploadFile.size,
-        ...(Object.keys(variants).length > 0 ? { variants } : {}),
+        variants,
       }
-
-      // 응답에서 사용 가능한 URL을 우선순위대로 선택한다.
-      setPost((prev) => ({
-        ...prev,
-        thumbnailUrl: thumbnail.signedUrl || thumbnail.url,
-        thumbnail,
-      }))
-      setMessage('썸네일 이미지가 업로드되었습니다.')
-    } catch (err) {
-      setError(err.message || '썸네일 이미지 업로드에 실패했습니다.')
     } finally {
       setPendingUploads((count) => count - 1)
     }
@@ -201,5 +158,5 @@ export function usePostUpload({ msalInstance, postId, setPost, setError, setMess
     }
   }
 
-  return { uploading: pendingUploads > 0, uploadThumbnail, uploadHtmlImage }
+  return { uploading: pendingUploads > 0, uploadThumbnailFile, uploadHtmlImage }
 }

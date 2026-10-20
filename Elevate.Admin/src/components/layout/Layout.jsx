@@ -165,7 +165,7 @@ function Shell() {
             >
               <PanelLeft size={19} strokeWidth={1.7} aria-hidden="true" />
             </button>
-            <Link to={`/apps/${ALL_APPS_KEY}`} className="ea-dbar__title">게시글</Link>
+            <Link to={`/apps/${ALL_APPS_KEY}`} className="ea-dbar__title">Blog</Link>
             <div ref={setDbarSlot} className="ea-dbar__slot" />
           </div>
         </div>

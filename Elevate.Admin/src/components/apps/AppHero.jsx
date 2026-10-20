@@ -17,6 +17,7 @@ import { getAppMeta } from '../../constants/appMeta.js'
  * @param {React.ReactNode[]} [props.meta] 세로 구분선으로 나뉘는 메타 정보
  * @param {React.ReactNode} [props.actions]
  * @param {boolean} [props.compact] 편집 화면용 작은 머리글
+ * @param {boolean} [props.wide] 편집 화면처럼 넓은 컨테이너에 맞춘다
  */
 export default function AppHero({
   app,
@@ -28,6 +29,7 @@ export default function AppHero({
   meta = [],
   actions,
   compact = false,
+  wide = false,
 }) {
   const appMeta = getAppMeta(app)
   const metaItems = meta.filter(Boolean)
@@ -35,7 +37,7 @@ export default function AppHero({
   return (
     <section className={`ea-hero${compact ? ' ea-hero--compact' : ''}`} aria-labelledby="ea-hero-title">
       <AppArt key={appMeta.key} className="ea-hero__art" paint={appMeta.paint} glyph={appMeta.glyph} />
-      <div className="ea-container ea-hero__inner">
+      <div className={`ea-container${wide ? ' ea-container--wide' : ''} ea-hero__inner`}>
         <div className="ea-hero__text">
           {crumbs.length > 0 && (
             <nav className="ea-crumbs" aria-label="현재 위치">

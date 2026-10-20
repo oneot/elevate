@@ -30,10 +30,7 @@ export function PostCard({ post, showApp = false }) {
           )}
           <h3 className="ea-card__title">{title}</h3>
           {post.excerpt && <p className="ea-card__excerpt">{post.excerpt}</p>}
-          <p className="ea-card__meta">
-            <span>{formatDate(post.updatedAt)} 수정</span>
-            {post.slug && <span className="ea-card__slug">/{post.slug}</span>}
-          </p>
+          <p className="ea-card__meta">{formatDate(post.updatedAt)} 수정</p>
         </div>
       </Link>
     </article>

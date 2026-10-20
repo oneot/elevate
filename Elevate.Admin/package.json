@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "check:bundle": "node scripts/check-bundle.mjs",
+    "sync:post-content": "node scripts/sync-post-content-css.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",

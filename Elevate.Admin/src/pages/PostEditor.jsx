@@ -1,23 +1,18 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, ExternalLink, Save, Trash2 } from 'lucide-react'
+import { ArrowLeft, Save, Trash2 } from 'lucide-react'
 import { ConfirmModal, FormField, Notice } from '../components/ui/index.js'
 import { HtmlEditor, PostMetaSidebar } from '../components/editor/index.js'
 import AppHero from '../components/apps/AppHero.jsx'
 import { isApiConfigured } from '../lib/apiClient.js'
-import {
-  createPost,
-  deletePost,
-  getPost,
-  listSeriesByCategory,
-  updatePost,
-} from '../services/postsApi.js'
+import { createPost, deletePost, getPost, updatePost } from '../services/postsApi.js'
 import { linkDraftFilesToPost } from '../services/assetsApi.js'
-import { slugify, extractYoutubeId, formatDate } from '../utils/formatters.js'
+import { formatDate } from '../utils/formatters.js'
+import { renderAutoThumbnail } from '../utils/autoThumbnail.js'
+import { getPublicThumbImage } from '../utils/publicThumbs.js'
 import {
   ALL_APPS_KEY,
-  APP_LABELS,
   BASE_CATEGORIES,
   applyAppTag,
   getApiCategory,
@@ -25,41 +20,52 @@ import {
   isAppKey,
 } from '../constants/apps.js'
 import { getAppMeta } from '../constants/appMeta.js'
-import { STATUS_LABELS } from '../constants/status.js'
-import { PUBLIC_SITE_URL } from '../constants/site.js'
+import { ARCHIVED, PUBLISHED, getStatusLabel, isPublished } from '../constants/status.js'
 import { useAuth } from '../hooks/useAuth.js'
 import { usePostUpload } from '../hooks/usePostUpload.js'
 import { useAdminPosts } from '../hooks/adminPosts.js'
 import { useDbarSlot, usePageApp } from '../hooks/shell.js'
 
-/** 신규 게시글 작성 시 초기 상태 기본값. */
+/**
+ * 신규 게시글 초기 상태. 새 글은 보관 상태로 시작한다.
+ * slug·tags·series는 화면에서 고치지 않는다 (slug는 서버가 만들고, 기존 값은 그대로 유지된다).
+ */
 const emptyPost = {
   title: '',
-  slug: '',
-  status: 'draft',
+  status: ARCHIVED,
   category: '',
   tags: [],
-  excerpt: '',
+  slug: '',
   series: '',
-  seriesOrder: null,
-  thumbnailUrl: '',
+  excerpt: '',
   htmlBody: '',
-  youtube: '',
+  thumbnail: null,
+  thumbnailUrl: '',
 }
 
 const ATTACHMENT_LINK_WARNING = '첨부파일 연결에 실패했습니다. 저장된 게시글에서 다시 확인해 주세요.'
-
-function parseTags(value) {
-  return value
-    .split(',')
-    .map((tag) => tag.trim())
-    .filter(Boolean)
-}
+const THUMBNAIL_WARNING = '썸네일을 자동으로 만들지 못했습니다. 다음에 게시 상태로 저장하면 다시 만듭니다.'
+const THUMBNAIL_CREATED = '본문 내용으로 썸네일을 만들었습니다.'
 
 /** 새 글 주소의 앱 (?app=, 이전 주소 호환용 ?category=). */
 function getInitialApp(searchParams) {
   const app = searchParams.get('app') || searchParams.get('category')
   return isAppKey(app) ? app : ''
+}
+
+/** 글자·이미지·영상 중 하나라도 있으면 본문이 있는 것으로 본다. */
+function hasBodyContent(html) {
+  const value = String(html || '')
+  if (/<(img|iframe|video)\b/i.test(value)) return true
+  return value.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').trim().length > 0
+}
+
+function hasThumbnail(post) {
+  return Boolean(post.thumbnail?.url || post.thumbnailUrl)
+}
+
+function withNotes(base, notes) {
+  return [base, ...notes].filter(Boolean).join(' ')
 }
 
 function createDraftSessionId() {
@@ -119,19 +125,10 @@ function PostEditor() {
     const app = isNew ? getInitialApp(searchParams) : ''
     return { ...emptyPost, category: app ? getApiCategory(app) : '' }
   })
-  // 새 글은 고른 앱의 태그(예: Word → word)를 미리 넣어 공개 사이트의 같은 앱에 표시되게 한다.
-  const [tagsInput, setTagsInput] = useState(() => (
-    isNew ? applyAppTag([], getInitialApp(searchParams)).join(', ') : ''
-  ))
-  const [youtubeInput, setYoutubeInput] = useState('')
-  const [youtubeError, setYoutubeError] = useState('')
-  const [seriesOptions, setSeriesOptions] = useState([])
-  const [isCreatingNewSeries, setIsCreatingNewSeries] = useState(false)
-  const [newSeriesName, setNewSeriesName] = useState('')
   const [loading, setLoading] = useState(!isNew)
   const [loadError, setLoadError] = useState('')
   const [loadAttempt, setLoadAttempt] = useState(0)
-  const [persisted, setPersisted] = useState(null)
+  const [persistedStatus, setPersistedStatus] = useState('')
   const [saving, setSaving] = useState(false)
   const [isAttachmentUploading, setIsAttachmentUploading] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -139,13 +136,7 @@ function PostEditor() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
-  const { uploading: isUploading, uploadThumbnail, uploadHtmlImage } = usePostUpload({
-    msalInstance,
-    postId,
-    setPost,
-    setError,
-    setMessage,
-  })
+  const { uploading: isUploading, uploadThumbnailFile, uploadHtmlImage } = usePostUpload({ msalInstance, postId })
 
   useEffect(() => {
     setDraftSessionId(isNew ? getDraftSessionId(draftAttachmentStorageKey) : '')
@@ -228,9 +219,7 @@ function PostEditor() {
         const data = await getPost(postId, { msalInstance })
         if (isMounted) {
           setPost({ ...emptyPost, ...data })
-          setTagsInput((data.tags || []).join(', '))
-          setYoutubeInput(data.youtube || '')
-          setPersisted({ status: data.status, slug: data.slug })
+          setPersistedStatus(data.status || '')
         }
       } catch (err) {
         // 불러오지 못한 글을 빈 양식으로 보여 주면 저장 시 기존 내용을 덮어쓸 수 있으므로 양식을 열지 않는다.
@@ -249,161 +238,53 @@ function PostEditor() {
     }
   }, [postId, isNew, msalInstance, loadAttempt])
 
-  useEffect(() => {
-    if (!isApiConfigured || !post.category) {
-      setSeriesOptions([])
-      return
-    }
-
-    let isMounted = true
-
-    listSeriesByCategory(post.category, { msalInstance })
-      .then((data) => {
-        if (!isMounted) return
-        const names = Array.from(new Set(
-          (data?.items || [])
-            .map((item) => (typeof item?.name === 'string' ? item.name.trim() : ''))
-            .filter(Boolean)
-        )).sort((a, b) => a.localeCompare(b, 'ko'))
-        setSeriesOptions(names)
-      })
-      .catch(() => {
-        if (isMounted) setSeriesOptions([])
-      })
-
-    return () => {
-      isMounted = false
-    }
-  }, [post.category, msalInstance])
-
-  useEffect(() => {
-    const currentSeries = (post.series || '').trim()
-    if (!currentSeries) {
-      setIsCreatingNewSeries(false)
-      setNewSeriesName('')
-      return
-    }
-
-    const existsInOptions = seriesOptions.includes(currentSeries)
-    if (existsInOptions) {
-      setIsCreatingNewSeries(false)
-      setNewSeriesName('')
-      return
-    }
-
-    setIsCreatingNewSeries(true)
-    setNewSeriesName(currentSeries)
-  }, [post.series, seriesOptions])
-
   const handleChange = (field) => (event) => {
     setPost((prev) => ({ ...prev, [field]: event.target.value }))
   }
 
-  // 새 글의 앱을 바꾸면 서버 category와 앱 태그를 함께 맞춘다 (예: Word → m365 + word 태그).
+  // 제목은 한 줄 값이므로 줄바꿈은 공백으로 바꾼다.
+  const handleTitleChange = (event) => {
+    const title = event.target.value.replace(/\r?\n/g, ' ')
+    setPost((prev) => ({ ...prev, title }))
+  }
+
+  const preventLineBreak = (event) => {
+    if (event.key === 'Enter') event.preventDefault()
+  }
+
+  // 새 글의 앱을 바꾸면 서버 category를 맞춘다. 앱 태그는 저장할 때 붙인다 (예: Word → m365 + word 태그).
   const handleAppChange = (event) => {
     const app = event.target.value
     if (!isAppKey(app)) return
     setSelectedApp(app)
     setPost((prev) => ({ ...prev, category: getApiCategory(app) }))
-    setTagsInput((prev) => applyAppTag(parseTags(prev), app).join(', '))
   }
 
-  const handleSeriesSelectChange = (event) => {
-    const value = event.target.value
-    setIsCreatingNewSeries(false)
-    setNewSeriesName('')
-    setPost((prev) => ({
-      ...prev,
-      series: value,
-      ...(value.trim() ? {} : { seriesOrder: null }),
-    }))
+  // '보관'은 공개하지 않는 상태다. 기존 임시저장(draft) 글은 다시 보관으로 돌려도 draft를 유지한다.
+  const handleStatusChange = (event) => {
+    const hiddenStatus = persistedStatus && !isPublished(persistedStatus) ? persistedStatus : ARCHIVED
+    const status = event.target.value === PUBLISHED ? PUBLISHED : hiddenStatus
+    setPost((prev) => ({ ...prev, status }))
   }
 
-  const handleStartNewSeries = () => {
-    setIsCreatingNewSeries(true)
-    setNewSeriesName(post.series || '')
-  }
-
-  const handleCancelNewSeries = () => {
-    const fallbackSeries = seriesOptions.includes(post.series || '') ? (post.series || '') : ''
-    setIsCreatingNewSeries(false)
-    setNewSeriesName('')
-    setPost((prev) => ({
-      ...prev,
-      series: fallbackSeries,
-      ...(fallbackSeries ? {} : { seriesOrder: null }),
-    }))
-  }
-
-  const handleNewSeriesNameChange = (event) => {
-    const value = event.target.value
-    setNewSeriesName(value)
-    setPost((prev) => ({
-      ...prev,
-      series: value,
-      ...(value.trim() ? {} : { seriesOrder: null }),
-    }))
-  }
-
-  const handleSeriesOrderChange = (event) => {
-    const rawValue = event.target.value.trim()
-    setPost((prev) => ({
-      ...prev,
-      seriesOrder: rawValue ? Number.parseInt(rawValue, 10) : null,
-    }))
-  }
-
-  const handleYoutubeChange = (event) => {
-    const url = event.target.value
-    setYoutubeInput(url)
-
-    if (!url) {
-      setYoutubeError('')
-      // YouTube URL이 지워졌을 때 자동으로 설정된 썸네일(img.youtube.com)도 함께 초기화한다.
-      // 사용자가 직접 업로드한 썸네일은 유지한다.
-      const wasAutoThumb = post.thumbnailUrl?.includes('img.youtube.com')
-      setPost((prev) => ({
-        ...prev,
-        youtube: '',
-        ...(wasAutoThumb ? { thumbnailUrl: '', thumbnail: null } : {}),
-      }))
-      return
-    }
-
-    const id = extractYoutubeId(url)
-    if (!id) {
-      setYoutubeError('유효하지 않은 YouTube URL입니다.')
-      setPost((prev) => ({ ...prev, youtube: '' }))
-      return
-    }
-
-    setYoutubeError('')
-    const autoThumbUrl = `https://img.youtube.com/vi/${id}/hqdefault.jpg`
-    // 썸네일이 비어 있을 때만 YouTube 썸네일을 자동 설정한다.
-    // 이미 썸네일이 있으면 사용자가 의도적으로 선택한 것으로 간주해 변경하지 않는다.
-    setPost((prev) => ({
-      ...prev,
-      youtube: id,
-      ...(!prev.thumbnailUrl ? {
-        thumbnailUrl: autoThumbUrl,
-        thumbnail: { url: autoThumbUrl, alt: '', width: 480, height: 360, mimeType: 'image/jpeg', sizeBytes: 0 },
-      } : {}),
-    }))
-  }
-
-  const parsedTags = useMemo(() => parseTags(tagsInput), [tagsInput])
-  // 공개 사이트에서 이 글이 표시될 앱 (slug → 시리즈 → 태그, Elevate.Web과 같은 규칙).
-  const displayApp = post.category
-    ? getDisplayCategory({
-      category: post.category,
-      slug: slugify(post.slug || ''),
-      series: (post.series || '').trim(),
-      tags: parsedTags,
-    })
-    : ''
-  const pageApp = isNew ? selectedApp : (isAppKey(displayApp) ? displayApp : '')
+  // 공개 사이트에서 이 글이 표시될 앱. 기존 글은 저장된 slug·시리즈·태그로 정해지며 편집으로 바뀌지 않는다.
+  const displayApp = isNew
+    ? selectedApp
+    : (post.category ? getDisplayCategory({ category: post.category, slug: post.slug, series: post.series, tags: post.tags }) : '')
+  const pageApp = isAppKey(displayApp) ? displayApp : ''
   const isUnmanagedPost = !isNew && !loading && !loadError && Boolean(post.category) && !BASE_CATEGORIES.includes(post.category)
   usePageApp(pageApp || null)
+
+  // 공개 카드와 같은 순서: 공개 사이트가 미리 만든 썸네일 → 저장된 썸네일.
+  const publicThumb = isNew ? null : getPublicThumbImage(pageApp, post.slug)
+  const previewImage = publicThumb || (post.thumbnailUrl ? { src: post.thumbnailUrl, srcSet: '' } : null)
+
+  /** 썸네일이 없는 글을 게시할 때 한 번만 만든다. 이미 있으면 글을 고쳐도 바꾸지 않는다. */
+  const createThumbnailIfNeeded = async (title) => {
+    if (!isPublished(post.status) || hasThumbnail(post) || publicThumb || !pageApp) return null
+    const file = await renderAutoThumbnail({ app: pageApp, title, excerpt: post.excerpt, html: post.htmlBody })
+    return uploadThumbnailFile(file, { alt: title })
+  }
 
   const handleSave = async () => {
     setError('')
@@ -414,8 +295,19 @@ function PostEditor() {
       return
     }
 
+    const title = post.title.trim()
     if (!post.category) {
       setError('앱을 선택해주세요.')
+      return
+    }
+
+    if (!title) {
+      setError('제목을 입력해주세요.')
+      return
+    }
+
+    if (!hasBodyContent(post.htmlBody)) {
+      setError('본문을 입력해주세요.')
       return
     }
 
@@ -429,22 +321,29 @@ function PostEditor() {
       return
     }
 
-    // slug 입력값을 항상 정규화한다 (한글·특수문자 제거).
-    // 정규화 후에도 빈 문자열이면 제목에서 생성하고,
-    // 여전히 비어 있으면 서버가 자동 생성하도록 비워 둔다.
-    const normalizedSlug = slugify(post.slug || '')
-    const payload = {
-      ...post,
-      slug: normalizedSlug || slugify(post.title),
-      tags: parsedTags,
+    setSaving(true)
+    const notes = []
+    let thumbnail = null
+    try {
+      thumbnail = await createThumbnailIfNeeded(title)
+      if (thumbnail) notes.push(THUMBNAIL_CREATED)
+    } catch (thumbnailError) {
+      console.error('[PostEditor] auto thumbnail failed', thumbnailError)
+      notes.push(THUMBNAIL_WARNING)
     }
 
-    setSaving(true)
     try {
       if (isNew) {
-        const created = await createPost(payload, { msalInstance })
+        const created = await createPost({
+          title,
+          category: post.category,
+          excerpt: post.excerpt,
+          htmlBody: post.htmlBody,
+          status: post.status,
+          tags: applyAppTag([], selectedApp),
+          thumbnail,
+        }, { msalInstance })
         const newId = created?.id || created?.postId
-        const warnings = []
         let draftAttachmentLinkState = null
         if (newId && draftSessionId) {
           try {
@@ -452,16 +351,14 @@ function PostEditor() {
             try { sessionStorage.removeItem(draftAttachmentStorageKey) } catch { /* storage blocked — non-fatal */ }
           } catch (linkError) {
             console.error('[PostEditor] draft attachment link failed', linkError)
-            warnings.push(ATTACHMENT_LINK_WARNING)
+            notes.push(ATTACHMENT_LINK_WARNING)
             draftAttachmentLinkState = {
               draftSessionId,
               draftAttachmentStorageKey,
             }
           }
         }
-        const successMessage = warnings.length > 0
-          ? `저장되었습니다. ${warnings.join(' ')}`
-          : '저장되었습니다.'
+        const successMessage = withNotes('저장되었습니다.', notes)
         refreshPosts()
         if (newId) {
           try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
@@ -475,16 +372,24 @@ function PostEditor() {
           setMessage(successMessage)
         }
       } else {
-        const updated = await updatePost(postId, payload, { msalInstance })
+        const updated = await updatePost(postId, {
+          title,
+          excerpt: post.excerpt,
+          htmlBody: post.htmlBody,
+          status: post.status,
+          thumbnail,
+        }, { msalInstance })
         try { localStorage.removeItem(storageKey) } catch { /* storage blocked — non-fatal */ }
-        // 저장 중에 고친 입력은 덮어쓰지 않고, 서버가 정한 시각만 반영한다.
+        // 저장 중에 고친 입력은 덮어쓰지 않고, 서버가 정한 시각·상태·썸네일만 반영한다.
         setPost((prev) => ({
           ...prev,
+          title: prev.title === post.title ? title : prev.title,
           updatedAt: updated?.updatedAt ?? prev.updatedAt,
           publishedAt: updated?.publishedAt ?? null,
+          ...(updated?.thumbnail ? { thumbnail: updated.thumbnail, thumbnailUrl: updated.thumbnailUrl } : {}),
         }))
-        setPersisted({ status: updated?.status || payload.status, slug: updated?.slug || payload.slug })
-        setMessage('업데이트되었습니다.')
+        setPersistedStatus(updated?.status || post.status)
+        setMessage(withNotes('업데이트되었습니다.', notes))
         refreshPosts()
       }
     } catch (err) {
@@ -567,10 +472,6 @@ function PostEditor() {
   const saveDisabled = saving || isUploading || isAttachmentUploading
   const saveLabel = saving ? '저장 중...' : isUploading ? '이미지 업로드 중...' : isAttachmentUploading ? '첨부 업로드 중...' : '저장'
   const appMeta = pageApp ? getAppMeta(pageApp) : null
-  const publicUrl = !isNew && persisted?.status === 'published' && persisted.slug && isAppKey(displayApp)
-    ? `${PUBLIC_SITE_URL}/${displayApp}/${encodeURIComponent(persisted.slug)}`
-    : ''
-  const appMismatch = isNew && selectedApp && isAppKey(displayApp) && displayApp !== selectedApp
 
   return (
     <>
@@ -599,6 +500,7 @@ function PostEditor() {
 
       <AppHero
         compact
+        wide
         app={pageApp || ALL_APPS_KEY}
         crumbs={[
           { label: '전체 게시글', to: `/apps/${ALL_APPS_KEY}` },
@@ -609,115 +511,76 @@ function PostEditor() {
         eyebrowIcon={appMeta?.icon || undefined}
         title={post.title.trim() || (isNew ? '새 게시글' : '(제목 없음)')}
         meta={[
-          STATUS_LABELS[post.status] || STATUS_LABELS.draft,
+          getStatusLabel(post.status),
           !isNew && post.updatedAt ? `마지막 수정 ${formatDate(post.updatedAt)}` : null,
           !isNew && post.publishedAt ? `게시 ${formatDate(post.publishedAt)}` : null,
         ]}
-        actions={publicUrl ? (
-          <a className="ea-btn ea-btn--glass ea-btn--sm" href={publicUrl} target="_blank" rel="noopener noreferrer">
-            공개 사이트에서 보기
-            <ExternalLink size={14} aria-hidden="true" />
-          </a>
-        ) : null}
       />
 
-      <div className="ea-container">
+      <div className="ea-container ea-container--wide">
         <div className="ea-editor__notices">
           {!isApiConfigured && <Notice tone="warning">API가 아직 연결되지 않아 목업 모드로 동작합니다.</Notice>}
           {error && <Notice tone="error">{error}</Notice>}
           {message && <Notice tone="success">{message}</Notice>}
-          {appMismatch && (
-            <Notice tone="warning">
-              선택한 앱은 {APP_LABELS[selectedApp]}이지만 시리즈 또는 태그 때문에 공개 사이트에서는 {APP_LABELS[displayApp]}에 표시됩니다.
-            </Notice>
-          )}
         </div>
 
         <div className="ea-editor">
-          <div className="ea-editor__main">
-            <section className="ea-panel" aria-label="기본 정보">
-              <div className="ea-fields">
-                <FormField label="제목" htmlFor={`${fieldId}-title`}>
-                  <input
-                    id={`${fieldId}-title`}
-                    className="ea-input ea-input--title"
-                    value={post.title}
-                    onChange={handleChange('title')}
-                    placeholder="게시글 제목"
-                  />
-                </FormField>
+          <section className="ea-panel ea-editor__info" aria-label="제목과 요약">
+            <div className="ea-fields">
+              <FormField label="제목" htmlFor={`${fieldId}-title`}>
+                <textarea
+                  id={`${fieldId}-title`}
+                  className="ea-textarea ea-textarea--title"
+                  rows={2}
+                  value={post.title}
+                  onChange={handleTitleChange}
+                  onKeyDown={preventLineBreak}
+                  placeholder="게시글 제목"
+                />
+              </FormField>
 
-                <FormField label="Slug" htmlFor={`${fieldId}-slug`} hint="비워두면 제목에서 자동 생성됩니다. 공개 사이트 주소의 마지막 부분입니다.">
-                  <input
-                    id={`${fieldId}-slug`}
-                    className="ea-input ea-input--mono"
-                    value={post.slug}
-                    onChange={handleChange('slug')}
-                    placeholder="my-post-slug"
-                  />
-                  {post.slug && slugify(post.slug) !== post.slug && (
-                    <p className="text-xs text-[#8a4b00]">
-                      저장 시 <span className="font-mono font-semibold">{slugify(post.slug) || '(자동 생성)'}</span>으로 변환됩니다.
-                    </p>
-                  )}
-                </FormField>
+              <FormField label="요약" htmlFor={`${fieldId}-excerpt`} hint="목록 카드에 표시됩니다. 첫 구절이 짧으면 썸네일 문구로도 쓰입니다.">
+                <textarea
+                  id={`${fieldId}-excerpt`}
+                  className="ea-textarea"
+                  rows={3}
+                  value={post.excerpt}
+                  onChange={handleChange('excerpt')}
+                  placeholder="목록 카드에 표시되는 한 줄 요약"
+                />
+              </FormField>
+            </div>
+          </section>
 
-                <FormField label="요약" htmlFor={`${fieldId}-excerpt`}>
-                  <textarea
-                    id={`${fieldId}-excerpt`}
-                    className="ea-textarea"
-                    value={post.excerpt}
-                    onChange={handleChange('excerpt')}
-                    placeholder="목록 카드에 표시되는 한 줄 요약"
-                  />
-                </FormField>
-              </div>
-            </section>
+          <section className="ea-panel ea-editor__body" aria-label="본문">
+            <h2 className="ea-panel__title">본문</h2>
+            <HtmlEditor
+              value={post.htmlBody}
+              onChange={(value) =>
+                setPost((prev) => ({
+                  ...prev,
+                  htmlBody: value,
+                }))
+              }
+              onUploadImage={uploadHtmlImage}
+              storageKey={storageKey}
+            />
+          </section>
 
-            <section className="ea-panel" aria-label="본문">
-              <h2 className="ea-panel__title">본문</h2>
-              <HtmlEditor
-                value={post.htmlBody}
-                onChange={(value) =>
-                  setPost((prev) => ({
-                    ...prev,
-                    htmlBody: value,
-                  }))
-                }
-                onUploadImage={uploadHtmlImage}
-                storageKey={storageKey}
-              />
-            </section>
-          </div>
-
-          <aside className="ea-editor__side" aria-label="게시 설정">
+          <div className="ea-editor__settings">
             <PostMetaSidebar
-              post={post}
-              tagsInput={tagsInput}
-              youtubeInput={youtubeInput}
-              youtubeError={youtubeError}
-              isUploading={isUploading}
               isNew={isNew}
               selectedApp={selectedApp}
               displayApp={displayApp}
               onAppChange={handleAppChange}
-              onChange={handleChange}
-              seriesOptions={seriesOptions}
-              isCreatingNewSeries={isCreatingNewSeries}
-              newSeriesName={newSeriesName}
-              onSeriesSelectChange={handleSeriesSelectChange}
-              onStartNewSeries={handleStartNewSeries}
-              onCancelNewSeries={handleCancelNewSeries}
-              onNewSeriesNameChange={handleNewSeriesNameChange}
-              onSeriesOrderChange={handleSeriesOrderChange}
-              onTagsChange={setTagsInput}
-              onYoutubeChange={handleYoutubeChange}
-              onThumbnailUpload={uploadThumbnail}
+              statusValue={isPublished(post.status) ? PUBLISHED : ARCHIVED}
+              onStatusChange={handleStatusChange}
+              thumbnail={previewImage}
               onAttachmentUploadingChange={setIsAttachmentUploading}
               postId={postId}
               draftSessionId={draftSessionId}
             />
-          </aside>
+          </div>
         </div>
       </div>
 

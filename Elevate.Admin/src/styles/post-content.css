@@ -1,0 +1,625 @@
+/* =========================================================================
+   게시글 본문 — 공개 사이트 글 상세와 같은 모양 (편집 화면의 본문 편집기에 쓴다)
+   공개 사이트는 본문을 <article class="edoc-article"><div class="prose prose-slate max-w-none post-content">로 그린다.
+   편집기도 같은 클래스를 쓰고(HtmlEditor.jsx), 아래 규칙을 같은 순서로 둔다.
+     1. 공개 사이트 .edoc 의 색·글꼴 변수 중 본문 규칙이 쓰는 것
+     2. Elevate.Web/src/index.css 의 .prose · .collapsible-code-* 규칙 (그대로 복사)
+     3. Elevate.Web/src/styles/elevate-docs.css 의 .edoc-article 본문 규칙 (그대로 복사)
+     4. 편집기 전용 보정 (.ProseMirror)
+   이 파일은 scripts/sync-post-content-css.mjs가 만든다. 직접 고치지 말고 Web 원본을 고친 뒤
+   npm run sync:post-content 를 실행한다. 1~3은 tests/post-content-style.test.js가 Web 원본과 같은지 검사한다.
+   ========================================================================= */
+
+/* ---------- 1. 공개 사이트 변수 (.edoc) ---------- */
+
+.edoc-article {
+  --edoc-ink: #1d1d1f;
+  --edoc-ink-2: #424245;
+  --edoc-ink-3: #6e6e73;
+  --edoc-ink-4: #86868b;
+  --edoc-line: #d2d2d7;
+  --edoc-line-soft: #e8e8ed;
+  --edoc-fill: #f5f5f7;
+  --edoc-fill-2: #ececf0;
+  --edoc-accent: #0067b8;
+  --edoc-accent-strong: #005a9e;
+  --edoc-accent-rgb: 0, 103, 184;
+  --edoc-dbar-h: 52px;
+  --edoc-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Segoe UI", "Malgun Gothic", "Helvetica Neue", system-ui, sans-serif;
+  --edoc-mono: "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  font-family: var(--edoc-font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- 2. Elevate.Web/src/index.css ---------- */
+
+.prose {
+  line-height: 1.75;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.prose p {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  word-break: break-word;
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+.prose .post-content-media {
+  display: block;
+  background-color: rgba(241, 245, 249, 0.72);
+}
+
+.prose .post-content-iframe {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: 220px;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+}
+
+.prose pre {
+  background-color: #1e293b;
+  color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 1rem 0;
+}
+
+.prose pre code {
+  display: block;
+  background: transparent;
+  padding: 0;
+  font-size: 0.875rem;
+  color: inherit;
+}
+
+.prose table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.prose th {
+  background-color: #f8fafc;
+  font-weight: 600;
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 1.5rem 0;
+}
+
+.prose input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .prose h1 { font-size: 1.875rem; }
+  .prose h2 { font-size: 1.6rem; }
+  .prose h3 { font-size: 1.35rem; }
+  .prose h4 { font-size: 1.2rem; }
+  .prose h5 { font-size: 1.1rem; }
+  .prose h6 { font-size: 1rem; }
+  .prose pre {
+    padding: 0.85rem;
+    font-size: 0.8125rem;
+  }
+  .prose pre code {
+    font-size: 0.8125rem;
+  }
+  .prose table {
+    font-size: 0.8125rem;
+  }
+  .prose th,
+  .prose td {
+    padding: 0.4rem 0.5rem;
+  }
+}
+
+.prose h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.2;
+}
+
+.prose h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.25;
+}
+
+.prose h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.prose h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose h5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose h6 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose a {
+  color: #0078D4;
+  text-decoration: underline;
+}
+
+.prose a:hover {
+  color: #005a9e;
+}
+
+.prose strong {
+  font-weight: 700;
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose del {
+  text-decoration: line-through;
+}
+
+.prose blockquote {
+  border-left: 4px solid #0078D4;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: #475569;
+  font-style: italic;
+}
+
+.prose ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+
+.prose ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+
+.prose li {
+  margin: 0.25rem 0;
+}
+
+.prose li ul,
+.prose li ol {
+  margin: 0.25rem 0;
+}
+
+.prose code {
+  background-color: #f1f5f9;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.prose pre code {
+  overflow-wrap: normal;
+}
+
+.prose .collapsible-code-block {
+  margin: 1rem 0;
+}
+
+.prose .collapsible-code-block pre {
+  margin: 0;
+}
+
+.collapsible-code-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.collapsible-code-toggle {
+  display: block;
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.collapsible-code-toggle:hover {
+  color: #374151;
+  border-color: #9ca3af;
+}
+
+.collapsible-code-copy {
+  display: block;
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.collapsible-code-copy:hover {
+  color: #374151;
+  border-color: #9ca3af;
+}
+
+/* ---------- 3. Elevate.Web/src/styles/elevate-docs.css ---------- */
+
+.edoc-article .prose {
+  --tw-prose-body: var(--edoc-ink);
+  --tw-prose-headings: var(--edoc-ink);
+  --tw-prose-lead: var(--edoc-ink-2);
+  --tw-prose-links: var(--edoc-accent);
+  --tw-prose-bold: var(--edoc-ink);
+  --tw-prose-counters: var(--edoc-ink-3);
+  --tw-prose-bullets: var(--edoc-ink-4);
+  --tw-prose-hr: var(--edoc-line-soft);
+  --tw-prose-quotes: var(--edoc-ink-2);
+  --tw-prose-quote-borders: var(--edoc-line);
+  --tw-prose-captions: var(--edoc-ink-3);
+  --tw-prose-code: var(--edoc-ink);
+  --tw-prose-pre-code: var(--edoc-ink);
+  --tw-prose-pre-bg: var(--edoc-fill);
+  --tw-prose-th-borders: var(--edoc-line);
+  --tw-prose-td-borders: var(--edoc-line-soft);
+
+  color: var(--edoc-ink);
+  font-size: 17px;
+  line-height: 1.76;
+  letter-spacing: -0.01em;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.edoc-article .prose :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--edoc-ink);
+  scroll-margin-top: calc(var(--edoc-dbar-h) + 24px);
+  word-break: keep-all;
+}
+
+.edoc-article .prose h1 {
+  margin: 56px 0 16px;
+  padding-top: 40px;
+  border-top: 1px solid var(--edoc-line-soft);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.022em;
+}
+
+.edoc-article .prose h2 {
+  margin: 44px 0 12px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.32;
+  letter-spacing: -0.018em;
+}
+
+.edoc-article .prose h3 {
+  margin: 32px 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.38;
+  letter-spacing: -0.015em;
+}
+
+.edoc-article .prose :is(h4, h5, h6) {
+  margin: 26px 0 6px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.edoc-article .prose > :first-child {
+  margin-top: 0;
+}
+
+.edoc-article .prose > :first-child:not(blockquote, pre) {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.edoc-article .prose p {
+  margin: 0.9em 0;
+}
+
+.edoc-article .prose a {
+  color: var(--edoc-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(var(--edoc-accent-rgb), 0.35);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s;
+}
+
+.edoc-article .prose a:hover {
+  color: var(--edoc-accent-strong);
+  text-decoration-color: currentColor;
+}
+
+.edoc-article .prose :is(ul, ol) {
+  margin: 0.8em 0;
+  padding-left: 1.4em;
+}
+
+.edoc-article .prose li {
+  margin: 0.3em 0;
+  padding-left: 0.2em;
+}
+
+.edoc-article .prose li::marker {
+  color: var(--edoc-ink-4);
+}
+
+.edoc-article .prose ol > li::marker {
+  color: var(--edoc-ink-3);
+  font-weight: 500;
+}
+
+.edoc-article .prose code::before,
+.edoc-article .prose code::after {
+  content: none;
+}
+
+.edoc-article .prose :not(pre) > code {
+  padding: 0.08em 0.4em;
+  border: 1px solid var(--edoc-line);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--edoc-ink);
+  font-family: var(--edoc-mono);
+  font-size: 0.85em;
+  font-weight: 500;
+  letter-spacing: 0;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.edoc-article .prose pre {
+  margin: 1.3em 0 0;
+  padding: 44px 20px 18px;
+  border: 0;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 25px 22px, #ff5f57 5px, transparent 5.5px),
+    radial-gradient(circle at 41px 22px, #febc2e 5px, transparent 5.5px),
+    radial-gradient(circle at 57px 22px, #28c840 5px, transparent 5.5px),
+    #1e1f24;
+  color: #f5f5f7;
+  font-size: 14px;
+  line-height: 1.62;
+  box-shadow: 0 14px 30px -22px rgba(15, 23, 42, 0.35);
+}
+
+.edoc-article .prose pre code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-family: var(--edoc-mono);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.edoc-article .prose .collapsible-code-block {
+  margin: 1.3em 0;
+}
+
+.edoc-article .collapsible-code-actions {
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.edoc-article .collapsible-code-toggle,
+.edoc-article .collapsible-code-copy {
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--edoc-fill);
+  color: var(--edoc-ink-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+
+.edoc-article .collapsible-code-toggle:hover,
+.edoc-article .collapsible-code-copy:hover {
+  background: var(--edoc-fill-2);
+  color: var(--edoc-ink);
+}
+
+.edoc-article .prose blockquote {
+  --quote-pad-y: 20px;
+
+  position: relative;
+  margin: 1.4em 0;
+  padding: var(--quote-pad-y) 24px var(--quote-pad-y) 58px;
+  border: 1px solid var(--edoc-line-soft);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 28px -20px rgba(15, 23, 42, 0.35);
+  color: var(--edoc-ink-2);
+  font-style: normal;
+  font-weight: 400;
+  quotes: none;
+}
+
+.edoc-article .prose blockquote::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--quote-pad-y) + 0.88em - 11px);
+  left: 20px;
+  width: 22px;
+  height: 22px;
+  background: var(--edoc-accent);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.75a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm0 3.75a1 1 0 0 0-1 1V17a1 1 0 1 0 2 0v-5.5a1 1 0 0 0-1-1Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.75a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm0 3.75a1 1 0 0 0-1 1V17a1 1 0 1 0 2 0v-5.5a1 1 0 0 0-1-1Z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.edoc-article .prose blockquote > :first-child {
+  margin-top: 0;
+}
+
+.edoc-article .prose blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.edoc-article .prose blockquote p::before,
+.edoc-article .prose blockquote p::after {
+  content: none;
+}
+
+.edoc-article .prose blockquote p {
+  margin: 0.3em 0;
+}
+
+.edoc-article .prose img {
+  margin: 1.5em auto;
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.edoc-article .prose .post-content-iframe {
+  border-radius: 14px;
+}
+
+.edoc-article .prose hr {
+  margin: 2.6em 0;
+  border-top: 1px solid var(--edoc-line-soft);
+}
+
+.edoc-article .prose table {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.edoc-article .prose :is(th, td) {
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--edoc-line-soft);
+}
+
+.edoc-article .prose th {
+  background: transparent;
+  border-bottom-color: var(--edoc-line);
+  color: var(--edoc-ink);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .edoc-article .prose {
+    font-size: 16px;
+  }
+
+  .edoc-article .prose h1 {
+    margin-top: 44px;
+    padding-top: 32px;
+    font-size: 26px;
+  }
+
+  .edoc-article .prose h2 {
+    font-size: 21px;
+  }
+
+  .edoc-article .prose h3 {
+    font-size: 18px;
+  }
+
+  .edoc-article .prose pre {
+    padding: 40px 16px 14px;
+    font-size: 13px;
+  }
+
+  .edoc-article .prose blockquote {
+    --quote-pad-y: 16px;
+
+    padding-right: 18px;
+    padding-left: 50px;
+  }
+
+  .edoc-article .prose blockquote::before {
+    left: 16px;
+  }
+}
+
+/* ---------- 4. 편집기 전용 보정 ---------- */
+
+/* 크기 조절 이미지: 공개 사이트 img의 위아래 여백을 바깥 틀에 주고, 안쪽 이미지는 조절 핸들 위치가 맞게 여백 없이 둔다. */
+.edoc-article .ProseMirror .resizable-image-node {
+  margin: 1.5em 0;
+}
+
+.edoc-article .ProseMirror .resizable-image-node img {
+  margin: 0;
+}
+
+/* 편집기는 코드 블록을 div.react-renderer로 한 번 더 감싼다.
+   공개 사이트에서 글·인용 카드의 첫·마지막 요소 바깥 여백을 지우는 규칙이 코드 블록에도 닿게 한다. */
+.edoc-article .ProseMirror > .react-renderer:first-child > .collapsible-code-block,
+.edoc-article .ProseMirror blockquote > .react-renderer:first-child > .collapsible-code-block {
+  margin-top: 0;
+}
+
+.edoc-article .ProseMirror blockquote > .react-renderer:last-child > .collapsible-code-block {
+  margin-bottom: 0;
+}

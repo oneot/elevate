@@ -1,41 +1,28 @@
 /**
  * PostMetaSidebar
  *
- * PostEditor 오른쪽 패널: 게시 설정(앱·상태), 분류(태그·시리즈), 미디어(YouTube·썸네일), 첨부파일.
+ * PostEditor 오른쪽 열의 게시 설정(앱·상태·썸네일)과 첨부파일 패널.
+ * 제목·요약은 PostEditor가 같은 열 위쪽에 따로 그린다.
  *
  * Props:
- *  - post                        {object}   현재 게시글 상태
- *  - tagsInput                   {string}
- *  - youtubeInput                {string}
- *  - youtubeError                {string}
- *  - isUploading                 {boolean}
  *  - isNew                       {boolean}
  *  - selectedApp                 {string}   새 글에서 고른 앱 ('' = 미선택)
- *  - displayApp                  {string}   공개 사이트에 표시될 앱 (slug → 시리즈 → 태그로 계산)
+ *  - displayApp                  {string}   공개 사이트에 표시될 앱 (기존 글은 slug → 시리즈 → 태그로 계산)
  *  - onAppChange                 {function} 새 글의 앱 변경 핸들러
- *  - onChange                    {function}
- *  - seriesOptions               {string[]}
- *  - isCreatingNewSeries         {boolean}
- *  - newSeriesName               {string}
- *  - onSeriesSelectChange        {function}
- *  - onStartNewSeries            {function}
- *  - onCancelNewSeries           {function}
- *  - onNewSeriesNameChange       {function}
- *  - onSeriesOrderChange         {function}
- *  - onTagsChange                {function}
- *  - onYoutubeChange             {function}
- *  - onThumbnailUpload           {function}
+ *  - statusValue                 {'published'|'archived'}
+ *  - onStatusChange              {function}
+ *  - thumbnail                   {{ src: string, srcSet?: string } | null}  공개 카드에 표시되는 썸네일 (없으면 null)
  *  - onAttachmentUploadingChange {function}
  *  - postId                      {string|undefined}
  *  - draftSessionId              {string|undefined}
  */
 
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import { FormField } from '../ui/index.js'
 import AttachUploader from './AttachUploader.jsx'
-import { APP_KEYS, APP_LABELS, getAppTag, isAppKey } from '../../constants/apps.js'
+import { APP_KEYS, APP_LABELS, isAppKey } from '../../constants/apps.js'
 import { getAppMeta } from '../../constants/appMeta.js'
-import { STATUS_LABELS, STATUS_VALUES } from '../../constants/status.js'
+import { STATUS_OPTIONS } from '../../constants/status.js'
 
 function AppField({ id, isNew, selectedApp, displayApp, onAppChange }) {
   if (isNew) {
@@ -57,43 +44,62 @@ function AppField({ id, isNew, selectedApp, displayApp, onAppChange }) {
 
   const meta = isAppKey(displayApp) ? getAppMeta(displayApp) : null
   return (
-    <FormField label="앱" hint="공개 사이트 표시 앱은 slug → 시리즈 → 태그 순서로 정해집니다.">
+    <div className="flex flex-col gap-1.5">
+      <p className="text-[13.5px] font-semibold text-[#424245]">앱</p>
       <span className="ea-appchip">
         {meta?.icon && <img src={meta.icon} alt="" width="20" height="20" />}
         {meta ? meta.name : displayApp || '-'}
       </span>
-    </FormField>
+    </div>
+  )
+}
+
+/**
+ * 읽기 전용 썸네일 미리보기. 썸네일이 아직 없으면(새 글 등) 칸을 보여 주지 않는다.
+ * 이미지를 불러오지 못하면 깨진 이미지 대신 안내를 보여 준다.
+ */
+function ThumbnailPreview({ thumbnail }) {
+  const [failedSrc, setFailedSrc] = useState('')
+  const src = thumbnail?.src || ''
+  if (!src) return null
+  const failed = failedSrc === src
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="text-[13.5px] font-semibold text-[#424245]">썸네일</p>
+      <div className="ea-thumb-preview">
+        {failed ? (
+          <span className="ea-thumb-preview__empty">미리보기를 불러오지 못했습니다.</span>
+        ) : (
+          <img
+            src={src}
+            srcSet={thumbnail.srcSet || undefined}
+            sizes={thumbnail.srcSet ? '360px' : undefined}
+            alt="썸네일 미리보기"
+            onError={() => setFailedSrc(src)}
+          />
+        )}
+      </div>
+      <p className="text-[12.5px] leading-relaxed text-[#86868b]">
+        공개 사이트 카드에 표시되는 썸네일입니다. 글을 수정해도 바뀌지 않습니다.
+      </p>
+    </div>
   )
 }
 
 function PostMetaSidebar({
-  post,
-  tagsInput,
-  youtubeInput,
-  youtubeError,
-  isUploading,
   isNew,
   selectedApp = '',
   displayApp = '',
   onAppChange,
-  onChange,
-  seriesOptions = [],
-  isCreatingNewSeries = false,
-  newSeriesName = '',
-  onSeriesSelectChange,
-  onStartNewSeries,
-  onCancelNewSeries,
-  onNewSeriesNameChange,
-  onSeriesOrderChange,
-  onTagsChange,
-  onYoutubeChange,
-  onThumbnailUpload,
+  statusValue,
+  onStatusChange,
+  thumbnail = null,
   onAttachmentUploadingChange,
   postId,
   draftSessionId,
 }) {
   const id = useId()
-  const appTag = getAppTag(isNew ? selectedApp : displayApp)
 
   return (
     <>
@@ -107,131 +113,20 @@ function PostMetaSidebar({
             displayApp={displayApp}
             onAppChange={onAppChange}
           />
-          <FormField label="상태" htmlFor={`${id}-status`} hint="게시됨으로 저장하면 공개 사이트에 표시됩니다.">
-            <select id={`${id}-status`} className="ea-select" value={post.status} onChange={onChange('status')}>
-              {STATUS_VALUES.map((status) => (
-                <option key={status} value={status}>{STATUS_LABELS[status]}</option>
+          <FormField label="상태" htmlFor={`${id}-status`} hint="게시로 저장하면 공개 사이트에 표시되고, 보관은 공개하지 않습니다.">
+            <select id={`${id}-status`} className="ea-select" value={statusValue} onChange={onStatusChange}>
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </select>
           </FormField>
-        </div>
-      </section>
-
-      <section className="ea-panel">
-        <h2 className="ea-panel__title">분류</h2>
-        <div className="ea-fields">
-          <FormField
-            label="태그"
-            htmlFor={`${id}-tags`}
-            hint={appTag
-              ? `쉼표로 구분합니다. ‘${appTag}’ 태그는 공개 사이트의 앱 분류에 쓰이므로 지우지 마세요.`
-              : '쉼표로 구분합니다.'}
-          >
-            <input
-              id={`${id}-tags`}
-              className="ea-input"
-              value={tagsInput}
-              onChange={(event) => onTagsChange(event.target.value)}
-              placeholder="Azure, CosmosDB"
-            />
-          </FormField>
-
-          <FormField label="시리즈" htmlFor={`${id}-series`} hint="같은 시리즈명을 가진 게시글끼리 우측 시리즈 내비게이션으로 묶입니다.">
-            {!isCreatingNewSeries ? (
-              <div className="flex items-center gap-2">
-                <select
-                  id={`${id}-series`}
-                  className="ea-select"
-                  value={post.series || ''}
-                  onChange={onSeriesSelectChange}
-                >
-                  <option value="">시리즈 선택 안함</option>
-                  {seriesOptions.map((name) => (
-                    <option key={name} value={name}>{name}</option>
-                  ))}
-                </select>
-                <button type="button" onClick={onStartNewSeries} className="ea-btn ea-btn--secondary ea-btn--sm shrink-0">
-                  새 시리즈
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <input
-                  id={`${id}-series`}
-                  className="ea-input"
-                  value={newSeriesName}
-                  onChange={onNewSeriesNameChange}
-                  placeholder="새 시리즈 이름 입력"
-                />
-                <button type="button" onClick={onCancelNewSeries} className="ea-btn ea-btn--ghost ea-btn--sm">
-                  기존 시리즈 선택
-                </button>
-              </div>
-            )}
-          </FormField>
-
-          <FormField label="시리즈 순서" htmlFor={`${id}-series-order`} hint="시리즈를 입력한 경우에만 사용합니다. 1 이상의 숫자만 허용됩니다.">
-            <input
-              id={`${id}-series-order`}
-              type="number"
-              min="1"
-              step="1"
-              className="ea-input"
-              value={post.seriesOrder ?? ''}
-              onChange={onSeriesOrderChange}
-              placeholder="1"
-              disabled={!post.series?.trim()}
-            />
-          </FormField>
-        </div>
-      </section>
-
-      <section className="ea-panel">
-        <h2 className="ea-panel__title">미디어</h2>
-        <div className="ea-fields">
-          <FormField label="YouTube" htmlFor={`${id}-youtube`} error={youtubeError}>
-            <input
-              id={`${id}-youtube`}
-              className="ea-input"
-              value={youtubeInput}
-              onChange={onYoutubeChange}
-              placeholder="https://www.youtube.com/watch?v=..."
-            />
-            {post.youtube && !youtubeError && (
-              <p className="text-xs text-[#86868b]">ID: {post.youtube}</p>
-            )}
-          </FormField>
-
-          <FormField label="썸네일" htmlFor={`${id}-thumbnail`}>
-            {post.thumbnailUrl && (
-              <div className="ea-thumb-preview">
-                <img src={post.thumbnailUrl} alt="썸네일 미리보기" />
-              </div>
-            )}
-            <input
-              id={`${id}-thumbnail`}
-              type="file"
-              accept="image/*"
-              onChange={async (event) => {
-                const fileObj = event.target.files?.[0]
-                if (!fileObj) return
-                try {
-                  await onThumbnailUpload(fileObj)
-                } catch {
-                  // 업로드 실패 시 파일 선택을 초기화해 재시도할 수 있도록 한다.
-                  event.target.value = ''
-                }
-              }}
-              className="ea-file"
-            />
-            {isUploading && <p className="text-xs text-ms-blue">썸네일 업로드 중...</p>}
-          </FormField>
+          <ThumbnailPreview thumbnail={thumbnail} />
         </div>
       </section>
 
       <section className="ea-panel">
         <h2 className="ea-panel__title">첨부파일</h2>
-        <p className="ea-panel__desc">업로드 후 URL 복사 버튼으로 본문에 붙여넣을 수 있습니다.</p>
+        <p className="ea-panel__desc">링크를 복사해 본문에 붙여 넣으면 파일 이름으로 표시됩니다.</p>
         <AttachUploader
           postId={postId}
           draftSessionId={draftSessionId}

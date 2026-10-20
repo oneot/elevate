@@ -29,9 +29,9 @@ export default function AppHeader() {
           <span className="ea-brand__badge">Admin</span>
         </Link>
         <div className="ea-header__actions">
-          <a className="ea-linkbtn ea-linkbtn--site" href={`${PUBLIC_SITE_URL}/all`} target="_blank" rel="noopener noreferrer">
+          <a className="ea-glass-pill ea-glass-pill--site" href={`${PUBLIC_SITE_URL}/all`} target="_blank" rel="noopener noreferrer" aria-label="공개 사이트 (새 창)">
             <ExternalLink size={15} aria-hidden="true" />
-            <span className="ea-linkbtn__label">공개 사이트</span>
+            <span className="ea-glass-pill__label">공개 사이트</span>
           </a>
           {isAuthenticated && (
             <>
