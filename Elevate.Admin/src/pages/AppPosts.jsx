@@ -18,10 +18,11 @@ const PAGE_SIZE = 12
 const REFRESH_AFTER_MS = 30_000
 const STATUS_FILTERS = ['all', PUBLISHED, ARCHIVED]
 
+// 공개 사이트처럼 화면 문구와 서버에 저장된 원래 문구를 함께 찾는다.
 function matchesQuery(post, query) {
   if (!query) return true
   const needle = query.toLowerCase()
-  return [post.title, post.excerpt, post.slug, ...(post.tags || [])]
+  return [post.title, post.serverTitle, post.excerpt, post.serverExcerpt, post.slug, ...(post.tags || [])]
     .some((value) => String(value || '').toLowerCase().includes(needle))
 }
 
@@ -138,7 +139,7 @@ export default function AppPosts() {
     initialized && appPosts.length > 0
       ? `게시 ${appCounts[PUBLISHED] || 0} · 보관 ${appCounts[ARCHIVED] || 0}`
       : null,
-    '최근 수정순',
+    '최근 게시순',
   ]
 
   const retry = () => refresh()
