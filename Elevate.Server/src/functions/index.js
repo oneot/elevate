@@ -35,6 +35,7 @@ const { functionDefinition: adminLinkDraftFiles } = require('./adminLinkDraftFil
 const { functionDefinition: adminGetFiles } = require('./adminGetFiles');
 const { functionDefinition: adminCreateFile } = require('./adminCreateFile');
 const { functionDefinition: adminDeleteFile } = require('./adminDeleteFile');
+const { functionDefinition: automationPostExcerpt } = require('./automationPostExcerpt');
 
 const functionDefinitions = [
   health,
@@ -69,7 +70,8 @@ const functionDefinitions = [
   adminGetFiles,
   adminCreateFile,
   adminDeleteFile,
-  adminAnalyticsSummary
+  adminAnalyticsSummary,
+  automationPostExcerpt // GitHub Actions OIDC 인증 (관리자 로그인 아님)
 ];
 
 for (const definition of functionDefinitions) {
