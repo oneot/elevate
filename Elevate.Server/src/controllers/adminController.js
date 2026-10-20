@@ -10,6 +10,7 @@ const {
   enrichContentWithSas,
   enrichThumbnailWithSas,
 } = require('../services/postContent');
+const thumbnailTrigger = require('../services/thumbnailTrigger');
 
 const allowedStatuses = new Set(['draft', 'published', 'archived']);
 const allowedMimeTypes = new Set([
@@ -555,6 +556,7 @@ exports.createPost = async (req, res) => {
     };
 
     const { resource } = await container.items.create(post);
+    await thumbnailTrigger.requestPostThumbnail(resource);
     const createResponse = toPostResponse(resource);
     if (createResponse.thumbnail) {
       createResponse.thumbnail = await enrichThumbnailWithSas(createResponse.thumbnail);
@@ -631,6 +633,7 @@ exports.updatePost = async (req, res) => {
     }
 
     const { resource } = await container.item(existing.id, existing.partitionKey || existing.category).replace(updated);
+    await thumbnailTrigger.requestPostThumbnail(resource);
     const updateResponse = toPostResponse(resource);
     if (updateResponse.thumbnail) {
       updateResponse.thumbnail = await enrichThumbnailWithSas(updateResponse.thumbnail);
