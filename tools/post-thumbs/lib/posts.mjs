@@ -13,6 +13,8 @@ export const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)))
 export const REPO_ROOT = resolve(ROOT, '../..')
 export const THUMBS_DIR = join(REPO_ROOT, 'Elevate.Web/src/assets/post-thumbs')
 export const PUBLIC_API = (process.env.ELEVATE_PUBLIC_API || 'https://func-elv-server-ep-dev.azurewebsites.net/api/public').replace(/\/$/, '')
+/** AI 요약을 게시글에 기재하는 서버 입구 (GitHub OIDC 인증). 기본은 공개 API 주소의 /public을 /automation으로 바꾼 것. */
+export const AUTOMATION_API = (process.env.ELEVATE_AUTOMATION_API || PUBLIC_API.replace(/\/public$/, '/automation')).replace(/\/$/, '')
 export const SITE_URL = 'https://microsoft-elevate.com'
 
 /** 공개 블로그의 13개 앱 (Elevate.Web POST_LIST_CATEGORIES에서 'all' 제외). */
@@ -58,6 +60,7 @@ export function toPublicPost(raw) {
   const post = toDisplayPost(raw)
   return {
     key: `${post.category}/${post.slug}`,
+    id: raw.id || null,
     category: post.category,
     apiCategory: raw.category,
     slug: post.slug,

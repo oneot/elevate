@@ -1,7 +1,7 @@
-# 작업: '{{TITLE}}' 카드 썸네일 만들기
+# 작업: '{{TITLE}}' 카드 썸네일과 요약 한 줄 만들기
 
 당신은 Elevate 블로그(microsoft-elevate.com) 카드 썸네일 디자이너다. 이 폴더의 'UI 미니어처' 키트로
-게시글 하나(`{{KEY}}`, {{APP_NAME}})의 썸네일 장면을 만든다. 묻지 말고 끝까지 진행한다.
+게시글 하나(`{{KEY}}`, {{APP_NAME}})의 썸네일 장면을 만들고, 같은 글의 카드에 보일 요약 한 줄도 쓴다. 묻지 말고 끝까지 진행한다.
 
 {{MODE}}
 
@@ -22,11 +22,24 @@
 - pill은 정확히 1개, 한국어 12자 안팎으로 글의 효용을 말한다.
 - 아이콘은 glob 도구로 파일을 찾아 고른다: `node_modules/@fluentui/svg-icons/icons/*<단어>*_24_filled.svg` (`K.ico('<이름>')`, `:r`는 regular).
 
+## 요약 한 줄 쓰기
+
+공개 사이트 카드·글 상단·검색 결과와 관리자 목록에 보일 이 글의 요약이다. 관리자에는 요약 입력 칸이 없고, 여기서 쓴 문장이 게시글에 그대로 기재된다.
+
+- `work/{{ID}}/excerpt.txt`에 **한 줄, 한 문장**만 쓴다. 35~55자(공백 포함, 25~70자를 벗어나면 거부), '~니다.'로 끝나는 존댓말 평서문.
+- 본문 전체를 바탕으로, 이 글을 따라 하면 **무엇을 만들고 어떤 기능을 익히거나 어떤 결과를 얻는지** 구체적으로 쓴다.
+  본문에 나오는 실제 기능·도구·결과물 이름을 쓰고, 제목을 그대로 되풀이하지 않는다.
+- '이 글은', '알아보겠습니다', '~에 대해' 같은 군말과 과장, 마크다운·HTML·따옴표·이모지는 쓰지 않는다.
+- 사람이 다듬은 같은 앱의 요약 예시(제목 → 요약). 말투와 길이를 맞춘다:
+
+{{EXCERPT_EXAMPLES}}
+
 ## 만들 파일
 
 - `scenes/auto/{{CATEGORY}}/{{SLUG}}.js` 하나만 만든다(이미 있으면 고쳐 쓴다). IIFE 안에서 `scene('{{KEY}}', (K, c) => …, { css })`를 **한 번만** 등록한다.
   기존 장면 파일과 같은 형식이다. `scenes/{{CATEGORY}}.js`에 같은 key가 있어도 그 파일은 고치지 않는다(새 파일이 나중에 불려 덮어쓴다).
 - 마지막에 `work/{{ID}}/summary.md`에 한국어 2~3줄: 썸네일이 보여 주는 화면과, 그것이 본문의 어떤 내용에 근거하는지.
+- `work/{{ID}}/excerpt.txt`에 요약 한 줄 (위 '요약 한 줄 쓰기').
 - 그 밖의 파일(키트, 렌더러, 다른 장면, 이미지)은 만들거나 고치지 않는다. 외부 이미지·폰트·네트워크를 쓰지 않는다.
 
 ## 이 환경에서 할 수 있는 일
@@ -34,7 +47,7 @@
 - 읽기: view·grep·glob 도구로 이 폴더의 파일을 읽는다. 렌더한 PNG도 view 도구로 열면 이미지가 보인다.
 - 명령: 렌더러 `thumb-render`만 실행할 수 있다(`node render.mjs`와 같다). STYLE_GUIDE의 `node render.mjs …`도 `thumb-render …`로 실행한다.
   `node`, `sed -i` 같은 다른 명령은 거부된다.
-- 쓰기: create·edit 도구로 `scenes/auto/{{CATEGORY}}/{{SLUG}}.js`와 `work/{{ID}}/summary.md`만 만들고 고칠 수 있다.
+- 쓰기: create·edit 도구로 `scenes/auto/{{CATEGORY}}/{{SLUG}}.js`, `work/{{ID}}/summary.md`, `work/{{ID}}/excerpt.txt`만 만들고 고칠 수 있다.
   셸 리디렉션(`cat > 파일`, `echo … >`)은 거부된다.
 
 ## 확인과 다듬기
@@ -43,12 +56,14 @@
 thumb-render zoom {{KEY}}        # review/zoom_{{ID}}.png (960px)
 thumb-render review {{CATEGORY}}   # review/{{CATEGORY}}.png (같은 앱 카드들 사이, 실제 크기 2배)
 thumb-render export {{KEY}}      # 최종 WebP 저장
+thumb-render excerpt {{KEY}}     # 요약 한 줄이 규칙에 맞는지 검사
 ```
 
 1. 장면을 쓰고 `zoom`으로 그린 뒤 **view 도구로 이미지를 직접 열어 본다**. 출력된 `! audit:`·`! console:` 경고를 모두 고친다.
 2. `review`로 같은 앱 카드들 사이에서 본다. 카드 크기에서 핵심 글자가 읽히는지, 기존 카드와 구성이 겹치지 않는지, 비어 보이거나 빽빽하지 않은지 확인한다.
 3. STYLE_GUIDE의 디자인 규칙 1~8을 하나씩 점검하며 1~2를 **최소 두 번** 반복해 다듬는다.
 4. 경고 0, 종료 코드 0이 되면 `export`를 실행하고 `summary.md`를 쓴다.
+5. `excerpt.txt`를 쓰고 `thumb-render excerpt {{KEY}}`로 검사한다. `! excerpt:` 경고가 없어질 때까지 고친다.
 
 ## 요청 사항
 
