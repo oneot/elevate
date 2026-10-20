@@ -30,17 +30,17 @@ function toEditorPost(apiPost) {
 }
 
 /**
- * 새 게시글 생성 페이로드. 관리자 화면은 제목·요약·본문·게시 상태만 다루며,
+ * 새 게시글 생성 페이로드. 관리자 화면은 제목·본문·게시 상태만 다루며,
  * slug는 보내지 않아 서버가 제목에서 중복 없는 값을 만든다.
  * tags에는 앱 분류용 태그(예: Word → ['word'])만 담는다 (서버는 배열을 필수로 받는다).
  * 썸네일은 보내지 않는다. 게시된 글의 썸네일은 GitHub Actions 'Post thumbnails'가 공개 사이트 이미지로 만든다.
- * @param {{ title: string, category: string, excerpt?: string, htmlBody?: string, status: string, tags?: string[] }} post
+ * 요약은 보내지 않는다(서버는 빈 값으로 만든다). 게시된 글의 요약은 'Post thumbnails'의 AI가 본문을 읽고 기재한다.
+ * @param {{ title: string, category: string, htmlBody?: string, status: string, tags?: string[] }} post
  */
 function toCreatePayload(post) {
   return {
     title: post.title,
     category: post.category,
-    excerpt: post.excerpt || '',
     contentMarkdown: post.htmlBody || '',
     tags: Array.isArray(post.tags) ? post.tags : [],
     status: post.status,
@@ -48,15 +48,14 @@ function toCreatePayload(post) {
 }
 
 /**
- * 기존 게시글 수정 페이로드. 화면에서 고칠 수 있는 제목·요약·본문·게시 상태만 보낸다.
- * 서버는 보내지 않은 category·slug·tags·series·youtube·thumbnail을 그대로 유지하므로
- * 앱 분류와 공개 주소, 기존 썸네일이 수정으로 바뀌지 않는다.
- * @param {{ title: string, excerpt?: string, htmlBody?: string, status: string }} post
+ * 기존 게시글 수정 페이로드. 화면에서 고칠 수 있는 제목·본문·게시 상태만 보낸다.
+ * 서버는 보내지 않은 category·slug·tags·series·youtube·thumbnail·excerpt를 그대로 유지하므로
+ * 앱 분류와 공개 주소, 기존 썸네일, AI가 기재한 요약이 수정으로 바뀌지 않는다.
+ * @param {{ title: string, htmlBody?: string, status: string }} post
  */
 function toUpdatePayload(post) {
   return {
     title: post.title,
-    excerpt: post.excerpt || '',
     contentMarkdown: post.htmlBody || '',
     status: post.status,
   }
