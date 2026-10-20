@@ -17,7 +17,7 @@ beforeEach(() => {
   mkdirSync(join(workdir, 'dist/.vite'), { recursive: true })
   manifest = {
     'index.html': { file: 'main.js', imports: ['_react'], dynamicImports: ['_editor'] },
-    'src/pages/CategoryPosts.jsx': { file: 'category.js', imports: ['_react'] },
+    'src/pages/AppPosts.jsx': { file: 'category.js', imports: ['_react'] },
     _react: { file: 'react.js' },
     _editor: { file: 'vendor-tiptap-test.js' },
   }

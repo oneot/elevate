@@ -32,6 +32,7 @@ import {
   RemoveFormatting,
 } from 'lucide-react'
 import { getClipboardImageFiles, shouldUploadClipboardImages } from './clipboardImages.js'
+import '../../styles/post-content.css'
 
 // lowlight 인스턴스에 지원할 언어를 등록한다.
 // 같은 언어에 여러 별칭(js/javascript, ts/typescript 등)을 등록해
@@ -269,8 +270,8 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
     },
     editorProps: {
       attributes: {
-        class:
-          'min-h-80 rounded-lg px-4 py-3 text-base focus:outline-none',
+        // 공개 사이트 글 본문과 같은 클래스 (styles/post-content.css)
+        class: 'prose prose-slate max-w-none post-content focus:outline-none',
       },
       handlePaste: (_view, event) => {
         if (!shouldUploadClipboardImages(event.clipboardData, onUploadImage)) return false
@@ -285,8 +286,10 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
 
   editorRef.current = editor
 
+  // React가 숨겨 둔 화면을 다시 연결하면(Suspense 등) 이 이펙트가 Tiptap이 이미 파괴한 이전 인스턴스로
+  // 먼저 실행될 수 있다. 파괴된 인스턴스는 건너뛰고, Tiptap이 다시 만든 인스턴스로 이어서 동기화한다.
   useEffect(() => {
-    if (!editor) return
+    if (!editor || editor.isDestroyed) return
     const current = editor.getHTML()
     const next = value || ''
     if (current !== next) {
@@ -299,6 +302,7 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
     const handler = () => {
       clearTimeout(autoSaveTimerRef.current)
       autoSaveTimerRef.current = setTimeout(() => {
+        if (editor.isDestroyed) return
         const html = editor.getHTML()
         try {
           localStorage.setItem(storageKey, html)
@@ -419,9 +423,9 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
   }
 
   return (
-    <div>
+    <div className="ea-rte">
       {showRestoreBanner && (
-        <div className="mb-2 flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-700">
+        <div className="mb-2 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-700">
           <span>저장되지 않은 작업이 있습니다. 복구하시겠어요?</span>
           <div className="flex gap-2 ml-4">
             <button
@@ -441,10 +445,10 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
           </div>
         </div>
       )}
-      <div className="relative rounded-md border border-neutral-300 bg-white shadow-elevation-2 focus-within:border-ms-blue focus-within:ring-1 focus-within:ring-ms-blue transition-shadow duration-200">
-        <div className="max-h-[70vh] overflow-y-auto">
+      <div className="ea-rte__frame relative rounded-xl border border-[#d2d2d7] bg-white focus-within:border-ms-blue/50 focus-within:ring-4 focus-within:ring-ms-blue/10 transition-shadow duration-200">
+        <div className="ea-rte__scroll">
           {/* 툴바 - 스크롤 컨테이너 내에서 sticky */}
-          <div className="border-b border-neutral-200 bg-[#f3f2f1] p-1 sticky top-0 z-10">
+          <div className="rounded-t-xl border-b border-[#e8e8ed] bg-[#f5f5f7] p-1 sticky top-0 z-10">
             <div className="flex flex-wrap gap-0.5 items-center px-1">
               {/* 실행취소/다시실행 */}
               <ToolbarButton
@@ -583,9 +587,9 @@ function HtmlEditor({ value, onChange, onUploadImage, storageKey }) {
             </div>
           </div>
 
-          {/* 에디터 - 드래그 피드백 */}
+          {/* 에디터 - 드래그 피드백. edoc-article: 공개 사이트 글 본문 틀과 같은 클래스 */}
           <div
-            className={`relative p-4 bg-white cursor-text transition-colors duration-150 ${
+            className={`ea-rte__content edoc-article relative rounded-b-xl bg-white cursor-text transition-colors duration-150 ${
               isDragging ? 'border-dashed border-2 border-blue-400 bg-blue-50' : ''
             }`}
             onClick={() => editor.commands.focus()}

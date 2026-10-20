@@ -15,7 +15,7 @@ function toEditorPost(apiPost) {
     id: apiPost.id,
     title: apiPost.title || '',
     slug: apiPost.slug || '',
-    status: apiPost.status || 'draft',
+    status: apiPost.status || 'archived',
     category: apiPost.category || '',
     tags: Array.isArray(apiPost.tags) ? apiPost.tags : [],
     excerpt: apiPost.excerpt || '',
@@ -27,28 +27,17 @@ function toEditorPost(apiPost) {
     youtube: apiPost.youtube || '',
     updatedAt: apiPost.updatedAt || null,
     publishedAt: apiPost.publishedAt || null,
-    eventDates: Array.isArray(apiPost.eventDates) ? apiPost.eventDates : null,
-    eventLocation: apiPost.eventLocation || '',
-    eventTarget: apiPost.eventTarget || '',
   }
 }
 
 /**
- * 에디터 상태를 API 요청 페이로드로 변환한다.
- *
- * - slug: 비어 있으면 서버가 자동 생성하므로 값이 있을 때만 포함한다.
- * - series: string 타입일 때만 포함하며, 빈 문자열은 null 로 전송해 시리즈를 해제한다.
- * - thumbnailUrl: 값이 있을 때만 thumbnail 객체를 구성한다.
- *   mimeType/sizeBytes 는 에디터 상태에서 원본 파일 정보가 없으므로 기본값을 사용한다.
- * - youtube: undefined 이면 전송하지 않는다. 빈 문자열은 null 로 전송해 연결을 해제한다.
- * @param {object} post 에디터 상태 객체
+ * 새 게시글 생성 페이로드. 관리자 화면은 제목·요약·본문·게시 상태만 다루며,
+ * slug는 보내지 않아 서버가 제목에서 중복 없는 값을 만든다.
+ * tags에는 앱 분류용 태그(예: Word → ['word'])만 담는다 (서버는 배열을 필수로 받는다).
+ * thumbnail은 게시할 때 자동으로 만든 썸네일이 있을 때만 포함한다.
+ * @param {{ title: string, category: string, excerpt?: string, htmlBody?: string, status: string, tags?: string[], thumbnail?: object }} post
  */
-function toApiPayload(post) {
-  const normalizedSeries = typeof post.series === 'string' ? post.series.trim() : post.series
-  const normalizedSeriesOrder = Number.isInteger(post.seriesOrder) && post.seriesOrder > 0
-    ? post.seriesOrder
-    : null
-
+function toCreatePayload(post) {
   const payload = {
     title: post.title,
     category: post.category,
@@ -57,74 +46,40 @@ function toApiPayload(post) {
     tags: Array.isArray(post.tags) ? post.tags : [],
     status: post.status,
   }
+  if (post.thumbnail?.url) payload.thumbnail = stripThumbnailSignedUrls(post.thumbnail)
+  return payload
+}
 
-  if (post.slug) {
-    payload.slug = post.slug
+/**
+ * 기존 게시글 수정 페이로드. 화면에서 고칠 수 있는 제목·요약·본문·게시 상태만 보낸다.
+ * 서버는 보내지 않은 category·slug·tags·series·youtube·thumbnail을 그대로 유지하므로
+ * 앱 분류와 공개 주소, 기존 썸네일이 수정으로 바뀌지 않는다.
+ * thumbnail은 썸네일이 없던 글을 게시하며 자동으로 만든 경우에만 포함한다.
+ * @param {{ title: string, excerpt?: string, htmlBody?: string, status: string, thumbnail?: object }} post
+ */
+function toUpdatePayload(post) {
+  const payload = {
+    title: post.title,
+    excerpt: post.excerpt || '',
+    contentMarkdown: post.htmlBody || '',
+    status: post.status,
   }
-
-  if (typeof normalizedSeries === 'string') {
-    payload.series = normalizedSeries || null
-  }
-
-  if (post.seriesOrder !== undefined) {
-    payload.seriesOrder = normalizedSeries ? normalizedSeriesOrder : null
-  }
-
-  if (post.thumbnail?.url) {
-    payload.thumbnail = stripThumbnailSignedUrls(post.thumbnail)
-  } else if (post.thumbnailUrl) {
-    payload.thumbnail = {
-      url: post.thumbnailUrl,
-      alt: '',
-      width: 0,
-      height: 0,
-      mimeType: 'image/jpeg',
-      sizeBytes: 0,
-    }
-  }
-
-  if (post.youtube !== undefined) {
-    payload.youtube = post.youtube || null
-  }
-
-  if (post.eventDates !== undefined) {
-    payload.eventDates = Array.isArray(post.eventDates) ? post.eventDates : null
-  }
-
-  if (post.eventLocation !== undefined) {
-    payload.eventLocation = post.eventLocation || null
-  }
-
-  if (post.eventTarget !== undefined) {
-    payload.eventTarget = post.eventTarget || null
-  }
-
+  if (post.thumbnail?.url) payload.thumbnail = stripThumbnailSignedUrls(post.thumbnail)
   return payload
 }
 
 export const _test = {
-  toApiPayload,
-}
-
-/**
- * 카테고리별 기존 시리즈 목록을 조회한다.
- * @param {string} category
- * @param {{ msalInstance?: object }} options
- */
-export function listSeriesByCategory(category, options = {}) {
-  const params = new URLSearchParams()
-  if (category) params.set('category', category)
-  const qs = params.toString()
-  return apiFetch(`/series${qs ? `?${qs}` : ''}`, options)
+  toCreatePayload,
+  toUpdatePayload,
 }
 
 /**
  * 게시글 목록을 조회한다. 쿼리 파라미터 기본값은 서버와 일치할 때 생략해
  * URL을 불필요하게 길어지지 않도록 한다.
- * @param {{ msalInstance, page?, limit?, status?, category?, search? }} options
+ * @param {{ msalInstance, page?, limit?, status?, category?, search?, signal? }} options
  */
 export function listPosts(options = {}) {
-  const { msalInstance, page = 1, limit = 20, status, category, search } = options;
+  const { msalInstance, page = 1, limit = 20, status, category, search, signal } = options;
   const params = new URLSearchParams();
   if (page !== 1) params.set('page', String(page));
   if (limit !== 20) params.set('limit', String(limit));
@@ -132,7 +87,26 @@ export function listPosts(options = {}) {
   if (category && category !== 'all') params.set('category', category);
   if (search) params.set('search', search);
   const qs = params.toString();
-  return apiFetch(`/posts${qs ? `?${qs}` : ''}`, { msalInstance })
+  return apiFetch(`/posts${qs ? `?${qs}` : ''}`, { msalInstance, signal })
+}
+
+const LIST_ALL_PAGE_SIZE = 100
+
+/**
+ * 한 서버 category의 게시글 요약을 모든 상태·페이지에 걸쳐 조회한다 (서버 최대 limit 100).
+ * 관리자 앱 목록은 공개 사이트와 같은 분류 규칙을 브라우저에서 적용하므로 category 전체가 필요하다.
+ * @param {{ msalInstance, category: string, signal?: AbortSignal }} options
+ * @returns {Promise<Array<object>>}
+ */
+export async function listAllPosts({ msalInstance, category, signal } = {}) {
+  const first = await listPosts({ msalInstance, category, limit: LIST_ALL_PAGE_SIZE, signal })
+  const items = Array.isArray(first?.items) ? [...first.items] : []
+  const totalPages = Number.isInteger(first?.totalPages) ? first.totalPages : 1
+  for (let page = 2; page <= totalPages; page += 1) {
+    const data = await listPosts({ msalInstance, category, page, limit: LIST_ALL_PAGE_SIZE, signal })
+    if (Array.isArray(data?.items)) items.push(...data.items)
+  }
+  return items
 }
 
 /**
@@ -146,28 +120,28 @@ export function getPost(postId, options = {}) {
 
 /**
  * 게시글을 생성한다.
- * @param {object} payload 에디터 상태 객체
+ * @param {object} post toCreatePayload 입력
  * @param {{ msalInstance }} options
  */
-export function createPost(payload, options = {}) {
+export function createPost(post, options = {}) {
   return apiFetch('/posts', {
     ...options,
     method: 'POST',
-    body: JSON.stringify(toApiPayload(payload)),
+    body: JSON.stringify(toCreatePayload(post)),
   }).then(toEditorPost)
 }
 
 /**
  * 게시글을 수정한다.
  * @param {string} postId
- * @param {object} payload 에디터 상태 객체
+ * @param {object} post toUpdatePayload 입력
  * @param {{ msalInstance }} options
  */
-export function updatePost(postId, payload, options = {}) {
+export function updatePost(postId, post, options = {}) {
   return apiFetch(`/posts/${postId}`, {
     ...options,
     method: 'PUT',
-    body: JSON.stringify(toApiPayload(payload)),
+    body: JSON.stringify(toUpdatePayload(post)),
   }).then(toEditorPost)
 }
 

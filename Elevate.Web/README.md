@@ -54,6 +54,19 @@ VPN on/off 재현 방법과 운영 조치는 [접속 장애 런북](../documents
 상세 사이드바의 카테고리 제목(카테고리 목록 링크) 앞에는 `docsMeta.js`의 앱 아이콘을 표시하고,
 아이콘이 없는 카테고리·섹션은 제목 글자만 표시합니다. 활동 사례(`/activity`) 사이드바의 머리글은 그대로입니다.
 
+## 화면 카테고리(앱) 분류
+
+서버에 저장되는 게시글 category는 7개(`BASE_CATEGORIES`)이고, 블로그는 `src/constants/categories.js`의
+`CATEGORY_SPLIT_RULES`로 일부 글을 별도 앱으로 나눠 보여 줍니다. 판단 순서는 slug → 시리즈 이름 → 태그(대소문자 무시)입니다.
+
+- Word·PowerPoint·Forms·OneDrive: M365 글 중 해당 시리즈, 없으면 `word`·`powerpoint`·`forms`·`onedrive` 태그.
+- GitHub·Azure: Copilot Studio 글 중 기존 글 slug 목록, 없으면 `github`·`azure` 태그.
+  태그 규칙은 관리자에서 새로 쓰는 GitHub·Azure 글을 위한 것이며, 2026-10-20 기준 공개 글의 분류는 바뀌지 않습니다
+  (나뉘는 대상인 M365·Copilot Studio 공개 글 33건의 분류와 개수를 `tests/category-split-rules.test.js`가 고정).
+
+관리자(`Elevate.Admin/src/constants/apps.js`)도 같은 규칙으로 앱별 목록과 새 글을 만듭니다.
+규칙을 바꾸면 Admin의 `tests/app-classification.test.js`가 두 앱의 차이를 실패로 알립니다.
+
 ## 블로그 카테고리 소개
 
 카테고리 목록(`/:category`) 머리글의 소개는 첫 화면 앱 카드와 같은 두 줄을 `src/constants/appIntros.js`에서 함께 씁니다.

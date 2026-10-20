@@ -1,14 +1,16 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useMsal } from '@azure/msal-react'
 import { loginRequest } from '../lib/msalConfig.js'
+import { markSignedOut } from '../lib/signOutFlag.js'
 
 /**
- * MSAL 인증 상태와 로그인 함수를 제공하는 훅.
+ * MSAL 인증 상태와 로그인/로그아웃 함수를 제공하는 훅.
  *
  * - account: 현재 활성 계정 (없으면 첫 번째 계정, 그것도 없으면 null)
  * - inProgress: MSAL 인증 작업 진행 중 여부 (InteractionStatus)
  * - isAuthenticated: 로그인 여부
  * - login: 로그인 페이지로 이동하는 함수
+ * - logout: 로그아웃 후 현재 호스트(postLogoutRedirectUri)로 돌아오는 함수
  * - msalInstance: 토큰 획득 등 직접 MSAL 조작이 필요한 컴포넌트에 전달
  */
 export function useAuth() {
@@ -23,15 +25,21 @@ export function useAuth() {
     }
   }, [accounts, instance])
 
-  const login = async () => {
+  const login = useCallback(async () => {
     await instance.acquireTokenRedirect(loginRequest)
-  }
+  }, [instance])
+
+  const logout = useCallback(async () => {
+    markSignedOut()
+    await instance.logoutRedirect({ account: instance.getActiveAccount() || undefined })
+  }, [instance])
 
   return {
     account,
     inProgress,
     isAuthenticated: Boolean(account),
     login,
+    logout,
     msalInstance: instance,
   }
 }

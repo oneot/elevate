@@ -8,6 +8,9 @@ import { tokenRequest } from './msalConfig.js'
  */
 const DEV_BEARER_TOKEN = import.meta.env.VITE_DEV_BEARER_TOKEN || ''
 
+/** 로컬 개발용 토큰으로 MSAL 로그인 없이 API를 호출하는지 여부. */
+export const hasDevBearerToken = Boolean(DEV_BEARER_TOKEN)
+
 /**
  * 현재 활성 계정을 반환한다.
  * 활성 계정이 없으면 첫 번째 계정을 활성 계정으로 설정하고 반환한다.

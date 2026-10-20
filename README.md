@@ -2,12 +2,12 @@
 
 React 공개 사이트와 관리자, Azure Functions API를 관리하는 저장소입니다.
 공개 사이트는 GitHub Pages와 실시간 Azure API를 사용하며, 관리자의 작성·게시·수정·삭제
-흐름은 별도 Admin 앱에서 유지합니다.
+흐름은 별도 Admin 앱(`https://admin.microsoft-elevate.com`)에서 유지합니다.
 
 | 영역 | 책임 | 개발 시작점 |
 | --- | --- | --- |
 | [Elevate.Web](Elevate.Web/README.md) | 게시글·활동 영상·행사·챗 UI | `src/main.jsx`, `src/App.jsx` |
-| Elevate.Admin | MSAL 인증, 콘텐츠 편집, 이미지·첨부 업로드 | `src/main.jsx`, `src/App.jsx` |
+| [Elevate.Admin](Elevate.Admin/README.md) | MSAL 인증, 13개 앱별 게시글 작성·편집, 이미지·첨부 업로드 | `src/main.jsx`, `src/App.jsx` |
 | Elevate.Server | 공개/관리자 API, Cosmos DB, Blob SAS | `src/functions/index.js` |
 
 ## 개발 환경
@@ -59,6 +59,7 @@ CI용 빌드는 운영 API·Entra·SAS 비밀값을 사용하지 않습니다.
 ## 배포와 문서
 
 기존 배포 경계는 `main` → GitHub Pages, `admin` → Azure Static Web Apps입니다.
+Admin 변경은 `main`에 병합한 뒤 `main`을 `admin`에 병합해야 배포됩니다.
 기본 브랜치나 운영 리소스를 이 문서만으로 변경하지 않습니다. Server 배포 워크플로는
 현재 저장소에 없으며 실제 배포 절차는 운영 확인이 필요합니다.
 

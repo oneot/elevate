@@ -1884,6 +1884,10 @@ a.edoc-nav__title:hover {
 
 .edoc-article .prose > :first-child {
   margin-top: 0;
+}
+
+/* 첫 제목의 위쪽 구분선만 지운다. 글이 안내 카드나 코드 창으로 시작하면 상자 모양을 그대로 둔다. */
+.edoc-article .prose > :first-child:not(blockquote, pre) {
   padding-top: 0;
   border-top: 0;
 }
@@ -1930,26 +1934,37 @@ a.edoc-nav__title:hover {
   content: none;
 }
 
+/* 인라인 코드: 흰 키캡 (아래 테두리를 조금 두껍게). 줄이 바뀌어도 조각마다 테두리를 그린다. */
 .edoc-article .prose :not(pre) > code {
-  padding: 0.14em 0.42em;
+  padding: 0.08em 0.4em;
+  border: 1px solid var(--edoc-line);
+  border-bottom-width: 2px;
   border-radius: 6px;
-  background: var(--edoc-fill);
+  background: #fff;
   color: var(--edoc-ink);
   font-family: var(--edoc-mono);
   font-size: 0.85em;
   font-weight: 500;
   letter-spacing: 0;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
+/* 코드 블록: 점 3개가 있는 어두운 창. 점은 배경으로 그려 가로로 스크롤해도 제자리에 있다. */
 .edoc-article .prose pre {
   margin: 1.3em 0 0;
-  padding: 16px 20px;
-  border: 1px solid var(--edoc-line-soft);
+  padding: 44px 20px 18px;
+  border: 0;
   border-radius: 14px;
-  background: var(--edoc-fill);
-  color: var(--edoc-ink);
+  background:
+    radial-gradient(circle at 25px 22px, #ff5f57 5px, transparent 5.5px),
+    radial-gradient(circle at 41px 22px, #febc2e 5px, transparent 5.5px),
+    radial-gradient(circle at 57px 22px, #28c840 5px, transparent 5.5px),
+    #1e1f24;
+  color: #f5f5f7;
   font-size: 14px;
   line-height: 1.62;
+  box-shadow: 0 14px 30px -22px rgba(15, 23, 42, 0.35);
 }
 
 .edoc-article .prose pre code {
@@ -1991,16 +2006,42 @@ a.edoc-nav__title:hover {
   color: var(--edoc-ink);
 }
 
+/* 인용: 안내 아이콘이 있는 흰 카드 */
 .edoc-article .prose blockquote {
+  --quote-pad-y: 20px;
+
+  position: relative;
   margin: 1.4em 0;
-  padding: 14px 18px;
-  border: 0;
-  border-radius: 14px;
-  background: var(--edoc-fill);
+  padding: var(--quote-pad-y) 24px var(--quote-pad-y) 58px;
+  border: 1px solid var(--edoc-line-soft);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 28px -20px rgba(15, 23, 42, 0.35);
   color: var(--edoc-ink-2);
   font-style: normal;
   font-weight: 400;
   quotes: none;
+}
+
+/* 원 안의 i. 첫 줄 가운데에 맞춘다 (줄 높이 1.76em의 절반 - 아이콘 높이의 절반). */
+.edoc-article .prose blockquote::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--quote-pad-y) + 0.88em - 11px);
+  left: 20px;
+  width: 22px;
+  height: 22px;
+  background: var(--edoc-accent);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.75a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm0 3.75a1 1 0 0 0-1 1V17a1 1 0 1 0 2 0v-5.5a1 1 0 0 0-1-1Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.75a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm0 3.75a1 1 0 0 0-1 1V17a1 1 0 1 0 2 0v-5.5a1 1 0 0 0-1-1Z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.edoc-article .prose blockquote > :first-child {
+  margin-top: 0;
+}
+
+.edoc-article .prose blockquote > :last-child {
+  margin-bottom: 0;
 }
 
 .edoc-article .prose blockquote p::before,
@@ -2208,8 +2249,19 @@ a.edoc-nav__title:hover {
   }
 
   .edoc-article .prose pre {
-    padding: 14px 16px;
+    padding: 40px 16px 14px;
     font-size: 13px;
+  }
+
+  .edoc-article .prose blockquote {
+    --quote-pad-y: 16px;
+
+    padding-right: 18px;
+    padding-left: 50px;
+  }
+
+  .edoc-article .prose blockquote::before {
+    left: 16px;
   }
 }
 
