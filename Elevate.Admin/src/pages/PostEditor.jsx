@@ -212,7 +212,8 @@ function PostEditor() {
       try {
         const data = await getPost(postId, { msalInstance })
         if (isMounted) {
-          // 제목·요약은 공개 사이트에 보이는 문구로 채운다. 저장하면 이 문구가 서버에 저장된다.
+          // 제목은 공개 사이트에 보이는 문구로 채운다(저장하면 이 문구가 서버에 저장된다).
+          // 요약은 관리자에서 고치지 않는다. 게시하면 'Post thumbnails'의 AI가 본문을 읽고 한 줄로 기재한다.
           setPost({ ...emptyPost, ...withDisplayText(data) })
           setPersistedStatus(data.status || '')
         }
@@ -232,10 +233,6 @@ function PostEditor() {
       isMounted = false
     }
   }, [postId, isNew, msalInstance, loadAttempt])
-
-  const handleChange = (field) => (event) => {
-    setPost((prev) => ({ ...prev, [field]: event.target.value }))
-  }
 
   // 제목은 한 줄 값이므로 줄바꿈은 공백으로 바꾼다.
   const handleTitleChange = (event) => {
@@ -317,7 +314,6 @@ function PostEditor() {
         const created = await createPost({
           title,
           category: post.category,
-          excerpt: post.excerpt,
           htmlBody: post.htmlBody,
           status: post.status,
           tags: applyAppTag([], selectedApp),
@@ -353,7 +349,6 @@ function PostEditor() {
       } else {
         const updated = await updatePost(postId, {
           title,
-          excerpt: post.excerpt,
           htmlBody: post.htmlBody,
           status: post.status,
         }, { msalInstance })
@@ -503,7 +498,7 @@ function PostEditor() {
         </div>
 
         <div className="ea-editor">
-          <section className="ea-panel ea-editor__info" aria-label="제목과 요약">
+          <section className="ea-panel ea-editor__info" aria-label="제목">
             <div className="ea-fields">
               <FormField label="제목" htmlFor={`${fieldId}-title`}>
                 <textarea
@@ -514,17 +509,6 @@ function PostEditor() {
                   onChange={handleTitleChange}
                   onKeyDown={preventLineBreak}
                   placeholder="게시글 제목"
-                />
-              </FormField>
-
-              <FormField label="요약" htmlFor={`${fieldId}-excerpt`} hint="목록 카드에 표시됩니다. 첫 구절이 짧으면 썸네일 문구로도 쓰입니다.">
-                <textarea
-                  id={`${fieldId}-excerpt`}
-                  className="ea-textarea"
-                  rows={3}
-                  value={post.excerpt}
-                  onChange={handleChange('excerpt')}
-                  placeholder="목록 카드에 표시되는 한 줄 요약"
                 />
               </FormField>
             </div>

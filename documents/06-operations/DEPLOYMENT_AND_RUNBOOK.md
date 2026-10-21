@@ -9,7 +9,7 @@ Web과 Admin은 각각의 잠금 파일로 `npm ci --legacy-peer-deps`를 실행
 
 `main` → GitHub Pages와 `admin` → Azure Static Web Apps 배포 경계는 유지한다.
 이 변경은 Azure Functions의 실배포 Node 버전이나 GitHub/Azure 설정을 변경하지 않는다.
-Server 배포 자동화는 현재 저장소에서 확인되지 않았으므로 별도 운영 확인이 필요하다.
+Server 배포 자동화는 저장소에 없다. 수동 배포 방법과 현재 운영 버전은 아래 '서버(Function App) 배포'에 기록한다.
 
 ### 배포 전 실패를 확인할 항목
 
@@ -144,8 +144,11 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
    (저장 category `m365`·`copilot-studio`, 태그 `word`·`github`, slug는 서버가 제목으로 생성).
 3. 기존 글 편집 저장, 본문 이미지·첨부 업로드가 동작한다. 기존 글의 썸네일·slug·태그·시리즈는 바뀌지 않는다.
    편집 화면의 썸네일 미리보기가 공개 사이트 카드 이미지와 같다.
-4. 썸네일: 테스트 글을 '게시'로 저장해도 관리자는 썸네일을 만들지 않는다(요청에 `thumbnail` 없음). 보통 20~35분 안에 `Post thumbnails`가
-   그 글의 썸네일 PR을 연다(아래 '게시글 썸네일 자동 생성'). 게시한 글은 공개 사이트에 바로 보이므로 확인 후 보관으로 바꾸거나 삭제한다.
+4. 썸네일·요약: 테스트 글을 '게시'로 저장해도 관리자는 썸네일과 요약을 만들지 않는다(요청에 `thumbnail`·`excerpt` 없음). 저장하면 Actions에 `Post thumbnails on save`
+   실행이 생긴다. 마지막 저장 10분 뒤 `Post thumbnails`가 시작돼 AI가 요약 한 줄을 게시글에 기재하고(보통 15~20분), 썸네일 PR을 연다.
+   Repository checks를 통과하면 자동으로 병합·배포해, 보통 25분 안팎에 공개 사이트와 관리자 카드에 썸네일이 보인다(아래 '게시글 썸네일 자동 생성').
+   게시한 글은 공개 사이트에 바로 보이므로 확인 후 보관으로 바꾸거나 삭제한다. 테스트 글의 썸네일도 자동으로 병합되므로,
+   필요 없으면 글을 먼저 보관·삭제한 뒤 병합 커밋을 되돌린다(글이 게시된 채로 이미지만 지우면 다시 만든다).
 5. 첨부파일을 올리고 '링크 복사' 후 본문에 붙여 넣으면 파일 이름으로 된 링크가 들어간다. 게시 후 공개 사이트에서 그 링크로 원래 파일 이름으로 내려받아진다.
 6. 로그아웃하면 같은 호스트로 돌아와 '로그아웃되었습니다' 안내와 '다시 로그인' 버튼이 보인다.
 
@@ -157,27 +160,92 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 | 이미지·첨부 업로드 실패 (콘솔에 Blob CORS 오류) | Storage Blob CORS 허용 origin에 접속한 관리자 호스트가 있는지 (위 '인증·CORS 전제') |
 | 목록 순서가 공개 사이트 앱 목록과 다름 | 브라우저 콘솔의 `[AdminPostsProvider] 공개 사이트 시리즈 순서 조회 실패`. 공개 API `GET /api/public/series` 응답과 Function App CORS. 받지 못해도 목록은 게시일순이며 같은 시각 글만 순서가 달라진다. 공개 사이트 '전체 게시글'은 같은 시각 글을 데이터베이스 순서로 보여 주므로 그 부분은 원래 다를 수 있다 |
 | 목록 카드가 썸네일 대신 유리 타일 | 정적 썸네일이 없는 글이면 상세 조회(`GET /api/admin/posts/{id}`) 응답의 `thumbnail.variants`와 Blob 읽기. 공개 사이트 정적 썸네일을 새로 넣었다면 Admin이 다시 배포됐는지 |
-| 게시했는데 썸네일 PR이 오지 않음 | Actions의 `Post thumbnails` 실행 기록(plan 출력), `thumbnail-failed` 이슈, 브랜치 `thumbnail/<앱>/<slug>`가 이미 있는지 (아래 표) |
+| 게시했는데 썸네일 PR이 오지 않음 | 저장 때마다 Actions에 `Post thumbnails on save` 실행이 생기는지 본다. 없으면 Function App 로그의 `[thumbnailTrigger]` 경고(HTTP 401·403은 토큰 만료·권한)와 앱 설정 `THUMBNAIL_DISPATCH_TOKEN`. 있으면 이어진 `Post thumbnails` 실행 기록(plan 출력), `thumbnail-failed` 이슈, 브랜치 `thumbnail/<앱>/<slug>`가 이미 있는지 (아래 표) |
+| 썸네일 PR이 열렸는데 병합되지 않음 | PR의 라벨 `thumbnail-merge-blocked`와 댓글(이유, 검사 링크). `Post thumbnails` 실행의 merge job 요약. 저장소 변수 `THUMBNAIL_AUTO_MERGE`가 `false`인지 (아래 표) |
+| 병합됐는데 사이트에 썸네일이 없음 | merge job이 실행한 `Deploy to GitHub Pages`, `Sync post thumbnails to admin` → `Deploy Elevate.Admin To Azure Static Web Apps` 실행 결과 |
+| 게시했는데 요약이 비어 있음 | `Post thumbnails` 실행 요약과 PR 본문의 '요약(AI)' 줄. 404면 서버가 automation 입구가 있는 코드로 배포됐는지, 401·403이면 Function App 로그의 `[automationAuth]` 경고(audience·저장소·브랜치·workflow claim), 409면 그 사이 저장돼 다음 실행이 다시 쓴다 (아래 '게시글 썸네일 자동 생성') |
+
+## 서버(Function App) 배포
+
+서버(`Elevate.Server`)는 저장소 workflow로 배포하지 않고, 운영자가 Azure CLI로 직접 배포한다.
+
+| 항목 | 값 |
+| --- | --- |
+| 대상 | Function App `func-elv-server-ep-dev` (리소스 그룹 `rg-elv-dev`, ReadOnly 잠금) |
+| 방법 | `az functionapp deployment source config-zip --build-remote` (원격 빌드, 패키지에서 실행). 잠금을 잠시 풀고 배포한 뒤 바로 다시 건다 |
+| 현재 운영 | `main` 5eb21e8 (2026-10-21 00:29 KST 배포, 패키지 `20261020152852.zip`). 이전 운영은 a501460 (2026-08-21) |
+| 되돌리기 | 이전 패키지 `20260820181540.zip`이 `SitePackages`에 남아 있다. `packagename.txt`를 그 이름으로 바꾸고 재시작한다(잠금 해제 필요) |
+
+### 2026-10-21 배포 기록 (코디네이터 수행)
+
+- 이번 배포로 10-18 모더나이즈(24a6c2b)의 서버 변경이 처음 운영에 나갔다.
+  - 본문 Blob 주소 서명 처리를 `services/postContent.js`로 통합했다.
+  - 잘못된 JSON 요청을 400으로 응답한다.
+  - 숫자가 아닌 파라미터는 400으로 거절한다(예: `limit=3x`, 의도된 변경).
+- 저장 시 썸네일 작업 요청(`services/thumbnailTrigger.js`)도 함께 배포했다.
+- 회귀 대조(SAS 서명을 뺀 비교): 공개 목록 190건, tags, activity-videos, calendar-events, 글 상세 163건이 배포 전과 같았다. 본문 이미지 서명과 읽기도 확인했다.
+- 앱 설정 `THUMBNAIL_DISPATCH_TOKEN`을 추가했다. 값은 문서·저장소에 남기지 않는다.
+  - GitHub fine-grained 토큰 이름은 `THUMBNAIL_DISPATCH_TOKEN`이다.
+  - 소유자는 `oneot`, 대상 저장소는 `oneot/elevate` 하나다.
+  - 권한은 Actions 읽기·쓰기와 Metadata 읽기만 있다.
+  - **만료는 2027-10-20 0시(KST)다.** 그 전에 아래 '게시글 썸네일 자동 생성'의 '토큰 갱신' 절차로 교체한다.
+- 저장 트리거 확인 범위
+  - 확인함: 서버 코드로 GitHub 실행 요청을 보내 접수되는 것(확인용 실행은 취소).
+  - 확인 안 함(2026-10-21 기준): 관리자에서 실제 글을 '게시'로 저장했을 때 실행이 생기는 것. 다음 실제 글 게시 때 확인한다.
+
+### AI 요약 기재 입구 (automation)
+
+`PUT /api/automation/posts/{id}/excerpt`는 관리자 로그인이 아니라 GitHub Actions OIDC 토큰으로 인증한다(`src/middleware/automationAuth.js`).
+비밀값이 없고, 'Post thumbnails' publish job만 이 입구로 AI 요약을 게시글에 쓴다.
+
+| 항목 | 값 |
+| --- | --- |
+| 받는 토큰 | 발급자 `https://token.actions.githubusercontent.com`, audience `api://elevate-post-automation`, `repository` `oneot/elevate`, `repository_id` `1125077519`, `ref` `refs/heads/main`, `workflow_ref` `oneot/elevate/.github/workflows/post-thumbnails.yml@refs/heads/main` |
+| 쓰는 범위 | 게시된 글의 `excerpt` 한 칸과 `excerptSource`(`ai`)·`excerptGeneratedAt`·`excerptRunId`. `updatedAt`은 바꾸지 않는다 |
+| 건너뜀 | AI가 읽은 뒤 저장된 글(요청의 `expectedUpdatedAt`과 다름)·읽고 쓰는 사이 저장된 글(Cosmos ETag 다름)·게시가 아닌 글은 409, 없는 글·slug가 다르면 404 |
+| 앱 설정 | 기본값이 코드에 있어 설정할 것이 없다. 바꿀 때만 `AUTOMATION_OIDC_AUDIENCE`, `AUTOMATION_GITHUB_REPOSITORY`, `AUTOMATION_GITHUB_REPOSITORY_ID`, `AUTOMATION_GITHUB_WORKFLOW`, `AUTOMATION_GITHUB_REF` |
+| 바깥 연결 | 토큰 서명을 확인하려고 GitHub 공개 키(`https://token.actions.githubusercontent.com/.well-known/jwks`)를 읽는다 |
+| 배포 | 이 입구가 들어간 서버 코드를 배포해야 동작한다. 그 전에는 publish가 404를 받아 요약만 건너뛴다. **서버를 먼저 배포한 뒤 관리자를 배포한다**: 관리자에는 요약 칸이 없으므로, 관리자를 먼저 배포하면 그 사이 게시한 새 글은 요약이 빈 채로 남고 그 글을 다시 저장해야 채워진다 |
 
 ## 게시글 썸네일 자동 생성
 
-게시된 글의 카드 썸네일은 `.github/workflows/post-thumbnails.yml`이 15분마다(매시 2·17·32·47분) 만든다.
-대상이 없으면 확인만 하고 약 30초 만에 끝나며 AI를 부르지 않는다. 게시 후 PR이 열리기까지 보통 20~35분, 병합 후 반영까지 약 5분이다.
+관리자에서 글을 '게시' 상태로 저장(새 글·수정)하면 서버가 `.github/workflows/post-thumbnails-on-save.yml`을 실행한다.
+이 workflow는 마지막 저장 뒤 10분(저장소 변수 `THUMBNAIL_WAIT_MINUTES`) 동안 다시 저장이 없으면 `.github/workflows/post-thumbnails.yml`을 실행하고,
+그 사이 다시 저장하면 기다리던 실행을 취소한다. 정기 실행은 없다. 글이 없는 동안에는 아무것도 돌지 않고,
+공개 저장소에서 60일 동안 커밋이 없으면 예약 실행이 자동으로 꺼지는 문제도 없다.
+대상이 없으면 확인만 하고 약 30초 만에 끝나며 AI를 부르지 않는다. 게시 후 공개 사이트 카드에 보이기까지 보통 25분 안팎이다
+(대기 10분, 생성·검사·병합 10분 안팎, 배포 몇 분).
 새 글과, 이미지를 그린 뒤 제목·요약·본문이 바뀐 글(`tools/post-thumbs/sources/`의 내용 지문과 비교)이 대상이다.
-GitHub Copilot CLI가 글 본문 전체를 읽고 'UI 미니어처' 키트(`tools/post-thumbs`)로 장면을 설계·렌더·검수한 뒤,
-별도 job이 결과를 검사해 PR(라벨 `thumbnail`)로 올린다. 사람이 PR을 병합하면 공개 사이트와 관리자에 반영된다.
+GitHub Copilot CLI가 글 본문 전체를 읽고 'UI 미니어처' 키트(`tools/post-thumbs`)로 장면을 설계·렌더·검수하고, 같은 글의 요약 한 줄도 쓴다.
+새 썸네일은 v3 플루이드 스킨(부드러운 3D 형태, 선명한 인접색, 앱 아이콘 타일)으로 그린다. 처음 공개된 80개는 v2 이미지 그대로다(`tools/post-thumbs/README.md`의 '디자인').
+관리자에는 요약 입력 칸이 없다. publish job이 요약을 위 'AI 요약 기재 입구'로 게시글에 기재한 뒤(실패해도 썸네일은 진행),
+결과를 검사해 PR(라벨 `thumbnail`)로 올린다. 버전 기록의 지문은 AI 요약으로 계산하므로, 요약을 기재한 글을 내용 없이 다시 저장해도 다시 만들지 않는다.
+이어서 merge job이 사람 없이 병합한다.
+- PR 브랜치에서 `Repository checks`(`web-checks.yml`)를 workflow_dispatch로 실행한다. GITHUB_TOKEN으로 만든 PR에는 pull_request 검사가 돌지 않기 때문이다.
+- 검사가 통과하고 PR이 publish가 올린 커밋 그대로면 병합하고 브랜치를 지운다. 병합 요청에 커밋 SHA를 함께 보낸다.
+- 하나라도 병합하면 `Deploy to GitHub Pages`와 `Sync post thumbnails to admin`을 직접 실행한다. GITHUB_TOKEN으로 병합한 커밋은 push 이벤트를 만들지 않기 때문이다.
+
+검사 실패·시간 초과(30분), 브랜치 변경, 충돌이면 병합하지 않고 PR에 라벨 `thumbnail-merge-blocked`와 댓글을 남긴다.
+검사가 실패하면 먼저 실패한 job만 한 번 다시 실행한다(`npm ci` 네트워크 끊김 같은 일시 오류 대비). 다시 실행해도 실패할 때만 병합을 멈춘다.
+생성·검사(validate)에 실패한 글은 PR 없이 실패 이슈만 남으므로 병합 대상이 아니다.
+`Post thumbnails`는 한 번에 하나씩만 돌고, 한 실행 안에서는 PR을 하나씩 병합한 뒤 배포를 한 번만 실행한다.
+여러 실행이 이어지면 공개 사이트 배포는 `pages` 동시 실행 그룹에서 마지막 것만 끝까지 돈다. 관리자 동기화는 차례로 돌고 바뀐 것이 없으면 배포하지 않는다.
 구조와 로컬 사용법은 `tools/post-thumbs/README.md`에 있다.
 
 | 상황 | 조치 |
 | --- | --- |
-| 처음 켤 때 | Settings → Actions → General → Workflow permissions에서 "Allow GitHub Actions to create and approve pull requests"를 켠다. 꺼져 있으면 브랜치만 올라가고 실패 이슈에 PR 만들기 링크가 남는다 |
-| 썸네일 확인 | PR 본문의 이미지와 AI 설명을 보고 병합한다. 병합 뒤 `Deploy to GitHub Pages`와 `Sync post thumbnails to admin`(→ 관리자 배포)이 돈다 |
-| 다시 만들기 | Actions → Post thumbnails → Run workflow에 `key`(`<앱>/<slug>`)와 `feedback`을 넣는다. 열린 PR은 새 이미지로 바뀐다 |
-| 쓰지 않기 | PR을 닫는다. 같은 내용으로는 자동으로 다시 만들지 않고, 글이 다시 바뀌면 새 버전을 만든다 |
-| 글 수정 | 제목·요약·본문을 고치면 다음 실행이 '썸네일 새 버전' PR(지금 이미지와 새 이미지 비교)을 연다. 병합 전까지는 지금 이미지가 보인다. 게시 상태 변경·내용 없는 저장은 대상이 아니다 |
-| 실패 | `썸네일 자동 생성 실패: <key>` 이슈(라벨 `thumbnail-failed`)와 실행 아티팩트 `log-<앱>__<slug>`(Copilot 작업 기록·렌더 이미지)를 본다. 이슈를 닫으면 다음 실행 때 다시 시도한다 |
-| 비용 | 비밀값 없이 `GITHUB_TOKEN`(`copilot-requests: write`)으로 Copilot CLI를 쓰며, 개인 소유 저장소라 저장소 소유자의 Copilot 이용량에서 차감된다. 모델은 Claude Opus 5.5(저장소 변수 `THUMBNAIL_MODEL`로 변경)이고, 한 번에 최대 2개 글, 대상이 없으면 AI를 부르지 않는다 |
-| 멈추기 | Actions → Post thumbnails → Disable workflow |
+| 처음 켤 때 | ① Settings → Actions → General → Workflow permissions에서 "Allow GitHub Actions to create and approve pull requests"를 켠다. 꺼져 있으면 브랜치만 올라가고 실패 이슈에 PR 만들기 링크가 남는다. ② 서버 토큰: fine-grained 토큰(`oneot/elevate`만, Repository permissions는 Actions: Read and write만, 만료일 지정)을 만들어 Function App `func-elv-server-ep-dev` 앱 설정 `THUMBNAIL_DISPATCH_TOKEN`에 넣는다(`rg-elv-dev` ReadOnly 잠금은 잠시 풀고 바로 다시 건다). ③ 이 설정을 읽는 서버 코드(`services/thumbnailTrigger.js`)가 배포됐는지 확인한다. 만드는 방법은 `tools/post-thumbs/README.md`의 '필요한 설정' |
+| 토큰 갱신 | 만료(2027-10-20 0시 KST) 전에 GitHub → Settings → Developer settings → Fine-grained tokens → `THUMBNAIL_DISPATCH_TOKEN` → **Regenerate token**으로 새 값을 만든다(권한은 그대로). 그 값으로 `THUMBNAIL_DISPATCH_TOKEN` 앱 설정을 바꾼다(`rg-elv-dev` 잠금 해제·복구, 값은 출력하지 않기). 게시 글을 저장해 `Post thumbnails on save` 실행이 생기면 된다. 만료되면 저장은 되지만 Function App 로그에 `[thumbnailTrigger] dispatch failed ... HTTP 401`이 남는다 |
+| 썸네일 확인 | 할 일은 없다. 검사를 통과하면 자동으로 병합·배포된다. 결과는 병합된 PR(라벨 `thumbnail`)의 댓글과 `Post thumbnails` 실행 요약의 '자동 병합'에 남는다 |
+| 병합되지 않은 PR | 라벨 `thumbnail-merge-blocked` PR의 댓글에서 이유와 검사 링크를 본다. 문제가 없으면 사람이 병합한다(push로 배포가 실행됨). 쓰지 않으려면 닫는다. 검사 실패 원인이 관리자 `check:bundle` 예산이면 썸네일 주소표 크기를 줄이는 코드 수정이 필요하다 |
+| 다시 만들기 | Actions → Post thumbnails → Run workflow에 `key`(`<앱>/<slug>`)와 `feedback`을 넣는다. 열린 PR은 새 이미지로 바뀌고, 없으면 새 PR이 열린다. 어느 쪽이든 검사 후 자동으로 병합된다 |
+| 병합된 썸네일 빼기 | 병합 커밋을 되돌리는(revert) PR을 올려 병합한다. 글이 게시된 채면 다음 실행이 다시 만들므로 먼저 글을 보관·삭제한다 |
+| 기존 썸네일을 지금 디자인으로 | 스킨 변경만으로는 다시 만들지 않는다(글 지문·plan 규칙 그대로). 바꾸려면 Actions → **Redraw post thumbnails** → Run workflow(`keys` 비우면 사람이 그린 장면의 썸네일 전부, `limit` 비용 상한). 글마다 실패하면 한 번 더 그리고, 그래도 안 되면 지금 이미지를 둔 채 결과를 PR 하나로 모아 검사·병합·배포를 한 번씩 한다. AI 요약은 기재하지 않는다(`tools/post-thumbs/README.md` '한꺼번에 다시 그리기'). AI 없이 새 스킨만 입히려면 `node render.mjs export --cat <앱>`(지금 이미지 그대로는 `--skin v2`) |
+| 자동 병합 끄기 | 저장소 변수 `THUMBNAIL_AUTO_MERGE`를 `false`로 둔다. PR까지만 열리고 사람이 병합한다(병합하면 배포는 push로 실행). 변수를 지우면 다시 자동이다 |
+| 글 수정 | 제목·요약·본문을 고쳐 저장하면 10분 뒤 실행이 '썸네일 새 버전' PR(지금 이미지와 새 이미지 비교)을 열고, 검사 후 자동으로 병합한다. 병합·배포 전까지는 지금 이미지가 보인다. 게시 상태 변경·내용 없는 저장은 대상이 아니다 |
+| 실패 | `썸네일 자동 생성 실패: <key>` 이슈(라벨 `thumbnail-failed`)와 실행 아티팩트 `log-<앱>__<slug>`(Copilot 작업 기록·렌더 이미지)를 본다. 이슈를 닫은 뒤 아무 글이나 '게시'로 저장하거나 수동 실행하면 다시 시도한다 |
+| 비용 | Actions 쪽 비밀값 없이 `GITHUB_TOKEN`(`copilot-requests: write`)으로 Copilot CLI를 쓰며, 개인 소유 저장소라 저장소 소유자의 Copilot 이용량에서 차감된다. 모델은 Claude Opus 5.5(저장소 변수 `THUMBNAIL_MODEL`로 변경)이고, 첫 실행 기준 글 하나에 2~3분, AI 크레딧 약 65~125(본문 길이에 따라)였다. v3 디자인 샘플 5개(로컬, 같은 지시·모델)는 글 하나에 2.5~4분, 82~129 크레딧(1 크레딧 = $0.01)이었다. 한 번에 최대 2개 글, 대상이 없으면 AI를 부르지 않는다. Actions 시간은 공개 저장소라 무료다 |
+| 멈추기 | Actions → Post thumbnails on save → Disable workflow(저장해도 시작하지 않음, 수동 실행은 됨). 서버 요청 자체를 멈추려면 `THUMBNAIL_DISPATCH_TOKEN`을 지운다 |
 
 ## GitHub Pages Smoke Test
 

@@ -1,7 +1,9 @@
 {
   "key": "copilot-studio/post",
+  "id": "7ef3b99b-d6c9-449d-aefa-a0d5e10c1eb7",
   "title": "무드 타입 테스트 만들기",
   "postUpdatedAt": "2026-08-20T18:17:30.337Z",
   "contentHash": "sha256:8906e4051d3b907d0bcfee13caa395dc5bdfd4ec6fabefd006652d16cdf754e7",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T00:48:25.890Z"
 }

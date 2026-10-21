@@ -1,7 +1,9 @@
 {
   "key": "word/wordonline2",
+  "id": "742ec83d-a423-4803-8c6a-2fadcfb9cead",
   "title": "화면 구성 알아보기",
   "postUpdatedAt": "2026-03-24T08:34:20.000Z",
   "contentHash": "sha256:214903e707393d64f343e63a635cf3d74bc3db3ef47a021d64ca7c4a325b3621",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T01:15:19.776Z"
 }

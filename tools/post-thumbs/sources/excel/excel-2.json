@@ -1,7 +1,9 @@
 {
   "key": "excel/excel-2",
+  "id": "aa54dcd9-f846-469c-b2d2-78e0facb0324",
   "title": "급식 지도 당번 배정하기",
   "postUpdatedAt": "2026-03-24T08:34:19.000Z",
   "contentHash": "sha256:638efe5421cdff118d84aa28fe7fef242e5b02fc3bc0c294b2c318e5422fa5a7",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T01:38:52.292Z"
 }

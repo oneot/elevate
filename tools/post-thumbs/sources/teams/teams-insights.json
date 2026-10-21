@@ -1,7 +1,9 @@
 {
   "key": "teams/teams-insights",
+  "id": "caf4e827-2a6a-4e45-966a-eee6320e3bd1",
   "title": "Insights로 학습 분석하기",
   "postUpdatedAt": "2026-03-24T08:34:21.000Z",
   "contentHash": "sha256:4066c5e40496c668f7606f317020f06979b1f8415a86c9176efb2728680981ba",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T00:56:49.568Z"
 }

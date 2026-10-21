@@ -1,7 +1,9 @@
 {
   "key": "copilot/research",
+  "id": "64b587bd-92eb-4d7f-acdb-f339d63c1cda",
   "title": "리서치 도구로 계획안 재사용하기",
   "postUpdatedAt": "2026-03-24T08:34:19.000Z",
   "contentHash": "sha256:53a6b03e0a0cce240090beed5745a9811fc0676b0c257aed4b91fe6214806619",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T01:38:38.412Z"
 }

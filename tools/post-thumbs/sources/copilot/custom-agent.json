@@ -1,7 +1,9 @@
 {
   "key": "copilot/custom-agent",
+  "id": "93a16e81-b851-4a76-96a5-cfecc4e5af1e",
   "title": "나만의 에이전트 만들기",
   "postUpdatedAt": "2026-03-24T08:34:19.000Z",
   "contentHash": "sha256:f12b090d7bdd1758f78d168f50c03468b3598f05883e207d22c1e1527faa849c",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T01:39:18.344Z"
 }

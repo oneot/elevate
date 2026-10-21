@@ -4,9 +4,11 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, it } from 'node:test'
 import sharp from 'sharp'
-import { contentHash, htmlToOutline, parseKey, thumbPaths, toPublicPost } from '../lib/posts.mjs'
-import { checkScene, checkWebps, classifyPost, failureTitle, keyFromFailureTitle, planPosts, unexpectedChanges, webpSize } from '../lib/pipeline.mjs'
-import { listAutoScenes, writeWebps } from '../render.mjs'
+import { contentHash, hashWithExcerpt, htmlToOutline, parseKey, thumbPaths, toPublicPost } from '../lib/posts.mjs'
+import { checkExcerpt, checkScene, checkWebps, classifyPost, failureTitle, hashCacheHit, keyFromFailureTitle, mergeDecision, pickChecksRun, pickExcerptExamples, planPosts, publishedPrProblem, unexpectedChanges, webpSize } from '../lib/pipeline.mjs'
+import { POST_TEXT_OVERRIDES } from '../../../Elevate.Web/src/constants/postText.js'
+import { getActionsIdToken, writeExcerpt } from '../lib/excerpt.mjs'
+import { checkExcerptFiles, listAutoScenes, writeWebps } from '../render.mjs'
 
 const post = (key, title = `${key} 제목`) => ({ key, title })
 
@@ -39,6 +41,8 @@ describe('post keys and paths', () => {
     assert.equal(shown.serverTitle, 'AI Creative Agent Team 제작하기')
     assert.equal(shown.date, '2026-03-09')
     assert.equal(shown.updatedAt, '2026-03-24T08:34:20.000Z')
+    assert.equal(shown.id, null)
+    assert.equal(toPublicPost({ id: 'post-7', category: 'teams', slug: 'teams-class', tags: [], title: 't', excerpt: '' }).id, 'post-7')
   })
 })
 
@@ -91,6 +95,18 @@ describe('content fingerprint', () => {
     const code = (last) => `<pre><code>${Array.from({ length: 30 }, (_, i) => `line ${i}`).join('\n')}\n${last}</code></pre>`
     assert.notEqual(contentHash({ ...base, html: code('end A') }), contentHash({ ...base, html: code('end B') }))
   })
+
+  it('hashes an AI excerpt the way plan will read it back from the public API once it is written', () => {
+    const raw = { id: 'p1', category: 'teams', slug: 'class-team', title: '수업용 팀 만들기', excerpt: '', tags: [], publishedAt: '2026-10-21T00:00:00Z', updatedAt: 't1' }
+    const [original, tidied] = POST_TEXT_OVERRIDES.find((entry) => entry.excerpt).excerpt
+    for (const excerpt of ['수업용 팀을 만들고 학생을 초대해 첫 수업을 준비합니다.', original]) {
+      const shown = toPublicPost({ ...raw, excerpt })
+      assert.equal(hashWithExcerpt({ title: shown.title, html: base.html }, excerpt), contentHash({ ...shown, html: base.html }))
+    }
+    // 공개 사이트 덮어쓰기 표의 원래 문구와 같은 요약은 다듬은 부제목으로 보이므로, 원문 그대로 계산하면 지문이 어긋난다.
+    assert.notEqual(tidied, original)
+    assert.notEqual(hashWithExcerpt({ title: raw.title, html: base.html }, original), contentHash({ title: raw.title, excerpt: original, html: base.html }))
+  })
 })
 
 describe('choosing posts to illustrate', () => {
@@ -115,6 +131,32 @@ describe('choosing posts to illustrate', () => {
     assert.deepEqual(classifyPost(state({ updatedAt: 't2', currentHash: H2 })), { reason: 'edited' })
     assert.equal(classifyPost(state({ updatedAt: 't2', currentHash: H2, branch: { exists: true, contentHash: H2 } })), null)
     assert.deepEqual(classifyPost(state({ updatedAt: 't2', currentHash: H2, branch: { exists: true, contentHash: H1 } })), { reason: 'edited' })
+  })
+
+  it('does not redraw a post whose PR branch was made for the same save, even if its excerpt was not written', () => {
+    // 요약 기재가 실패하면 지금 지문(옛 요약)이 브랜치 기록의 지문(AI 요약)과 다르다. AI 요약 기재는 수정 시각을 바꾸지 않는다.
+    const branch = { exists: true, contentHash: H2, postUpdatedAt: 't2' }
+    const fresh = state({ hasThumb: false, source: null, branch, updatedAt: 't2' })
+    assert.equal(classifyPost(fresh), null)
+    assert.equal(classifyPost(state({ updatedAt: 't2', branch })), null)
+    // 그 뒤 다시 저장하면 지문으로 판단한다: 브랜치와 같으면 그대로 두고, 다르면 다시 그린다.
+    assert.deepEqual(classifyPost({ ...fresh, updatedAt: 't3' }), { need: 'hash' })
+    assert.equal(classifyPost({ ...fresh, updatedAt: 't3', currentHash: H2 }), null)
+    assert.deepEqual(classifyPost({ ...fresh, updatedAt: 't3', currentHash: H1 }), { reason: 'new' })
+    assert.deepEqual(classifyPost(state({ updatedAt: 't3', branch, currentHash: 'sha256:3' })), { reason: 'edited' })
+  })
+
+  it('reuses a cached fingerprint only while the save time, title and excerpt are the same', () => {
+    const post = { key: 'teams/class-team', updatedAt: 't1', title: '수업용 팀 만들기', excerpt: '사람이 쓴 요약입니다.' }
+    const entry = { updatedAt: 't1', title: post.title, excerpt: post.excerpt, contentHash: H1 }
+    assert.equal(hashCacheHit(entry, post), true)
+    // AI 요약 기재는 수정 시각을 바꾸지 않는다.
+    assert.equal(hashCacheHit(entry, { ...post, excerpt: 'AI가 본문을 읽고 쓴 요약입니다.' }), false)
+    assert.equal(hashCacheHit(entry, { ...post, title: '팀 만들기' }), false)
+    assert.equal(hashCacheHit(entry, { ...post, updatedAt: 't2' }), false)
+    // 이전 형식(수정 시각만 남긴 항목)이나 빈 항목은 쓰지 않는다.
+    assert.equal(hashCacheHit({ updatedAt: 't1', contentHash: H1 }, post), false)
+    assert.equal(hashCacheHit(undefined, post), false)
   })
 
   it('leaves images without a version record and posts with an open failure issue alone', () => {
@@ -181,6 +223,188 @@ describe('checking what the AI produced', () => {
     const allowed = Object.values(thumbPaths('m365/test'))
     assert.deepEqual(unexpectedChanges(allowed, allowed), [])
     assert.deepEqual(unexpectedChanges([...allowed, 'tools/post-thumbs/kit.js'], allowed), ['tools/post-thumbs/kit.js'])
+  })
+})
+
+describe('deciding whether to merge a thumbnail PR', () => {
+  const SHA = 'a'.repeat(40)
+  const open = (sha = SHA) => ({ state: 'open', merged: false, head: { sha } })
+
+  it('merges an open PR at the published commit whose checks passed on that commit', () => {
+    assert.deepEqual(mergeDecision({ pr: open(), expectedSha: SHA, checks: { conclusion: 'success', sha: SHA } }), { action: 'merge', reason: 'Repository checks 통과' })
+  })
+
+  it('leaves failed, cancelled, timed-out or missing checks for a person', () => {
+    for (const [checks, text] of [[{ conclusion: 'failure' }, '실패'], [{ conclusion: 'cancelled' }, '취소됨'], [{ conclusion: 'timed_out' }, '시간 초과'], [{ conclusion: 'not_started' }, '실행 요청 실패'], [null, '없음'], [{ conclusion: 'failure', attempts: 2 }, '실패, 2번 실행']]) {
+      const decision = mergeDecision({ pr: open(), expectedSha: SHA, checks })
+      assert.equal(decision.action, 'block')
+      assert.match(decision.reason, new RegExp(text))
+    }
+  })
+
+  it('does not merge a branch that changed after publishing or checks of another commit', () => {
+    assert.match(mergeDecision({ pr: open('b'.repeat(40)), expectedSha: SHA, checks: { conclusion: 'success' } }).reason, /브랜치가 바뀌었습니다/)
+    assert.match(mergeDecision({ pr: open(), expectedSha: SHA, checks: { conclusion: 'success', sha: 'c'.repeat(40) } }).reason, /검사한 커밋/)
+  })
+
+  it('skips PRs that are already merged or closed', () => {
+    assert.deepEqual(mergeDecision({ pr: { state: 'closed', merged: true, head: { sha: SHA } }, expectedSha: SHA, checks: { conclusion: 'success' } }), { action: 'skip', reason: '이미 병합된 PR입니다.' })
+    assert.equal(mergeDecision({ pr: { state: 'closed', merged: false, head: { sha: SHA } }, expectedSha: SHA, checks: null }).action, 'skip')
+  })
+
+  it('picks the newest checks run started for the commit after the request', () => {
+    const since = Date.parse('2026-10-21T00:10:00Z')
+    const run = (id, sha, at) => ({ id, head_sha: sha, created_at: at })
+    const runs = [
+      run(1, SHA, '2026-10-21T00:00:00Z'), // 요청 전의 오래된 run
+      run(2, SHA, '2026-10-21T00:10:05Z'),
+      run(3, 'b'.repeat(40), '2026-10-21T00:10:06Z'), // 다른 커밋
+      run(4, SHA, '2026-10-21T00:09:30Z'), // 시계 차이 안
+    ]
+    assert.equal(pickChecksRun(runs, { sha: SHA, since }).id, 2)
+    assert.equal(pickChecksRun(runs.slice(0, 1), { sha: SHA, since }), null)
+    assert.equal(pickChecksRun(undefined, { sha: SHA, since }), null)
+  })
+
+  it('accepts only PRs from this pipeline before touching their branches', () => {
+    const pr = { key: 'm365/new-post', number: 12, branch: 'thumbnail/m365/new-post', sha: SHA }
+    assert.equal(publishedPrProblem(pr), null)
+    assert.match(publishedPrProblem({ ...pr, branch: 'main' }), /thumbnail\/m365\/new-post/)
+    assert.match(publishedPrProblem({ ...pr, number: '12' }), /PR 번호/)
+    assert.match(publishedPrProblem({ ...pr, sha: 'abc' }), /SHA/)
+    assert.match(publishedPrProblem({ ...pr, key: 'm365/../x' }), /잘못된 key/)
+  })
+})
+
+describe('the AI summary line', () => {
+  const GOOD = '반복되는 학생 질문에 대신 답해 주는 학급 도우미 에이전트를 만들고 공유합니다.'
+
+  it('accepts one plain sentence in the tone of the tidied public summaries', () => {
+    assert.deepEqual(checkExcerpt(GOOD, { title: '학급 도우미 에이전트 만들기' }), [])
+    assert.deepEqual(checkExcerpt(`  ${GOOD}\n`), [])
+  })
+
+  it('rejects empty, multi-line, too short or long, unfinished, decorated or repeated-title summaries', () => {
+    const cases = [
+      ['', /비어/],
+      [`${GOOD}\n둘째 줄입니다.`, /한 줄/],
+      ['짧게 씁니다.', /25~70자/],
+      [`${'아주 긴 설명을 이어 붙여 '.repeat(5)}만듭니다.`, /25~70자/],
+      ['학급 도우미 에이전트를 만들고 반 학생들과 함께 공유해요', /'~니다\.'로 끝나야/],
+      ['에이전트를 만듭니다. 그리고 학생들과 함께 공유하는 방법도 익힙니다.', /한 문장/],
+      ['**학급 도우미** 에이전트를 만들고 반 학생들과 함께 공유합니다.', /마크다운/],
+      ['"학급 도우미 에이전트를 만들고 반 학생들과 함께 공유합니다."', /따옴표|'~니다\.'로 끝나야/],
+    ]
+    for (const [text, problem] of cases) assert.match(checkExcerpt(text).join(' '), problem, text)
+    const title = '학급 도우미 에이전트를 만들고 반 학생들과 함께 공유합니다.'
+    assert.match(checkExcerpt(title, { title }).join(' '), /제목과 같습니다/)
+  })
+
+  it('shows the AI tidied summaries from the same app first, then from other apps', () => {
+    const posts = [
+      { key: 'teams/a', category: 'teams', title: 'A', excerpt: '팀에서 바로 전자필기장을 만들어 학생 노트를 한곳에서 보고 자료를 나눠 줍니다.' },
+      { key: 'teams/raw', category: 'teams', title: 'Raw', excerpt: '1. 팀즈 과제 및 성적' },
+      { key: 'word/b', category: 'word', title: 'B', excerpt: '스타일로 상담일지를 정리하고, 받아쓰기와 단축키로 작업 속도를 높입니다.' },
+      { key: 'teams/self', category: 'teams', title: 'Self', excerpt: GOOD },
+    ]
+    assert.deepEqual(pickExcerptExamples(posts, { key: 'teams/self', category: 'teams' }).map((example) => example.title), ['A', 'B'])
+    assert.equal(pickExcerptExamples(posts, { key: 'teams/self', category: 'teams', limit: 1 }).length, 1)
+  })
+
+  it('lets the AI check its summary file with the renderer', () => {
+    const root = mkdtempSync(join(tmpdir(), 'excerpt-'))
+    const logs = []
+    const log = console.log
+    console.log = (line) => logs.push(line)
+    try {
+      mkdirSync(join(root, 'work/teams__class'), { recursive: true })
+      writeFileSync(join(root, 'work/teams__class/content.json'), JSON.stringify({ title: '학급 도우미', html: '' }))
+      writeFileSync(join(root, 'work/teams__class/excerpt.txt'), `${GOOD}\n`)
+      assert.equal(checkExcerptFiles(['teams/class'], root), 0)
+      writeFileSync(join(root, 'work/teams__class/excerpt.txt'), '짧아요')
+      assert.equal(checkExcerptFiles(['teams/class'], root), 1)
+      assert.equal(checkExcerptFiles(['teams/missing'], root), 1)
+    } finally {
+      console.log = log
+      rmSync(root, { recursive: true, force: true })
+    }
+    assert.match(logs.join('\n'), /요약 검사 통과/)
+    assert.match(logs.join('\n'), /! excerpt: .*25~70자/)
+    assert.match(logs.join('\n'), /excerpt\.txt가 없습니다/)
+  })
+})
+
+describe('writing the AI summary into the post', () => {
+  const source = {
+    key: 'word/class-guide', id: 'post-9', title: '공동 작업 가이드', postUpdatedAt: '2026-10-21T01:00:00.000Z',
+    excerpt: '링크 하나로 반 학생들과 같은 문서를 열어 함께 고치고 의견을 남깁니다.',
+  }
+  const reply = (status, body = '') => ({ ok: status >= 200 && status < 300, status, text: async () => body })
+  function fakeFetch(...statuses) {
+    const calls = []
+    return {
+      calls,
+      fetchImpl: async (url, init) => {
+        calls.push({ url, init })
+        const status = statuses[Math.min(calls.length, statuses.length) - 1]
+        if (status instanceof Error) throw status
+        return reply(status, `{"message":"status ${status}"}`)
+      },
+    }
+  }
+  const write = (fetchImpl, options = {}) => writeExcerpt({
+    source, baseUrl: 'https://api.example.test/api/automation', getToken: async () => 'oidc-token', fetchImpl, sleep: async () => {}, ...options,
+  })
+
+  it('sends the summary with the GitHub token, the slug and the version the AI read', async () => {
+    const { calls, fetchImpl } = fakeFetch(200)
+    assert.deepEqual(await write(fetchImpl), { status: 'written', note: '게시글에 기재함' })
+    assert.equal(calls.length, 1)
+    assert.equal(calls[0].url, 'https://api.example.test/api/automation/posts/post-9/excerpt')
+    assert.equal(calls[0].init.method, 'PUT')
+    assert.equal(calls[0].init.headers.authorization, 'Bearer oidc-token')
+    assert.deepEqual(JSON.parse(calls[0].init.body), { excerpt: source.excerpt, slug: 'class-guide', expectedUpdatedAt: source.postUpdatedAt })
+  })
+
+  it('skips without failing when the post changed, is gone or there is no valid summary', async () => {
+    assert.equal((await write(fakeFetch(409).fetchImpl)).status, 'skipped')
+    assert.match((await write(fakeFetch(409).fetchImpl)).note, /바뀌어/)
+    assert.equal((await write(fakeFetch(404).fetchImpl)).status, 'skipped')
+    const none = fakeFetch(200)
+    assert.equal((await writeExcerpt({ source: { ...source, excerpt: null }, baseUrl: 'x', fetchImpl: none.fetchImpl })).status, 'skipped')
+    assert.equal((await writeExcerpt({ source: { ...source, excerpt: '짧아요' }, baseUrl: 'x', fetchImpl: none.fetchImpl })).status, 'skipped')
+    assert.equal((await writeExcerpt({ source: { ...source, id: null }, baseUrl: 'x', fetchImpl: none.fetchImpl })).status, 'skipped')
+    assert.equal(none.calls.length, 0, '쓸 것이 없으면 서버를 부르지 않는다')
+  })
+
+  it('retries server and network errors, then reports refusals as failures', async () => {
+    const flaky = fakeFetch(502, new Error('ECONNRESET'), 200)
+    assert.equal((await write(flaky.fetchImpl)).status, 'written')
+    assert.equal(flaky.calls.length, 3)
+
+    const down = fakeFetch(503)
+    const result = await write(down.fetchImpl)
+    assert.equal(result.status, 'failed')
+    assert.equal(down.calls.length, 3)
+
+    const refused = fakeFetch(403)
+    assert.match((await write(refused.fetchImpl)).note, /HTTP 403/)
+    assert.equal(refused.calls.length, 1, '권한 거절은 다시 시도하지 않는다')
+
+    assert.match((await write(fakeFetch(200).fetchImpl, { getToken: async () => { throw new Error('id-token 권한 없음') } })).note, /id-token/)
+  })
+
+  it('asks GitHub for a token for the server audience inside Actions only', async () => {
+    const calls = []
+    const fetchImpl = async (url, init) => {
+      calls.push({ url, init })
+      return { ok: true, status: 200, json: async () => ({ value: 'jwt' }) }
+    }
+    const env = { ACTIONS_ID_TOKEN_REQUEST_URL: 'https://token.example.test/oidc?api-version=2', ACTIONS_ID_TOKEN_REQUEST_TOKEN: 'request-token' }
+    assert.equal(await getActionsIdToken('api://elevate-post-automation', { env, fetchImpl }), 'jwt')
+    assert.equal(calls[0].url, 'https://token.example.test/oidc?api-version=2&audience=api%3A%2F%2Felevate-post-automation')
+    assert.equal(calls[0].init.headers.authorization, 'bearer request-token')
+    await assert.rejects(getActionsIdToken('x', { env: {}, fetchImpl }), /id-token: write/)
   })
 })
 

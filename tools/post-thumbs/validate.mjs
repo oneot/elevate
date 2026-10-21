@@ -6,13 +6,17 @@
  * - 다시 export·zoom: audit 경고와 콘솔 오류 0
  * - WebP 960×540, 480×270
  * - 통과하면 prepare가 남긴 글 버전(work/<id>/source.json)을 sources/<앱>/<slug>.json으로 저장
+ *   AI 요약 한 줄(work/<id>/excerpt.txt)이 규칙에 맞으면 버전 기록에 excerpt로 남기고, 지문은 그 요약이 공개 사이트에 보이는 문구로 다시 계산한다.
+ *   publish가 이 요약을 게시글에 기재하므로, 기재된 뒤의 글 내용과 지문이 같아져 같은 내용으로 다시 만들지 않는다.
+ *   요약이 없거나 규칙에 맞지 않으면 썸네일은 그대로 두고 요약만 기재하지 않는다(경고).
+ *   THUMBNAIL_EXCERPT=off(한꺼번에 다시 그리기)면 요약을 기재하지 않으므로 기록에도 넣지 않고 지금 요약으로 계산한 지문을 둔다.
  * - 저장소에서 바뀐 파일이 장면·버전 기록·WebP 두 장뿐인지 (그 밖의 변경은 거부. 로컬에서 다른 작업 중이면 --no-git-check)
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
-import { REPO_ROOT, ROOT, parseKey, thumbPaths } from './lib/posts.mjs'
-import { checkScene, checkWebps, unexpectedChanges } from './lib/pipeline.mjs'
+import { REPO_ROOT, ROOT, hashWithExcerpt, parseKey, thumbPaths } from './lib/posts.mjs'
+import { checkExcerpt, checkScene, checkWebps, unexpectedChanges } from './lib/pipeline.mjs'
 import { main as render } from './render.mjs'
 
 const { key, id } = parseKey(process.argv[2])
@@ -40,8 +44,30 @@ if (!problems.length) {
   } else {
     const file = join(REPO_ROOT, paths.source)
     mkdirSync(dirname(file), { recursive: true })
-    writeFileSync(file, `${JSON.stringify({ ...source, generatedAt: new Date().toISOString() }, null, 2)}\n`)
+    writeFileSync(file, `${JSON.stringify({ ...source, ...excerptRecord(source), generatedAt: new Date().toISOString() }, null, 2)}\n`)
   }
+}
+
+/** AI 요약이 규칙에 맞으면 버전 기록에 남기고 그 요약으로 지문을 다시 계산한다. 아니면 기록을 그대로 둔다. */
+function excerptRecord(source) {
+  if (process.env.THUMBNAIL_EXCERPT === 'off') {
+    console.log('excerpt: 이번 실행은 요약을 게시글에 기재하지 않으므로 버전 기록에도 넣지 않습니다 (THUMBNAIL_EXCERPT=off).')
+    return {}
+  }
+  const excerptFile = join(ROOT, 'work', id, 'excerpt.txt')
+  const contentFile = join(ROOT, 'work', id, 'content.json')
+  if (!existsSync(excerptFile)) {
+    console.warn(`! excerpt: work/${id}/excerpt.txt가 없어 요약은 기재하지 않습니다.`)
+    return {}
+  }
+  const excerpt = readFileSync(excerptFile, 'utf8').trim()
+  const content = existsSync(contentFile) ? JSON.parse(readFileSync(contentFile, 'utf8')) : null
+  const excerptProblems = checkExcerpt(excerpt, { title: content?.title || source.title })
+  if (excerptProblems.length || !content) {
+    console.warn(`! excerpt: 요약은 기재하지 않습니다 — ${excerptProblems.join(' ') || 'content.json이 없습니다.'}`)
+    return {}
+  }
+  return { excerpt, contentHash: hashWithExcerpt(content, excerpt) }
 }
 
 if (!process.argv.includes('--no-git-check')) {

@@ -126,7 +126,10 @@ function createControllerHandler(controller, options = {}) {
     const correlationId = getHeader(request.headers, 'x-correlation-id') || createCorrelationId();
 
     try {
-      const user = options.requireAdminAuth ? await authorizeAdminRequest(request) : null;
+      // authorize는 관리자 로그인 대신 다른 인증을 쓰는 요청(예: GitHub Actions OIDC)에 쓴다.
+      const user = options.authorize
+        ? await options.authorize(request)
+        : (options.requireAdminAuth ? await authorizeAdminRequest(request) : null);
       const req = createRequestAdapter({
         request,
         context,

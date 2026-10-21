@@ -1,14 +1,14 @@
 name: Post thumbnails
 
 # 공개 사이트에 새로 게시된 글과 내용이 바뀐 글의 카드 썸네일을 AI(GitHub Copilot CLI)가 본문 전체를 읽고 만들어 PR로 올린다.
-# 사람이 PR을 확인해 병합하면 공개 사이트가 배포되고, 'Sync post thumbnails to admin'이 관리자도 다시 배포한다.
+# 관리자에서 글을 '게시'로 저장하면 'Post thumbnails on save'가 마지막 저장 몇 분 뒤 이 workflow를 실행한다. 수동 실행도 된다.
+# 정기 실행은 두지 않는다(글이 없는 동안 실행 기록이 쌓이지 않고, 공개 저장소의 60일 비활성 자동 중지도 받지 않는다).
+# merge job이 PR 브랜치에서 'Repository checks'를 실행해 통과한 PR만 자동으로 병합하고, 공개 사이트 배포와
+# 'Sync post thumbnails to admin'(관리자 배포)을 직접 실행한다. 저장소 변수 THUMBNAIL_AUTO_MERGE=false이면 사람이 병합한다.
 # 생성(AI) job은 저장소 읽기 권한만 가지며, 검사를 통과한 결과만 별도 publish job이 PR로 올린다.
 # 자세한 내용: tools/post-thumbs/README.md
 
 on:
-    schedule:
-        # 15분마다 (정각을 피해 2·17·32·47분). 대상이 없으면 약 30초 만에 끝나고 AI를 부르지 않는다.
-        - cron: "2,17,32,47 * * * *"
     workflow_dispatch:
         inputs:
             key:
@@ -78,6 +78,8 @@ jobs:
         env:
             KEY: ${{ matrix.item.key }}
             ID: ${{ matrix.item.id }}
+            CATEGORY: ${{ matrix.item.category }}
+            SLUG: ${{ matrix.item.slug }}
         steps:
             - uses: actions/checkout@v4
 
@@ -99,7 +101,10 @@ jobs:
                   REASON: ${{ matrix.item.reason }}
                   FEEDBACK: ${{ inputs.feedback }}
 
-            # 쓰기는 이 폴더 안에서만, 명령은 렌더러만 허용한다. 결과 검사는 다음 단계에서 따로 한다.
+            # AI가 실행할 수 있는 명령은 렌더러(thumb-render = node render.mjs)와 Copilot CLI가 읽기 전용으로 보는 명령뿐이다.
+            # 파일은 이 글의 장면, summary.md, excerpt.txt(요약 한 줄)만 만들고 고칠 수 있다(셸 리디렉션도 막힘). 결과 검사는 다음 단계에서 따로 한다.
+            # Copilot CLI는 git·gh 밖의 명령을 이름으로만 구분하므로(shell(node render.mjs:*)는 맞지 않음) 렌더러 전용 이름을 PATH에 둔다.
+            # 쓰기 규칙은 도구가 쓰는 실제 경로(pwd -P)와 같아야 맞는다.
             # 모델은 품질을 위해 고정한다 (기본 Claude Opus 5.5, 저장소 변수 THUMBNAIL_MODEL로 바꿀 수 있다).
             - name: Design thumbnail with Copilot
               timeout-minutes: 30
@@ -107,8 +112,17 @@ jobs:
                   GITHUB_TOKEN: ${{ github.token }}
                   THUMBNAIL_MODEL: ${{ vars.THUMBNAIL_MODEL || 'claude-opus-5.5' }}
               run: |
-                  copilot -p "$(cat "work/$ID/task.md")" --model "$THUMBNAIL_MODEL" --no-ask-user \
-                      --allow-tool='write' --allow-tool='shell(node render.mjs:*)' --share="work/$ID/transcript.md"
+                  ROOT="$(pwd -P)"
+                  BIN="$RUNNER_TEMP/thumb-bin"
+                  mkdir -p "$BIN"
+                  printf '#!/bin/sh\nexec node "%s/render.mjs" "$@"\n' "$ROOT" > "$BIN/thumb-render"
+                  chmod +x "$BIN/thumb-render"
+                  PATH="$BIN:$PATH" copilot -p "$(cat "work/$ID/task.md")" --model "$THUMBNAIL_MODEL" --no-ask-user \
+                      --allow-tool='shell(thumb-render)' \
+                      --allow-tool="write($ROOT/scenes/auto/$CATEGORY/$SLUG.js)" \
+                      --allow-tool="write($ROOT/work/$ID/summary.md)" \
+                      --allow-tool="write($ROOT/work/$ID/excerpt.txt)" \
+                      --share="work/$ID/transcript.md"
 
             - name: Validate result
               run: node validate.mjs "$KEY"
@@ -137,6 +151,7 @@ jobs:
                       tools/post-thumbs/work/${{ matrix.item.id }}/
                       tools/post-thumbs/review/
 
+    # AI 요약 한 줄을 게시글에 기재할 때 서버에 보내는 GitHub OIDC 토큰을 받으려고 id-token: write를 준다(비밀값 없음).
     publish:
         needs: [plan, generate]
         if: always() && needs.plan.result == 'success' && needs.plan.outputs.count != '0'
@@ -146,6 +161,9 @@ jobs:
             contents: write
             pull-requests: write
             issues: write
+            id-token: write
+        outputs:
+            prs: ${{ steps.publish.outputs.prs }}
         steps:
             - uses: actions/checkout@v4
               with:
@@ -163,10 +181,38 @@ jobs:
                   path: artifacts
 
             - name: Open pull requests
+              id: publish
               run: node tools/post-thumbs/publish.mjs
               env:
                   GITHUB_TOKEN: ${{ github.token }}
                   ITEMS: ${{ needs.plan.outputs.items }}
                   ARTIFACTS: ${{ github.workspace }}/artifacts
                   FEEDBACK: ${{ inputs.feedback }}
+                  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+    # 사람 없이 병합한다. publish 일부가 실패해도(실패 이슈) PR이 열린 글은 병합한다.
+    # GITHUB_TOKEN으로 만든 PR에는 pull_request 검사가 돌지 않으므로 PR 브랜치에서 'Repository checks'를 직접 실행해 통과를 확인하고,
+    # GITHUB_TOKEN으로 병합한 커밋은 push 이벤트를 만들지 않으므로 배포 workflow도 직접 실행한다(merge.mjs).
+    merge:
+        needs: publish
+        if: ${{ !cancelled() && needs.publish.outputs.prs != '' && needs.publish.outputs.prs != '[]' && vars.THUMBNAIL_AUTO_MERGE != 'false' }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 40
+        permissions:
+            actions: write
+            contents: write
+            pull-requests: write
+            issues: write
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+
+            - name: Check and merge thumbnail pull requests
+              run: node tools/post-thumbs/merge.mjs
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  PRS: ${{ needs.publish.outputs.prs }}
                   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

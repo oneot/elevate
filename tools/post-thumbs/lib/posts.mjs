@@ -7,12 +7,15 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { BASE_CATEGORIES, toDisplayPost } from '../../../Elevate.Web/src/constants/categories.js'
+import { getDisplayExcerpt } from '../../../Elevate.Web/src/constants/postText.js'
 
 /** tools/post-thumbs (끝 '/' 없음). */
 export const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)))
 export const REPO_ROOT = resolve(ROOT, '../..')
 export const THUMBS_DIR = join(REPO_ROOT, 'Elevate.Web/src/assets/post-thumbs')
 export const PUBLIC_API = (process.env.ELEVATE_PUBLIC_API || 'https://func-elv-server-ep-dev.azurewebsites.net/api/public').replace(/\/$/, '')
+/** AI 요약을 게시글에 기재하는 서버 입구 (GitHub OIDC 인증). 기본은 공개 API 주소의 /public을 /automation으로 바꾼 것. */
+export const AUTOMATION_API = (process.env.ELEVATE_AUTOMATION_API || PUBLIC_API.replace(/\/public$/, '/automation')).replace(/\/$/, '')
 export const SITE_URL = 'https://microsoft-elevate.com'
 
 /** 공개 블로그의 13개 앱 (Elevate.Web POST_LIST_CATEGORIES에서 'all' 제외). */
@@ -58,6 +61,7 @@ export function toPublicPost(raw) {
   const post = toDisplayPost(raw)
   return {
     key: `${post.category}/${post.slug}`,
+    id: raw.id || null,
     category: post.category,
     apiCategory: raw.category,
     slug: post.slug,
@@ -103,6 +107,15 @@ export function contentHash({ title, excerpt, html }) {
   const body = htmlToOutline(html, { maxLength: Infinity, maxCodeLines: Infinity })
   const digest = createHash('sha256').update(JSON.stringify([title || '', excerpt || '', body])).digest('hex')
   return `sha256:${digest}`
+}
+
+/**
+ * AI 요약을 게시글에 기재한 뒤의 지문. plan이 공개 API에서 다시 계산할 값과 같도록,
+ * 요약도 공개 사이트에 보이는 문구(postText.js: 서버 원래 문구와 같을 때만 다듬은 부제목)로 바꿔 계산한다.
+ * @param {{ title: string, html: string }} content  prepare가 쓴 work/<id>/content.json (title은 화면 제목)
+ */
+export function hashWithExcerpt(content, excerpt) {
+  return contentHash({ title: content.title, excerpt: getDisplayExcerpt({ excerpt }) || '', html: content.html })
 }
 
 const ENTITIES = { nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" }

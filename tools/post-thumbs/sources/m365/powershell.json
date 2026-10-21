@@ -1,7 +1,9 @@
 {
   "key": "m365/powershell",
+  "id": "f8ea3bb6-1cd1-4bc6-bac7-ee68bedc82a4",
   "title": "PowerShell로 표시 이름 일괄 변경하기",
   "postUpdatedAt": "2026-05-02T08:41:19.241Z",
   "contentHash": "sha256:d1e31fba3c1d876c7224709f441225cf65ee82c3a3e4b3558d42a8543e4d7b65",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T01:05:21.483Z"
 }

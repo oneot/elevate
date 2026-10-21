@@ -10,13 +10,15 @@
  *   DRY_RUN=1   아무것도 올리지 않고 할 일과 PR 본문만 출력한다 (로컬 점검용)
  * 이 단계는 생성 단계(AI 실행)와 분리된 job에서만 저장소에 쓰기 권한을 가진다.
  * 아티팩트 파일은 다시 검사하고, 장면 파일·글 버전 기록·WebP 두 장만 커밋한다.
+ * 연(또는 갱신한) PR 목록을 step 출력 prs로 남긴다. 다음 merge 단계(merge.mjs)가 검사 후 자동으로 병합한다.
  */
 import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
-import { REPO_ROOT, SITE_URL, parseKey, thumbPaths } from './lib/posts.mjs'
-import { BRANCH_PREFIX, FAILURE_LABEL, PR_LABEL, checkScene, checkWebps, failureTitle } from './lib/pipeline.mjs'
+import { AUTOMATION_API, REPO_ROOT, SITE_URL, parseKey, thumbPaths } from './lib/posts.mjs'
+import { BRANCH_PREFIX, FAILURE_LABEL, MERGE_BLOCKED_LABEL, PR_LABEL, checkScene, checkWebps, failureTitle } from './lib/pipeline.mjs'
 import { ensureLabel, github, repository } from './lib/github.mjs'
+import { writeExcerpt } from './lib/excerpt.mjs'
 
 const items = JSON.parse(process.env.ITEMS || '[]')
 const artifacts = process.env.ARTIFACTS || join(REPO_ROOT, 'artifacts')
@@ -44,18 +46,19 @@ function readArtifact(item) {
   ]
   if (problems.length) throw new Error(`${item.key} 아티팩트 검사 실패: ${problems.join(' / ')}`)
   const note = join(dir, `tools/post-thumbs/work/${item.id}/summary.md`)
-  return { paths, files, note: existsSync(note) ? readFileSync(note, 'utf8').trim() : '' }
+  return { paths, files, source, note: existsSync(note) ? readFileSync(note, 'utf8').trim() : '' }
 }
 
 const TITLES = { new: '썸네일', edited: '썸네일 새 버전', manual: '썸네일 다시 만들기' }
 const REASONS = { new: '새로 게시된 글', edited: '글 내용(제목·요약·본문)이 바뀜', manual: '수동 실행으로 다시 만들기' }
 
-function prBody(item, sha, note, paths, previousSha) {
+function prBody(item, sha, note, paths, previousSha, excerpt) {
   const { category, slug } = parseKey(item.key)
   const raw = (ref) => `https://raw.githubusercontent.com/${repo}/${ref}/${paths.large}`
   const image = previousSha
     ? ['| 지금 | 새 버전 |', '| --- | --- |', `| ![지금 썸네일](${raw(previousSha)}) | ![새 썸네일](${raw(sha)}) |`].join('\n')
     : `![${item.title} 썸네일](${raw(sha)})`
+  const cell = (text) => String(text).replace(/\|/g, '\\|').replace(/\n/g, ' ')
   return [
     `## ${item.title}`,
     '',
@@ -65,9 +68,10 @@ function prBody(item, sha, note, paths, previousSha) {
     '| --- | --- |',
     `| 게시글 | [${SITE_URL}/${item.key}](${SITE_URL}/${item.key}) |`,
     `| 만든 이유 | ${REASONS[item.reason] || REASONS.new} |`,
+    `| 요약(AI) | ${excerpt?.text ? `${cell(excerpt.text)} — ${cell(excerpt.note)}` : `없음 — ${cell(excerpt?.note || '기재하지 않음')}`} |`,
     `| 장면 파일 | \`${paths.scene}\` |`,
     runUrl ? `| 만든 실행 | [Actions 실행](${runUrl}) (AI 작업 기록은 아티팩트 \`log-${item.id}\`) |` : null,
-    feedback ? `| 반영한 요청 | ${feedback.replace(/\|/g, '\\|').replace(/\n/g, ' ')} |` : null,
+    feedback ? `| 반영한 요청 | ${cell(feedback)} |` : null,
     '',
     '### AI 설명',
     '',
@@ -75,9 +79,11 @@ function prBody(item, sha, note, paths, previousSha) {
     '',
     '### 확인과 반영',
     '',
-    '- 병합하면 공개 사이트 카드에 이 썸네일이 표시되고, 관리자 목록에도 반영됩니다(`Sync post thumbnails to admin`이 관리자를 다시 배포).',
-    `- 다시 만들려면 Actions → **Post thumbnails** → Run workflow에서 \`key\`에 \`${category}/${slug}\`, \`feedback\`에 바라는 점을 적어 실행하세요. 이 PR이 새 썸네일로 바뀝니다.`,
-    `- 쓰지 않으려면 PR을 닫으세요. 같은 내용으로는 자동으로 다시 만들지 않고, 글이 다시 바뀌면 그때 새로 만듭니다(브랜치 \`${BRANCH_PREFIX}${item.key}\`를 지우면 다음 실행 때 다시 만듭니다).`,
+    '- 이 PR 브랜치에서 Repository checks가 통과하면 자동으로 병합합니다. 그다음 공개 사이트(`Deploy to GitHub Pages`)와 관리자(`Sync post thumbnails to admin`) 배포가 실행됩니다.',
+    `- 검사에 실패하거나 병합할 수 없으면 병합하지 않고 라벨 \`${MERGE_BLOCKED_LABEL}\`과 댓글로 알립니다. 확인한 뒤 직접 병합하거나 닫으세요.`,
+    '- 저장소 변수 `THUMBNAIL_AUTO_MERGE`가 `false`이면 자동 병합하지 않습니다. 사람이 확인해 병합하면 배포는 그대로 실행됩니다.',
+    `- 다시 만들려면 Actions → **Post thumbnails** → Run workflow에서 \`key\`에 \`${category}/${slug}\`, \`feedback\`에 바라는 점을 적어 실행하세요. 열려 있는 PR은 새 썸네일로 바뀌고, 이미 병합됐으면 새 PR이 열려 같은 방식으로 병합됩니다.`,
+    '- 병합된 썸네일을 빼려면 병합 커밋을 되돌리는(revert) PR을 올리세요.',
   ].filter((line) => line !== null).join('\n')
 }
 
@@ -89,11 +95,11 @@ async function closeFailureIssue(item, message) {
   }
 }
 
-async function openPullRequest(item, artifact) {
+async function openPullRequest(item, artifact, excerpt) {
   const branch = `${BRANCH_PREFIX}${item.key}`
   if (dryRun) {
     const previous = item.reason === 'new' ? null : '<main sha>'
-    console.log(`[dry run] ${branch}에 ${Object.values(artifact.paths).join(', ')}를 커밋하고 PR을 엽니다.\n${prBody(item, '<sha>', artifact.note, artifact.paths, previous)}`)
+    console.log(`[dry run] ${branch}에 ${Object.values(artifact.paths).join(', ')}를 커밋하고 PR을 엽니다.\n${prBody(item, '<sha>', artifact.note, artifact.paths, previous, excerpt)}`)
     return
   }
   git('fetch', '--quiet', 'origin', 'main')
@@ -117,7 +123,7 @@ async function openPullRequest(item, artifact) {
   git('push', '--quiet', '--force', 'origin', `HEAD:refs/heads/${branch}`)
   git('switch', '--quiet', '--detach', 'origin/main')
 
-  const body = prBody(item, sha, artifact.note, artifact.paths, previousSha)
+  const body = prBody(item, sha, artifact.note, artifact.paths, previousSha, excerpt)
   const [open] = await github('GET', `/repos/${repo}/pulls?state=open&head=${encodeURIComponent(`${owner}:${branch}`)}`)
   let pr = open
   if (pr) {
@@ -139,6 +145,7 @@ async function openPullRequest(item, artifact) {
   await closeFailureIssue(item, `썸네일을 만들었습니다: #${pr.number}`)
   summary(`- ${item.key}: [#${pr.number}](${pr.html_url}) ${open ? '갱신' : '생성'}`)
   console.log(`${item.key}: ${pr.html_url}`)
+  return { key: item.key, title: item.title, number: pr.number, url: pr.html_url, branch, sha }
 }
 
 async function reportFailure(item, reason) {
@@ -166,7 +173,7 @@ async function reportFailure(item, reason) {
         '',
         detail,
         '',
-        '- 이 이슈를 닫으면 다음 정기 실행(15분 간격) 때 다시 만듭니다.',
+        "- 이 이슈를 닫으면 다음에 관리자에서 글을 '게시'로 저장할 때(어느 글이든) 다시 만듭니다.",
         `- 바로 다시 하려면 Actions → **Post thumbnails** → Run workflow에서 \`key\`에 \`${item.key}\`를 넣어 실행하세요.`,
       ].join('\n'),
     })
@@ -175,12 +182,37 @@ async function reportFailure(item, reason) {
   console.log(`${item.key}: 실패 이슈를 남겼습니다 — ${reason}`)
 }
 
+/**
+ * AI 요약 한 줄을 게시글에 기재한다(서버 automation 입구, GitHub OIDC). PR보다 먼저 해서 PR 본문에 결과를 남긴다.
+ * 기재하지 못해도 썸네일 PR은 그대로 연다. 버전 기록의 지문은 AI 요약으로 계산했으므로,
+ * 기재하지 못한 글은 다음에 저장할 때 내용이 바뀐 것으로 보여 썸네일과 요약을 다시 만든다.
+ */
+async function writeItemExcerpt(item, source) {
+  const text = String(source.excerpt || '').trim()
+  if (dryRun) {
+    console.log(`[dry run] 요약 기재: PUT ${AUTOMATION_API}/posts/${source.id}/excerpt ← ${text || '(없음)'}`)
+    return { text, status: 'dry-run', note: text ? '(dry run) 게시글에 기재할 예정' : '기재하지 않음' }
+  }
+  const result = await writeExcerpt({ source, baseUrl: AUTOMATION_API })
+  const label = { written: '기재', skipped: '건너뜀', failed: '실패' }[result.status]
+  summary(`- ${item.key}: 요약 ${label} — ${result.note}`)
+  console.log(`${item.key}: 요약 ${label} — ${result.note}`)
+  if (result.status === 'failed') console.log(`::warning title=요약 기재 실패::${item.key} — ${result.note}`)
+  return { text, ...result }
+}
+
 let failed = 0
+const published = []
 for (const item of items) {
   try {
     const artifact = readArtifact(item)
-    if (artifact) await openPullRequest(item, artifact)
-    else await reportFailure(item, 'AI 생성 또는 검사 단계가 결과를 남기지 못했습니다.')
+    if (artifact) {
+      const excerpt = await writeItemExcerpt(item, artifact.source)
+      const pr = await openPullRequest(item, artifact, excerpt)
+      if (pr) published.push(pr)
+    } else {
+      await reportFailure(item, 'AI 생성 또는 검사 단계가 결과를 남기지 못했습니다.')
+    }
   } catch (error) {
     failed += 1
     console.error(error.message)
@@ -191,4 +223,6 @@ for (const item of items) {
     }
   }
 }
+// 실패한 글은 PR이 없으므로 병합 대상에 들어가지 않는다.
+if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `prs=${JSON.stringify(published)}\n`)
 if (failed) process.exitCode = 1

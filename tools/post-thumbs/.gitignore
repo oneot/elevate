@@ -4,3 +4,4 @@ data/
 review/
 work/
 .cache/
+__pycache__/

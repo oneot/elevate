@@ -1,7 +1,9 @@
 {
   "key": "forms/forms-quiz",
+  "id": "0666f0fd-6fac-4312-8492-fd6426188044",
   "title": "퀴즈 만들기",
   "postUpdatedAt": "2026-03-24T08:34:19.000Z",
   "contentHash": "sha256:cb599bb59bffa4a9561aca7b854d93e1236ff271cc17a28387e6ef332a7c7791",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T00:29:10.810Z"
 }

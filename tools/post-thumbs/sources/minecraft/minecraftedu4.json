@@ -1,7 +1,9 @@
 {
   "key": "minecraft/minecraftedu4",
+  "id": "1d992f11-c895-4ca2-981e-ce1e699fa91d",
   "title": "건축 창작 수업하기",
   "postUpdatedAt": "2026-03-24T08:34:20.000Z",
   "contentHash": "sha256:f5bd125bebb1048241ee887809ffbe40e5f40d60cbb279918c0ed9e8cca3ba93",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T01:12:06.479Z"
 }

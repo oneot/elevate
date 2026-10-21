@@ -123,5 +123,6 @@ async function authorizeAdminRequest(requestLike) {
 module.exports = {
   AuthError,
   authorizeAdminRequest,
-  extractBearerToken
+  extractBearerToken,
+  getAuthorizationHeader
 };
