@@ -147,6 +147,19 @@ it('offers only the title, body, app, publish state and attachments', async () =
 })
 
 it.each([
+  ['/posts/new?app=word'],
+  ['/posts/post-1'],
+])('lays out %s as title, publish settings, attachments, then body so narrow screens read top to bottom', async (path) => {
+  await renderRoute(path)
+  const editor = host.querySelector('.ea-editor')
+  const panels = [...editor.children].map((node) => [...node.classList].find((name) => name.startsWith('ea-editor__')))
+  expect(panels).toEqual(['ea-editor__info', 'ea-editor__meta', 'ea-editor__files', 'ea-editor__body'])
+  expect(editor.querySelector('.ea-editor__meta').textContent).toContain('게시 설정')
+  expect(editor.querySelector('.ea-editor__files').textContent).toContain('첨부파일')
+  expect(editor.querySelector('.ea-editor__body').contains(bodyInput())).toBe(true)
+})
+
+it.each([
   '/calendar-events/new',
   '/calendar-events/event-1',
   '/activity-videos',

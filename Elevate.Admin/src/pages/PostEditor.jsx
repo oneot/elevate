@@ -514,6 +514,19 @@ function PostEditor() {
             </div>
           </section>
 
+          <PostMetaSidebar
+            isNew={isNew}
+            selectedApp={selectedApp}
+            displayApp={displayApp}
+            onAppChange={handleAppChange}
+            statusValue={isPublished(post.status) ? PUBLISHED : ARCHIVED}
+            onStatusChange={handleStatusChange}
+            thumbnail={previewImage}
+            onAttachmentUploadingChange={setIsAttachmentUploading}
+            postId={postId}
+            draftSessionId={draftSessionId}
+          />
+
           <section className="ea-panel ea-editor__body" aria-label="본문">
             <h2 className="ea-panel__title">본문</h2>
             <HtmlEditor
@@ -528,21 +541,6 @@ function PostEditor() {
               storageKey={storageKey}
             />
           </section>
-
-          <div className="ea-editor__settings">
-            <PostMetaSidebar
-              isNew={isNew}
-              selectedApp={selectedApp}
-              displayApp={displayApp}
-              onAppChange={handleAppChange}
-              statusValue={isPublished(post.status) ? PUBLISHED : ARCHIVED}
-              onStatusChange={handleStatusChange}
-              thumbnail={previewImage}
-              onAttachmentUploadingChange={setIsAttachmentUploading}
-              postId={postId}
-              draftSessionId={draftSessionId}
-            />
-          </div>
         </div>
       </div>
 

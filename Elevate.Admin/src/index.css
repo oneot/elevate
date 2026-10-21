@@ -1573,49 +1573,82 @@ body {
   --ea-gutter: clamp(16px, 2.6cqi, 40px);
 }
 
-/* 좁은 화면: 제목·요약 → 본문 → 게시 설정. 넓은 화면: 왼쪽 본문, 오른쪽 세로 열에 제목·요약과 게시 설정. */
+/* 넓은 화면(본문 영역 1024px 이상): 왼쪽 본문, 오른쪽 세로 열에 제목·게시 설정·첨부파일.
+   그보다 좁으면 세 패널을 본문 위로 올려 본문이 폭을 다 쓰게 한다.
+   - 600px 이상: 왼쪽에 제목과 첨부파일, 오른쪽에 게시 설정을 두고 아래 끝을 맞춘다.
+   - 그보다 좁으면 세로로 쌓는다.
+   DOM 순서(제목 → 게시 설정 → 첨부파일 → 본문)가 좁은 화면에서 보이는 순서와 같아 탭 이동 순서도 같다. */
 .ea-editor {
   display: grid;
   grid-template-areas:
     'info'
-    'body'
-    'settings';
+    'meta'
+    'files'
+    'body';
   gap: 20px;
   align-items: start;
   padding-top: 24px;
   padding-bottom: 88px;
 }
 
-@container ea-main (min-width: 900px) {
-  .ea-editor {
-    grid-template-columns: minmax(0, 1fr) clamp(300px, 26cqi, 360px);
-    grid-template-rows: auto 1fr;
-    grid-template-areas:
-      'body info'
-      'body settings';
-    padding-bottom: 24px;
-  }
-}
-
 .ea-editor__info {
   grid-area: info;
+}
+
+.ea-editor__meta {
+  grid-area: meta;
+}
+
+.ea-editor__files {
+  grid-area: files;
 }
 
 .ea-editor__body {
   grid-area: body;
 }
 
-.ea-editor__settings {
-  grid-area: settings;
-  display: grid;
-  gap: 20px;
-}
-
 .ea-editor__info,
-.ea-editor__body,
-.ea-editor__settings {
+.ea-editor__meta,
+.ea-editor__files,
+.ea-editor__body {
   align-self: start;
   min-width: 0;
+}
+
+/* 1fr 줄은 게시 설정이 제목·첨부파일보다 길 때 남는 높이를 첨부파일 줄에 준다(제목 줄은 제목 높이 그대로). */
+@container ea-main (min-width: 600px) {
+  .ea-editor {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      'info  meta'
+      'files meta'
+      'body  body';
+    padding-bottom: 24px;
+  }
+
+  .ea-editor > .ea-editor__info,
+  .ea-editor > .ea-editor__meta,
+  .ea-editor > .ea-editor__files {
+    align-self: stretch;
+  }
+}
+
+@container ea-main (min-width: 1024px) {
+  .ea-editor {
+    grid-template-columns: minmax(0, 1fr) clamp(300px, 26cqi, 360px);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      'body info'
+      'body meta'
+      'body files';
+  }
+
+  .ea-editor > .ea-editor__info,
+  .ea-editor > .ea-editor__meta,
+  .ea-editor > .ea-editor__files {
+    align-self: start;
+  }
 }
 
 /* 본문 편집기 (HtmlEditor). 좁은 화면에서는 화면 높이 안에서 스크롤하고,
@@ -1633,11 +1666,11 @@ body {
   min-height: max(420px, calc(100vh - 360px));
 }
 
-/* 넓은 화면: 본문 상자를 화면 높이에 맞춘다. 편집 영역을 문서 바 바로 아래까지 스크롤하면 상자가
-   위아래 24px(.ea-editor의 위·아래 padding) 여백만 두고 화면을 채운다. 오른쪽 열 길이나 썸네일 유무와 관계없이
-   같은 높이이고, 오른쪽 열이 더 길면 페이지를 스크롤해 나머지를 본다. 낮은 화면에서도 480px 아래로 줄이지 않는다.
+/* 본문 영역 600px 이상: 본문 상자를 화면 높이에 맞춘다. 상자 위쪽이 문서 바 아래 24px에 오도록 스크롤하면
+   아래쪽에도 24px만 남기고 화면을 채운다. 오른쪽 열·위쪽 패널 길이나 썸네일 유무와 관계없이 같은 높이이고,
+   넓은 화면에서 오른쪽 열이 더 길면 페이지를 스크롤해 나머지를 본다. 낮은 화면에서도 480px 아래로 줄이지 않는다.
    넘치는 본문은 편집기 안에서 스크롤한다. contain: size로 본문 내용이 상자와 행 높이를 늘리지 않게 한다. */
-@container ea-main (min-width: 900px) {
+@container ea-main (min-width: 600px) {
   .ea-editor__body {
     display: flex;
     flex-direction: column;
