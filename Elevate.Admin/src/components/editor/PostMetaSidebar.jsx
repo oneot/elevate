@@ -1,8 +1,9 @@
 /**
  * PostMetaSidebar
  *
- * PostEditor 오른쪽 열의 게시 설정(앱·상태·썸네일)과 첨부파일 패널.
- * 제목·요약은 PostEditor가 같은 열 위쪽에 따로 그린다.
+ * PostEditor의 게시 설정(앱·상태·썸네일)과 첨부파일 패널. 두 패널은 PostEditor의 편집 grid에 바로 놓이며
+ * (ea-editor__meta, ea-editor__files), 넓은 화면에서는 오른쪽 열에, 좁은 화면에서는 제목과 함께 본문 위에 놓인다.
+ * 제목은 PostEditor가 따로 그린다.
  *
  * Props:
  *  - isNew                       {boolean}
@@ -103,7 +104,7 @@ function PostMetaSidebar({
 
   return (
     <>
-      <section className="ea-panel">
+      <section className="ea-panel ea-editor__meta">
         <h2 className="ea-panel__title">게시 설정</h2>
         <div className="ea-fields">
           <AppField
@@ -124,7 +125,7 @@ function PostMetaSidebar({
         </div>
       </section>
 
-      <section className="ea-panel">
+      <section className="ea-panel ea-editor__files">
         <h2 className="ea-panel__title">첨부파일</h2>
         <p className="ea-panel__desc">링크를 복사해 본문에 붙여 넣으면 파일 이름으로 표시됩니다.</p>
         <AttachUploader
