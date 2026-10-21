@@ -1,6 +1,7 @@
 import { strict as assert } from 'node:assert'
 import { describe, it } from 'node:test'
 import { mergeThumbnails } from '../merge.mjs'
+import { redrawPrProblem } from '../lib/pipeline.mjs'
 
 const REPO = 'oneot/elevate'
 const sha = (digit) => String(digit).repeat(40)
@@ -105,6 +106,22 @@ const run = (gh, prs, options = {}) => mergeThumbnails({
 })
 
 describe('merging thumbnail PRs without a person', () => {
+  it('merges the one redraw PR only with the redraw check, then deploys once', async () => {
+    const pr = { key: 'redraw', title: '썸네일 다시 그리기: 70개', number: 31, url: `https://github.com/${REPO}/pull/31`, branch: 'thumbnail-redraw/987654', sha: sha(7) }
+    const refused = fakeGitHub({ prs: [pr] })
+    const normal = await run(refused, [pr])
+    assert.equal(normal.merged.length, 0)
+    assert.match(normal.errors.join(), /잘못된 key/)
+    assert.equal(refused.calls.length, 0, '기본 검사로는 아무것도 하지 않는다')
+
+    const gh = fakeGitHub({ prs: [pr] })
+    const result = await run(gh, [pr], { checkPr: redrawPrProblem })
+    assert.deepEqual(result.merged.map((item) => [item.number, item.mergeSha]), [[31, 'merge-31']])
+    assert.deepEqual(gh.find('POST', /web-checks\.yml\/dispatches$/).map((call) => call.body.ref), ['thumbnail-redraw/987654'])
+    assert.deepEqual(gh.find('DELETE', /\/git\/refs\/heads\//).map((call) => call.path), [`/repos/${REPO}/git/refs/heads/thumbnail-redraw/987654`])
+    assert.deepEqual(result.deployed, ['deploy.yml', 'sync-admin-thumbnails.yml'])
+  })
+
   it('merges every PR whose checks pass in order, deletes its branch and then deploys once', async () => {
     const prs = [published(11, 'm365/first', sha(1)), published(12, 'word/second', sha(2))]
     const gh = fakeGitHub({ prs })

@@ -39,17 +39,19 @@ const isTransient = (error) => error.status === undefined || error.status >= 500
  *   repo: string,
  *   runUrl?: string, timeoutMs?: number, pollMs?: number,
  *   sleep?: (ms: number) => Promise<void>, now?: () => number, log?: (line: string) => void,
+ *   checkPr?: (pr: object) => string|null,  PR 정보 검사 (기본: publish가 연 thumbnail/<key> PR. 한꺼번에 다시 그리기는 redrawPrProblem)
  * }} options
  * @returns {Promise<{ merged: object[], blocked: object[], skipped: object[], deployed: string[], errors: string[] }>}
  */
 export async function mergeThumbnails({
   prs, api, repo, runUrl = '', timeoutMs = 30 * MINUTE, pollMs = 15_000,
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)), now = () => Date.now(), log = console.log,
+  checkPr = publishedPrProblem,
 }) {
   const result = { merged: [], blocked: [], skipped: [], deployed: [], errors: [] }
   const valid = []
   for (const pr of prs || []) {
-    const problem = publishedPrProblem(pr)
+    const problem = checkPr(pr)
     if (problem) result.errors.push(`${pr?.key || '(key 없음)'} #${pr?.number ?? '?'}: ${problem}`)
     else valid.push(pr)
   }

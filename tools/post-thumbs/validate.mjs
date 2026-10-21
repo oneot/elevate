@@ -9,6 +9,7 @@
  *   AI 요약 한 줄(work/<id>/excerpt.txt)이 규칙에 맞으면 버전 기록에 excerpt로 남기고, 지문은 그 요약이 공개 사이트에 보이는 문구로 다시 계산한다.
  *   publish가 이 요약을 게시글에 기재하므로, 기재된 뒤의 글 내용과 지문이 같아져 같은 내용으로 다시 만들지 않는다.
  *   요약이 없거나 규칙에 맞지 않으면 썸네일은 그대로 두고 요약만 기재하지 않는다(경고).
+ *   THUMBNAIL_EXCERPT=off(한꺼번에 다시 그리기)면 요약을 기재하지 않으므로 기록에도 넣지 않고 지금 요약으로 계산한 지문을 둔다.
  * - 저장소에서 바뀐 파일이 장면·버전 기록·WebP 두 장뿐인지 (그 밖의 변경은 거부. 로컬에서 다른 작업 중이면 --no-git-check)
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -49,6 +50,10 @@ if (!problems.length) {
 
 /** AI 요약이 규칙에 맞으면 버전 기록에 남기고 그 요약으로 지문을 다시 계산한다. 아니면 기록을 그대로 둔다. */
 function excerptRecord(source) {
+  if (process.env.THUMBNAIL_EXCERPT === 'off') {
+    console.log('excerpt: 이번 실행은 요약을 게시글에 기재하지 않으므로 버전 기록에도 넣지 않습니다 (THUMBNAIL_EXCERPT=off).')
+    return {}
+  }
   const excerptFile = join(ROOT, 'work', id, 'excerpt.txt')
   const contentFile = join(ROOT, 'work', id, 'content.json')
   if (!existsSync(excerptFile)) {
