@@ -529,6 +529,30 @@ SDK 내부의 React 개발 모드 경고와 큰 청크/Speech SDK 빌드 경고�
   - 로컬 Chromium 917×1090(위 두 열 배치)과 1920×1080에서 편집기 기능이 그대로 동작한다.
     - 확인한 기능: 도구 모음 고정, 끌어 놓기 덮개, 이미지 크기 조절, 접는 코드 블록, 포커스 표시, 복원 알림 막대, 낮은 창의 최소 480px.
 
+### 썸네일 도구 검사 범위 (2026-10-21, 12차)
+
+관리자에서 'test hihi'(`copilot-studio/test-hihi`)를 게시하자 썸네일 PR #314가 열리고 요약(AI)도 기재됐다. 그런데 merge 단계의
+Repository checks에서 `thumbnail-tools-checks`가 다시 실행 후에도 실패해 `thumbnail-merge-blocked`가 붙었다.
+사용자 결정: 이 수정을 병합한 뒤 #314도 반영하고, 'test hihi' 글은 게시 상태로 둔다.
+
+- **원인**: `tools/post-thumbs`의 `npm test`가 경로 없는 `node --test`라서 Node 기본 탐색 규칙을 썼다.
+  - 기본 규칙은 `test-*.js`, `*-test.js`, `*_test.js`, `*.test.js`, `test.js`와 `test/` 아래 파일을 모두 테스트로 실행한다.
+  - 그래서 장면 `scenes/auto/copilot-studio/test-hihi.js`가 실행됐고, 브라우저 전역 `scene()`이 없어 `ReferenceError: scene is not defined`로 실패했다.
+  - slug가 이런 이름인 글은 모두 자동 병합이 막힌다. 그때까지 `main`에는 해당하는 장면이 없었다.
+- **변경**: `"test": "node --test \"test/**/*.test.mjs\""`로 `test/`만 실행한다. Node 22는 디렉터리 인자(`node --test test/`)를 모듈로 읽으려다 실패하므로 glob을 쓴다.
+- **회귀 테스트** (`test/npm-test.test.mjs`):
+  - 임시 폴더에 `package.json`의 `test` 스크립트, `test/` 확인용 테스트, 장면 5개를 두고 스크립트를 실행한다.
+  - 장면 이름은 기본 규칙 5가지(`test-hihi`, `hihi-test`, `hihi_test`, `hihi.test`, `test`)다. slug에는 `.`과 `_`도 쓸 수 있다.
+  - 종료 코드 0과 `test/` 실행을 확인한다.
+- **다른 테스트 명령**: 바꾸지 않았다.
+  - Server `npm test`도 경로 없는 `node --test`지만, 장면이 생기지 않는 `Elevate.Server` 안만 찾는다.
+  - Web·Admin은 Vitest(`tests/**/*.test.{js,jsx}`)와 `test:source`(`scripts/test-*.mjs`)로 범위가 정해져 있다.
+- **검증** (Node 22.22.2, 24.13.0):
+  - 테스트 68개 → 69개(기존 68개 그대로, 회귀 1개 추가). 기존 기본 탐색과 새 스크립트가 고르는 테스트·스위트 목록이 같다.
+  - PR #314의 장면을 넣으면 수정 전에는 69개 중 1개가 실패하고(CI와 같음), 수정 후에는 69개가 통과한다.
+  - 스크립트를 `node --test`로 되돌리면 회귀 테스트가 실패한다(장면 5개 모두 실행).
+  - 안쪽 실행에 `NODE_TEST_CONTEXT`를 남겨 파일을 건너뛰게 해도 회귀 테스트가 실패한다.
+
 ## 회귀 검증과 배포 경계
 
 아래 세 앱 검증 수치는 PR #272 당시 기록이다. 웹챗 후속 변경은 별도 Web 회귀와

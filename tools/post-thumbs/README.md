@@ -191,8 +191,12 @@ node prepare.mjs m365/test             # work/m365__test/post.md, task.md, conte
 node render.mjs excerpt m365/test      # work/m365__test/excerpt.txt(AI 요약 한 줄) 규칙 검사
 node validate.mjs m365/test --no-git-check
 DRY_RUN=1 PRS='[{"key":"m365/test","number":1,"branch":"thumbnail/m365/test","sha":"<40자리 커밋>"}]' node merge.mjs  # 자동 병합 순서만 출력
-npm test                               # 단위 테스트 (브라우저·네트워크 없음)
+npm test                               # 단위 테스트 test/**/*.test.mjs (브라우저·네트워크 없음)
 ```
+
+`npm test`는 `test/` 아래 `*.test.mjs`만 실행합니다. 경로 없이 `node --test`만 쓰면 Node 기본 규칙(`test-*.js`, `*-test.js`, `*_test.js`,
+`*.test.js`, `test.js` 등)에 맞는 장면도 테스트로 실행됩니다. 장면은 브라우저 전역 `scene()`을 부르므로 실패하고, slug가 그런 이름인 글
+(예: `copilot-studio/test-hihi`)의 썸네일 PR은 Repository checks에서 막힙니다. `test/npm-test.test.mjs`가 이 범위를 확인합니다.
 
 `render.mjs`는 이전 `render.py`와 같은 결과를 냅니다(기존 80개를 다시 그렸을 때 평균 픽셀 차 0.5/255 이하, WebP 압축 차이).
 장면 작성 규칙은 [STYLE_GUIDE.md](STYLE_GUIDE.md), AI 작업 지시는 [TASK.md](TASK.md)에 있습니다.
