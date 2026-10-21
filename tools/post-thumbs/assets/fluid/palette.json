@@ -1,0 +1,85 @@
+{
+  "m365": [
+    "#38c8ff",
+    "#4a7dff",
+    "#a35cff",
+    "#ff5c9e",
+    "#ff9d4a"
+  ],
+  "copilot": [
+    "#26b6ff",
+    "#21d4a8",
+    "#bfe24a",
+    "#ffb03a",
+    "#ff5c8a",
+    "#9a5cff"
+  ],
+  "copilot-studio": [
+    "#3ce8cc",
+    "#1fb8e6",
+    "#3d7bf2",
+    "#8a5cf6",
+    "#e05cd8"
+  ],
+  "teams": [
+    "#b3bbff",
+    "#7c84ff",
+    "#5a5ce6",
+    "#6d4ee6",
+    "#a46cf5"
+  ],
+  "onenote": [
+    "#ff8cf0",
+    "#de5cf6",
+    "#ad3fe8",
+    "#7f2fd9"
+  ],
+  "forms": [
+    "#7cf2e2",
+    "#22c9cc",
+    "#0aa2b5",
+    "#0d7f9c"
+  ],
+  "onedrive": [
+    "#7fe4ff",
+    "#38b0ff",
+    "#1f7cf2",
+    "#2f55dd"
+  ],
+  "powerpoint": [
+    "#ffc85a",
+    "#ff8a3d",
+    "#f5504a",
+    "#de2f78"
+  ],
+  "excel": [
+    "#e0f772",
+    "#88dc5a",
+    "#2db552",
+    "#0e8a45"
+  ],
+  "word": [
+    "#62e0ff",
+    "#33a2ff",
+    "#2e6cf0",
+    "#3b45d9"
+  ],
+  "minecraft": [
+    "#d2ef72",
+    "#86cc4c",
+    "#45a03c",
+    "#2f7d3a"
+  ],
+  "github": [
+    "#d99eff",
+    "#a66cf7",
+    "#6f72f6",
+    "#3f63e6"
+  ],
+  "azure": [
+    "#6ff0ff",
+    "#2fb6f5",
+    "#127de0",
+    "#2f56d9"
+  ]
+}

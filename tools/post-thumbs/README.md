@@ -4,6 +4,7 @@ Elevate 블로그(microsoft-elevate.com) 카드 썸네일을 그리는 키트와
 요약은 게시글에 바로 기재하고, 썸네일은 PR로 올려 검사를 통과하면 사람 없이 병합·배포하는 파이프라인입니다.
 공개 사이트와 관리자 목록은 `Elevate.Web/src/assets/post-thumbs/<앱>/<slug>-960.webp`, `-480.webp`를 DB 썸네일보다 먼저 씁니다.
 관리자에는 요약 입력 칸이 없습니다. 게시글의 요약(`excerpt`)은 이 파이프라인의 AI가 기재합니다.
+새 썸네일은 **v3 플루이드** 스킨으로 그립니다(아래 '디자인'). 먼저 공개된 80개 썸네일은 v2 이미지 그대로 둡니다.
 
 ## 흐름
 
@@ -36,8 +37,8 @@ flowchart LR
      병합한 썸네일은 main의 버전 기록으로 같은 내용을 알아보므로, 병합 뒤 브랜치를 지워도 다시 만들지 않습니다.
 2. **generate** (macOS 러너): `prepare.mjs`가 글 본문 전체를 `work/<앱>__<slug>/post.md`로 쓰고 `TASK.md`로 작업 지시를 만듭니다.
    내용이 바뀐 글은 지금 이미지(`previous-960.webp`)와 이전 장면을 함께 줍니다.
-   GitHub Copilot CLI가 `STYLE_GUIDE.md`·같은 앱의 기존 장면·본문을 읽고 `scenes/auto/<앱>/<slug>.js`를 쓴 뒤,
-   렌더러로 그려(`zoom`·`review`) 이미지를 직접 보며 다듬고 `export`합니다. 이 job의 토큰은 저장소 읽기와 Copilot 요청만 할 수 있습니다.
+   GitHub Copilot CLI가 `STYLE_GUIDE.md`(v3 규칙)·같은 앱의 기존 장면·본문을 읽고 `scenes/auto/<앱>/<slug>.js`를 쓴 뒤,
+   렌더러로 그려(`zoom`의 960px·실제 카드 480px, `review`) 이미지를 직접 보며 다듬고 `export`합니다. 이 job의 토큰은 저장소 읽기와 Copilot 요청만 할 수 있습니다.
    같은 세션에서 요약 한 줄(`work/<앱>__<slug>/excerpt.txt`)도 씁니다. 사람이 다듬은 기존 요약 80개(33~55자, 모두 '~니다.')에 맞춰
    35~55자 한 문장으로, 이 글로 무엇을 만들고 익히는지 씁니다. 작업 지시에 같은 앱의 요약 예시를 넣고(`pickExcerptExamples`),
    AI는 `thumb-render excerpt <key>`로 규칙(`checkExcerpt`)을 스스로 확인합니다. 본문을 한 번 읽어 둘 다 만들므로 요약에 드는 AI 이용량은 거의 없습니다.
@@ -72,6 +73,25 @@ flowchart LR
 새 글은 병합·배포되기 전까지 카드에 앱 유리 타일(또는 예전 DB 썸네일)이 보이고, 내용이 바뀐 글은 그때까지 지금 이미지가 그대로 보입니다.
 게시 후 공개 사이트 카드에 보이기까지 보통 25분 안팎입니다(저장 뒤 대기 10분, 생성·검사·병합 10분 안팎, 배포 몇 분).
 사람이 만든 기존 80개 썸네일에도 지금 내용으로 버전 기록을 만들어 두었으므로(`node baseline.mjs`), 그 글들의 내용이 바뀌어도 새 버전을 만듭니다.
+
+## 디자인 (v3 플루이드)
+
+사용자 요청(2026-10-21): "앞으로 만들어지는 디자인들에서 이런 느낌이 나오면 좋을 것 같은데" + Microsoft Design, [Fluid forms, vibrant colors](https://microsoft.design/articles/fluid-forms-vibrant-colors/).
+글 내용을 구체적으로 보여 주는 UI 미니어처는 그대로 두고, 그 주변을 글의 느낌으로 진화시켰습니다. 자세한 규칙은 [STYLE_GUIDE.md](STYLE_GUIDE.md)의 'v3 플루이드'에 있습니다.
+
+| 바뀐 것 | 내용 |
+| --- | --- |
+| 무대 | 앱별 색 램프(`assets/fluid/palette.json`, 밝은 → 깊은 인접색)로 칠한 더 선명한 그라데이션. 강조 채움도 앱 색 → 인접색으로 이어집니다 |
+| 3D 형태 | 유리 오브젝트 대신 접힌 시트·리본·구·방울(`assets/fluid/<앱>/*.webp`). `python3 make_fluid.py`로 만듭니다(numpy 레이마칭, 형태는 한 번 추적하고 앱마다 색만 칠함) |
+| 앱 정체성 | `K.tile`: 새 스타일 앱 아이콘(글자판)을 유리 타일에 얹어 주 화면 모서리에 띄웁니다(받침대 선택). 공개 사이트의 썸네일 없는 카드와 같은 언어입니다 |
+| 놀이성 | `K.float`: 주 화면 주변의 작은 유리 조각 0~2개(아이콘, 숫자, 다른 앱) |
+| 단순함 | 주 화면 58~72%, 핵심 글자 ≥ 2.6cqw. AI 장면에는 480px 카드 기준 audit(1.8cqw 미만 글자, 글자 덩어리 16개 초과, pill·앱 타일 개수)가 붙고, `zoom`이 `review/card_<id>.png`(480px)도 씁니다 |
+
+- **기존 80개**: `render.mjs … --skin v2`가 v2 스킨으로 그리며, 이전 키트와 바이트까지 같은 이미지를 냅니다(160개 확인). 이 PR은 기존 이미지를 바꾸지 않습니다.
+  내용이 바뀌거나 직접 다시 만들기를 요청한 글만 v3로 다시 그립니다. 글 지문·plan 규칙은 그대로라 스킨 변경만으로는 다시 만들지 않습니다.
+- **기존 80개를 v3로 바꾸고 싶을 때** (사용자가 원할 때만):
+  - AI 없이 기존 장면에 새 스킨만 입히기: `node render.mjs export --cat <앱>`. 비용이 없고 몇 초면 되지만, 구성은 v2 그대로라 3D 형태가 창에 많이 가려집니다.
+  - AI로 다시 그리기: 글마다 Run workflow(`key`). 글 하나에 몇 분과 Copilot 이용량이 듭니다.
 
 ## 운영
 
@@ -138,7 +158,8 @@ npx playwright install chromium        # 또는 설치된 Edge를 쓰려면 THUM
 node data.mjs                          # 공개 글 목록 → data/posts.json
 node render.mjs review word            # review/word.png
 node render.mjs zoom word/wordonline1  # review/zoom_word__wordonline1.png
-node render.mjs export --cat word      # 공개 사이트 이미지 다시 쓰기
+node render.mjs export --cat word --skin v2  # 처음 80개 카드를 지금 이미지(v2) 그대로 다시 쓰기 (--skin 없이 내보내면 v3로 바뀜)
+python3 make_fluid.py --sheet          # assets/fluid 다시 만들기 + review/_fluid.png (numpy, Pillow)
 node plan.mjs                          # 지금 만들 글 목록 (새 글, 내용이 바뀐 글)
 node baseline.mjs                      # 이미지는 있는데 버전 기록이 없는 글에 지금 내용으로 기록 만들기
 node prepare.mjs m365/test             # work/m365__test/post.md, task.md, content.json

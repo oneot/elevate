@@ -217,6 +217,7 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 (대기 10분, 생성·검사·병합 10분 안팎, 배포 몇 분).
 새 글과, 이미지를 그린 뒤 제목·요약·본문이 바뀐 글(`tools/post-thumbs/sources/`의 내용 지문과 비교)이 대상이다.
 GitHub Copilot CLI가 글 본문 전체를 읽고 'UI 미니어처' 키트(`tools/post-thumbs`)로 장면을 설계·렌더·검수하고, 같은 글의 요약 한 줄도 쓴다.
+새 썸네일은 v3 플루이드 스킨(부드러운 3D 형태, 선명한 인접색, 앱 아이콘 타일)으로 그린다. 처음 공개된 80개는 v2 이미지 그대로다(`tools/post-thumbs/README.md`의 '디자인').
 관리자에는 요약 입력 칸이 없다. publish job이 요약을 위 'AI 요약 기재 입구'로 게시글에 기재한 뒤(실패해도 썸네일은 진행),
 결과를 검사해 PR(라벨 `thumbnail`)로 올린다. 버전 기록의 지문은 AI 요약으로 계산하므로, 요약을 기재한 글을 내용 없이 다시 저장해도 다시 만들지 않는다.
 이어서 merge job이 사람 없이 병합한다.
@@ -239,10 +240,11 @@ GitHub Copilot CLI가 글 본문 전체를 읽고 'UI 미니어처' 키트(`tool
 | 병합되지 않은 PR | 라벨 `thumbnail-merge-blocked` PR의 댓글에서 이유와 검사 링크를 본다. 문제가 없으면 사람이 병합한다(push로 배포가 실행됨). 쓰지 않으려면 닫는다. 검사 실패 원인이 관리자 `check:bundle` 예산이면 썸네일 주소표 크기를 줄이는 코드 수정이 필요하다 |
 | 다시 만들기 | Actions → Post thumbnails → Run workflow에 `key`(`<앱>/<slug>`)와 `feedback`을 넣는다. 열린 PR은 새 이미지로 바뀌고, 없으면 새 PR이 열린다. 어느 쪽이든 검사 후 자동으로 병합된다 |
 | 병합된 썸네일 빼기 | 병합 커밋을 되돌리는(revert) PR을 올려 병합한다. 글이 게시된 채면 다음 실행이 다시 만들므로 먼저 글을 보관·삭제한다 |
+| 기존 썸네일을 v3로 | 스킨 변경만으로는 다시 만들지 않는다(글 지문·plan 규칙 그대로). 바꾸려면 글마다 '다시 만들기'(AI, 글 하나 몇 분·약 $1)를 하거나, AI 없이 기존 장면에 새 스킨만 입혀 `node render.mjs export --cat <앱>`으로 이미지를 다시 쓰고 PR로 올린다(비용 없음, 구성은 그대로). 지금 이미지 그대로 다시 쓸 때는 `--skin v2` |
 | 자동 병합 끄기 | 저장소 변수 `THUMBNAIL_AUTO_MERGE`를 `false`로 둔다. PR까지만 열리고 사람이 병합한다(병합하면 배포는 push로 실행). 변수를 지우면 다시 자동이다 |
 | 글 수정 | 제목·요약·본문을 고쳐 저장하면 10분 뒤 실행이 '썸네일 새 버전' PR(지금 이미지와 새 이미지 비교)을 열고, 검사 후 자동으로 병합한다. 병합·배포 전까지는 지금 이미지가 보인다. 게시 상태 변경·내용 없는 저장은 대상이 아니다 |
 | 실패 | `썸네일 자동 생성 실패: <key>` 이슈(라벨 `thumbnail-failed`)와 실행 아티팩트 `log-<앱>__<slug>`(Copilot 작업 기록·렌더 이미지)를 본다. 이슈를 닫은 뒤 아무 글이나 '게시'로 저장하거나 수동 실행하면 다시 시도한다 |
-| 비용 | Actions 쪽 비밀값 없이 `GITHUB_TOKEN`(`copilot-requests: write`)으로 Copilot CLI를 쓰며, 개인 소유 저장소라 저장소 소유자의 Copilot 이용량에서 차감된다. 모델은 Claude Opus 5.5(저장소 변수 `THUMBNAIL_MODEL`로 변경)이고, 첫 실행 기준 글 하나에 2~3분, AI 크레딧 약 65~125(본문 길이에 따라)였다. 한 번에 최대 2개 글, 대상이 없으면 AI를 부르지 않는다. Actions 시간은 공개 저장소라 무료다 |
+| 비용 | Actions 쪽 비밀값 없이 `GITHUB_TOKEN`(`copilot-requests: write`)으로 Copilot CLI를 쓰며, 개인 소유 저장소라 저장소 소유자의 Copilot 이용량에서 차감된다. 모델은 Claude Opus 5.5(저장소 변수 `THUMBNAIL_MODEL`로 변경)이고, 첫 실행 기준 글 하나에 2~3분, AI 크레딧 약 65~125(본문 길이에 따라)였다. v3 디자인 샘플 5개(로컬, 같은 지시·모델)는 글 하나에 2.5~4분, 82~129 크레딧(1 크레딧 = $0.01)이었다. 한 번에 최대 2개 글, 대상이 없으면 AI를 부르지 않는다. Actions 시간은 공개 저장소라 무료다 |
 | 멈추기 | Actions → Post thumbnails on save → Disable workflow(저장해도 시작하지 않음, 수동 실행은 됨). 서버 요청 자체를 멈추려면 `THUMBNAIL_DISPATCH_TOKEN`을 지운다 |
 
 ## GitHub Pages Smoke Test

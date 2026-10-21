@@ -22,6 +22,7 @@
 </head>
 <body>
 <div id="root"></div>
+<script src="assets/fluid/palette.js"></script>
 <script src="kit.js"></script>
 <script>
   const CATS = ['m365', 'copilot', 'copilot-studio', 'teams', 'onenote', 'forms', 'onedrive', 'powerpoint', 'excel', 'word', 'minecraft', 'github', 'azure'];
@@ -74,6 +75,42 @@
         if (el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflow !== 'visible') issues.push(`${key}: text overflows its box — "${text.slice(0, 40)}"`);
       }
       if (!window.SCENES[key]) issues.push(`${key}: no scene yet`);
+      else if (window.SCENES[key].auto && stage.classList.contains('fluid')) issues.push(...auditFluid(stage, key));
+    });
+    return issues;
+  }
+
+  // v3 rules for AI scenes (STYLE_GUIDE 'v3 플루이드'): readable at the 480px card, simple, the app tile once.
+  // Scenes in scenes/<app>.js (the first 80 cards) are not held to these, so their warnings never reach the AI.
+  function auditFluid(stage, key) {
+    const issues = [];
+    const cqw = stage.getBoundingClientRect().width / 100;
+    let blocks = 0;
+    let smallest = null;
+    const walker = document.createTreeWalker(stage, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      const text = node.textContent.trim();
+      const el = node.parentElement;
+      if (!text || el.closest('style')) continue;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const r = range.getBoundingClientRect();
+      if (!r.width || !r.height) continue;
+      blocks += 1;
+      const size = parseFloat(getComputedStyle(el).fontSize) / cqw;
+      if (size < 1.8 - 0.01 && (!smallest || size < smallest.size)) smallest = { size, text };
+    }
+    if (smallest) issues.push(`${key}: text smaller than 1.8cqw is unreadable on the 480px card (${smallest.size.toFixed(2)}cqw) — "${smallest.text.slice(0, 30)}"`);
+    if (blocks > 16) issues.push(`${key}: ${blocks} text blocks — keep it to 12–16 (use K.skel for the rest)`);
+    const count = (selector) => stage.querySelectorAll(selector).length;
+    if (count('.pill') !== 1) issues.push(`${key}: ${count('.pill')} pills — use exactly one K.pill`);
+    if (count('.k-tile') !== 1) issues.push(`${key}: ${count('.k-tile')} app tiles — use exactly one K.tile (the app icon tile)`);
+    if (count('.k-float') > 3) issues.push(`${key}: ${count('.k-float')} floating pieces — at most 3 K.float`);
+    const sbox = stage.getBoundingClientRect();
+    stage.querySelectorAll('.k-tile').forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.left < sbox.left - 0.5 || r.right > sbox.right + 0.5 || r.top < sbox.top - 0.5 || r.bottom > sbox.bottom + 0.5) issues.push(`${key}: app tile outside the stage`);
     });
     return issues;
   }
@@ -99,9 +136,11 @@
 
   (async () => {
     const auto = await fetch('scenes/auto/index.json').then((res) => (res.ok ? res.json() : [])).catch(() => []);
+    window.AUTO_SCENES = true;
     for (const src of auto) {
       try { await loadScript(src); } catch (e) { console.error(e.message); }
     }
+    window.AUTO_SCENES = false;
     const posts = await (await fetch('data/posts.json')).json();
     let list = posts;
     if (cat) list = list.filter((p) => cat.split(',').includes(p.category));

@@ -3,10 +3,11 @@
  * 'UI 미니어처' 썸네일 렌더러 (이전 render.py의 Node 판).
  *
  *   node render.mjs review <앱…|all>          → review/<앱>.png        실제 카드 크기(≈342px) 2배로 앱 전체
- *   node render.mjs zoom <앱>/<slug> …        → review/zoom_<앱>__<slug>.png  960px 확대본
+ *   node render.mjs zoom <앱>/<slug> …        → review/zoom_<앱>__<slug>.png  960px 확대본, review/card_<앱>__<slug>.png  실제 카드 480px
  *   node render.mjs export [<앱>/<slug> …] [--cat a,b] [--out DIR]
  *                                            → DIR/<앱>/<slug>-960.webp, -480.webp (기본 DIR: Elevate.Web/src/assets/post-thumbs)
  *   node render.mjs excerpt <앱>/<slug> …     → work/<id>/excerpt.txt(AI 요약 한 줄)가 규칙에 맞는지 검사 (브라우저 없음)
+ *   --skin v2                                 처음 80개 카드의 v2 소프트 글래스 스킨으로 그린다 (기본: v3 플루이드)
  *
  * 글 목록은 data/posts.json을 쓴다 (없으면 공개 API에서 만든다. 새로 받으려면 `node data.mjs`).
  * 장면은 scenes/<앱>.js와 AI가 만든 scenes/auto/<앱>/<slug>.js를 모두 불러온다.
@@ -24,6 +25,7 @@ import { checkExcerpt } from './lib/pipeline.mjs'
 
 const ICONS = join(ROOT, 'node_modules/@fluentui/svg-icons/icons')
 const REVIEW = join(ROOT, 'review')
+const PALETTE = join(ROOT, 'assets/fluid/palette.json')
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -55,6 +57,12 @@ function resolveFile(pathname) {
 export function startServer() {
   const server = http.createServer((req, res) => {
     const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname)
+    // 유동 형태와 같은 색(assets/fluid/palette.json)을 kit.js가 동기적으로 읽도록 스크립트로 준다.
+    if (pathname === '/assets/fluid/palette.js') {
+      res.writeHead(200, { 'content-type': TYPES['.js'], 'cache-control': 'no-store' })
+      res.end(`window.FLUID_PALETTE = ${readFileSync(PALETTE, 'utf8').trim()};\n`)
+      return
+    }
     if (pathname === '/scenes/auto/index.json') {
       res.writeHead(200, { 'content-type': TYPES['.json'], 'cache-control': 'no-store' })
       res.end(JSON.stringify(listAutoScenes()))
@@ -118,14 +126,16 @@ export async function writeWebps(png, outDir, category, slug) {
 
 function parseArgs(argv) {
   const [mode, ...rest] = argv
-  const options = { mode, targets: [], out: THUMBS_DIR, cat: null }
+  const options = { mode, targets: [], out: THUMBS_DIR, cat: null, skin: null }
   for (let i = 0; i < rest.length; i += 1) {
     if (rest[i] === '--out') options.out = resolve(rest[(i += 1)])
     else if (rest[i] === '--cat') options.cat = rest[(i += 1)]
+    else if (rest[i] === '--skin') options.skin = rest[(i += 1)]
     else options.targets.push(rest[i])
   }
+  if (options.skin && options.skin !== 'v2') throw new Error('--skin은 v2만 고를 수 있습니다 (기본은 v3 플루이드).')
   if (!['review', 'zoom', 'export'].includes(mode)) {
-    throw new Error('사용법: node render.mjs review <앱…|all> | zoom <앱>/<slug>… | export [<앱>/<slug>…] [--cat a,b] [--out DIR] | excerpt <앱>/<slug>…')
+    throw new Error('사용법: node render.mjs review <앱…|all> | zoom <앱>/<slug>… | export [<앱>/<slug>…] [--cat a,b] [--out DIR] | excerpt <앱>/<slug>… [--skin v2]')
   }
   return options
 }
@@ -163,6 +173,7 @@ export async function main(argv = process.argv.slice(2)) {
   mkdirSync(REVIEW, { recursive: true })
   const server = await startServer()
   const base = `http://127.0.0.1:${server.address().port}/render.html`
+  const skin = options.skin ? `&skin=${options.skin}` : ''
   const channel = process.env.THUMB_BROWSER_CHANNEL
   const browser = await chromium.launch(channel ? { channel } : {})
   let issues = 0
@@ -170,7 +181,7 @@ export async function main(argv = process.argv.slice(2)) {
     if (options.mode === 'review') {
       const cats = !options.targets.length || options.targets.includes('all') ? APPS : options.targets
       for (const cat of cats) {
-        const { page, errors } = await openPage(browser, `${base}?mode=review&cat=${encodeURIComponent(cat)}`, 1180, 2)
+        const { page, errors } = await openPage(browser, `${base}?mode=review&cat=${encodeURIComponent(cat)}${skin}`, 1180, 2)
         const file = join(REVIEW, `${cat}.png`)
         await page.locator('#root').screenshot({ path: file })
         console.log(file)
@@ -180,18 +191,22 @@ export async function main(argv = process.argv.slice(2)) {
     } else if (options.mode === 'zoom') {
       for (const target of options.targets) {
         const { key, id } = parseKey(target)
-        const { page, errors } = await openPage(browser, `${base}?mode=zoom&keys=${encodeURIComponent(key)}`, 1000, 1)
+        const { page, errors } = await openPage(browser, `${base}?mode=zoom&keys=${encodeURIComponent(key)}${skin}`, 1000, 1)
         const thumb = page.locator('.thumb')
         if (!(await thumb.count())) throw new Error(`${key}: data/posts.json에 없는 글입니다 (node data.mjs로 목록을 다시 받으세요).`)
         const file = join(REVIEW, `zoom_${id}.png`)
-        await thumb.first().screenshot({ path: file })
+        const png = await thumb.first().screenshot({ path: file })
+        // 공개 카드에 실제로 쓰이는 480px 이미지와 같은 크기 (export의 -480.webp와 같은 축소).
+        const card = join(REVIEW, `card_${id}.png`)
+        await sharp(png).resize(480, 270, { fit: 'fill', kernel: 'lanczos3' }).png().toFile(card)
         console.log(file)
+        console.log(card)
         issues += await report(page, errors)
         await page.close()
       }
     } else {
       const keys = options.targets.map((target) => parseKey(target).key)
-      const query = `mode=export${options.cat ? `&cat=${encodeURIComponent(options.cat)}` : ''}${keys.length ? `&keys=${encodeURIComponent(keys.join(','))}` : ''}`
+      const query = `mode=export${options.cat ? `&cat=${encodeURIComponent(options.cat)}` : ''}${keys.length ? `&keys=${encodeURIComponent(keys.join(','))}` : ''}${skin}`
       const { page, errors } = await openPage(browser, `${base}?${query}`, 2000, 2)
       const withScene = new Set(await page.evaluate(() => Object.keys(window.SCENES || {})))
       // 전체를 내보낼 때는 아직 장면이 없는 글(새 글)을 건너뛴다. 지정한 글에 장면이 없으면 오류다.

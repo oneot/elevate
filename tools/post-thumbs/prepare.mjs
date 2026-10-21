@@ -61,7 +61,7 @@ if (hasPrevious) copyFileSync(previous, join(dir, 'previous-960.webp'))
 const PREVIOUS = `이 글에는 이미 썸네일이 있다: \`work/${id}/previous-960.webp\` (이전 장면은 \`scenes/${category}.js\`나 \`scenes/auto/${category}/${slug}.js\`에서 \`${key}\`로 찾는다).`
 const MODES = {
   new: '처음 만드는 썸네일이다.',
-  edited: `${PREVIOUS} 글 내용이 바뀌어 **새 버전**을 만든다. 바뀐 본문을 기준으로 장면을 다시 정하고, 이전 장면에서 여전히 맞는 구성은 이어 써도 된다.`,
+  edited: `${PREVIOUS} 글 내용이 바뀌어 **새 버전**을 만든다. 바뀐 본문을 기준으로 장면을 다시 정하고, 이전 장면에서 여전히 맞는 내용은 이어 쓰되 구성은 v3 규칙(STYLE_GUIDE 규칙 2·9~11)에 맞춘다.`,
   manual: `${hasPrevious ? `${PREVIOUS} ` : ''}다시 만들어 달라는 요청이다. 아래 '요청 사항'을 우선 반영한다.`,
 }
 
