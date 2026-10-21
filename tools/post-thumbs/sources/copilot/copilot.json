@@ -1,7 +1,9 @@
 {
   "key": "copilot/copilot",
+  "id": "93864945-c5ed-46d8-9825-9dd3719b4d08",
   "title": "수업 설계하기",
   "postUpdatedAt": "2026-06-10T05:58:12.191Z",
   "contentHash": "sha256:95f6596f59698109c435a685ae73093e9b71ba6482884e7df1682bb0d2a56917",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T00:49:21.606Z"
 }

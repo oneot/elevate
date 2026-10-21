@@ -1,7 +1,9 @@
 {
   "key": "teams/teams-home",
+  "id": "3c634fbb-aad4-41b7-8362-039cecd4cd64",
   "title": "팀 홈페이지 만들기",
   "postUpdatedAt": "2026-03-24T08:34:20.000Z",
   "contentHash": "sha256:67d1840cc0b68182cdde4eb77da75978438d76905220285cf7cbf45e7738b0f1",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T00:58:04.725Z"
 }

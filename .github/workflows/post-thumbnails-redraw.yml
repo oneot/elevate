@@ -95,6 +95,8 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ github.token }}
                   THUMBNAIL_MODEL: ${{ vars.THUMBNAIL_MODEL || 'claude-opus-5.5' }}
+              # shell: bash는 pipefail로 실행한다(기본 bash -e는 validate | tee에서 validate 실패를 놓친다).
+              shell: bash
               run: |
                   REASON=new node prepare.mjs "$KEY"
                   ROOT="$(pwd -P)"
@@ -119,6 +121,8 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ github.token }}
                   THUMBNAIL_MODEL: ${{ vars.THUMBNAIL_MODEL || 'claude-opus-5.5' }}
+              # shell: bash는 pipefail로 실행한다(기본 bash -e는 validate | tee에서 validate 실패를 놓친다).
+              shell: bash
               run: |
                   git -C "$GITHUB_WORKSPACE" checkout -- .
                   rm -f "scenes/auto/$CATEGORY/$SLUG.js"
@@ -211,19 +215,20 @@ jobs:
               with:
                   node-version-file: .nvmrc
 
+            # 저장소 밖(runner.temp)에 받는다. 저장소 안에 받으면 바뀐 파일 검사가 아티팩트 파일까지 잡는다.
             - name: Download thumbnails
               uses: actions/download-artifact@v4
               continue-on-error: true
               with:
                   pattern: thumb-*
-                  path: artifacts
+                  path: ${{ runner.temp }}/artifacts
 
             - name: Download results
               uses: actions/download-artifact@v4
               continue-on-error: true
               with:
                   pattern: result-*
-                  path: results
+                  path: ${{ runner.temp }}/results
                   merge-multiple: true
 
             - name: Open one pull request
@@ -232,8 +237,8 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ github.token }}
                   ITEMS: ${{ needs.plan.outputs.items }}
-                  ARTIFACTS: ${{ github.workspace }}/artifacts
-                  RESULTS: ${{ github.workspace }}/results
+                  ARTIFACTS: ${{ runner.temp }}/artifacts
+                  RESULTS: ${{ runner.temp }}/results
                   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
     # 'Post thumbnails'의 merge job과 같다: PR 브랜치에서 Repository checks를 실행해 통과하면 병합하고 배포를 한 번 실행한다.

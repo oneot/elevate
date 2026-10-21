@@ -1,7 +1,9 @@
 {
   "key": "copilot/copilot2",
+  "id": "8d1d9417-09a5-41d8-9f99-7b923feec2cb",
   "title": "Designer로 이미지 만들기",
   "postUpdatedAt": "2026-03-24T08:34:19.000Z",
   "contentHash": "sha256:29dd112875f041beae72b0890c74cb61dcd1789b6f96be9daccce6c4b80ff561",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T01:28:40.561Z"
 }

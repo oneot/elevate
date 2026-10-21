@@ -1,7 +1,9 @@
 {
   "key": "copilot-studio/copilot-studio-workshop-chemicalfactory",
+  "id": "7f08e16b-fb33-4afb-b83e-dfdf4c0c080e",
   "title": "화학 공장 사고 대응 에이전트 만들기",
   "postUpdatedAt": "2026-06-05T07:13:18.757Z",
   "contentHash": "sha256:7f8201b3406e8edc486db47da5147c2f1b654eafc920c659156bd646880098d2",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T00:52:17.937Z"
 }

@@ -1,7 +1,9 @@
 {
   "key": "teams/teams-maketeam",
+  "id": "6d0cf9df-e335-4042-beef-d415bf847153",
   "title": "팀 만들기",
   "postUpdatedAt": "2026-03-24T08:34:21.000Z",
   "contentHash": "sha256:fc2751a8bf9b597918a6c633b5ef1acc45e4932aefd7dc700680fcc002353be8",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T00:55:38.275Z"
 }

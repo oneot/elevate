@@ -1,7 +1,9 @@
 {
   "key": "copilot/analyst",
+  "id": "da75b1bd-d2ee-497e-bc81-d7370c21e4bd",
   "title": "분석가로 수행평가 결과 활용하기",
   "postUpdatedAt": "2026-03-24T08:34:19.000Z",
   "contentHash": "sha256:c5112440bce0b897ca4119385d8129784a088f932ceba72b398967bf8248417f",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T01:41:42.001Z"
 }

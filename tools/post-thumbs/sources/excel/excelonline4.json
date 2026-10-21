@@ -1,7 +1,9 @@
 {
   "key": "excel/excelonline4",
+  "id": "26b4013e-8e88-45ee-bc1d-9be43dc5788c",
   "title": "공유하고 인쇄하기",
   "postUpdatedAt": "2026-03-24T08:34:19.000Z",
   "contentHash": "sha256:a2a4961a7973e83d372e5995a0bd7bdb1d0ee5531cb03a9e3f0c33d79f1d233b",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T01:22:46.342Z"
 }
