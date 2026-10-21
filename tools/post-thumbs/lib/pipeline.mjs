@@ -18,6 +18,11 @@ export const DEPLOY_WORKFLOWS = ['deploy.yml', 'sync-admin-thumbnails.yml']
 
 export const failureTitle = (key) => `썸네일 자동 생성 실패: ${key}`
 
+/** 'Redraw post thumbnails'가 결과를 모으는 브랜치 (thumbnail-redraw/<실행 번호>). plan이 읽는 thumbnail/<key> 브랜치와 겹치지 않는다. */
+export const REDRAW_BRANCH_PREFIX = 'thumbnail-redraw/'
+/** 한꺼번에 다시 그리기의 PR 하나를 가리키는 key (merge.mjs가 로그에 쓴다). */
+export const REDRAW_KEY = 'redraw'
+
 /** 실패 이슈 제목에서 key를 꺼낸다. 형식이 다르면 null. */
 export function keyFromFailureTitle(title) {
   const match = /^썸네일 자동 생성 실패: (\S+)$/.exec(String(title || '').trim())
@@ -69,6 +74,77 @@ export function hashCacheHit(entry, post) {
 function toItem(post, reason) {
   const { key, id, category, slug } = parseKey(post.key)
   return { key, id, category, slug, title: post.title, reason }
+}
+
+/**
+ * 한꺼번에 다시 그릴 글을 고른다 ('Redraw post thumbnails'의 plan, 순수 함수).
+ * - keys(쉼표·공백으로 구분)가 있으면 그 글들. 게시돼 있고 썸네일이 있어야 한다(없는 글은 'Post thumbnails'가 만든다).
+ * - 없으면 사람이 그린 장면(scenes/<앱>.js)으로 만든 썸네일 전부: 썸네일은 있는데 AI 장면(scenes/auto)이 없는 글.
+ * 공개 API 순서(최신 게시순)로 limit개까지.
+ * @param {{ posts: Array<object>, keys?: string, limit?: number, hasThumb: (key: string) => boolean, hasAiScene: (key: string) => boolean }} options
+ * @returns {Array<{ key, id, category, slug, title, reason: 'redraw' }>}
+ */
+export function redrawTargets({ posts, keys = '', limit = 80, hasThumb, hasAiScene }) {
+  if (!Number.isInteger(limit) || limit < 1) throw new Error(`limit은 1 이상의 정수여야 합니다: ${limit}`)
+  const wanted = [...new Set(String(keys).split(/[\s,]+/).filter(Boolean).map((key) => parseKey(key).key))]
+  let chosen
+  if (wanted.length) {
+    const published = new Set(posts.map((post) => post.key))
+    const missing = wanted.filter((key) => !published.has(key))
+    if (missing.length) throw new Error(`공개 사이트에 게시된 글이 아닙니다: ${missing.join(', ')}`)
+    const noThumb = wanted.filter((key) => !hasThumb(key))
+    if (noThumb.length) throw new Error(`썸네일이 없는 글은 'Post thumbnails'가 만듭니다: ${noThumb.join(', ')}`)
+    chosen = posts.filter((post) => wanted.includes(post.key))
+  } else {
+    chosen = posts.filter((post) => hasThumb(post.key) && !hasAiScene(post.key))
+  }
+  return chosen.slice(0, limit).map((post) => toItem(post, 'redraw'))
+}
+
+/** 'Redraw post thumbnails'가 연 PR인지 확인한다 (merge.mjs의 PR 검사를 이것으로 바꿔 쓴다). @returns {string|null} 문제가 있으면 이유 */
+export function redrawPrProblem(pr) {
+  if (pr?.key !== REDRAW_KEY) return `key가 ${REDRAW_KEY}가 아닙니다.`
+  if (!Number.isInteger(pr.number) || pr.number < 1) return 'PR 번호가 올바르지 않습니다.'
+  if (!/^thumbnail-redraw\/\d+$/.test(pr.branch || '')) return `브랜치가 ${REDRAW_BRANCH_PREFIX}<실행 번호>가 아닙니다.`
+  if (!/^[0-9a-f]{40}$/.test(pr.sha || '')) return '커밋 SHA가 올바르지 않습니다.'
+  return null
+}
+
+/**
+ * 한꺼번에 다시 그리기 PR 본문 (순수 함수).
+ * @param {{ done: Array<{ key, title, attempts? }>, failed: Array<{ key, title, reason }>, repo: string, baseSha: string, headSha?: string, runUrl?: string, paths: (key) => { large: string, small: string } }} options
+ */
+export function redrawPrBody({ done, failed, repo, baseSha, headSha, runUrl = '', site = 'https://microsoft-elevate.com', paths }) {
+  const raw = (ref, path) => `https://raw.githubusercontent.com/${repo}/${ref}/${path}`
+  const cell = (text) => String(text).replace(/\|/g, '\\|').replace(/\n/g, ' ')
+  const lines = [
+    '## 썸네일 다시 그리기',
+    '',
+    `'Redraw post thumbnails'가 이미 썸네일이 있는 글을 지금 디자인(tools/post-thumbs/STYLE_GUIDE.md)으로 다시 그렸습니다.`,
+    '생성·검사는 \'Post thumbnails\'와 같습니다. Repository checks를 통과하면 자동으로 병합하고 공개 사이트와 관리자 배포를 한 번 실행합니다.',
+    '',
+    '| | |',
+    '| --- | --- |',
+    `| 다시 그린 글 | ${done.length}개${done.some((item) => item.attempts > 1) ? ` (그중 ${done.filter((item) => item.attempts > 1).length}개는 두 번째 시도)` : ''} |`,
+    `| 지금 이미지를 둔 글 | ${failed.length}개 |`,
+    '| AI 요약 | 게시글에 기재하지 않고 버전 기록에도 넣지 않았습니다(기존 요약 유지) |',
+    runUrl ? `| 만든 실행 | [Actions 실행](${runUrl}) (글별 AI 작업 기록은 아티팩트 \`log-<앱>__<slug>\`) |` : null,
+    '',
+  ]
+  if (failed.length) {
+    lines.push('### 지금 이미지를 둔 글', '', ...failed.map((item) => `- \`${item.key}\` ${cell(item.title || '')} — ${cell(item.reason)}`), '')
+  }
+  if (done.length) {
+    lines.push('### 다시 그린 글', '', '| 글 | 지금 | 새 이미지 |', '| --- | --- | --- |')
+    for (const item of done) {
+      const { small } = paths(item.key)
+      const now = `<img src="${raw(baseSha, small)}" width="240" alt="지금">`
+      const next = headSha ? `<img src="${raw(headSha, small)}" width="240" alt="새 이미지">` : '(커밋 뒤 표시)'
+      lines.push(`| [${cell(item.title)}](${site}/${item.key})<br>\`${item.key}\`${item.attempts > 1 ? ' (두 번째 시도)' : ''} | ${now} | ${next} |`)
+    }
+    lines.push('')
+  }
+  return lines.filter((line) => line !== null).join('\n')
 }
 
 /**

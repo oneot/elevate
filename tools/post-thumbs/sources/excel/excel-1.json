@@ -1,7 +1,9 @@
 {
   "key": "excel/excel-1",
+  "id": "eabc8c60-491a-421c-bfe2-b92e4798044c",
   "title": "학급 성적 관리하기",
   "postUpdatedAt": "2026-03-24T08:34:19.000Z",
   "contentHash": "sha256:92b3c5d58a6a326b6c3047f846b4d2e759bb2fd9888c82efe3557caac2a41593",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T00:28:59.724Z"
 }

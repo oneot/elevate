@@ -1,0 +1,262 @@
+name: Redraw post thumbnails
+
+# 이미 썸네일이 있는 글을 지금 디자인(tools/post-thumbs/STYLE_GUIDE.md)으로 한꺼번에 다시 그린다. Run workflow로만 실행한다.
+# 글마다 생성·검사는 'Post thumbnails'의 generate job과 같다(같은 작업 지시·모델·권한 규칙·validate).
+# 검사를 통과하지 못하면 한 번 더 그리고, 그래도 안 되면 그 글은 지금 이미지를 둔다(다른 글을 막지 않는다).
+# 결과는 PR 하나로 모아 Repository checks 1번, 병합 1번, 배포 1번으로 끝낸다(merge.mjs와 같은 자동 병합).
+# AI 요약은 게시글에 기재하지 않고 버전 기록에도 넣지 않는다(THUMBNAIL_EXCERPT=off). 요약 기재는 'Post thumbnails'만 한다.
+# 'Post thumbnails'와 같은 동시 실행 그룹을 써서, '게시' 저장으로 시작한 실행은 이 실행이 끝난 뒤에 돈다(같은 파일을 동시에 고치지 않음).
+# 자세한 내용: tools/post-thumbs/README.md '한꺼번에 다시 그리기'
+
+on:
+    workflow_dispatch:
+        inputs:
+            keys:
+                description: "다시 그릴 글 <앱>/<slug>를 쉼표로. 비우면 사람이 그린 장면(scenes/<앱>.js)으로 만든 썸네일 전부"
+                required: false
+                default: ""
+            limit:
+                description: "최대 글 수 (비용 상한: 글 하나에 AI 크레딧 약 80~130)"
+                required: false
+                default: "80"
+
+permissions: {}
+
+concurrency:
+    group: post-thumbnails
+    cancel-in-progress: false
+
+jobs:
+    plan:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        permissions:
+            contents: read
+        outputs:
+            items: ${{ steps.plan.outputs.items }}
+            count: ${{ steps.plan.outputs.count }}
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+
+            - name: Find thumbnails to redraw
+              id: plan
+              run: node tools/post-thumbs/redraw.mjs plan
+              env:
+                  KEYS: ${{ inputs.keys }}
+                  LIMIT: ${{ inputs.limit }}
+
+    generate:
+        needs: plan
+        if: needs.plan.outputs.count != '0'
+        # 기존 썸네일과 같은 글꼴(SF Pro, Apple SD Gothic Neo)로 그리기 위해 macOS에서 실행한다.
+        runs-on: macos-latest
+        timeout-minutes: 90
+        permissions:
+            contents: read
+            copilot-requests: write
+        strategy:
+            fail-fast: false
+            max-parallel: 4
+            matrix:
+                item: ${{ fromJSON(needs.plan.outputs.items) }}
+        defaults:
+            run:
+                working-directory: tools/post-thumbs
+        env:
+            KEY: ${{ matrix.item.key }}
+            ID: ${{ matrix.item.id }}
+            CATEGORY: ${{ matrix.item.category }}
+            SLUG: ${{ matrix.item.slug }}
+            THUMBNAIL_EXCERPT: "off"
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+                  cache: npm
+                  cache-dependency-path: tools/post-thumbs/package-lock.json
+
+            - name: Install tools
+              run: |
+                  npm ci
+                  npx playwright install chromium
+                  npm install -g @github/copilot
+
+            # 'Post thumbnails'의 Design thumbnail with Copilot·Validate result와 같은 명령이다(권한 규칙 설명은 그 workflow에 있다).
+            - name: Draw and validate (attempt 1)
+              id: first
+              continue-on-error: true
+              timeout-minutes: 35
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  THUMBNAIL_MODEL: ${{ vars.THUMBNAIL_MODEL || 'claude-opus-5.5' }}
+              run: |
+                  REASON=new node prepare.mjs "$KEY"
+                  ROOT="$(pwd -P)"
+                  BIN="$RUNNER_TEMP/thumb-bin"
+                  mkdir -p "$BIN"
+                  printf '#!/bin/sh\nexec node "%s/render.mjs" "$@"\n' "$ROOT" > "$BIN/thumb-render"
+                  chmod +x "$BIN/thumb-render"
+                  PATH="$BIN:$PATH" copilot -p "$(cat "work/$ID/task.md")" --model "$THUMBNAIL_MODEL" --no-ask-user \
+                      --allow-tool='shell(thumb-render)' \
+                      --allow-tool="write($ROOT/scenes/auto/$CATEGORY/$SLUG.js)" \
+                      --allow-tool="write($ROOT/work/$ID/summary.md)" \
+                      --allow-tool="write($ROOT/work/$ID/excerpt.txt)" \
+                      --share="work/$ID/transcript.md"
+                  node validate.mjs "$KEY" 2>&1 | tee "$RUNNER_TEMP/validate-1.log"
+
+            # 첫 시도가 실패하면(검사 실패·시간 초과·오류) 결과를 지우고 처음 상태에서 한 번 더 그린다. 첫 시도 기록은 work/<id>-attempt1에 남긴다.
+            - name: Draw and validate (attempt 2)
+              id: second
+              if: steps.first.outcome != 'success'
+              continue-on-error: true
+              timeout-minutes: 35
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  THUMBNAIL_MODEL: ${{ vars.THUMBNAIL_MODEL || 'claude-opus-5.5' }}
+              run: |
+                  git -C "$GITHUB_WORKSPACE" checkout -- .
+                  rm -f "scenes/auto/$CATEGORY/$SLUG.js"
+                  rm -rf "work/$ID-attempt1"
+                  if [ -d "work/$ID" ]; then mv "work/$ID" "work/$ID-attempt1"; fi
+                  PROBLEMS="$(tail -n 20 "$RUNNER_TEMP/validate-1.log" 2>/dev/null || true)"
+                  FEEDBACK="$(printf '첫 시도는 검사를 통과하지 못했다. 아래 문제를 피해 처음부터 다시 그린다.\n%s' "${PROBLEMS:-생성 단계가 끝나지 않았다(시간 초과·오류).}")"
+                  REASON=new FEEDBACK="$FEEDBACK" node prepare.mjs "$KEY"
+                  ROOT="$(pwd -P)"
+                  BIN="$RUNNER_TEMP/thumb-bin"
+                  mkdir -p "$BIN"
+                  printf '#!/bin/sh\nexec node "%s/render.mjs" "$@"\n' "$ROOT" > "$BIN/thumb-render"
+                  chmod +x "$BIN/thumb-render"
+                  PATH="$BIN:$PATH" copilot -p "$(cat "work/$ID/task.md")" --model "$THUMBNAIL_MODEL" --no-ask-user \
+                      --allow-tool='shell(thumb-render)' \
+                      --allow-tool="write($ROOT/scenes/auto/$CATEGORY/$SLUG.js)" \
+                      --allow-tool="write($ROOT/work/$ID/summary.md)" \
+                      --allow-tool="write($ROOT/work/$ID/excerpt.txt)" \
+                      --share="work/$ID/transcript.md"
+                  node validate.mjs "$KEY" 2>&1 | tee "$RUNNER_TEMP/validate-2.log"
+
+            - name: Record result
+              if: always()
+              env:
+                  FIRST: ${{ steps.first.outcome }}
+                  SECOND: ${{ steps.second.outcome }}
+              run: |
+                  mkdir -p "$RUNNER_TEMP/result"
+                  node -e '
+                    const fs = require("node:fs")
+                    const { KEY, ID, FIRST, SECOND, RUNNER_TEMP } = process.env
+                    const ok = FIRST === "success" || SECOND === "success"
+                    const tail = (n) => { try { return fs.readFileSync(`${RUNNER_TEMP}/validate-${n}.log`, "utf8").trim().split("\n").slice(-6) } catch { return [] } }
+                    const problems = ok ? [] : (tail(2).length ? tail(2) : tail(1))
+                    const result = { key: KEY, ok, attempts: FIRST === "success" ? 1 : 2, problems }
+                    fs.writeFileSync(`${RUNNER_TEMP}/result/result-${ID}.json`, JSON.stringify(result) + "\n")
+                    console.log(JSON.stringify(result))'
+
+            - name: Upload thumbnail
+              if: steps.first.outcome == 'success' || steps.second.outcome == 'success'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: thumb-${{ matrix.item.id }}
+                  if-no-files-found: error
+                  retention-days: 7
+                  path: |
+                      tools/post-thumbs/scenes/auto/${{ matrix.item.category }}/${{ matrix.item.slug }}.js
+                      tools/post-thumbs/sources/${{ matrix.item.category }}/${{ matrix.item.slug }}.json
+                      Elevate.Web/src/assets/post-thumbs/${{ matrix.item.category }}/${{ matrix.item.slug }}-960.webp
+                      Elevate.Web/src/assets/post-thumbs/${{ matrix.item.category }}/${{ matrix.item.slug }}-480.webp
+                      tools/post-thumbs/work/${{ matrix.item.id }}/summary.md
+
+            - name: Upload result
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: result-${{ matrix.item.id }}
+                  if-no-files-found: error
+                  retention-days: 7
+                  path: ${{ runner.temp }}/result/result-${{ matrix.item.id }}.json
+
+            - name: Upload Copilot log
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: log-${{ matrix.item.id }}
+                  if-no-files-found: ignore
+                  retention-days: 14
+                  path: |
+                      tools/post-thumbs/work/${{ matrix.item.id }}/
+                      tools/post-thumbs/work/${{ matrix.item.id }}-attempt1/
+                      tools/post-thumbs/review/zoom_${{ matrix.item.id }}.png
+                      tools/post-thumbs/review/card_${{ matrix.item.id }}.png
+
+    publish:
+        needs: [plan, generate]
+        if: always() && needs.plan.result == 'success' && needs.plan.outputs.count != '0'
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        permissions:
+            contents: write
+            pull-requests: write
+            issues: write
+        outputs:
+            prs: ${{ steps.publish.outputs.prs }}
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+
+            - name: Download thumbnails
+              uses: actions/download-artifact@v4
+              continue-on-error: true
+              with:
+                  pattern: thumb-*
+                  path: artifacts
+
+            - name: Download results
+              uses: actions/download-artifact@v4
+              continue-on-error: true
+              with:
+                  pattern: result-*
+                  path: results
+                  merge-multiple: true
+
+            - name: Open one pull request
+              id: publish
+              run: node tools/post-thumbs/redraw.mjs publish
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  ITEMS: ${{ needs.plan.outputs.items }}
+                  ARTIFACTS: ${{ github.workspace }}/artifacts
+                  RESULTS: ${{ github.workspace }}/results
+                  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+    # 'Post thumbnails'의 merge job과 같다: PR 브랜치에서 Repository checks를 실행해 통과하면 병합하고 배포를 한 번 실행한다.
+    merge:
+        needs: publish
+        if: ${{ !cancelled() && needs.publish.outputs.prs != '' && needs.publish.outputs.prs != '[]' && vars.THUMBNAIL_AUTO_MERGE != 'false' }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 45
+        permissions:
+            actions: write
+            contents: write
+            pull-requests: write
+            issues: write
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+
+            - name: Check and merge the pull request
+              run: node tools/post-thumbs/redraw.mjs merge
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  PRS: ${{ needs.publish.outputs.prs }}
+                  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
