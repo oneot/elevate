@@ -49,6 +49,11 @@ async function plan() {
   summary([`### 다시 그릴 글 ${items.length}개`, '', ...lines, ''])
 }
 
+function isUnchangedRecord(file, repoPath) {
+  const current = join(REPO_ROOT, repoPath)
+  return existsSync(current) && readFileSync(current).equals(readFileSync(file))
+}
+
 /** generate가 올린 결과 (아티팩트 thumb-<id>). 'Post thumbnails'의 publish.mjs와 같은 검사를 다시 한다. 없으면 null. */
 export function readArtifact(artifacts, item) {
   const paths = thumbPaths(item.key)
@@ -62,6 +67,8 @@ export function readArtifact(artifacts, item) {
     ...(source.key === item.key && /^sha256:[0-9a-f]{64}$/.test(source.contentHash || '') ? [] : ['글 버전 기록이 올바르지 않습니다.']),
     // 요약을 기재하지 않는 실행이므로, 버전 기록의 지문은 지금 요약 기준이어야 한다(AI 요약이 들어가면 다음 저장 때 다시 그린다).
     ...('excerpt' in source ? ['버전 기록에 AI 요약이 들어 있습니다(THUMBNAIL_EXCERPT=off가 아님).'] : []),
+    // validate는 검사를 통과해야 기록을 새로 쓴다. main의 기록과 같으면 검사를 통과하지 못한 결과다.
+    ...(isUnchangedRecord(files.source, paths.source) ? ['버전 기록이 새로 쓰이지 않았습니다(검사를 통과하지 못한 결과).'] : []),
   ]
   if (problems.length) throw new Error(problems.join(' / '))
   return { paths, files }

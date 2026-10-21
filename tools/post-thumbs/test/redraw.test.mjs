@@ -1,12 +1,13 @@
 import { strict as assert } from 'node:assert'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { describe, it } from 'node:test'
 import sharp from 'sharp'
-import { thumbPaths } from '../lib/posts.mjs'
+import { REPO_ROOT, thumbPaths } from '../lib/posts.mjs'
 import { publishedPrProblem, redrawPrBody, redrawPrProblem, redrawTargets } from '../lib/pipeline.mjs'
 import { readArtifact, readResult } from '../redraw.mjs'
+import { autoSceneProblems } from '../render.mjs'
 
 const post = (key, title = `${key} 제목`) => ({ key, title })
 const SHA = 'a'.repeat(40)
@@ -100,10 +101,45 @@ describe('reading the generate results', () => {
     }
   })
 
+  it('refuses a version record that validate did not rewrite (the same as on main)', async () => {
+    const existing = { key: 'm365/signup', id: 'm365__signup' }
+    const onMain = readFileSync(join(REPO_ROOT, thumbPaths(existing.key).source), 'utf8')
+    const root = mkdtempSync(join(tmpdir(), 'redraw-'))
+    try {
+      const dir = join(root, `thumb-${existing.id}`)
+      const paths = thumbPaths(existing.key)
+      const write = (path, data) => { mkdirSync(dirname(join(dir, path)), { recursive: true }); writeFileSync(join(dir, path), data) }
+      const webp = (width, height) => sharp({ create: { width, height, channels: 3, background: '#38c8ff' } }).webp({ quality: 82 }).toBuffer()
+      write(paths.scene, scene.replace('teams/by-hand', existing.key))
+      write(paths.source, onMain)
+      write(paths.large, await webp(960, 540))
+      write(paths.small, await webp(480, 270))
+      assert.throws(() => readArtifact(root, existing), /새로 쓰이지 않았습니다/)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
   it('refuses a version record that carries an AI excerpt, so a later save does not redraw the post', async () => {
     const root = await artifact({ ...source, excerpt: 'AI가 쓴 요약입니다.' })
     try {
       assert.throws(() => readArtifact(root, item), /AI 요약/)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('checking AI scene code while rendering', () => {
+  it('reports the validate rules (like an https:// address in the screen text) for AI scenes only', () => {
+    const root = mkdtempSync(join(tmpdir(), 'render-'))
+    try {
+      mkdirSync(join(root, 'scenes/auto/azure'), { recursive: true })
+      const scene = (body) => `(() => {\n  scene('azure/x', (K) => ${body}, {});\n})();\n`
+      writeFileSync(join(root, 'scenes/auto/azure/x.js'), scene("'<span>https://oneot.github.io</span>'"))
+      assert.deepEqual(autoSceneProblems(['azure/x', 'azure/none'], root), ['azure/x: 허용하지 않는 코드: 외부 URL'])
+      writeFileSync(join(root, 'scenes/auto/azure/x.js'), scene("'<span>oneot.github.io</span>'"))
+      assert.deepEqual(autoSceneProblems(['azure/x'], root), [])
     } finally {
       rmSync(root, { recursive: true, force: true })
     }

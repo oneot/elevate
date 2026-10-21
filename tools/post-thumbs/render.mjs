@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { chromium } from 'playwright'
 import { APPS, ROOT, THUMBS_DIR, fetchPublishedPosts, parseKey, writePostsData } from './lib/posts.mjs'
-import { checkExcerpt } from './lib/pipeline.mjs'
+import { checkExcerpt, checkScene } from './lib/pipeline.mjs'
 
 const ICONS = join(ROOT, 'node_modules/@fluentui/svg-icons/icons')
 const REVIEW = join(ROOT, 'review')
@@ -141,6 +141,22 @@ function parseArgs(argv) {
 }
 
 /**
+ * AI 장면(scenes/auto/<앱>/<slug>.js) 코드 검사. validate.mjs·publish와 같은 규칙(checkScene)을 렌더할 때도 알려 줘서
+ * 생성 단계의 AI가 작업 중에 고칠 수 있게 한다 (예: 화면 글자에 쓴 https:// 주소). 사람이 쓴 scenes/<앱>.js는 보지 않는다.
+ * @returns {string[]} audit 줄
+ */
+export function autoSceneProblems(keys, root = ROOT) {
+  const lines = []
+  for (const key of keys) {
+    const { category, slug } = parseKey(key)
+    const file = join(root, 'scenes/auto', category, `${slug}.js`)
+    if (!existsSync(file)) continue
+    for (const problem of checkScene(readFileSync(file, 'utf8'), key)) lines.push(`${key}: ${problem}`)
+  }
+  return lines
+}
+
+/**
  * AI가 쓴 요약 한 줄(work/<id>/excerpt.txt)을 검사한다. 생성 단계의 AI는 렌더러(thumb-render)만 실행할 수 있어
  * 스스로 확인할 수 있도록 여기에 둔다. 같은 규칙으로 validate.mjs와 publish.mjs가 다시 검사한다.
  */
@@ -189,6 +205,10 @@ export async function main(argv = process.argv.slice(2)) {
         await page.close()
       }
     } else if (options.mode === 'zoom') {
+      for (const line of autoSceneProblems(options.targets.map((target) => parseKey(target).key))) {
+        console.log(`  ! audit: ${line}`)
+        issues += 1
+      }
       for (const target of options.targets) {
         const { key, id } = parseKey(target)
         const { page, errors } = await openPage(browser, `${base}?mode=zoom&keys=${encodeURIComponent(key)}${skin}`, 1000, 1)
@@ -206,6 +226,10 @@ export async function main(argv = process.argv.slice(2)) {
       }
     } else {
       const keys = options.targets.map((target) => parseKey(target).key)
+      for (const line of autoSceneProblems(keys)) {
+        console.log(`  ! audit: ${line}`)
+        issues += 1
+      }
       const query = `mode=export${options.cat ? `&cat=${encodeURIComponent(options.cat)}` : ''}${keys.length ? `&keys=${encodeURIComponent(keys.join(','))}` : ''}${skin}`
       const { page, errors } = await openPage(browser, `${base}?${query}`, 2000, 2)
       const withScene = new Set(await page.evaluate(() => Object.keys(window.SCENES || {})))
