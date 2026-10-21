@@ -1,7 +1,9 @@
 {
   "key": "teams/teams-filetap",
+  "id": "3ced0878-8d48-4719-ad9d-dd30f53ade3a",
   "title": "파일 탭으로 문서 관리하기",
   "postUpdatedAt": "2026-03-24T08:34:20.000Z",
   "contentHash": "sha256:d44572213a42596e9a41df27350aaffa080c5945e921ab6d626f6bb129e94e48",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T00:58:52.004Z"
 }

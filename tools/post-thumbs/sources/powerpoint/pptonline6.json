@@ -1,7 +1,9 @@
 {
   "key": "powerpoint/pptonline6",
+  "id": "9c857d11-c28f-44cd-9d1b-f29865b50492",
   "title": "3D 모델과 번역 기능 쓰기",
   "postUpdatedAt": "2026-03-24T08:34:20.000Z",
   "contentHash": "sha256:3f032f45fdadbc3a91f367bf8eed38f85ad75a6f8a8da483b0e5ce056764efad",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T01:17:29.429Z"
 }

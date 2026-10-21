@@ -1,7 +1,9 @@
 {
   "key": "github/github-copilot",
+  "id": "4b14b29f-fe2c-404d-be9e-6a35389ab941",
   "title": "Copilot으로 바이브 코딩하기",
   "postUpdatedAt": "2026-10-16T08:32:06.205Z",
   "contentHash": "sha256:7b40f9fbb52ffc99deb46109a52a48eb25a9aa994911e2434d4aab445e69b872",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T00:47:36.648Z"
 }

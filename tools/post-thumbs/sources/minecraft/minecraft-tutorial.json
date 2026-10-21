@@ -1,7 +1,9 @@
 {
   "key": "minecraft/minecraft-tutorial",
+  "id": "b58c51a3-259b-4451-b575-9380b320ec89",
   "title": "설치하고 시작하기",
   "postUpdatedAt": "2026-03-24T08:34:20.000Z",
   "contentHash": "sha256:aeebb53b029b10506d81f1b7dec385ce44e111a0da0b584f33e1f46e7e0c2db8",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T01:31:34.311Z"
 }

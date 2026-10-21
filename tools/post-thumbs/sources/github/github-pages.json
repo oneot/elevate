@@ -1,7 +1,9 @@
 {
   "key": "github/github-pages",
+  "id": "100bbff0-a2d2-483c-be29-bbe0dfec4da4",
   "title": "Pages에 에이전트 배포하기",
   "postUpdatedAt": "2026-10-16T10:18:09.760Z",
   "contentHash": "sha256:18f29c638b97ca7f0d8428d220d012137089be7c78452d9c460edd8e745018ea",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T00:44:05.685Z"
 }
