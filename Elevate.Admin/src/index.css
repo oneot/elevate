@@ -1593,6 +1593,7 @@ body {
     grid-template-areas:
       'body info'
       'body settings';
+    padding-bottom: 24px;
   }
 }
 
@@ -1632,14 +1633,16 @@ body {
   min-height: max(420px, calc(100vh - 360px));
 }
 
-/* 넓은 화면: 본문 상자를 오른쪽 열(제목·요약부터 첨부파일까지)의 아래 끝에 맞추고,
-   넘치는 본문은 편집기 안에서 스크롤한다. contain: size로 본문 내용이 행 높이를 늘리지 않게 한다. */
+/* 넓은 화면: 본문 상자를 화면 높이에 맞춘다. 편집 영역을 문서 바 바로 아래까지 스크롤하면 상자가
+   위아래 24px(.ea-editor의 위·아래 padding) 여백만 두고 화면을 채운다. 오른쪽 열 길이나 썸네일 유무와 관계없이
+   같은 높이이고, 오른쪽 열이 더 길면 페이지를 스크롤해 나머지를 본다. 낮은 화면에서도 480px 아래로 줄이지 않는다.
+   넘치는 본문은 편집기 안에서 스크롤한다. contain: size로 본문 내용이 상자와 행 높이를 늘리지 않게 한다. */
 @container ea-main (min-width: 900px) {
   .ea-editor__body {
     display: flex;
     flex-direction: column;
-    align-self: stretch;
-    min-height: 560px;
+    height: max(480px, calc(100vh - var(--ea-dbar-h) - 48px));
+    height: max(480px, calc(100dvh - var(--ea-dbar-h) - 48px));
     contain: size;
   }
 
