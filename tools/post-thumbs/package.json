@@ -10,7 +10,7 @@
     "data": "node data.mjs",
     "render": "node render.mjs",
     "plan": "node plan.mjs",
-    "test": "node --test"
+    "test": "node --test \"test/**/*.test.mjs\""
   },
   "dependencies": {
     "@fluentui/svg-icons": "1.1.344",
