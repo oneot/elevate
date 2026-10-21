@@ -1,7 +1,9 @@
 {
   "key": "copilot/teach",
+  "id": "814d155d-4020-4554-a50c-8ba27dcb124c",
   "title": "Teach로 수업 계획과 루브릭 만들기",
   "postUpdatedAt": "2026-06-10T04:27:53.238Z",
   "contentHash": "sha256:0000b248c4b2c3f4ce4de233c0f30562c2fc2925c296caca3fada56aa6ecfb42",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T00:28:51.473Z"
 }

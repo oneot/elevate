@@ -1,7 +1,9 @@
 {
   "key": "powerpoint/pptonline4",
+  "id": "5d15460d-db7f-4364-a455-914afb2af9ca",
   "title": "전환 효과와 애니메이션 넣기",
   "postUpdatedAt": "2026-03-24T08:34:20.000Z",
   "contentHash": "sha256:a659b45e34bb7a4f68a229a6fb478bb5b0a2caffb7e34a187b7ecb2ae98c7eae",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T00:29:03.292Z"
 }

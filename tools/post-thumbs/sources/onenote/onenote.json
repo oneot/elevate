@@ -1,7 +1,9 @@
 {
   "key": "onenote/onenote",
+  "id": "5c66109b-835e-42ab-83f4-20f184d21ec5",
   "title": "자료 정리 기초 익히기",
   "postUpdatedAt": "2026-03-24T08:34:20.000Z",
   "contentHash": "sha256:4298ec0af4a36d0495efbc12aee4f9b1ada3dd3d26999bb2459161796c7456dc",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T00:29:21.599Z"
 }

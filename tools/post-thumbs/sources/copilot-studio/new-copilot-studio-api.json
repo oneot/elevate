@@ -1,7 +1,9 @@
 {
   "key": "copilot-studio/new-copilot-studio-api",
+  "id": "1b0311c1-b050-4097-94cb-e769359048f4",
   "title": "Workflow로 날씨 API 연동하기",
   "postUpdatedAt": "2026-08-20T18:19:17.641Z",
   "contentHash": "sha256:32dd662ba882cdf3d7d6a69cd9273319380c9827f9ab5a8b7ce263cfd9b03f60",
-  "origin": "manual"
+  "origin": "ai",
+  "generatedAt": "2026-10-21T00:29:07.242Z"
 }
