@@ -1,16 +1,16 @@
 # Elevate 프로젝트 - GitHub Copilot 지시사항
 
-> **마지막 업데이트**: 2026년 10월 22일  
+> **마지막 업데이트**: 2026년 10월 23일  
 > **버전**: 2.4  
-> **필수 참조 문서**: [documents/01-getting-started/PLAN.md](../documents/01-getting-started/PLAN.md)  
-> **설계도(Bicep)·인수인계 문서**: 비공개 레포 `oneot/elevate-infra` (이 공개 레포에는 `infra/`를 두지 않는다. 아래 "저장소 경계" 참조)
+> **필수 참조 문서**: [README.md](../README.md) (개발·검증 시작점)  
+> **설계·운영 문서와 Bicep**: 비공개 레포 `oneot/elevate-infra` (이 공개 레포에는 `documents/`, `infra/`를 두지 않는다. 아래 "저장소 경계" 참조)
 
 ---
 
 ## 🗂️ 저장소 경계 (공개/비공개)
 
-- 이 레포(`oneot/elevate`)는 **공개 레포**다. Bicep 설계도와 설계·정책·인수인계 문서는 **비공개 레포 `oneot/elevate-infra`**에 있다.
-- 이 레포에 `infra/`나 정책·아키텍처 문서가 없는 것은 의도된 상태다. 이를 이유로 복구 모드를 적용하거나 이 레포에 `infra/`·Bicep·정책/아키텍처 문서를 새로 만들지 않는다. `.gitignore`의 `infra` 줄은 실수로 올리는 것을 막는 장치이므로 지우지 않는다.
+- 이 레포(`oneot/elevate`)는 **공개 레포**다. Bicep 설계도와 설계·운영 문서(개발 기준, 변경 기록, 배포·운영 런북, 정책·아키텍처, 인수인계)는 **비공개 레포 `oneot/elevate-infra`**에 있다.
+- 이 레포에 `documents/`, `infra/`가 없는 것은 의도된 상태다. 이를 이유로 복구 모드를 적용하거나 이 레포에 `documents/`·`infra/`·Bicep·설계/운영 문서를 새로 만들지 않는다. `.gitignore`의 `infra`, `/documents/` 줄은 실수로 올리는 것을 막는 장치이므로 지우지 않는다.
 - `oneot/elevate-infra` 문서는 접근 권한이 있을 때 읽기 전용으로 참조한다. 그 내용과 구독 ID·리소스 상세·배포 증적을 이 레포의 코드·문서·커밋·PR·이슈에 옮겨 적지 않는다. 접근할 수 없으면 추정하지 말고 확인하지 못한 항목을 완료 보고에 적는다.
 - **Azure 설정 변경이 필요한 기능(앱 설정, CORS, 커스텀 도메인, 새 Azure 리소스, 관리 ID·권한)이면 PR 본문에 "인프라 반영 필요 (elevate-infra)" 목록을 남기고 사용자에게 알린다.** 목록에는 바꿀 항목과 이유만 적고 구독 ID·리소스 ID·비밀값은 적지 않는다.
 
@@ -20,14 +20,14 @@
 
 모든 작업은 아래 순서를 따른다:
 
-1. **계획 파악**: `documents/01-getting-started/PLAN.md` 읽기
-2. **저장소 경계 확인**: 설계도·인수인계 문서는 `oneot/elevate-infra`에 있다. 이 레포에 `infra/`가 없다는 이유로 [복구 지침](instructions/recovery.instructions.md)을 적용하지 않는다 (사용자가 복구 작업을 명시적으로 요청한 경우에만 적용)
+1. **계획 파악**: 루트 `README.md`와 관련 앱 README 읽기 (설계·운영 문서가 필요하면 `oneot/elevate-infra`의 `PLAN.md`부터)
+2. **저장소 경계 확인**: 설계·운영 문서와 Bicep은 `oneot/elevate-infra`에 있다. 이 레포에 `documents/`, `infra/`가 없다는 이유로 [복구 지침](instructions/recovery.instructions.md)을 적용하지 않는다 (사용자가 복구 작업을 명시적으로 요청한 경우에만 적용)
 3. **Skills 확인**: 관련 Skill이 1%라도 있으면 즉시 호출 (§기본원칙 3 참조)
 4. **정책 검토**: 변경안이 §기본원칙 6과 `oneot/elevate-infra`의 `POLICY.md`를 위반하는지 확인
 5. **아키텍처 정합성**: 관련 문서와 일치하는지 확인
 6. **구현**: 문서 기준에 맞춰 코드 작성 (IaC/Bicep은 이 레포에서 작성하지 않음)
 7. **검증**: 빌드/테스트/`verification-before-completion` Skill 실행
-8. **문서 동기화 + 완료 보고**: 이 레포 문서에 변경사항 반영 후 변경 내역 요약. Azure 설정 변경이 필요하면 PR 본문에 "인프라 반영 필요 (elevate-infra)" 목록을 남기고 사용자에게 알림
+8. **문서 동기화 + 완료 보고**: 이 레포 문서(README 등)에 변경사항 반영 후 변경 내역 요약. Azure 설정 변경이나 `oneot/elevate-infra` 문서 갱신이 필요하면 PR 본문에 "인프라 반영 필요 (elevate-infra)" 목록을 남기고 사용자에게 알림
 
 ---
 
@@ -39,15 +39,16 @@
 - 에러 메시지, 분석 결과, 설명은 모두 한국어 제공
 
 ### 2. 작업 시작 전 필수 절차
-- **세션의 첫 작업 이전에는 반드시 [documents/01-getting-started/PLAN.md](../documents/01-getting-started/PLAN.md)를 참조하여 전체 계획을 파악한다.**
-- PLAN.md가 제시하는 문서 참조 우선순위를 따른다.
-- 이 레포에 `infra/`나 정책·아키텍처 문서가 없는 것은 정상이다. [복구 작업 특별 지침](instructions/recovery.instructions.md)은 사용자가 복구 작업을 명시적으로 요청한 경우에만 적용한다.
-- 작업 종류에 따라 필요한 문서를 선택적으로 읽는다:
-  - 정책 검토: `oneot/elevate-infra`의 `POLICY.md`, `AZURE_POLICY_MAPPING.md`
-  - 아키텍처 설계/변경: `oneot/elevate-infra`의 `AZURE_ARCHITECTURE.md`, `AUTHORIZATION_MODEL.md`, `IMAGE_POLICY.md`
-  - Bicep 구현: `oneot/elevate-infra`의 `BICEP_IMPLEMENTATION_PLAN.md` (Bicep 작업도 그 레포에서 한다)
+- **세션의 첫 작업 이전에는 반드시 루트 [README.md](../README.md)로 코드 구조·개발 환경·검증 명령을 파악한다.**
+- 설계·운영 문서가 필요하면 `oneot/elevate-infra`의 `PLAN.md`가 제시하는 문서 참조 우선순위를 따른다.
+- 이 레포에 `documents/`, `infra/`가 없는 것은 정상이다. [복구 작업 특별 지침](instructions/recovery.instructions.md)은 사용자가 복구 작업을 명시적으로 요청한 경우에만 적용한다.
+- 작업 종류에 따라 필요한 문서를 선택적으로 읽는다 (API 외에는 모두 `oneot/elevate-infra`에 있다):
+  - 정책 검토: `POLICY.md`, `AZURE_POLICY_MAPPING.md`
+  - 아키텍처 설계/변경: `AZURE_ARCHITECTURE.md`, `AUTHORIZATION_MODEL.md`, `IMAGE_POLICY.md`
+  - Bicep 구현: `BICEP_IMPLEMENTATION_PLAN.md` (Bicep 작업도 그 레포에서 한다)
+  - 최근 변경 기록: `MODERNIZATION.md`
+  - 배포/운영: `DEPLOYMENT_AND_RUNBOOK.md`
   - API: 별도 계약 문서가 없으므로 `Elevate.Server/src`의 실제 구현과 테스트를 기준으로 한다
-  - 배포/운영: 이 레포의 [DEPLOYMENT_AND_RUNBOOK.md](../documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md)
 
 ### 3. Skills 및 MCP 서버 최대 활용
 - **작업을 시작하기 전, 사용 가능한 모든 Skills와 MCP 서버를 반드시 확인하고 최대한 활용한다.**
@@ -90,7 +91,7 @@
 
 ## 🔍 작업별 문서 참조 가이드
 
-> 이 레포 `documents/`에 없는 문서(`POLICY.md`, `AZURE_POLICY_MAPPING.md`, `AZURE_ARCHITECTURE.md`, `AUTHORIZATION_MODEL.md`, `IMAGE_POLICY.md`, `BICEP_IMPLEMENTATION_PLAN.md`)는 비공개 레포 `oneot/elevate-infra`에 있다.
+> 아래 문서(`POLICY.md`, `AZURE_POLICY_MAPPING.md`, `AZURE_ARCHITECTURE.md`, `AUTHORIZATION_MODEL.md`, `IMAGE_POLICY.md`, `BICEP_IMPLEMENTATION_PLAN.md`, `DEPLOYMENT_AND_RUNBOOK.md`)는 모두 비공개 레포 `oneot/elevate-infra`에 있다. 이 레포에는 `documents/`가 없다.
 
 ### Bicep/Infrastructure 작업 시
 - 이 레포에서는 Bicep/IaC를 작성하지 않는다. 이 레포 작업 중 인프라 변경이 필요하면 PR 본문의 "인프라 반영 필요 (elevate-infra)" 목록에 적는다.
@@ -117,7 +118,7 @@
 6. **`NODE_ENV=production` 필수**: 프로덕션 환경에서 올바른 인증 경로를 보장하기 위해 반드시 설정
 
 ### 배포/운영 작업 시
-1. 이 레포의 [DEPLOYMENT_AND_RUNBOOK.md](../documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md) → 배포 토폴로지/SLO/임계값/장애 대응 절차 확인
+1. `DEPLOYMENT_AND_RUNBOOK.md` → 배포 토폴로지/SLO/임계값/장애 대응 절차 확인
 2. `BICEP_IMPLEMENTATION_PLAN.md` → 배포 순서 준수
 3. CORS/Redirect URI가 바뀌면 PR 본문의 "인프라 반영 필요 (elevate-infra)" 목록에 적어 `oneot/elevate-infra` 문서에 반영되게 한다
 
@@ -175,12 +176,13 @@ az bicep build --file infra/modules/*.bicep
 3. 나머지 세부 문서
 
 ### 변경 시 동기화 필수
-- 이 레포 문서(`documents/`의 PLAN·MODERNIZATION·DEPLOYMENT_AND_RUNBOOK, 각 README)는 코드 변경과 같은 PR에서 갱신한다.
+- 이 레포 문서(루트·앱별 README, `tools/post-thumbs/` 문서)는 코드 변경과 같은 PR에서 갱신한다.
 - `oneot/elevate-infra` 문서는 이 레포에서 고치거나 내용을 옮겨 적지 않는다. 갱신이 필요하면 PR 본문의 "인프라 반영 필요 (elevate-infra)" 목록에 문서 이름과 바뀐 점을 적는다:
+  - 기능·동작 변경 기록 → `MODERNIZATION.md`
+  - 배포 절차·운영 임계값 변경 → `DEPLOYMENT_AND_RUNBOOK.md`
   - 아키텍처 변경 → `AZURE_ARCHITECTURE.md`
   - 인증 변경 → `AUTHORIZATION_MODEL.md`
 - API 변경 → `Elevate.Server` 테스트와 이 레포 문서를 함께 갱신 (별도 API 계약 문서 없음)
-- 운영 임계값 변경 → 이 레포의 `DEPLOYMENT_AND_RUNBOOK.md` 수정
 
 ### 문서 업데이트 시 확인 사항
 - 다른 문서와의 모순 여부 확인
@@ -196,8 +198,8 @@ az bicep build --file infra/modules/*.bicep
 - 하드코딩된 비밀값/토큰/연결 문자열
 - `oneot/elevate-infra`의 `POLICY.md`에 명시된 리소스/리전/인증 제약사항 위반
 - 문서와 불일치하는 고정 구성값 사용
-- 이 공개 레포에 `infra/`·Bicep·정책/아키텍처/인수인계 문서를 만들거나, 구독 ID·리소스 상세·배포 증적·`oneot/elevate-infra` 문서 내용을 추가하는 행위 (`.gitignore`의 `infra` 줄 삭제 포함)
+- 이 공개 레포에 `documents/`·`infra/`·Bicep·설계/운영 문서를 만들거나, 구독 ID·리소스 상세·배포 증적·`oneot/elevate-infra` 문서 내용을 추가하는 행위 (`.gitignore`의 `infra`, `/documents/` 줄 삭제 포함)
 
 ---
 
-> ⚠️ 이 레포에 `infra/`나 정책·아키텍처 문서가 없는 것은 **복구 상황이 아니다** (`oneot/elevate-infra`에서 관리). [`recovery.instructions.md`](instructions/recovery.instructions.md)는 사용자가 복구 작업을 명시적으로 요청한 경우에만 적용하며, 복구 산출물은 `oneot/elevate-infra`에만 둔다.
+> ⚠️ 이 레포에 `documents/`, `infra/`가 없는 것은 **복구 상황이 아니다** (`oneot/elevate-infra`에서 관리). [`recovery.instructions.md`](instructions/recovery.instructions.md)는 사용자가 복구 작업을 명시적으로 요청한 경우에만 적용하며, 복구 산출물은 `oneot/elevate-infra`에만 둔다.

@@ -3,6 +3,7 @@ Elevate.Web/.env
 .DS_Store
 .vscode
 infra
+/documents/
 TODO.md
 .env.production
 migration

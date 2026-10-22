@@ -1,12 +1,12 @@
 ---
 description: '문서/인프라 복구 작업 지침 — 사용자가 복구 작업을 명시적으로 요청한 경우에만 적용 (작업 위치: oneot/elevate-infra)'
-applyTo: 'infra/**, **/*.bicep, **/*.bicepparam'
+applyTo: 'documents/**, infra/**, **/*.bicep, **/*.bicepparam'
 ---
 
 # 문서/인프라 복구 작업 특별 지침
 
-> 이 레포(`oneot/elevate`)는 공개 레포다. Bicep 설계도와 설계·정책·인수인계 문서는 비공개 레포 `oneot/elevate-infra`에서 관리한다.  
-> 이 레포에 `infra/`나 정책·아키텍처 문서가 없는 것은 의도된 상태이며 **복구 상황이 아니다**.  
+> 이 레포(`oneot/elevate`)는 공개 레포다. Bicep 설계도와 설계·운영 문서는 비공개 레포 `oneot/elevate-infra`에서 관리한다.  
+> 이 레포에 `documents/`, `infra/`가 없는 것은 의도된 상태이며 **복구 상황이 아니다**.  
 > 이 지침은 사용자가 복구 작업을 **명시적으로 요청한 경우에만** 적용한다. 일반 작업 지침은 `.github/copilot-instructions.md`를 참조한다.
 
 ---
@@ -17,16 +17,15 @@ applyTo: 'infra/**, **/*.bicep, **/*.bicepparam'
 
 다음은 복구 조건이 **아니다**:
 
-- 이 레포에 `infra/`, Bicep, 정책·아키텍처 문서(`POLICY.md` 등)가 없는 경우
-- 이 레포의 `documents/`에 일부 문서만 있는 경우
+- 이 레포에 `documents/`, `infra/`, Bicep, 설계·운영 문서(`PLAN.md`, `POLICY.md` 등)가 없는 경우
 
 ---
 
 ## 작업 위치
 
 - 복구 산출물(Bicep, ARM export 증적, 설계·정책·인수인계 문서)은 `oneot/elevate-infra`에만 둔다. 아래 절차의 `infra/`, `documents/` 경로는 모두 `oneot/elevate-infra` 기준이다.
-- 이 공개 레포에서는 앱 코드(`Elevate.Admin/`, `Elevate.Server/`, `Elevate.Web/`)와 설정 파일을 사실 확인용으로 읽기만 한다. 이 레포에 `infra/`·Bicep·export 결과·정책/아키텍처 문서를 만들거나 커밋하지 않는다.
-- `.gitignore`의 `infra` 줄은 실수로 올리는 것을 막는 장치이므로 지우지 않는다.
+- 이 공개 레포에서는 앱 코드(`Elevate.Admin/`, `Elevate.Server/`, `Elevate.Web/`)와 설정 파일을 사실 확인용으로 읽기만 한다. 이 레포에 `documents/`·`infra/`·Bicep·export 결과·설계/운영 문서를 만들거나 커밋하지 않는다.
+- `.gitignore`의 `infra`, `/documents/` 줄은 실수로 올리는 것을 막는 장치이므로 지우지 않는다.
 
 ---
 
@@ -63,7 +62,7 @@ applyTo: 'infra/**, **/*.bicep, **/*.bicepparam'
 
 ## 문서 복구 절차
 
-1. 가장 먼저 `oneot/elevate-infra`의 `documents/01-getting-started/PLAN.md`를 재작성하여 이후 작업의 기준 문서로 복구한다 (이 공개 레포의 PLAN.md가 아니다).
+1. 가장 먼저 `oneot/elevate-infra`의 `documents/01-getting-started/PLAN.md`를 재작성하여 이후 작업의 기준 문서로 복구한다.
 2. 다음 순서로 핵심 문서를 복구한다:
    - `documents/02-governance/POLICY.md`
    - `documents/02-governance/AZURE_POLICY_MAPPING.md`
@@ -97,7 +96,7 @@ applyTo: 'infra/**, **/*.bicep, **/*.bicepparam'
 - 인증 관련 문서는 `Elevate.Admin/`, `Elevate.Server/`의 실제 인증 처리와 일치해야 한다.
 - API 문서는 서버 함수와 컨트롤러 구현과 일치해야 한다.
 - 문서에 기록한 배포 절차는 실제 Azure CLI 또는 운영 절차로 재현 가능해야 한다.
-- 이 공개 레포의 변경에 `infra/`, Bicep, export 증적, 정책·아키텍처·인수인계 문서가 없어야 한다.
+- 이 공개 레포의 변경에 `documents/`, `infra/`, Bicep, export 증적, 설계·운영 문서가 없어야 한다.
 
 ---
 
@@ -108,4 +107,4 @@ applyTo: 'infra/**, **/*.bicep, **/*.bicepparam'
 - 확인되지 않은 정책값이나 운영값을 사실처럼 문서화하는 행위
 - 비밀값, 키, 토큰, 연결 문자열을 문서나 Bicep 기본값으로 넣는 행위
 - 키 기반 인증을 복구 편의상 임시 허용하는 행위
-- 이 공개 레포에 `infra/`, Bicep, export 증적, 정책·아키텍처·인수인계 문서를 만들거나 커밋하는 행위, `.gitignore`의 `infra` 줄을 지우는 행위
+- 이 공개 레포에 `documents/`, `infra/`, Bicep, export 증적, 설계·운영 문서를 만들거나 커밋하는 행위, `.gitignore`의 `infra`, `/documents/` 줄을 지우는 행위
