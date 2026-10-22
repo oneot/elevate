@@ -69,14 +69,14 @@
 - 독립적인 작업은 `dispatching-parallel-agents` Skill을 통해 병렬 처리한다.
 
 ### 4. 브랜치 및 커밋 규칙
-- **브랜치명**: `YoonKeumJae/{작업내용-kebab-case}` 형식, 반드시 `develop`에서 분기
+- **브랜치명**: `oneot-{작업내용-kebab-case}` 형식, 반드시 `main`에서 분기 (Copilot 앱 세션은 `oneot-` 접두사가 자동으로 붙는다). `thumbnail/<앱>/<slug>`, `thumbnail-redraw/<실행 번호>`는 썸네일 워크플로가 만드는 자동화 브랜치다
 - **커밋 단위**: 논리적 변경 단위 1 커밋 (WIP/임시 커밋 금지)
 - **커밋 메시지**: 명령형 현재시제 영문 subject, 필요 시 한국어 body 허용
 - **커밋 트레일러**: 아래 트레일러를 모든 커밋에 반드시 포함
   ```
   Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
   ```
-- **PR 대상**: upstream(`oneot/elevate`)의 `develop` 브랜치
+- **PR 대상**: `oneot/elevate`의 `main` 브랜치 (포크가 아닌 같은 레포의 브랜치에서 연다)
 
 ### 5. GitHub commit/push 금지
 - **사용자가 명시적으로 요청하지 않는 한, 코드 변경 사항을 에이전트가 GitHub에 커밋하거나 푸시하는 행위는 절대 금지한다.**
