@@ -5,6 +5,9 @@
   "postUpdatedAt": "2026-10-22T07:46:13.533Z",
   "contentHash": "sha256:e8427130e86528d56a058eeec8b4578fe172eb92f0c5987c929aa219fc1bbcca",
   "origin": "ai",
-  "excerpt": "이메일로 GitHub 계정을 만들고 인증 앱이나 SMS로 2차 인증까지 등록해 계정을 지킵니다.",
-  "generatedAt": "2026-10-22T07:59:46.056Z"
+  "mascots": [
+    "copilot-turn",
+    "mona-34b"
+  ],
+  "generatedAt": "2026-10-22T09:29:58.988Z"
 }

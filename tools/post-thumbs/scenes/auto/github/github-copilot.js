@@ -1,55 +1,62 @@
-/* github/github-copilot — GitHub Copilot chat: syntax check, then a modern redesign handed back as code to copy and commit. */
+/* github/github-copilot — vibe coding loop: ask Copilot to recolour the web app, copy the full code, see it live on Pages. */
 (() => {
   scene('github/github-copilot', (K) => {
-    const code = ['34%', '58%', '76%', '50%', '68%'].map((w, i) => `<div class="cl" style="--in:${[0, 2.4, 4.8, 4.8, 2.4][i]}cqw"><i style="width:${w};--c:${['#d2a8ff', '#79c0ff', '#7ee787', '#ffa657', '#79c0ff'][i]}"></i></div>`).join('');
+    const sk = (w) => `<i class="sk" style="width:${w}cqw"></i>`;
     return K.win({
-      x: 31, y: 8.5, w: 65, h: 51, z: 2, icon: false, title: 'Copilot', sub: ' · index.html',
+      x: 4, y: 10.5, w: 58, h: 50, z: 2, icon: false, title: 'Copilot', sub: ' · index.html',
       body: `<div class="ct">
-        ${K.bubble('문법 검사해줘.', { me: true })}
-        <div class="rp">
-          <span class="av">${K.ico('bot_sparkle', { s: 2.6 })}</span>
-          <div class="rb"><b>오류와 개선 사항을 찾았어요</b><div class="row">${K.chip('닫는 태그 누락', { dot: 'var(--red)' })}${K.chip('버튼 접근성', { dot: 'var(--amber)' })}</div></div>
-        </div>
-        ${K.bubble('모던하고 세련된 디자인으로 수정해 줘', { me: true })}
+        ${K.bubble('강조 색상을 보라색으로 변경해줘', { me: true })}
+        <div class="rp"><span class="av">${K.ico('bot_sparkle', { s: 2.6 })}</span><b>기존 기능은 그대로 유지했어요</b></div>
         <div class="cb hl">
           <div class="cbh"><span>html</span><span class="grow"></span>${K.btn('Copy code', { primary: true, icon: 'copy:r' })}</div>
-          <div class="cbd">${code}</div>
+          <div class="cbd">
+            <div class="l">${sk(14)}</div>
+            <div class="l del"><span class="mk">-</span><span class="v">--accent: #2563eb;</span></div>
+            <div class="l add"><span class="mk">+</span><span class="v">--accent: #7c3aed;</span><i class="sw"></i></div>
+            <div class="l">${sk(20)}</div>
+          </div>
         </div>
       </div>`,
     })
       + K.card({
-        x: 3.5, y: 17, w: 27.5, cls: 'ed',
-        body: `<div class="eh">${K.ico('edit', { s: 2.6, c: 'rgb(var(--tint))' })}<b>index.html</b></div>
-          <div class="es">${K.skel('86%')}${K.skel('64%')}</div>
-          ${K.btn('Commit changes', { primary: true })}`,
+        x: 59, y: 21, w: 35, z: 3, cls: 'wa',
+        body: `<div class="url">${K.ico('lock_closed', { s: 2 })}oneot.github.io/ai</div>
+          <div class="hero"><b>무엇이든 물어보세요</b>${K.skel('70%')}</div>
+          ${K.prompt('메시지 입력')}`,
       })
-      + K.mascot('copilot-front', { right: 7, y: 0.4, w: 11, z: 1 })
-      + K.tile({ x: 26.4, y: 3.4, s: 10.5 })
-      + K.float({ x: 6, y: 5, icon: 'globe', s: 6, far: true })
-      + K.pill({ x: 4, bottom: 4.6, icon: 'sparkle', text: '대화로 다듬는 웹앱' });
+      + K.mascot('copilot-front', { x: 59, y: 0.6, w: 24, z: 1 })
+      + K.tile({ x: 1.4, y: 4.6, s: 10 })
+      + K.pill({ right: 4, bottom: 2.6, icon: 'sparkle', text: '말 한마디로 디자인 수정' });
   }, {
-    deco: { big: 'ribbon', small: false, v: 1 },
+    deco: { big: 'ribbon', small: 'sphere', v: 0 },
     css: `
-      .win__bar { padding-left: 11.6cqw; padding-right: 2.4cqw; }
-      .ct { height: 100%; display: flex; flex-direction: column; gap: 1.5cqw; padding: 2.4cqw 3cqw 0; }
-      .ct .bubble { align-self: flex-end; max-width: 80%; padding: 1cqw 1.8cqw; font-size: 2.4cqw; white-space: nowrap; }
-      .rp { display: flex; align-items: flex-start; gap: 1.4cqw; }
+      .win__bar { padding-left: 10.4cqw; }
+      .ct { height: 100%; display: flex; flex-direction: column; gap: 1.8cqw; padding: 2.6cqw 3cqw 0; }
+      .ct .bubble { align-self: flex-end; max-width: 90%; padding: 1.1cqw 1.9cqw; font-size: 2.6cqw; white-space: nowrap; }
+      .rp { display: flex; align-items: center; gap: 1.3cqw; }
+      .rp b { font-size: 2.6cqw; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
       .av { flex: none; display: grid; place-items: center; width: 4.4cqw; height: 4.4cqw; border-radius: 50%; background: var(--grad); color: #fff; }
-      .rb { display: flex; flex-direction: column; gap: 1.2cqw; }
-      .rb b { font-size: 2.7cqw; font-weight: 750; letter-spacing: -0.02em; white-space: nowrap; }
-      .rb .row { gap: 1cqw; }
-      .rb .chip { font-size: 2.1cqw; white-space: nowrap; }
       .cb { border-radius: 1.6cqw; overflow: hidden; background: #fff; }
       .cbh { display: flex; align-items: center; padding: 1cqw 1cqw 1cqw 2cqw; background: #f3f1fb; font-family: var(--mono); font-size: 2.2cqw; font-weight: 650; color: var(--ink-3); }
-      .cbh .btn { font-family: var(--font); font-size: 2.3cqw; padding: .9cqw 1.6cqw; }
-      .cbd { display: flex; flex-direction: column; gap: 1.3cqw; padding: 1.8cqw 2cqw 3cqw; background: #1f2430; }
-      .cl { padding-left: var(--in); }
-      .cl i { display: block; height: 1.3cqw; border-radius: 99px; background: var(--c); opacity: .85; }
-      .ed { z-index: 3; display: flex; flex-direction: column; gap: 1.8cqw; padding: 2.6cqw; }
-      .eh { display: flex; align-items: center; gap: 1cqw; }
-      .eh b { font-family: var(--mono); font-size: 2.4cqw; font-weight: 700; }
-      .es { display: flex; flex-direction: column; gap: 1.1cqw; }
-      .ed .btn { align-self: flex-start; font-size: 2.4cqw; padding: 1.1cqw 2cqw; }
+      .cbh .btn { font-family: var(--font); font-size: 2.4cqw; padding: .9cqw 1.7cqw; }
+      .cbd { display: flex; flex-direction: column; padding: 1.4cqw 0 3cqw; background: #1f2430; font-family: var(--mono); }
+      .l { display: flex; align-items: center; gap: 1.2cqw; height: 4.4cqw; padding: 0 2cqw; }
+      .l .mk { width: 1.6cqw; font-size: 2.6cqw; font-weight: 700; }
+      .l .v { font-size: 2.6cqw; font-weight: 650; color: #e6edf3; white-space: nowrap; }
+      .l.del { background: rgba(248, 81, 73, .18); }
+      .l.del .mk { color: #ff7b72; }
+      .l.del .v { color: #ffb4ad; text-decoration: line-through; text-decoration-color: rgba(255, 123, 114, .7); }
+      .l.add { background: rgba(46, 160, 67, .24); }
+      .l.add .mk { color: #7ee787; }
+      .sw { width: 2.6cqw; height: 2.6cqw; border-radius: .7cqw; background: #7c3aed; box-shadow: 0 0 0 .25cqw rgba(255, 255, 255, .7); }
+      .sk { display: block; height: 1.3cqw; margin-left: 2.8cqw; border-radius: 99px; background: rgba(255, 255, 255, .16); }
+      .wa { display: flex; flex-direction: column; gap: 1.8cqw; padding: 2.2cqw 2.6cqw 2.4cqw; --tint: 124, 58, 237; }
+      .url { align-self: flex-start; display: inline-flex; align-items: center; gap: .7cqw; padding: .6cqw 1.5cqw .6cqw 1.2cqw; border-radius: 99px; background: var(--fill); font-size: 2.1cqw; font-weight: 650; color: var(--ink-2); white-space: nowrap; }
+      .url .ico { color: var(--ink-3); }
+      .hero { display: flex; flex-direction: column; gap: 1.1cqw; }
+      .hero b { font-size: 3cqw; font-weight: 800; letter-spacing: -0.03em; white-space: nowrap; color: #5b21b6; }
+      .wa .prompt { font-size: 2.2cqw; }
+      .wa .prompt .send { background: #7c3aed; }
     `,
   });
 })();

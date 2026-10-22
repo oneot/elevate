@@ -5,5 +5,8 @@
   "postUpdatedAt": "2026-10-16T10:18:09.760Z",
   "contentHash": "sha256:18f29c638b97ca7f0d8428d220d012137089be7c78452d9c460edd8e745018ea",
   "origin": "ai",
-  "generatedAt": "2026-10-21T00:44:05.685Z"
+  "mascots": [
+    "ducky-front"
+  ],
+  "generatedAt": "2026-10-22T09:29:30.889Z"
 }

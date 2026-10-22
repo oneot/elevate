@@ -1,50 +1,41 @@
-/* github/github — sign-up form with Create account, then two-factor methods in settings/security */
+/* github/github — settings/security: two-factor methods with the authenticator app configured */
 (() => {
   scene('github/github', (K) => {
-    const fd = (label, value, cls = '') => `<div class="fd ${cls}"><small>${label}</small><div class="in">${value}</div></div>`;
-    const mt = (icon, name, on) => `<div class="mt${on ? ' on' : ''}">${K.ico(icon, { s: 3 })}<b>${name}</b>${on ? K.ico('checkmark_circle', { s: 3, c: 'var(--green)' }) : K.skel(4.6, { h: 1.3 })}</div>`;
+    const row = (icon, name, sub, end, on) => `<div class="mt${on ? ' on hl' : ''}"><span class="mi">${K.ico(icon, { s: 3.2 })}</span>
+      <div class="grow"><b>${name}</b>${sub ? `<small>${sub}</small>` : K.skel('60%', { h: 1.2 })}</div>${end}</div>`;
     return K.win({
-      x: 5, y: 9, w: 60, h: 50, icon: false, title: 'github.com/signup',
-      body: `<div class="su">
-        <p class="h">Sign up to GitHub</p>
-        <div class="sso"><span>Continue with Google</span><span>Apple</span></div>
-        ${fd('Email', 'kim@school.kr')}
-        ${fd('Password', '<span class="dots">••••••••••</span>')}
-        <div class="go hl">${K.btn('Create account', { primary: true })}</div>
+      x: 38, y: 9.5, w: 58, h: 50, z: 2, icon: false,
+      title: `<span class="url">${K.ico('lock_closed', { s: 2.2 })}github.com/settings/security</span>`,
+      body: `<div class="pg">
+        <div class="hd">${K.ico('shield_lock', { s: 3.6, c: 'rgb(var(--tint))' })}<p class="h">Two-factor authentication</p></div>
+        ${row('phone_key', 'Authenticator app', 'Microsoft Authenticator', K.ico('checkmark_circle', { s: 4.6, c: 'var(--green)' }), true)}
+        ${row('chat', 'SMS/Text message', '', K.btn('Add', { line: true }))}
+        ${row('phone', 'GitHub Mobile', '', K.btn('Add', { line: true }))}
       </div>`,
     })
-      + K.card({
-        x: 59, y: 18.5, w: 36, cls: 'tf',
-        body: `<div class="th">${K.ico('shield_lock', { s: 3.2, c: 'rgb(var(--tint))' })}<b>Two-factor methods</b></div>
-          ${mt('phone_key', 'Authenticator app', true)}
-          ${mt('chat_lock', 'SMS', false)}
-          ${mt('phone', 'GitHub Mobile', false)}`,
-      })
-      + K.tile({ x: 1.4, y: 4.2, s: 10.5 })
-      + K.float({ x: 70, bottom: 1.8, icon: 'mail_checkmark', s: 6.4 })
-      + K.pill({ right: 4, y: 4.4, icon: 'shield_checkmark', text: '가입부터 2차 인증까지' });
+      + K.tile({ x: 33.6, y: 4.4, s: 10.5, z: 3 })
+      + K.mascot('mona-34b', { x: 19, y: 11, w: 17, z: 1 })
+      + K.mascot('copilot-turn', { x: 3, bottom: -2, w: 26, z: 3 })
+      + K.pill({ right: 4, y: 2.2, icon: 'shield_checkmark', text: '2차 인증으로 계정 지키기' });
   }, {
-    deco: { big: 'sphere', small: 'bubbles', v: 0 },
+    deco: { big: 'sphere', small: 'bubbles', v: 1 },
     css: `
-      .win__bar { padding-left: 11cqw; }
-      .su { height: 100%; display: flex; flex-direction: column; gap: 1.6cqw; width: 52cqw; padding: 2.4cqw 4.6cqw 0; }
-      .h { font-size: 3.3cqw; font-weight: 750; letter-spacing: -0.02em; }
-      .sso { display: flex; gap: 1.4cqw; }
-      .sso span { flex: 1; display: grid; place-items: center; height: 4.4cqw; border-radius: 1.2cqw; background: #fff; box-shadow: inset 0 0 0 .2cqw var(--line-2); font-size: 2.2cqw; font-weight: 650; color: var(--ink-2); white-space: nowrap; }
-      .sso span:last-child { flex: none; width: 13cqw; }
-      .fd { display: flex; flex-direction: column; gap: .5cqw; }
-      .fd small { font-size: 2.2cqw; font-weight: 650; color: var(--ink-3); }
-      .fd .in { display: flex; align-items: center; height: 4.6cqw; padding: 0 1.8cqw; border-radius: 1.2cqw; background: #fff; box-shadow: inset 0 0 0 .2cqw var(--line-2); font-size: 2.6cqw; font-weight: 650; white-space: nowrap; }
-      .dots { letter-spacing: .18em; color: var(--ink-2); }
-      .go { margin-top: .4cqw; border-radius: 1.6cqw; }
-      .go .btn { width: 100%; justify-content: center; height: 5.6cqw; font-size: 2.8cqw; font-weight: 750; }
-      .tf { z-index: 3; display: flex; flex-direction: column; gap: 1.3cqw; padding: 2.6cqw; }
-      .th { display: flex; align-items: center; gap: 1cqw; margin-bottom: .4cqw; }
-      .th b { font-size: 2.6cqw; font-weight: 750; letter-spacing: -0.02em; white-space: nowrap; }
-      .mt { display: flex; align-items: center; gap: 1.2cqw; padding: 1.2cqw 1.6cqw; border-radius: 1.3cqw; background: var(--fill); color: var(--ink-3); }
-      .mt b { flex: 1; font-size: 2.3cqw; font-weight: 650; color: var(--ink-2); white-space: nowrap; }
-      .mt.on { background: color-mix(in srgb, rgb(var(--tint)) 10%, #fff); box-shadow: 0 0 0 .3cqw color-mix(in srgb, rgb(var(--tint)) 55%, #fff); color: rgb(var(--tint)); }
-      .mt.on b { font-weight: 750; color: var(--ink); }
+      .win__bar { padding-left: 8.4cqw; }
+      .win__bar .url { display: inline-flex; align-items: center; gap: .8cqw; padding: .7cqw 1.8cqw .7cqw 1.4cqw; border-radius: 99px; background: var(--fill); font-size: 2.2cqw; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+      .win__bar .url .ico { color: var(--ink-3); }
+      .pg { height: 100%; display: flex; flex-direction: column; gap: 1.8cqw; padding: 3cqw 3.2cqw 0; }
+      .hd { display: flex; align-items: center; gap: 1.2cqw; padding-bottom: 1.6cqw; border-bottom: .2cqw solid var(--line); }
+      .h { font-size: 3.1cqw; font-weight: 750; letter-spacing: -0.02em; white-space: nowrap; }
+      .mt { display: flex; align-items: center; gap: 1.6cqw; padding: 1.5cqw 1.8cqw; border-radius: 1.6cqw; background: rgba(255, 255, 255, .7); box-shadow: inset 0 0 0 .2cqw var(--line-2); }
+      .mi { display: grid; place-items: center; flex: none; width: 5.4cqw; height: 5.4cqw; border-radius: 1.4cqw; background: var(--fill); color: var(--ink-3); }
+      .mt b { display: block; font-size: 2.6cqw; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
+      .mt small { display: block; margin-top: .3cqw; font-size: 2.1cqw; font-weight: 600; color: var(--ink-3); white-space: nowrap; }
+      .mt .skel { margin-top: .9cqw; }
+      .mt .btn { padding: .9cqw 2cqw; font-size: 2.3cqw; }
+      .mt.on { background: color-mix(in srgb, rgb(var(--tint)) 9%, #fff); box-shadow: 0 0 0 .3cqw color-mix(in srgb, rgb(var(--tint)) 55%, #fff), 0 2.4cqw 4.8cqw -2.4cqw rgba(var(--tint), .6); }
+      .mt.on .mi { background: var(--grad); color: #fff; }
+      .mt.on b { color: var(--ink); font-size: 2.8cqw; }
+      .mt.on .grow { min-width: 0; }
     `,
   });
 })();
