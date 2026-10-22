@@ -102,12 +102,20 @@ Vitest와 jsdom은 개발 의존성입니다. 테스트는 실제 React 화면�
 
 ## 웹챗 연결과 가독성
 
-사이트 진입 시 WebChat 모듈 다운로드와 기존 `VITE_BOT_TOKEN_ENDPOINT`의 토큰 요청을
+사이트 진입 시 WebChat 모듈 다운로드와 `VITE_BOT_TOKEN_ENDPOINT`의 토큰 요청을
 병렬로 시작하고, 준비되는 즉시 숨겨진 WebChat을 마운트하여 실제 Direct Line 연결을 시작합니다.
 홈뿐 아니라 `/all` 등 직접 진입에서도 동일합니다. 클릭·hover·idle callback을 기다리지 않으며,
 페이지 라우팅과 첫 렌더링은 모듈·토큰·연결 응답을 기다리지 않습니다.
 **채팅을 열지 않아도 네트워크를 사용하는 의도적인 변경**입니다. SDK는 여전히 별도 비동기 청크이며,
 다운로드 크기나 실제 네트워크 지연을 없애는 방식은 아닙니다.
+
+토큰 주소는 Elevate API의 `GET /api/public/chat-token`입니다
+(예: `VITE_BOT_TOKEN_ENDPOINT=https://<elevate-api-host>/api/public/chat-token`).
+서버가 앱 설정 `DIRECT_LINE_SECRET`(Copilot Studio Direct Line 비밀값)으로 토큰을 발급받아
+`{ "token": "..." }`만 돌려주므로 비밀값은 브라우저와 저장소에 두지 않습니다.
+응답은 `Cache-Control: no-store`이고 Direct Line 호출은 8초로 제한합니다.
+설정이 없으면 503, Direct Line 오류는 502, 시간 초과는 504로 답합니다. 오류 응답 본문에는 상태 이름(`code`)과
+일반 메시지, `correlationId`만 담고, 원인은 서버 로그에 Direct Line 상태 코드로만 남깁니다.
 
 창은 처음에는 닫혀 있습니다. 열기/닫기는 표시만 바꾸며 같은 연결과 대화 store를 유지합니다.
 라우트 이동도 세션을 유지하고, `/elevathon`에서는 기존처럼 버튼과 창만 숨깁니다.

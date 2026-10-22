@@ -8,7 +8,7 @@ React 공개 사이트와 관리자, Azure Functions API를 관리하는 저장�
 | --- | --- | --- |
 | [Elevate.Web](Elevate.Web/README.md) | 게시글·활동 영상·행사·챗 UI | `src/main.jsx`, `src/App.jsx` |
 | [Elevate.Admin](Elevate.Admin/README.md) | MSAL 인증, 13개 앱별 게시글 작성·편집, 이미지·첨부 업로드 | `src/main.jsx`, `src/App.jsx` |
-| Elevate.Server | 공개/관리자 API, Cosmos DB, Blob SAS | `src/functions/index.js` |
+| Elevate.Server | 공개/관리자 API, Cosmos DB, Blob SAS, 웹챗 토큰 발급 | `src/functions/index.js` |
 
 ## 개발 환경
 
@@ -29,7 +29,9 @@ npm --prefix Elevate.Server ci
 Web/Admin은 각 앱의 `.env.example`을 참고합니다. Admin 실행에는 해당 환경의
 MSAL 설정과 `/api/admin` API 기준 URL이 필요합니다. Server 로컬 설정 예시는
 `Elevate.Server/local.settings.json.example`이며, 실제 인증·리소스 값은 운영 확인 후
-별도로 주입해야 합니다. 비밀값이나 실제 로컬 설정 파일을 커밋하지 않습니다.
+별도로 주입해야 합니다. 웹챗 토큰 발급(`GET /api/public/chat-token`)에는 Copilot Studio
+Direct Line 비밀값을 앱 설정 `DIRECT_LINE_SECRET`으로 넣으며, 예시 파일에는 빈 값으로 둡니다.
+비밀값이나 실제 로컬 설정 파일을 커밋하지 않습니다.
 
 ```bash
 npm --prefix Elevate.Web run dev
