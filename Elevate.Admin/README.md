@@ -145,7 +145,7 @@ PR 브랜치에서 저장소 검사(Repository checks)를 통과하면 사람 �
 - API 토큰 검증, CORS 허용 origin은 Server/Azure 설정입니다. 관리자 호스트의 origin
   (`https://admin.microsoft-elevate.com`, 기본 호스트)은 Function App CORS와 Storage Blob CORS에 모두 있어야 합니다.
   본문 이미지·첨부 업로드는 브라우저가 사용자 위임 SAS로 Blob에 바로 PUT하므로 Blob CORS가 빠지면 업로드만 실패합니다.
-  현재 값과 확인 방법은 [배포 런북](../documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md#인증cors-전제-2026-10-20-코디네이터-확인)에 있습니다.
+  현재 값과 확인 방법은 비공개 레포 `oneot/elevate-infra`의 배포·운영 런북에 있습니다.
 
 ## 환경 변수
 
@@ -188,4 +188,4 @@ npm run sync:post-content   # Web 본문 CSS를 바꾼 뒤 편집기용 복사�
    공개 사이트 화면 문구(`Elevate.Web/src/constants/postText.js`)가 바뀌었을 때 실행됩니다.
 3. 배포 후 두 호스트에서 각각 로그인·목록(카드 썸네일이 공개 사이트와 같은지)·앱별 새 글 저장(보관)·게시·편집·로그아웃을 확인합니다.
 
-자세한 운영 절차는 [배포 런북](../documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md#관리자-배포와-도메인)을 참고합니다.
+자세한 운영 절차는 비공개 레포 `oneot/elevate-infra`의 배포·운영 런북을 참고합니다.

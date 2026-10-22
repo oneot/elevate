@@ -55,17 +55,19 @@ Server 실행은 Azure Functions Core Tools가 설치된 환경에서
 Web의 필수 SEO 메타데이터 수집은 로컬 HTTP fixture로, UI는 jsdom과 모의 API로 확인합니다.
 CI용 빌드는 운영 API·Entra·SAS 비밀값을 사용하지 않습니다.
 실제 Azure 연결 테스트(`npm run test:azure`)는 별도 선택 검증입니다.
+실제 실행한 명령과 검증하지 못한 범위는 PR에 구분해 기록합니다.
 
 ## 배포와 문서
 
-기존 배포 경계는 `main` → GitHub Pages, `admin` → Azure Static Web Apps입니다.
+기존 배포 경계는 `main` → GitHub Pages(`.github/workflows/deploy.yml`),
+`admin` → Azure Static Web Apps(`.github/workflows/deploy-admin-azure-swa.yml`)입니다.
 Admin 변경은 `main`에 병합한 뒤 `main`을 `admin`에 병합해야 배포됩니다.
 기본 브랜치나 운영 리소스를 이 문서만으로 변경하지 않습니다. Server 배포 워크플로는
 현재 저장소에 없으며 실제 배포 절차는 운영 확인이 필요합니다.
 
-- [개발 기준과 문서 복구 범위](documents/01-getting-started/PLAN.md)
-- [전체 주요 경로 분석과 모더나이즈 근거](documents/04-application/MODERNIZATION.md)
-- [배포·접속 장애 런북](documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md)
+개발 기준, 변경 기록(모더나이즈), 배포·접속 장애 런북, 설계·정책·인수인계 문서와
+인프라(Bicep)는 비공개 레포 `oneot/elevate-infra`에서 관리합니다.
+이 레포에는 `documents/`, `infra/`를 두지 않습니다.
 
 **VPN 경유 공개 API 접속 장애는 미해결·보류 상태입니다.**
 콘텐츠 스냅샷 전환, 새 프록시·호스팅, Git 이력 재작성은 이번 개선에 포함하지 않습니다.

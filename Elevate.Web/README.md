@@ -40,7 +40,7 @@ GET의 네트워크 오류 및 502/503/504는 300ms 후 한 번만 자동 재시
 
 VPN 연결 상태에서 API의 TCP 연결이 차단되는 문제는 이 클라이언트 처리만으로 해결되지 않습니다.
 정적 GitHub Pages는 API 프록시가 아니므로 네트워크 담당자의 기존 공개 API 접근 경로 확인이 필요합니다.
-VPN on/off 재현 방법과 운영 조치는 [접속 장애 런북](../documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md#http--vpn-접속-장애)을 참고하세요.
+VPN on/off 재현 방법과 운영 조치는 비공개 레포 `oneot/elevate-infra`의 배포·운영 런북("HTTP / VPN 접속 장애")을 참고하세요.
 
 ## 블로그 사이드바
 
@@ -140,7 +140,7 @@ npm test -- tests/chat-widget.test.jsx tests/webchat-module.test.js
 느린 토큰/연결, 첫 클릭 전 요청, 준비된 연결 재사용, 라우트·취소·만료·명시적 재시도,
 SDK/청크 실패 격리 및 불투명한 표면을 모의로 검증합니다.
 실제 SDK를 사용한 로컬 브라우저 지연·화면 확인 근거와 한계는
-[모더나이즈 문서의 웹챗 후속 개선](../documents/04-application/MODERNIZATION.md#웹챗-후속-개선-2026-10-18)을 참고하세요.
+비공개 레포 `oneot/elevate-infra`의 모더나이즈 문서("웹챗 후속 개선 (2026-10-18)")를 참고하세요.
 
 ## 활동 영상과 SEO 빌드
 
@@ -159,14 +159,6 @@ VITE_API_BASE_URL= REQUIRE_API_ROUTES=false npm run generate:seo-routes
 
 ## 문서
 
-모든 상세 문서는 저장소 루트 `documents/` 폴더에 있습니다.
-
-| 문서 | 위치 |
-|------|------|
-| 개발·검증 시작점 | [README.md](../README.md) |
-| 프로젝트 전체 계획 | [documents/01-getting-started/PLAN.md](../documents/01-getting-started/PLAN.md) |
-| 전체 주요 경로 분석·변경 근거 | [MODERNIZATION.md](../documents/04-application/MODERNIZATION.md) |
-| 배포 및 운영 | [documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md](../documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md) |
-
-현재 없는 아키텍처·정책 문서는 복구된 PLAN의 확인 범위에 따르며,
-누락된 운영 구성을 코드만으로 추정하지 않습니다.
+개발·검증 시작점은 [루트 README](../README.md)입니다.
+개발 기준, 변경 기록(모더나이즈), 배포·운영 런북, 아키텍처·정책 문서와 인프라(Bicep)는
+비공개 레포 `oneot/elevate-infra`에서 관리하며, 운영 구성을 코드만으로 추정하지 않습니다.
