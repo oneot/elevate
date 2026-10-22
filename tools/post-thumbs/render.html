@@ -18,6 +18,14 @@
   body.export { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; width: 2000px; }
   body.zoom { padding: 0; }
   body.zoom .thumb { width: 960px; }
+  /* Mascot audit of GitHub AI scenes (render.mjs auditMascots): a flat green stage with no glow or fluid forms and no mascot
+     shadow, so only the mascots and the UI over them change between the screenshots. Never applied to an exported image. */
+  .tD.km-measure { background: #00ff00 !important; }
+  .tD.km-measure::before { display: none !important; }
+  .tD.km-measure > .deco { visibility: hidden !important; }
+  .tD.km-measure .mascot { filter: none !important; }
+  .tD.km-measure .mascot.km-hide { visibility: hidden !important; }
+  .tD.km-measure .mascot.km-raise { z-index: 2147483647 !important; }
 </style>
 </head>
 <body>
@@ -114,6 +122,65 @@
     });
     return issues;
   }
+
+  // GitHub AI scenes (v3): where each mascot is and what could lie under it. render.mjs screenshots the stage with each
+  // mascot raised and hidden to count the pixels where it is really seen, then judges them (lib/mascots.mjs checkMascots).
+  const thumbOf = (key) => [...document.querySelectorAll('.thumb[data-key]')].find((el) => el.dataset.key === key);
+  window.mascotLayout = (key) => {
+    const thumb = thumbOf(key);
+    const stage = thumb && thumb.querySelector('.tD');
+    const scene = window.SCENES[key];
+    if (!stage || !scene || !scene.auto || !stage.classList.contains('fluid') || key.split('/')[0] !== 'github') return null;
+    const box = thumb.getBoundingClientRect();
+    const cqw = box.width / 100;
+    const rel = (r) => ({ x: r.left - box.left, y: r.top - box.top, w: r.right - r.left, h: r.bottom - r.top });
+    const clip = (r, c) => {
+      const left = Math.max(r.left, c.left); const top = Math.max(r.top, c.top);
+      const right = Math.min(r.right, c.right); const bottom = Math.min(r.bottom, c.bottom);
+      return right > left && bottom > top ? { left, top, right, bottom } : null;
+    };
+    const mascots = [...stage.querySelectorAll('img.mascot')].map((el) => {
+      const r = el.getBoundingClientRect();
+      const src = el.getAttribute('src') || '';
+      // The screenshots compare the stage with itself, so a faded or blurred mascot would still count as seen.
+      let opacity = 1;
+      let blur = false;
+      for (let n = el; n && n !== stage; n = n.parentElement) {
+        const style = getComputedStyle(n);
+        opacity *= Number(style.opacity);
+        blur = blur || /blur\(/.test(style.filter);
+      }
+      // Rotation makes the box wider than the image, a CSS scale makes the image smaller than its layout width.
+      return { name: (/([^/]+)\.png$/.exec(src) || [])[1] || src, w: Math.min(el.offsetWidth, r.width) / cqw, size: { w: el.offsetWidth, h: el.offsetHeight }, rect: rel(r), opacity, blur };
+    });
+    // Only the part of each text that can be seen: inside its clipping box and the stage.
+    const texts = [];
+    const walker = document.createTreeWalker(stage, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      const text = node.textContent.trim();
+      const el = node.parentElement;
+      if (!text || el.closest('style')) continue;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const r = range.getBoundingClientRect();
+      if (!r.width || !r.height) continue;
+      const seen = clip(r, el.closest('.win, .card, .phone__screen, .slide, .page, .node, .tD').getBoundingClientRect());
+      const onStage = seen && clip(seen, box);
+      if (onStage) texts.push({ text, rect: rel(onStage) });
+    }
+    const tiles = [...stage.querySelectorAll('.k-tile')].map((el) => ({ rect: rel(el.getBoundingClientRect()) }));
+    return { width: box.width, height: box.height, cqw, mascots, texts, tiles, floats: stage.querySelectorAll('.k-float').length };
+  };
+  /** state: {} draws every mascot, { raise: i } puts mascot i on top, { hide: [i…] } hides mascots, null restores the stage. */
+  window.mascotMeasure = (key, state) => {
+    const stage = thumbOf(key).querySelector('.tD');
+    stage.classList.toggle('km-measure', state != null);
+    stage.querySelectorAll('img.mascot').forEach((el, i) => {
+      el.classList.toggle('km-raise', Boolean(state && state.raise === i));
+      el.classList.toggle('km-hide', Boolean(state && state.hide && state.hide.includes(i)));
+    });
+  };
 
   async function settle() {
     await document.fonts.ready;

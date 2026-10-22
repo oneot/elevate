@@ -5,5 +5,8 @@
   "postUpdatedAt": "2026-10-16T08:32:06.205Z",
   "contentHash": "sha256:7b40f9fbb52ffc99deb46109a52a48eb25a9aa994911e2434d4aab445e69b872",
   "origin": "ai",
-  "generatedAt": "2026-10-21T00:47:36.648Z"
+  "mascots": [
+    "copilot-front"
+  ],
+  "generatedAt": "2026-10-22T09:29:23.502Z"
 }

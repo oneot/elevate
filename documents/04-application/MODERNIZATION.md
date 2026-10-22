@@ -553,6 +553,51 @@ Repository checks에서 `thumbnail-tools-checks`가 다시 실행 후에도 실�
   - 스크립트를 `node --test`로 되돌리면 회귀 테스트가 실패한다(장면 5개 모두 실행).
   - 안쪽 실행에 `NODE_TEST_CONTEXT`를 남겨 파일을 건너뛰게 해도 회귀 테스트가 실패한다.
 
+### GitHub 썸네일 마스코트 (2026-10-22, 13차)
+
+사용자 요청: "방금 만들어진 썸네일 낫배드인데, 깃허브 게시물 들은 첨부한 마스코드들이 조금 더 크게 배치가 되어서 다른 게시물들 보다 조금 더 귀여운 느낌이 나면 좋을 것 같아."
+사용자 결정: "마스코트가 글 당 1-2마리 랜덤하게 들어가면 좋을 듯 일단 샘플 5개 줘봐".
+첨부한 마스코트 15장은 `tools/post-thumbs/assets/mascots`의 파일과 바이트까지 같아 그림은 추가하지 않았다. 대상은 GitHub 글뿐이다.
+
+- **배정** (`lib/mascots.mjs`):
+  - 마리 수(1~2)는 반반, 캐릭터(Mona·Copilot·Ducky)와 자세(캐릭터마다 5개)는 다른 GitHub 글이 덜 쓴 것을 먼저, 같으면 무작위로 고른다. 두 마리면 서로 다른 캐릭터이고 첫째가 주인공이다.
+  - 처음에는 순수 무작위로 시범 5개를 그렸다. 그림은 좋았지만 Copilot이 한 번도 나오지 않고 `ducky-down`·`mona-34`가 두 번씩 나왔다.
+    5개 글에 순수 무작위로 배정하면 같은 자세가 겹칠 확률이 약 81%(시뮬레이션 20만 번)라, 카드가 모이는 GitHub 목록에서 되풀이가 보인다.
+  - plan(`plan.mjs`, `redraw.mjs plan`)이 한 실행의 글을 차례로 배정해 generate job의 `MASCOTS`로 넘긴다. 그래서 동시에 그리는 글끼리도 겹치지 않는다.
+    없으면 `prepare.mjs`가 같은 방법으로 고른다. workflow는 generate job 환경 변수 한 줄씩만 바꿨다.
+  - 배정은 작업 지시(`TASK.md`의 `{{MASCOTS}}`, GitHub가 아니면 빈 문자열)와 버전 기록(`sources/github/<slug>.json`의 `mascots`)에 남고, 다음 배정의 기준이 된다.
+- **크기·자리** (STYLE_GUIDE 'GitHub 마스코트'): 주인공 w 22~28cqw, 둘째 15~19cqw(이전 장면은 w 11). 자리를 만들려고 주 화면은 52~64%, `K.float`는 0~1개다.
+  창 모서리 뒤에서 내다보기, 창·카드 위에 앉히기 예시를 넣었다. 그림 원본이 폭 207~325px이라 28cqw(960px 이미지에서 269px)까지 거의 1:1이다.
+- **검사** (`render.mjs` zoom·export, `validate.mjs`):
+  - GitHub AI 장면만 본다. 배정과 다른 마스코트, 주인공 20cqw·둘째 14cqw 미만이나 30cqw 초과, 둘째가 주인공보다 큼, 60% 미만으로 보임, 흐림·투명, 글자(1cqw² 이상)·앱 타일(15% 초과)을 덮음, `K.float` 2개 이상이면 audit 경고다.
+  - 렌더러가 무대를 초록 단색으로 바꾸고 마스코트 그림자를 끈 뒤, 마스코트마다 맨 위로 올린 무대와 숨긴 무대를 찍어 실제로 보이는 픽셀을 센다.
+    유리 창 뒤에 비쳐 보이는 부분과 무대 밖으로 잘린 부분은 보이지 않는 것으로 센다. 내보낼 이미지를 찍은 뒤에 재므로 이미지는 바뀌지 않는다.
+  - `review`(같은 앱 비교 화면)에서는 재지 않는다. AI가 고칠 수 없는 다른 카드의 경고를 보지 않게 하려는 것이다.
+  - validate는 같은 렌더를 다시 하고, GitHub 글에 배정이 없으면 거부한다.
+- **다른 앱**: 작업 지시가 글자 하나 다르지 않고(`{{MASCOTS}}`가 빈 문자열), kit는 바꾸지 않았다. 전체 81개를 내보내 비교하니 162장이 바이트까지 같았다.
+- **샘플 5개**: 로컬에서 'Redraw post thumbnails'와 같은 순서로 그렸다. publish, 서버 요약 입구 호출, push, `thumbnail/*` 브랜치, 썸네일 PR은 없다.
+  - 배정은 `KEYS=<5개> node redraw.mjs plan`으로 정했다. 글마다 별도 worktree와 `COPILOT_HOME`을 쓰고, prepare(REASON=new, MASCOTS) → Copilot CLI 1.0.102(`claude-opus-5.5`, 같은 `--allow-tool`) → validate 순서다. `THUMBNAIL_EXCERPT=off`라 요약은 지금 그대로다.
+  - 5개 모두 첫 시도에 validate를 통과했다.
+
+    | 글 | 마스코트 (너비, 보이는 비율) | 걸린 시간 | AI 크레딧 |
+    | --- | --- | --- | --- |
+    | github/github | copilot-turn 26cqw 97%(주인공), mona-34b 17cqw 92% | 4.0분 | 110 |
+    | github/github-pages | ducky-front 26cqw 75% | 3.3분 | 88 |
+    | github/agent-to-website | mona-tilt 24cqw 69%(주인공), ducky-side2 17cqw 100% | 3.7분 | 108 |
+    | github/github-copilot | copilot-front 24cqw 87% | 3.2분 | 106 |
+    | github/copilot-studio-multi-model-ai-agent-github-pages | ducky-down 25cqw 95%(주인공), copilot-34 16cqw 100% | 6.7분 | 151 |
+
+  - 합계 563.0 크레딧(약 $5.63), 병렬로 약 7분이다. 순수 무작위 시범 5개는 518.8 크레딧(약 $5.19), 약 8분이었다.
+- **반영** (사용자 결정: "이대로 반영하고 배포"): 샘플 5개를 같은 PR에 그대로 반영했다(장면·버전 기록·WebP 20개, AI를 다시 돌리지 않음).
+  버전 기록의 지문과 수정 시각은 반영 전과 같고 `mascots`만 늘었다. 요약 필드가 없어 지문은 지금 요약 기준이고, 반영한 상태에서 plan은 '만들 글 없음'이다.
+  이후 GitHub의 새 글, 내용이 바뀐 글, 다시 만들기를 요청한 글에 마스코트가 들어간다.
+- **테스트 글 정리** (사용자 결정: "같이 정리"): 공개 사이트에서 내려간 테스트 글 2개(`copilot-studio/test-hihi`, `github/test`)의 썸네일 파일 8개
+  (WebP 4장, AI 장면 2개, 버전 기록 2개)를 지웠다. 지우기 직전에 공개 API로 두 글이 목록에 없고 상세 조회가 404인 것을 확인했다.
+  관리자 배포 브랜치의 같은 이미지는 'Sync post thumbnails to admin'이 지운다. 같은 글을 다시 게시하면 새 글로 다시 만든다.
+- **검증**: 도구 테스트 69개 → 92개(배정·다양성·작업 지시·기록·MASCOTS, 판정 규칙, 픽셀 세기).
+  측정은 위치를 아는 시험 장면으로 확인했다(트인 곳 100%, 반쯤 무대 밖 51%, 창 뒤 45%, 글자 덮음·반투명 감지).
+  validate는 통과, 배정과 다른 장면, 배정 없음을 각각 확인했다. workflow 변경(`MASCOTS: ${{ toJSON(matrix.item.mascots) }}`)은 Actions에서 실행해 보지 않았다.
+
 ## 회귀 검증과 배포 경계
 
 아래 세 앱 검증 수치는 PR #272 당시 기록이다. 웹챗 후속 변경은 별도 Web 회귀와

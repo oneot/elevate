@@ -12,6 +12,7 @@
  * 글 목록은 data/posts.json을 쓴다 (없으면 공개 API에서 만든다. 새로 받으려면 `node data.mjs`).
  * 장면은 scenes/<앱>.js와 AI가 만든 scenes/auto/<앱>/<slug>.js를 모두 불러온다.
  * 브라우저 콘솔 오류나 audit 경고(잘린 글자, 무대 밖 pill, 없는 아이콘·장면)가 있으면 출력하고 종료 코드 1로 끝난다.
+ * zoom·export는 GitHub AI 장면의 마스코트(배정, 크기, 보이는 비율, 가린 글자)도 검사한다 (lib/mascots.mjs).
  * 로컬에서 Playwright Chromium 대신 설치된 Edge를 쓰려면 THUMB_BROWSER_CHANNEL=msedge.
  */
 import http from 'node:http'
@@ -22,10 +23,12 @@ import sharp from 'sharp'
 import { chromium } from 'playwright'
 import { APPS, ROOT, THUMBS_DIR, fetchPublishedPosts, parseKey, writePostsData } from './lib/posts.mjs'
 import { checkExcerpt, checkScene } from './lib/pipeline.mjs'
+import { checkMascots, maskCount, visibleMascotPixels } from './lib/mascots.mjs'
 
 const ICONS = join(ROOT, 'node_modules/@fluentui/svg-icons/icons')
 const REVIEW = join(ROOT, 'review')
 const PALETTE = join(ROOT, 'assets/fluid/palette.json')
+const MASCOTS = join(ROOT, 'assets/mascots')
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -156,6 +159,76 @@ export function autoSceneProblems(keys, root = ROOT) {
   return lines
 }
 
+/** work/<id>/source.json에 prepare가 남긴 마스코트 배정 (GitHub 글). 없으면 null. */
+export function assignedMascots(key, root = ROOT) {
+  const file = join(root, 'work', parseKey(key).id, 'source.json')
+  if (!existsSync(file)) return null
+  try {
+    const { mascots } = JSON.parse(readFileSync(file, 'utf8'))
+    return Array.isArray(mascots) ? mascots : null
+  } catch {
+    return null
+  }
+}
+
+const coverage = new Map()
+/** 마스코트 그림에서 불투명한 부분의 비율. 보이는 비율의 분모로 쓴다(무대 밖으로 잘린 부분도 안 보이는 것으로 센다). */
+async function alphaCoverage(name) {
+  if (!coverage.has(name)) {
+    const file = join(MASCOTS, `${name}.png`)
+    let value = 0.75
+    if (existsSync(file)) {
+      const { data, info } = await sharp(file).ensureAlpha().extractChannel('alpha').raw().toBuffer({ resolveWithObject: true })
+      let opaque = 0
+      for (const alpha of data) if (alpha >= 128) opaque += 1
+      value = opaque / (info.width * info.height)
+    }
+    coverage.set(name, value)
+  }
+  return coverage.get(name)
+}
+
+/**
+ * GitHub AI 장면(v3)의 마스코트를 재서 검사한다 (lib/mascots.mjs checkMascots). 다른 장면은 빈 배열이다.
+ * 같은 무대를 마스코트마다 맨 위로 올려서, 숨겨서 찍어 실제로 보이는 픽셀과 그 아래 글자·앱 타일을 센다.
+ * 내보낼 이미지를 찍은 뒤에 부르고, 끝나면 무대를 원래대로 돌린다.
+ * @returns {Promise<string[]>} audit 줄
+ */
+async function auditMascots(page, key) {
+  const layout = await page.evaluate((k) => window.mascotLayout(k), key)
+  if (!layout) return []
+  const thumb = page.locator(`.thumb[data-key="${key}"]`).first()
+  const shot = async (state) => {
+    await page.evaluate(([k, s]) => window.mascotMeasure(k, s), [key, state])
+    return sharp(await thumb.screenshot()).removeAlpha().raw().toBuffer({ resolveWithObject: true })
+  }
+  try {
+    const all = await shot({})
+    const { info } = all
+    const scale = info.width / layout.width
+    const px = (rect) => ({ x: rect.x * scale, y: rect.y * scale, w: rect.w * scale, h: rect.h * scale })
+    const seen = new Uint8Array(info.width * info.height)
+    const placed = []
+    for (const [i, mascot] of layout.mascots.entries()) {
+      const top = await shot({ raise: i })
+      const hid = await shot({ hide: [i] })
+      const { mask, visible } = visibleMascotPixels({ all: all.data, top: top.data, hid: hid.data }, info, px(mascot.rect))
+      for (let p = 0; p < mask.length; p += 1) seen[p] |= mask[p]
+      const full = mascot.size.w * mascot.size.h * scale * scale * await alphaCoverage(mascot.name)
+      placed.push({ name: mascot.name, w: mascot.w, visible: full > 0 ? Math.min(1, visible / full) : 0, opacity: mascot.opacity, blur: mascot.blur })
+    }
+    const cqw2 = (layout.cqw * scale) ** 2
+    const texts = layout.texts.map((text) => ({ text: text.text, area: maskCount(seen, info, px(text.rect)) / cqw2 }))
+    const tiles = layout.tiles.map((tile) => {
+      const rect = px(tile.rect)
+      return maskCount(seen, info, rect) / Math.max(1, rect.w * rect.h)
+    })
+    return checkMascots({ assigned: assignedMascots(key), placed, texts, tiles, floats: layout.floats }).map((line) => `${key}: ${line}`)
+  } finally {
+    await page.evaluate((k) => window.mascotMeasure(k, null), key)
+  }
+}
+
 /**
  * AI가 쓴 요약 한 줄(work/<id>/excerpt.txt)을 검사한다. 생성 단계의 AI는 렌더러(thumb-render)만 실행할 수 있어
  * 스스로 확인할 수 있도록 여기에 둔다. 같은 규칙으로 validate.mjs와 publish.mjs가 다시 검사한다.
@@ -222,6 +295,10 @@ export async function main(argv = process.argv.slice(2)) {
         console.log(file)
         console.log(card)
         issues += await report(page, errors)
+        for (const line of await auditMascots(page, key)) {
+          console.log(`  ! audit: ${line}`)
+          issues += 1
+        }
         await page.close()
       }
     } else {
@@ -247,6 +324,10 @@ export async function main(argv = process.argv.slice(2)) {
         const files = await writeWebps(await element.screenshot(), options.out, category, slug)
         for (const file of files) bytes += statSync(file).size
         written += 1
+        for (const line of await auditMascots(page, key)) {
+          console.log(`  ! audit: ${line}`)
+          issues += 1
+        }
       }
       if (keys.length && written !== keys.length) {
         console.log(`  ! export: ${keys.length}개 중 ${written}개만 내보냈습니다 (장면이나 data/posts.json 항목 확인).`)

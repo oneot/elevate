@@ -5,5 +5,9 @@
   "postUpdatedAt": "2026-10-16T10:18:21.323Z",
   "contentHash": "sha256:a9cac1b7589b22c52a328e88855534b6391da4b88b82ecd2e1530e46813ee6cd",
   "origin": "ai",
-  "generatedAt": "2026-10-21T00:47:56.690Z"
+  "mascots": [
+    "ducky-down",
+    "copilot-34"
+  ],
+  "generatedAt": "2026-10-22T09:32:58.768Z"
 }

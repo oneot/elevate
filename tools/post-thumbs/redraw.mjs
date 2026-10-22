@@ -2,6 +2,7 @@
 /**
  * 이미 썸네일이 있는 글을 지금 디자인(STYLE_GUIDE)으로 한꺼번에 다시 그린다 (GitHub Actions 'Redraw post thumbnails').
  *   node redraw.mjs plan      다시 그릴 글. KEYS(쉼표)가 없으면 사람이 그린 장면(scenes/<앱>.js)으로 만든 썸네일 전부, LIMIT개까지
+ *                             GitHub 글에는 마스코트를 차례로 배정한다(item의 mascots → generate의 MASCOTS)
  *   node redraw.mjs publish   generate 결과를 브랜치 하나(thumbnail-redraw/<실행 번호>)에 모아 PR 하나로 연다.
  *                             두 번 시도해도 검사를 통과하지 못한 글은 지금 이미지를 그대로 두고 PR 본문과 실행 요약에 남긴다.
  *   node redraw.mjs merge     그 PR을 'Post thumbnails'와 같은 방식(merge.mjs)으로 검사·병합하고 배포를 한 번 실행한다.
@@ -22,6 +23,7 @@ import { REPO_ROOT, SITE_URL, fetchPublishedPosts, thumbPaths } from './lib/post
 import {
   PR_LABEL, REDRAW_BRANCH_PREFIX, REDRAW_KEY, checkScene, checkWebps, redrawPrBody, redrawPrProblem, redrawTargets, unexpectedChanges,
 } from './lib/pipeline.mjs'
+import { assignMascots, readMascotRecords } from './lib/mascots.mjs'
 import { ensureLabel, github, repository } from './lib/github.mjs'
 import { mergeThumbnails } from './merge.mjs'
 
@@ -35,16 +37,18 @@ const summary = (lines) => { if (process.env.GITHUB_STEP_SUMMARY) appendFileSync
 async function plan() {
   const posts = await fetchPublishedPosts()
   const limit = process.env.LIMIT ? Number(process.env.LIMIT) : 80
-  const items = redrawTargets({
+  const targets = redrawTargets({
     posts,
     keys: process.env.KEYS || '',
     limit,
     hasThumb: (key) => existsSync(join(REPO_ROOT, thumbPaths(key).large)),
     hasAiScene: (key) => existsSync(join(REPO_ROOT, thumbPaths(key).scene)),
   })
+  // GitHub 글은 여기서 마스코트를 차례로 배정한다. generate job들이 동시에 돌아도 서로 겹치지 않는다(prepare.mjs의 MASCOTS).
+  const items = assignMascots(targets, readMascotRecords())
   output('items', JSON.stringify(items))
   output('count', String(items.length))
-  const lines = items.map((item) => `- ${item.key} ${item.title}`)
+  const lines = items.map((item) => `- ${item.key} ${item.title}${item.mascots ? ` · 마스코트 ${item.mascots.join(', ')}` : ''}`)
   console.log(items.length ? `다시 그릴 글 ${items.length}개:\n${lines.join('\n')}` : '다시 그릴 글이 없습니다.')
   summary([`### 다시 그릴 글 ${items.length}개`, '', ...lines, ''])
 }

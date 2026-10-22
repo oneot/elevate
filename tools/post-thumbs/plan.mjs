@@ -10,12 +10,14 @@
  *  AI 요약 기재는 수정 시각을 바꾸지 않으므로 요약이 달라지면 다시 계산한다).
  * PR 브랜치(thumbnail/<앱>/<slug>)가 지금 내용으로 만든 것이면(그 뒤 저장하지 않았거나 지문이 같으면) 검토 중이거나 닫은 것이므로 다시 만들지 않는다.
  * 결과를 출력하고, Actions에서는 GITHUB_OUTPUT에 items(JSON 배열)와 count를 쓴다.
+ * GitHub 글의 item에는 마스코트 배정(mascots)이 붙고, generate job이 prepare.mjs에 MASCOTS로 넘긴다 (lib/mascots.mjs).
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
 import { REPO_ROOT, ROOT, contentHash, fetchPostHtml, fetchPublishedPosts, readSource, thumbPaths } from './lib/posts.mjs'
 import { BRANCH_PREFIX, FAILURE_LABEL, hashCacheHit, keyFromFailureTitle, planPosts } from './lib/pipeline.mjs'
+import { assignMascots, readMascotRecords } from './lib/mascots.mjs'
 import { github, repository } from './lib/github.mjs'
 
 const git = (...args) => execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()
@@ -63,7 +65,7 @@ async function hashOf(post) {
 const posts = await fetchPublishedPosts()
 const branches = readBranches()
 const failed = await failedKeys()
-const items = await planPosts({
+const planned = await planPosts({
   posts,
   stateOf: (post) => ({
     hasThumb: existsSync(join(REPO_ROOT, thumbPaths(post.key).large)),
@@ -76,13 +78,15 @@ const items = await planPosts({
   force: (process.env.FORCE_KEY || '').trim(),
   max: Number(process.env.MAX_PER_RUN || 2),
 })
+// GitHub 글은 여기서 마스코트를 배정해 generate(prepare.mjs의 MASCOTS)로 넘긴다. 같은 실행의 글끼리 겹치지 않는다.
+const items = assignMascots(planned, readMascotRecords())
 
 mkdirSync(dirname(cacheFile), { recursive: true })
 writeFileSync(cacheFile, `${JSON.stringify(cache, null, 2)}\n`)
 
 const LABELS = { new: '새 글', edited: '내용 바뀜', manual: '다시 만들기 요청' }
 console.log(items.length
-  ? items.map((item) => `- ${item.key} (${item.title}) — ${LABELS[item.reason]}`).join('\n')
+  ? items.map((item) => `- ${item.key} (${item.title}) — ${LABELS[item.reason]}${item.mascots ? ` · 마스코트 ${item.mascots.join(', ')}` : ''}`).join('\n')
   : '썸네일을 만들 글이 없습니다.')
 if (process.env.GITHUB_OUTPUT) {
   appendFileSync(process.env.GITHUB_OUTPUT, `items=${JSON.stringify(items)}\ncount=${items.length}\n`)

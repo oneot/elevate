@@ -42,11 +42,13 @@ flowchart LR
    같은 세션에서 요약 한 줄(`work/<앱>__<slug>/excerpt.txt`)도 씁니다. 사람이 다듬은 기존 요약 80개(33~55자, 모두 '~니다.')에 맞춰
    35~55자 한 문장으로, 이 글로 무엇을 만들고 익히는지 씁니다. 작업 지시에 같은 앱의 요약 예시를 넣고(`pickExcerptExamples`),
    AI는 `thumb-render excerpt <key>`로 규칙(`checkExcerpt`)을 스스로 확인합니다. 본문을 한 번 읽어 둘 다 만들므로 요약에 드는 AI 이용량은 거의 없습니다.
+   GitHub 글은 마스코트 1~2마리를 코드가 무작위로 배정해(다른 GitHub 글이 덜 쓴 캐릭터·자세 먼저) 작업 지시와 버전 기록에 넣고, AI는 그 마스코트를 크게 그립니다(아래 'GitHub 마스코트').
    Copilot이 실행할 수 있는 명령은 렌더러뿐이고(workflow가 `node render.mjs`를 `thumb-render`라는 이름으로 PATH에 둡니다),
    파일은 그 글의 장면과 `work/<앱>__<slug>/summary.md`·`excerpt.txt`만 만들고 고칠 수 있습니다(셸 리디렉션도 막힘).
    Copilot CLI는 `git`·`gh` 밖의 명령을 이름으로만 구분하므로 `shell(node render.mjs:*)` 같은 규칙은 맞지 않고,
    쓰기 규칙은 실제 경로(`pwd -P`)로 적어야 합니다.
 3. **validate** (`validate.mjs`): 장면이 그 글 하나만 등록하는지, 네트워크·외부 URL 코드가 없는지 확인하고 다시 그려 audit 경고 0을 확인합니다.
+   GitHub 글은 배정한 마스코트가 그대로, 크게, 가려지지 않고, 글자를 덮지 않게 들어갔는지도 이 audit에서 확인합니다.
    WebP 크기(960×540, 480×270)를 보고, 통과하면 글 버전 기록(`sources/<앱>/<slug>.json`)을 저장합니다.
    요약이 규칙에 맞으면 기록에 `excerpt`로 남기고, 지문을 **AI 요약이 공개 사이트에 보이는 문구로**(덮어쓰기 표 `postText.js` 규칙 포함, `hashWithExcerpt`) 다시 계산합니다. 요약이 게시글에 기재된 뒤의 글과 지문이 같아야
    같은 내용으로 다시 만들지 않기 때문입니다. 요약이 없거나 규칙에 맞지 않으면 썸네일은 그대로 두고 요약만 기재하지 않습니다(경고).
@@ -92,6 +94,20 @@ flowchart LR
 - **기존 썸네일을 지금 디자인으로 바꾸고 싶을 때** (사용자가 원할 때만):
   - AI로 한꺼번에 다시 그리기: 아래 '한꺼번에 다시 그리기'. 글 하나에 몇 분과 Copilot 이용량(약 $1)이 듭니다.
   - AI 없이 기존 장면에 새 스킨만 입히기: `node render.mjs export --cat <앱>`. 비용이 없고 몇 초면 되지만, 구성은 v2 그대로라 3D 형태가 창에 많이 가려집니다.
+
+### GitHub 마스코트 (2026-10-22)
+
+사용자 요청: "깃허브 게시물들은 첨부한 마스코트들이 조금 더 크게 배치가 되어서 다른 게시물들보다 조금 더 귀여운 느낌이 나면 좋을 것 같아."
+"마스코트가 글 당 1-2마리 랜덤하게 들어가면 좋을 듯". GitHub 글만 바뀌고, 다른 앱의 작업 지시·검사·이미지는 그대로입니다.
+
+| 단계 | 내용 |
+| --- | --- |
+| 배정 (plan, `prepare.mjs`) | 마리 수(1~2)는 반반, 캐릭터(Mona·Copilot·Ducky)와 자세(캐릭터마다 5개)는 다른 GitHub 글이 덜 쓴 것을 먼저 고르고 똑같이 쓴 것 중에서는 무작위입니다(`lib/mascots.mjs`, `crypto.randomInt`). 두 마리면 서로 다른 캐릭터이고 첫째가 주인공입니다. AI에게 고르게 하면 매번 비슷한 것을 고르고, 순수 무작위로는 GitHub 카드 몇 장 사이에서도 같은 자세가 자주 겹치기 때문입니다. plan(`plan.mjs`, `redraw.mjs plan`)이 한 실행의 글들을 차례로 배정해 generate job의 `MASCOTS`로 넘기므로 여러 글을 동시에 그려도 겹치지 않습니다(없으면 `prepare.mjs`가 같은 방법으로 고릅니다). 작업 지시의 'GitHub 마스코트'와 `work/<id>/source.json`의 `mascots`에 넣고, 검사를 통과하면 버전 기록 `sources/github/<slug>.json`에 남아 다음 배정의 기준이 됩니다 |
+| 그리기 (AI) | 주인공 w 22~28cqw, 둘째 15~19cqw(지금까지 w 11). 창 모서리 뒤에서 내다보거나 창·카드 위에 앉혀 화면과 어울리게 둡니다. 자리를 만들려고 주 화면은 52~64%로 조금 줄이고 `K.float`는 0~1개로 줄입니다. 앱 타일과 pill은 1개씩 그대로입니다 (STYLE_GUIDE 'GitHub 마스코트') |
+| 검사 (`render.mjs` zoom·export, `validate.mjs`) | 배정과 다른 마스코트, 주인공 20cqw·둘째 14cqw 미만이나 30cqw 초과, 둘째가 주인공보다 큼, 60% 미만만 보임(창·카드 뒤나 무대 밖), 흐리거나 투명함, 글자(1cqw² 이상)·앱 타일(15% 초과)을 덮음, `K.float` 2개 이상이면 audit 경고입니다. 렌더러가 마스코트마다 맨 위로 올린 무대와 숨긴 무대를 찍어 실제로 보이는 픽셀을 셉니다. validate가 같은 렌더를 다시 하고, GitHub 글에 배정이 없으면 거부합니다 |
+
+마스코트 그림은 `assets/mascots/`의 15장(캐릭터마다 5개)입니다. 원본이 폭 207~325px이라 28cqw(960px 이미지에서 269px)까지는 거의 1:1입니다.
+`mona-front-lg`(647px)는 같은 자세의 큰 판이라 배정에 넣지 않습니다.
 
 ## 한꺼번에 다시 그리기 (Redraw post thumbnails)
 
@@ -188,6 +204,7 @@ python3 make_fluid.py --sheet          # assets/fluid 다시 만들기 + review/
 node plan.mjs                          # 지금 만들 글 목록 (새 글, 내용이 바뀐 글)
 node baseline.mjs                      # 이미지는 있는데 버전 기록이 없는 글에 지금 내용으로 기록 만들기
 node prepare.mjs m365/test             # work/m365__test/post.md, task.md, content.json
+MASCOTS=mona-tilt,ducky-side node prepare.mjs github/github  # GitHub 글의 마스코트 배정을 정해 준비 (없으면 덜 쓴 것을 무작위로)
 node render.mjs excerpt m365/test      # work/m365__test/excerpt.txt(AI 요약 한 줄) 규칙 검사
 node validate.mjs m365/test --no-git-check
 DRY_RUN=1 PRS='[{"key":"m365/test","number":1,"branch":"thumbnail/m365/test","sha":"<40자리 커밋>"}]' node merge.mjs  # 자동 병합 순서만 출력

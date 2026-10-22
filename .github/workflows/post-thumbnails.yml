@@ -80,6 +80,8 @@ jobs:
             ID: ${{ matrix.item.id }}
             CATEGORY: ${{ matrix.item.category }}
             SLUG: ${{ matrix.item.slug }}
+            # GitHub 글의 마스코트 배정(plan이 같은 실행의 글끼리 겹치지 않게 정함). 다른 앱은 null이고 prepare.mjs가 무시한다.
+            MASCOTS: ${{ toJSON(matrix.item.mascots) }}
         steps:
             - uses: actions/checkout@v4
 

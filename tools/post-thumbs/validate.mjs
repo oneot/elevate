@@ -3,6 +3,8 @@
  * AI가 만든 결과를 검사하고 최종 이미지를 다시 그린다 (generate 단계 마지막).
  *   node validate.mjs <앱>/<slug>
  * - 장면 파일: scenes/auto/<앱>/<slug>.js에 이 key 하나만 등록, 네트워크·외부 URL 등 금지 코드 없음
+ * - GitHub 글: prepare가 배정한 마스코트(work/<id>/source.json의 mascots)가 있어야 한다. 장면이 배정대로 크게 넣었는지는
+ *   다시 그릴 때 렌더러 audit가 검사한다(lib/mascots.mjs: 배정, 크기, 보이는 비율, 가린 글자, K.float 수)
  * - 다시 export·zoom: audit 경고와 콘솔 오류 0
  * - WebP 960×540, 480×270
  * - 통과하면 prepare가 남긴 글 버전(work/<id>/source.json)을 sources/<앱>/<slug>.json으로 저장
@@ -17,15 +19,22 @@ import { execFileSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
 import { REPO_ROOT, ROOT, hashWithExcerpt, parseKey, thumbPaths } from './lib/posts.mjs'
 import { checkExcerpt, checkScene, checkWebps, unexpectedChanges } from './lib/pipeline.mjs'
+import { hasMascots, mascotAssignmentProblem } from './lib/mascots.mjs'
 import { main as render } from './render.mjs'
 
-const { key, id } = parseKey(process.argv[2])
+const { key, id, category } = parseKey(process.argv[2])
 const paths = thumbPaths(key)
 const problems = []
+const record = join(ROOT, 'work', id, 'source.json')
+const source = existsSync(record) ? JSON.parse(readFileSync(record, 'utf8')) : null
 
 const scenePath = join(REPO_ROOT, paths.scene)
 if (!existsSync(scenePath)) problems.push(`${paths.scene} 파일이 없습니다.`)
 else problems.push(...checkScene(readFileSync(scenePath, 'utf8'), key))
+if (hasMascots(category)) {
+  const problem = mascotAssignmentProblem(source?.mascots)
+  if (problem) problems.push(`work/${id}/source.json의 GitHub 마스코트 배정이 올바르지 않습니다 — ${problem} prepare.mjs를 다시 실행하세요.`)
+}
 
 if (!problems.length) {
   if (await render(['export', key])) problems.push('export에서 audit 경고나 오류가 났습니다 (위 출력 참고).')
@@ -37,8 +46,6 @@ if (!problems.length) {
 }
 
 if (!problems.length) {
-  const record = join(ROOT, 'work', id, 'source.json')
-  const source = existsSync(record) ? JSON.parse(readFileSync(record, 'utf8')) : null
   if (!source || source.key !== key || !String(source.contentHash || '').startsWith('sha256:')) {
     problems.push(`work/${id}/source.json(글 버전 기록)이 없거나 올바르지 않습니다. prepare.mjs를 먼저 실행하세요.`)
   } else {
