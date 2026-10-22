@@ -15,6 +15,7 @@ const { functionDefinition: adminCalendarEventUpdate } = require('./adminCalenda
 const { functionDefinition: adminCalendarEventDelete } = require('./adminCalendarEventDelete');
 const { functionDefinition: publicCalendarEventsList } = require('./publicCalendarEventsList');
 const { functionDefinition: publicActivityVideosList } = require('./publicActivityVideosList');
+const { functionDefinition: publicChatToken } = require('./publicChatToken');
 const { functionDefinition: adminActivityVideosList } = require('./adminActivityVideosList');
 const { functionDefinition: adminActivityVideoCreate } = require('./adminActivityVideoCreate');
 const { functionDefinition: adminActivityVideoDetail } = require('./adminActivityVideoDetail');
@@ -46,6 +47,7 @@ const functionDefinitions = [
   publicTags,
   publicCalendarEventsList,       // literal route — before parameterized routes
   publicActivityVideosList,
+  publicChatToken, // 웹챗 Direct Line 토큰 (서버 설정 DIRECT_LINE_SECRET)
   adminSeriesList,
   adminPostsList,
   adminPostDetail,

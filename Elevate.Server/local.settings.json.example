@@ -16,6 +16,7 @@
     "ENTRA_TENANT_ID": "62ae463a-9f12-4edf-8544-4f6ca3834524",
     "ENTRA_AUDIENCE": "api://c4ea0eaf-6aaa-42e0-85ff-eef864cd2728",
     "THUMBNAIL_DISPATCH_TOKEN": "",
-    "AUTOMATION_OIDC_AUDIENCE": "api://elevate-post-automation"
+    "AUTOMATION_OIDC_AUDIENCE": "api://elevate-post-automation",
+    "DIRECT_LINE_SECRET": ""
   }
 }
