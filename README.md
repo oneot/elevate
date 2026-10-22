@@ -62,8 +62,9 @@ CI용 빌드는 운영 API·Entra·SAS 비밀값을 사용하지 않습니다.
 Admin 변경은 `main`에 병합한 뒤 `main`을 `admin`에 병합해야 배포됩니다.
 기본 브랜치나 운영 리소스를 이 문서만으로 변경하지 않습니다. Server 배포 워크플로는
 현재 저장소에 없으며 실제 배포 절차는 운영 확인이 필요합니다.
+인프라(Bicep)와 설계·정책·인수인계 문서는 비공개 레포 `oneot/elevate-infra`에서 관리합니다.
 
-- [개발 기준과 문서 복구 범위](documents/01-getting-started/PLAN.md)
+- [개발 기준과 확인 범위](documents/01-getting-started/PLAN.md)
 - [전체 주요 경로 분석과 모더나이즈 근거](documents/04-application/MODERNIZATION.md)
 - [배포·접속 장애 런북](documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md)
 

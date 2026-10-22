@@ -1,19 +1,32 @@
 ---
-applyTo: '*'
+description: '문서/인프라 복구 작업 지침 — 사용자가 복구 작업을 명시적으로 요청한 경우에만 적용 (작업 위치: oneot/elevate-infra)'
+applyTo: 'infra/**, **/*.bicep, **/*.bicepparam'
 ---
 
 # 문서/인프라 복구 작업 특별 지침
 
-> 이 파일은 `documents/` 또는 `infra/` 폴더가 삭제되거나 핵심 기준 문서가 없는 **복구 상황에서만** 적용된다.  
-> 일반 작업 지침은 `.github/copilot-instructions.md`를 참조한다.
+> 이 레포(`oneot/elevate`)는 공개 레포다. Bicep 설계도와 설계·정책·인수인계 문서는 비공개 레포 `oneot/elevate-infra`에서 관리한다.  
+> 이 레포에 `infra/`나 정책·아키텍처 문서가 없는 것은 의도된 상태이며 **복구 상황이 아니다**.  
+> 이 지침은 사용자가 복구 작업을 **명시적으로 요청한 경우에만** 적용한다. 일반 작업 지침은 `.github/copilot-instructions.md`를 참조한다.
 
 ---
 
 ## 적용 조건
 
-- `documents/` 폴더가 삭제되었거나 핵심 기준 문서가 없는 경우
-- `infra/` 폴더가 삭제되어 IaC 원본이 없는 경우
-- 배포된 Azure 리소스 상태를 기준으로 문서와 Bicep을 재구성해야 하는 경우
+- 사용자가 문서·인프라 복구 작업을 명시적으로 요청한 경우에만 적용한다 (예: `oneot/elevate-infra`의 문서나 Bicep이 유실되어 배포된 Azure 리소스 상태를 기준으로 재구성해야 하는 경우).
+
+다음은 복구 조건이 **아니다**:
+
+- 이 레포에 `infra/`, Bicep, 정책·아키텍처 문서(`POLICY.md` 등)가 없는 경우
+- 이 레포의 `documents/`에 일부 문서만 있는 경우
+
+---
+
+## 작업 위치
+
+- 복구 산출물(Bicep, ARM export 증적, 설계·정책·인수인계 문서)은 `oneot/elevate-infra`에만 둔다. 아래 절차의 `infra/`, `documents/` 경로는 모두 `oneot/elevate-infra` 기준이다.
+- 이 공개 레포에서는 앱 코드(`Elevate.Admin/`, `Elevate.Server/`, `Elevate.Web/`)와 설정 파일을 사실 확인용으로 읽기만 한다. 이 레포에 `infra/`·Bicep·export 결과·정책/아키텍처 문서를 만들거나 커밋하지 않는다.
+- `.gitignore`의 `infra` 줄은 실수로 올리는 것을 막는 장치이므로 지우지 않는다.
 
 ---
 
@@ -24,7 +37,7 @@ applyTo: '*'
 1. 현재 Azure에 배포된 실제 리소스 상태
 2. Azure CLI로 export 또는 조회한 배포 템플릿과 리소스 속성
 3. 애플리케이션 코드의 실제 동작 (`Elevate.Admin/`, `Elevate.Server/`, `Elevate.Web/`)
-4. 현재 저장소의 설정 파일 (`package.json`, `staticwebapp.config.json`, `host.json`, 환경 변수 예시 파일)
+4. 이 공개 레포(`oneot/elevate`)의 설정 파일 (`package.json`, `staticwebapp.config.json`, `host.json`, 환경 변수 예시 파일)
 5. 확인 가능한 운영 스크립트와 테스트 코드
 
 ---
@@ -41,7 +54,7 @@ applyTo: '*'
 ## infra 복구 절차
 
 1. Azure CLI로 현재 배포 상태를 export 또는 조회하여 ARM 템플릿과 리소스 속성을 확보한다.
-2. export 결과는 원본 증적으로 보관하고, 바로 최종 Bicep으로 간주하지 않는다.
+2. export 결과는 `oneot/elevate-infra`에 원본 증적으로 보관하고(이 공개 레포에는 두지 않는다), 바로 최종 Bicep으로 간주하지 않는다.
 3. ARM 템플릿을 기반으로 Bicep으로 변환한 뒤, 모듈 구조, 네이밍, 태그, 파라미터 전략을 현재 프로젝트 규칙에 맞게 다시 정리한다.
 4. 복구된 Bicep은 반드시 환경별 파라미터 분리, 비밀값 외부 주입, Managed Identity 우선 원칙을 만족해야 한다.
 5. export 결과에 포함된 우발적 설정, 임시 리소스 속성, 런타임 생성값은 그대로 고정하지 않고 의도된 구성인지 검토한다.
@@ -50,7 +63,7 @@ applyTo: '*'
 
 ## 문서 복구 절차
 
-1. 가장 먼저 `documents/01-getting-started/PLAN.md`를 재작성하여 이후 작업의 기준 문서로 복구한다.
+1. 가장 먼저 `oneot/elevate-infra`의 `documents/01-getting-started/PLAN.md`를 재작성하여 이후 작업의 기준 문서로 복구한다 (이 공개 레포의 PLAN.md가 아니다).
 2. 다음 순서로 핵심 문서를 복구한다:
    - `documents/02-governance/POLICY.md`
    - `documents/02-governance/AZURE_POLICY_MAPPING.md`
@@ -84,6 +97,7 @@ applyTo: '*'
 - 인증 관련 문서는 `Elevate.Admin/`, `Elevate.Server/`의 실제 인증 처리와 일치해야 한다.
 - API 문서는 서버 함수와 컨트롤러 구현과 일치해야 한다.
 - 문서에 기록한 배포 절차는 실제 Azure CLI 또는 운영 절차로 재현 가능해야 한다.
+- 이 공개 레포의 변경에 `infra/`, Bicep, export 증적, 정책·아키텍처·인수인계 문서가 없어야 한다.
 
 ---
 
@@ -94,3 +108,4 @@ applyTo: '*'
 - 확인되지 않은 정책값이나 운영값을 사실처럼 문서화하는 행위
 - 비밀값, 키, 토큰, 연결 문자열을 문서나 Bicep 기본값으로 넣는 행위
 - 키 기반 인증을 복구 편의상 임시 허용하는 행위
+- 이 공개 레포에 `infra/`, Bicep, export 증적, 정책·아키텍처·인수인계 문서를 만들거나 커밋하는 행위, `.gitignore`의 `infra` 줄을 지우는 행위

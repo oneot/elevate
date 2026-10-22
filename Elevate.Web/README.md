@@ -159,7 +159,7 @@ VITE_API_BASE_URL= REQUIRE_API_ROUTES=false npm run generate:seo-routes
 
 ## 문서
 
-모든 상세 문서는 저장소 루트 `documents/` 폴더에 있습니다.
+이 레포의 상세 문서는 저장소 루트 `documents/` 폴더에 있습니다.
 
 | 문서 | 위치 |
 |------|------|
@@ -168,5 +168,5 @@ VITE_API_BASE_URL= REQUIRE_API_ROUTES=false npm run generate:seo-routes
 | 전체 주요 경로 분석·변경 근거 | [MODERNIZATION.md](../documents/04-application/MODERNIZATION.md) |
 | 배포 및 운영 | [documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md](../documents/06-operations/DEPLOYMENT_AND_RUNBOOK.md) |
 
-현재 없는 아키텍처·정책 문서는 복구된 PLAN의 확인 범위에 따르며,
-누락된 운영 구성을 코드만으로 추정하지 않습니다.
+아키텍처·정책 문서와 인프라(Bicep)는 비공개 레포 `oneot/elevate-infra`에서 관리하며,
+운영 구성을 코드만으로 추정하지 않습니다.

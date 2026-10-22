@@ -1,14 +1,16 @@
 # Elevate 개발 기준과 확인 범위
 
 이 문서는 2026-10-18 `main`의 애플리케이션 코드와 저장소 설정을 기준으로 복구한
-개발 진입점이다. 삭제된 정책 문서나 Azure 배포 구성을 복구 완료한 것으로 간주하지 않는다.
+개발 진입점이다. 정책·아키텍처 문서, Azure 배포 구성(Bicep), 인수인계 문서는
+비공개 레포 `oneot/elevate-infra`에서 관리하며 이 공개 레포에는 두지 않는다.
 
 ## 참조 순서
 
-1. 조직 정책이 복구되면 `POLICY.md`를 최우선으로 적용하고, 확인된 Azure 아키텍처,
-   인증, API, 인프라, 운영 문서를 순서대로 대조한다.
-2. 현재는 `.github/copilot-instructions.md`와
-   `.github/instructions/recovery.instructions.md`의 금지 사항을 준수한다.
+1. `oneot/elevate-infra`의 `POLICY.md`를 최우선으로 적용하고, Azure 아키텍처,
+   인증, 인프라, 운영 문서를 순서대로 대조한다.
+2. `.github/copilot-instructions.md`의 저장소 경계와 금지 사항을 준수한다.
+   `.github/instructions/recovery.instructions.md`는 사용자가 복구 작업을
+   명시적으로 요청한 경우에만 적용한다.
 3. 실제 동작은 `Elevate.Web/src`, `Elevate.Admin/src`, `Elevate.Server/src`,
    각 앱의 `package.json`, `.github/workflows`로 확인한다.
 4. 확인된 접속 장애 기록은
@@ -40,13 +42,14 @@
   프록시·호스팅 추가, 콘텐츠 스냅샷 전환은 포함하지 않는다.
 - Git 이력 재작성, 대량 콘텐츠 삭제, 생성물 커밋을 하지 않는다.
 
-## 복구되지 않은 기준
+## 이 레포에 두지 않는 기준
 
-`documents/02-governance`, `documents/03-architecture`의 정책·아키텍처 문서,
-API 계약 기준 문서 및 `infra/`는 현재 없다. Azure 실제 리소스 조회·export와
-운영 설정 교차 확인 없이는 리전·리소스 수·인증 고정값이나 Bicep을 재구성하지 않는다.
-후속 인프라 복구는 정책 → 아키텍처·인증/API → Bicep → 운영 절차 순으로,
-문서와 실제 배포 상태를 함께 확인해야 한다.
+정책·아키텍처 문서와 `infra/`(Bicep)는 `oneot/elevate-infra`에서 관리하므로 이 레포에
+없는 것이 정상이다. 없다는 이유로 복구 모드를 적용하거나 이 레포에 `infra/`·정책 문서를
+새로 만들지 않는다. 별도 API 계약 기준 문서는 없으므로 API는 `Elevate.Server/src`의
+실제 구현과 테스트를 기준으로 한다. Azure 설정 변경이 필요한 작업은
+`.github/copilot-instructions.md`의 저장소 경계 규칙에 따라 PR 본문에
+"인프라 반영 필요 (elevate-infra)" 목록을 남기고 사용자에게 알린다.
 
 ## 검증 기준
 
