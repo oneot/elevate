@@ -78,7 +78,7 @@ node render.mjs … --skin v2         # 처음 80개 카드의 v2 스킨으로 �
 | `K.prompt(text,{lead,icon})` | 입력창 + 보내기 버튼 |
 | `K.wires(svgInner,{z})` + `K.curve(x1,y1,x2,y2,{c,w,dash,arrow,dot,bend})` | 연결선 (무대 좌표 cqw). `bend:'h'|'v'|'none'` |
 | `K.cursor({x,y})` | 마우스 포인터 (끝점 x,y) |
-| `K.mascot(name,{x,y,right,bottom,w,z,rotate,flip})` | GitHub 마스코트 머리 (`assets/mascots/`: `mona-*`, `copilot-*`, `ducky-*`). `flip:true` 좌우 반전. 창 뒤에서 내다보게 하려면 창에 `z:2`, 마스코트에 `z:1` |
+| `K.mascot(name,{x,y,right,bottom,w,z,rotate,flip})` | GitHub 마스코트 머리 (`assets/mascots/`: `mona-*`, `copilot-*`, `ducky-*`). `flip:true` 좌우 반전. 창 뒤에서 내다보게 하려면 창에 `z:2`, 마스코트에 `z:1`. GitHub AI 장면은 배정된 1–2마리를 아래 'GitHub 마스코트' 크기로 |
 | `K.pos({...})` | 위치 style 문자열 |
 | `K.tile({x,y,right,bottom,s,app,plinth,rotate,z})` | **v3 앱 타일**: 새 스타일 앱 아이콘(글자판)을 얹은 유리 타일. 장면당 1개, 주 화면 모서리에 걸쳐 띄운다(`s` 기본 10). `plinth:true`면 흰 받침대 위에 선다 |
 | `K.float({x,y,right,bottom,s,icon,app,text,square,far,z})` | **v3 떠 있는 조각**: 작은 유리 원(또는 `square`)에 Fluent 아이콘·앱 아이콘(`app:true`/`'teams'`)·짧은 숫자(`text`)를 앱 그라데이션으로. 0–2개 |
@@ -113,6 +113,8 @@ kit.css 클래스: `.row .col .grow .pad .sep .soft .hl(강조 테두리) .t-num
 11. **놀이 요소 (v3)**: `K.float()` 0–2개(최대 3)를 주 화면 가장자리 바깥에 띄워 글과 관련된 작은 조각을 보여 준다(완료 체크, 반짝임, 알림 수, 다른 앱 아이콘 등).
     핵심 글자를 가리지 않는다. 하나쯤은 `far: true`로 흐리게 해 깊이를 줘도 된다. 장식용 아이콘 남발 금지.
 
+GitHub 장면은 아래 'GitHub 마스코트' 절이 규칙 2(주 화면 크기)와 11(놀이 요소)보다 우선한다.
+
 ## 작업 순서
 
 1. `node render.mjs review <앱>`으로 같은 앱의 기존 카드와 참고 장면 3개를 본다.
@@ -124,8 +126,38 @@ kit.css 클래스: `.row .col .grow .pad .sep .soft .hl(강조 테두리) .t-num
 
 - **다크 테마**: `kit.js`의 카테고리 팔레트에 `dark: { tint, solid }`가 있으면 무대에 `.tD.dark`가 붙는다.
   지금은 **Copilot Studio만 다크**(v2 위의 '밝은 유리 다크', 아래 섹션). 나머지는 라이트.
-- **마스코트**: GitHub 장면은 Mona·Copilot·Ducky를 장면마다 1–2마리만 넣는다. 창 가장자리에서 내다보거나 카드 위에 앉히고, 핵심 글자는 가리지 않는다.
+- **마스코트**: GitHub 장면은 Mona·Copilot·Ducky 중 글마다 배정된 1–2마리를 크게 넣는다(아래 'GitHub 마스코트'). 창 가장자리에서 내다보거나 카드 위에 앉히고, 핵심 글자는 가리지 않는다.
 - 한 카테고리만 다시 내보내기: `node render.mjs export --cat copilot-studio,github`
+
+## GitHub 마스코트 (2026-10-22, GitHub 장면만)
+
+사용자 요청: "깃허브 게시물들은 첨부한 마스코트들이 조금 더 크게 배치가 되어서 다른 게시물들보다 조금 더 귀여운 느낌이 나면 좋을 것 같아."
+"마스코트가 글 당 1-2마리 랜덤하게 들어가면 좋을 듯". 다른 앱의 규칙은 그대로다.
+
+- **배정은 코드가 한다**: 글마다 1–2마리를 무작위로 고른다(`lib/mascots.mjs`). 다른 GitHub 글이 덜 쓴 캐릭터와 자세를 먼저 골라 카드 목록에서 되풀이되지 않게 한다.
+  두 마리면 서로 다른 캐릭터이고 첫째가 주인공이다. 작업 지시의 'GitHub 마스코트'에 적힌 이름만 그대로 쓴다.
+  고른 결과는 글 버전 기록(`sources/github/<slug>.json`의 `mascots`)에 남는다.
+
+  | 캐릭터 | 자세 (`K.mascot` 이름) |
+  | --- | --- |
+  | Copilot | `copilot-front` `copilot-34` `copilot-side` `copilot-turn` `copilot-down` |
+  | Ducky | `ducky-front` `ducky-side2` `ducky-side` `ducky-down` `ducky-up` |
+  | Mona | `mona-front` `mona-34` `mona-side` `mona-34b` `mona-tilt` |
+
+- **크게**: 주인공 w 22–28cqw(최소 20), 둘째 w 15–19cqw(최소 14, 주인공보다 작게). 어떤 마스코트도 30cqw를 넘지 않는다. 지금까지의 w 11보다 확실히 크게.
+- **자리 만들기**: 주 화면은 무대 너비의 52–64%로 조금 줄이고, `K.float`는 0–1개만 둔다(마스코트가 놀이 요소를 맡는다). 앱 타일과 pill은 그대로 1개씩.
+- **화면과 어울리게**: 창 모서리 뒤에서 내다보기(창 `z: 2`, 마스코트 `z: 1`), 창·카드 윗변에 앉히기(카드보다 위 z, 아래쪽을 윗변에 살짝 걸침), 무대 가장자리에서 들어오기.
+  옆을 보는 자세는 주 화면 쪽을 보게 `flip`한다. 두 마리면 서로 다른 자리에 둔다(예: 하나는 창 모서리, 하나는 카드 위).
+- **가리지 않기**: 마스코트마다 60% 이상 보이고 얼굴이 가려지지 않게 한다. 글자와 앱 타일을 덮지 않는다.
+- **audit** (`zoom`·`export`, GitHub AI 장면): 배정과 다른 마스코트, 크기, 보이는 비율, 흐림·투명, 덮은 글자·앱 타일, `K.float` 수.
+  렌더러가 마스코트마다 맨 위로 올린 무대와 숨긴 무대를 찍어 실제로 보이는 픽셀을 센다(유리 창 뒤에 비치거나 무대 밖으로 잘린 부분은 보이지 않는 것으로 센다). `validate.mjs`도 같은 검사를 다시 한다.
+
+```js
+// 창 오른쪽 위 모서리 뒤에서 내다보기 (창 z:2, 마스코트 z:1, 약 64% 보임)
+K.win({ x: 4, y: 12, w: 58, h: 46, z: 2, … }) + K.mascot('mona-tilt', { x: 48, y: 0.5, w: 25, z: 1 })
+// 카드 윗변에 앉히기 (카드 z:3보다 위, 옆모습을 창 쪽으로 flip)
+K.card({ right: 4, y: 30, w: 32, … }) + K.mascot('ducky-side', { right: 9, y: 17, w: 16, z: 4, flip: true })
+```
 
 ## v3 플루이드 (2026-10-21, 새 카드 기준)
 
@@ -143,6 +175,7 @@ kit.css 클래스: `.row .col .grow .pad .sep .soft .hl(강조 테두리) .t-num
 - **스킨**: kit.js가 모든 무대에 `.fluid`를 붙인다. `--skin v2`(render.html?skin=v2)는 처음 80개 카드의 v2 스킨으로 그리며, 원래 키트와 바이트까지 같다.
   처음 80개 카드 이미지는 v2 그대로 둔다. 기존 장면의 `deco`는 그대로 쓰이고 유리 모양 이름은 가까운 유동 형태로 바뀐다(orb·pebble→sphere, blob→bubbles, torus→fold, capsule→ribbon).
 - **AI 장면 audit (scenes/auto만)**: 1.8cqw 미만 글자, 글자 덩어리 16개 초과, pill ≠ 1, 앱 타일 ≠ 1, `K.float` 3개 초과, 무대 밖 타일. 사람이 쓴 80개 장면에는 적용하지 않는다.
+  GitHub 장면은 마스코트 검사도 받는다(위 'GitHub 마스코트').
 - **다크(Copilot Studio)**: 무대는 다크 그대로, 유동 형태·타일·조각도 같은 규칙이다. 장면 색은 `&.dark { … }`로 따로 준다(밝은 칠 위 흰 글자 금지).
 - **kit 클래스**: v3 클래스는 `k-` 접두사(`.k-tile .k-tilebox .k-plinth .k-float`)다. 장면 CSS의 클래스 이름과 겹치지 않는다.
 - **유동 형태 다시 만들기**: `python3 make_fluid.py [앱…] [--shapes fold,ribbon] [--sheet]` (numpy, Pillow). 형태는 한 번만 추적해 `.cache/fluid`에 두고 앱마다 색만 칠한다.

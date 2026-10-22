@@ -71,6 +71,8 @@ jobs:
             ID: ${{ matrix.item.id }}
             CATEGORY: ${{ matrix.item.category }}
             SLUG: ${{ matrix.item.slug }}
+            # GitHub 글의 마스코트 배정(plan이 이번에 그릴 글끼리 겹치지 않게 정함). 두 번째 시도도 같은 배정이다. 다른 앱은 null.
+            MASCOTS: ${{ toJSON(matrix.item.mascots) }}
             THUMBNAIL_EXCERPT: "off"
         steps:
             - uses: actions/checkout@v4

@@ -2,13 +2,15 @@
 /**
  * AI에게 줄 작업 폴더를 만든다 (GitHub Actions 'Post thumbnails'의 generate 단계 앞부분).
  *   node prepare.mjs <앱>/<slug>
- *   환경 변수: REASON(new | edited | manual, plan 결과), FEEDBACK(다시 만들 때 반영할 요청)
+ *   환경 변수: REASON(new | edited | manual, plan 결과), FEEDBACK(다시 만들 때 반영할 요청), MASCOTS(plan이 정한 GitHub 마스코트 배정)
  * 만드는 파일:
  *   data/posts.json             렌더러가 쓰는 공개 글 목록 (새 글 포함)
  *   work/<id>/post.md           제목·요약·주소와 본문 전체
  *   work/<id>/task.md           TASK.md에 이 글의 값을 채운 AI 작업 지시 (같은 앱의 요약 예시 포함)
  *   work/<id>/content.json      제목·지금 요약·본문 HTML (validate가 AI 요약으로 글 버전 지문을 다시 계산한다)
  *   work/<id>/source.json       이 썸네일을 그린 글 버전 (검사를 통과하면 sources/<앱>/<slug>.json으로 저장)
+ *                               GitHub 글은 마스코트 1~2마리(mascots)도 남긴다. plan이 정한 배정(MASCOTS)을 쓰고, 없으면 다른 GitHub 글이
+ *                               덜 쓴 것을 먼저 무작위로 고른다 (lib/mascots.mjs, 작업 지시에도 넣음)
  *   work/<id>/previous-960.webp 지금 공개 사이트 썸네일 (있을 때만)
  */
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -18,6 +20,7 @@ import {
   REPO_ROOT, ROOT, SITE_URL, contentHash, fetchPostHtml, fetchPublishedPosts, htmlToOutline, parseKey, thumbPaths, writePostsData,
 } from './lib/posts.mjs'
 import { pickExcerptExamples } from './lib/pipeline.mjs'
+import { assignMascots, hasMascots, mascotTask, mascotsFromEnv, readMascotRecords } from './lib/mascots.mjs'
 
 const { key, category, slug, id } = parseKey(process.argv[2])
 const feedback = (process.env.FEEDBACK || '').trim()
@@ -44,6 +47,9 @@ lines.push('', '## 본문', '', htmlToOutline(html), '')
 const dir = join(ROOT, 'work', id)
 mkdirSync(dir, { recursive: true })
 mkdirSync(join(ROOT, 'scenes/auto', category), { recursive: true })
+const mascots = hasMascots(category)
+  ? mascotsFromEnv(process.env.MASCOTS) || assignMascots([{ key, category }], readMascotRecords())[0].mascots
+  : null
 writeFileSync(join(dir, 'post.md'), lines.join('\n'))
 writeFileSync(join(dir, 'content.json'), `${JSON.stringify({ title: post.title, excerpt: post.excerpt, html })}\n`)
 writeFileSync(join(dir, 'source.json'), `${JSON.stringify({
@@ -53,6 +59,7 @@ writeFileSync(join(dir, 'source.json'), `${JSON.stringify({
   postUpdatedAt: post.updatedAt,
   contentHash: contentHash({ title: post.title, excerpt: post.excerpt, html }),
   origin: 'ai',
+  ...(mascots ? { mascots } : {}),
 }, null, 2)}\n`)
 
 const previous = join(REPO_ROOT, thumbPaths(key).large)
@@ -69,9 +76,11 @@ const examples = pickExcerptExamples(posts, { key, category })
 const values = {
   KEY: key, ID: id, CATEGORY: category, SLUG: slug, APP_NAME: appName, TITLE: post.title,
   MODE: MODES[reason] || MODES.new,
+  MASCOTS: mascotTask(mascots),
   FEEDBACK: feedback || '없음',
   EXCERPT_EXAMPLES: examples.map((example) => `- ${example.title} → ${example.excerpt}`).join('\n') || '- (예시 없음)',
 }
 const task = readFileSync(join(ROOT, 'TASK.md'), 'utf8').replace(/\{\{(\w+)\}\}/g, (match, name) => values[name] ?? match)
 writeFileSync(join(dir, 'task.md'), task)
+if (mascots) console.log(`마스코트 배정: ${mascots.join(', ')}`)
 console.log(join(dir, 'task.md'))

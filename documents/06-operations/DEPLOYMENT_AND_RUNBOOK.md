@@ -218,6 +218,7 @@ curl --silent --show-error --output /dev/null --connect-timeout 8 --max-time 20 
 새 글과, 이미지를 그린 뒤 제목·요약·본문이 바뀐 글(`tools/post-thumbs/sources/`의 내용 지문과 비교)이 대상이다.
 GitHub Copilot CLI가 글 본문 전체를 읽고 'UI 미니어처' 키트(`tools/post-thumbs`)로 장면을 설계·렌더·검수하고, 같은 글의 요약 한 줄도 쓴다.
 새 썸네일은 v3 플루이드 스킨(부드러운 3D 형태, 선명한 인접색, 앱 아이콘 타일)으로 그린다. 처음 공개된 80개는 v2 이미지 그대로다(`tools/post-thumbs/README.md`의 '디자인').
+GitHub 글은 마스코트(Mona·Copilot·Ducky) 1~2마리를 코드가 무작위로 배정하고(다른 GitHub 글이 덜 쓴 것 먼저), AI가 그 마스코트를 다른 앱보다 크게 넣는다. 배정과 다르거나 작거나 가려지면 validate가 거부한다(같은 README의 'GitHub 마스코트').
 관리자에는 요약 입력 칸이 없다. publish job이 요약을 위 'AI 요약 기재 입구'로 게시글에 기재한 뒤(실패해도 썸네일은 진행),
 결과를 검사해 PR(라벨 `thumbnail`)로 올린다. 버전 기록의 지문은 AI 요약으로 계산하므로, 요약을 기재한 글을 내용 없이 다시 저장해도 다시 만들지 않는다.
 이어서 merge job이 사람 없이 병합한다.
