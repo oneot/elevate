@@ -1,45 +1,58 @@
-/* copilot-studio/copilotstudio — Preview activity trace: skills and connected agents called in order, files attached */
+/* copilot-studio/copilotstudio — Preview answer: chosen color theme + deliverables table, every file attached */
 (() => {
   scene('copilot-studio/copilotstudio', (K) => {
-    const step = (kind, name, extra = '', cls = '') => `<div class="st ${cls}">
-      <span class="dt"></span>
-      <span class="ni ${kind}">${K.ico(kind === 'ag' ? 'bot' : 'puzzle_piece', { s: 2.7 })}</span>
-      <b>${name}</b><span class="sp"></span>${extra}
-    </div>`;
+    const row = (icon, name) => `<div class="fr">${icon}<b>${name}</b><span class="sp"></span>
+      <span class="ok">${K.ico('checkmark_circle', { s: 2.4 })}첨부됨</span></div>`;
+    const sw = (a, b, on) => `<i class="sw${on ? ' on' : ''}" style="--a:${a};--b:${b}"></i>`;
     return K.win({
-      x: 5, y: 9.5, w: 63, h: 52, title: 'AI Creative Agent Team', sub: ' · 활동 기록', icon: false,
-      body: `<div class="tr">
-        ${step('sk', 'write-brief')}
-        ${step('ag', 'budget-agent', K.chip('먼저', { dot: 'var(--amber)' }))}
-        ${step('ag', 'ppt-agent 외 3개', K.skel('8cqw'))}
-        ${step('sk', 'liquid-glass-design')}
-        ${step('sk', 'make- 스킬 5개', K.skel('8cqw'))}
-        ${step('sk', 'deliver-files', K.chip('5개 첨부됨', { icon: 'checkmark_circle', cls: 'ok' }), 'on')}
+      x: 33, y: 9.5, w: 64, h: 50, title: 'AI Creative Agent Team', sub: ' · 미리보기', icon: false,
+      body: `<div class="ch">
+        ${K.bubble('AI 크리에이터 캠프 자료 만들어 줘', { me: true })}
+        <div class="th">${sw('#3aa8ff', '#bfe6ff')}<b>스카이 테마</b><span>맑고 신뢰감 있게</span></div>
+        <div class="tb">
+          ${row(K.app('powerpoint', { s: 3.2 }), 'presentation.pptx')}
+          ${row(K.ico('globe', { s: 3, c: 'var(--sky)' }), 'poster.html')}
+          ${row(K.app('excel', { s: 3.2 }), 'budget_analysis.xlsx')}
+        </div>
       </div>`,
     })
-      + K.tile({ x: 1.6, y: 4.4, s: 10.5 })
-      + K.float({ x: 73, y: 22, s: 7.2, app: 'powerpoint' })
-      + K.float({ x: 86.5, y: 27.5, s: 5.4, app: 'excel', far: true })
-      + K.pill({ right: 4.5, y: 9, icon: 'people_team', text: '요청 한 번, 파일 5개' });
+      + K.card({
+        x: 4, y: 20, w: 26.5, cls: 'pk',
+        body: `<p class="pl">${K.ico('color', { s: 2.6 })}컬러 테마</p>
+          <div class="sws">${sw('#3aa8ff', '#bfe6ff', true)}${sw('#6fd3ff', '#ff4fb8')}${sw('#1d2b5a', '#5a78c8')}${sw('#25b26b', '#bdf0c9')}${sw('#ff7a6b', '#ffc9ae')}</div>`,
+      })
+      + K.tile({ x: 28.5, y: 3.8, s: 10.5 })
+      + K.float({ x: 15, y: 6.5, s: 6, icon: 'arrow_download', far: true })
+      + K.pill({ x: 4, bottom: 4.5, icon: 'sparkle', text: '같은 테마로 파일 5개' });
   }, {
-    deco: { big: 'ribbon', small: 'sphere', v: 0 },
+    deco: { big: 'ribbon', small: 'sphere', v: 1 },
     css: `
-      .win__bar { padding-left: 11.2cqw; font-size: 2.7cqw; font-weight: 700; }
-      .tr { position: relative; display: flex; flex-direction: column; gap: .7cqw; padding: 2.2cqw 3cqw; }
-      .tr::before { content: ''; position: absolute; left: 3.85cqw; top: 4.4cqw; bottom: 0; width: .25cqw; background: rgba(255, 255, 255, .2); }
-      .st { position: relative; display: flex; align-items: center; gap: 1.4cqw; height: 5.1cqw; padding: 0 1.6cqw 0 0; border-radius: 1.6cqw; }
-      .dt { flex: none; width: 1.9cqw; height: 1.9cqw; margin-right: .6cqw; border-radius: 50%; background: var(--grad); box-shadow: 0 0 0 .45cqw rgba(14, 40, 54, .5); }
-      .ni { flex: none; display: grid; place-items: center; width: 4.4cqw; height: 4.4cqw; border-radius: 1.2cqw; background: rgba(var(--tint), .18); color: rgb(var(--tint)); }
-      .ni.ag { background: rgba(225, 87, 190, .2); color: #ff9ade; }
-      .st b { font-family: var(--mono); font-size: 2.6cqw; font-weight: 700; color: var(--ink); white-space: nowrap; letter-spacing: -0.02em; }
-      .st .sp { flex: 1; }
-      .st .chip { font-size: 2.2cqw; font-weight: 700; }
-      .st.on { margin-left: -1.2cqw; padding-left: 1.2cqw; background: rgba(var(--tint), .14); box-shadow: inset 0 0 0 .3cqw rgb(var(--tint)), 0 0 3cqw -1cqw rgba(var(--tint), .5); }
-      .st.on { height: 5.8cqw; margin-top: .5cqw; }
-      .st.on b { font-size: 2.9cqw; }
-      .st.on .chip { font-size: 2.4cqw; }
-      .ok { background: rgba(63, 214, 143, .2); color: #7ef0b6; }
-      .ok .ico { color: #7ef0b6; }
+      --sky: #2f8fe6;
+      .win__bar { padding-left: 9cqw; font-size: 2.7cqw; font-weight: 700; }
+      .ch { display: flex; flex-direction: column; gap: 2cqw; padding: 2.8cqw 3cqw; }
+      .ch .bubble { align-self: flex-end; font-size: 2.5cqw; white-space: nowrap; }
+      .th { display: flex; align-items: center; gap: 1.3cqw; white-space: nowrap; }
+      .th b { font-size: 2.9cqw; font-weight: 750; letter-spacing: -0.03em; }
+      .th span { font-size: 2.2cqw; font-weight: 600; color: var(--ink-3); }
+      .sw { flex: none; display: block; width: 3.6cqw; height: 3.6cqw; border-radius: 50%; background: linear-gradient(135deg, var(--a) 50%, var(--b) 50%); box-shadow: inset 0 0 0 .2cqw rgba(255, 255, 255, .5); }
+      .tb { display: flex; flex-direction: column; gap: .9cqw; padding: 1.2cqw; border-radius: 1.8cqw; background: rgba(255, 255, 255, .5); box-shadow: inset 0 0 0 .2cqw var(--line-2); }
+      .fr { display: flex; align-items: center; gap: 1.4cqw; height: 5cqw; padding: 0 1.4cqw; border-radius: 1.2cqw; }
+      .fr + .fr { box-shadow: 0 -.5cqw 0 -.35cqw var(--line-2); }
+      .fr b { font-family: var(--mono); font-size: 2.5cqw; font-weight: 700; white-space: nowrap; letter-spacing: -0.02em; }
+      .sp { flex: 1; }
+      .ok { display: inline-flex; align-items: center; gap: .6cqw; padding: .6cqw 1.3cqw; border-radius: 99px; background: rgba(36, 170, 104, .14); color: #16884f; font-size: 2.3cqw; font-weight: 700; white-space: nowrap; }
+      .pk { z-index: 3; padding: 2.4cqw 2.4cqw 2.6cqw; }
+      .pl { display: flex; align-items: center; gap: .8cqw; font-size: 2.5cqw; font-weight: 700; color: var(--ink); white-space: nowrap; }
+      .pl .ico { color: rgb(var(--tint)); }
+      .sws { display: flex; gap: .9cqw; margin-top: 1.8cqw; padding-left: .4cqw; }
+      .sws .sw.on { box-shadow: 0 0 0 .35cqw rgba(14, 40, 54, .6), 0 0 0 .7cqw rgb(var(--tint)); }
+      &.dark {
+        --sky: #7cc4ff;
+        .th span { color: var(--ink-3); }
+        .tb { background: rgba(255, 255, 255, .07); box-shadow: inset 0 0 0 .15cqw rgba(255, 255, 255, .14); }
+        .fr + .fr { box-shadow: 0 -.5cqw 0 -.35cqw rgba(255, 255, 255, .14); }
+        .ok { background: rgba(63, 214, 143, .2); color: #7ef0b6; }
+      }
     `,
   });
 })();
