@@ -1,0 +1,14 @@
+{
+  "key": "github/github-copilot-1",
+  "id": "35b49dad-aa1d-4771-8e78-95920f023e10",
+  "title": "GitHub Copilot으로 나만의 포트폴리오 만들기 (1)",
+  "postUpdatedAt": "2026-10-23T07:15:16.109Z",
+  "contentHash": "sha256:4aa121255cd1ac1629d937f0cba40c095a003b3ae178d36d4b2a9bf0adbf0659",
+  "origin": "ai",
+  "mascots": [
+    "copilot-side",
+    "ducky-up"
+  ],
+  "excerpt": "템플릿 포트폴리오를 /init 지침과 /plan 계획 모드로 고쳐 GitHub에 push합니다.",
+  "generatedAt": "2026-10-23T07:30:44.489Z"
+}
