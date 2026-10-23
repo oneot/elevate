@@ -1,0 +1,13 @@
+{
+  "key": "github/github-copilot-2",
+  "id": "509f6791-b581-4c82-8025-755671ad874a",
+  "title": "GitHub Copilot으로 나만의 포트폴리오 만들기 (2)",
+  "postUpdatedAt": "2026-10-23T07:15:23.961Z",
+  "contentHash": "sha256:bd40850a669115c490420f4098cc636d7b763aa2f48b5493032db94dca3e31cf",
+  "origin": "ai",
+  "mascots": [
+    "mona-front"
+  ],
+  "excerpt": "프로젝트 관리 스킬과 포트폴리오 리뷰 에이전트를 만들어 쓰고 Pages로 포트폴리오를 배포합니다.",
+  "generatedAt": "2026-10-23T07:30:07.747Z"
+}
