@@ -2,8 +2,9 @@
   "key": "copilot-studio/copilotstudio",
   "id": "337730d5-2c4c-41a5-8e57-82b61403c03f",
   "title": "AI Creative Agent Team 만들기",
-  "postUpdatedAt": "2026-10-20T10:26:18.604Z",
-  "contentHash": "sha256:0ecfc45a78c30893eddb0673c92a7b0b97b891f3ac193d1ad1924fd16e9600d4",
+  "postUpdatedAt": "2026-10-23T04:25:37.388Z",
+  "contentHash": "sha256:42c4308cecc2d8253d4543212cdc88636e3536c55327e515b25e9bdf8538aba1",
   "origin": "ai",
-  "generatedAt": "2026-10-21T00:43:34.694Z"
+  "excerpt": "전문가 에이전트 5개와 스킬 8개로 PPT·포스터·제안서·웹페이지·예산 엑셀을 한 번에 만듭니다.",
+  "generatedAt": "2026-10-23T04:39:02.022Z"
 }
