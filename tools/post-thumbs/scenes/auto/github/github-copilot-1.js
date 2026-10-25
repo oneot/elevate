@@ -1,48 +1,41 @@
-/* github/github-copilot-1 — GitHub Copilot App: the slash-command menu (/init, /plan, /context, /compact) */
+/* github/github-copilot-1 — GitHub Copilot App: /plan implementation plan carried out in Autopilot mode */
 (() => {
   scene('github/github-copilot-1', (K) => {
-    const cmd = (name, desc, icon, on) => `<div class="cm${on ? ' on' : ''}"><span class="ci">${K.ico(icon, { s: 2.6 })}</span><b>${name}</b><span>${desc}</span></div>`;
+    const step = (text, state) => `<div class="st ${state}">${state === 'run' ? `<span class="sp">${K.ico('arrow_sync_circle', { s: 2.9 })}</span>` : '<span class="check on"></span>'}<b>${text}</b>${state === 'run' ? K.skel(8, { tint: true }) : ''}</div>`;
     return K.win({
-      x: 4, y: 12, w: 60, h: 47, z: 2, icon: false, title: 'my-portfolio',
-      barRight: `<span class="df"><i class="ad">+24</i><i class="dl">−6</i></span>${K.btn('Commit', { primary: true, icon: 'checkmark' })}`,
-      body: `<div class="ss">
-        <div class="msg">${K.skel('62%')}${K.skel('44%')}</div>
-        <div class="menu">
-          ${cmd('/init', '프로젝트 지침 만들기', 'document_text', false)}
-          ${cmd('/plan', '계획 모드로 기획', 'task_list_ltr', true)}
-          ${cmd('/compact', '대화 압축하기', 'arrow_minimize', false)}
+      right: 3, y: 14, w: 61, h: 45, z: 2, icon: false, title: 'my-portfolio',
+      body: `<div class="bd">
+        <div class="plan">
+          <div class="ph">${K.ico('task_list_ltr', { s: 3 })}<b>구현 계획</b><span class="cmd">/plan</span></div>
+          ${step('한 줄 소개', 'done')}
+          ${step('관심사와 취미', 'done')}
+          ${step('앞으로의 목표', 'run')}
         </div>
-        <div class="inp"><span class="sl">/</span><i class="caret"></i><span class="grow"></span><span class="send">${K.ico('send', { s: 2.4 })}</span></div>
+        <div class="mode"><span>Interactive</span><span>Plan</span><span class="on">${K.ico('rocket', { s: 2.6 })}Autopilot</span></div>
       </div>`,
     })
-      + K.tile({ x: 1.2, y: 6.2, s: 10.5, z: 3 })
-      + K.mascot('ducky-up', { x: 53, y: 0, w: 16, z: 1, flip: true })
-      + K.mascot('copilot-side', { right: 2, bottom: 2.5, w: 27, z: 3, flip: true })
-      + K.pill({ right: 4, y: 5, icon: 'code', text: '슬래시 명령어로 척척' });
+      + K.tile({ x: 30.5, y: 8.6, s: 10.5, z: 3 })
+      + K.mascot('copilot-down', { right: 5, y: -1.4, w: 23, z: 3 })
+      + K.float({ x: 23.5, y: 30, s: 7, icon: 'checkmark_circle' })
+      + K.pill({ x: 4, bottom: 5, icon: 'task_list_ltr', text: '계획대로 알아서 구현' });
   }, {
-    deco: { big: 'ribbon', v: 2 },
+    deco: { big: 'ribbon', v: 3 },
     css: `
-      .win__bar { padding-left: 12cqw; font-weight: 700; }
-      .win__bar .btn { padding: .9cqw 1.6cqw; font-size: 2.3cqw; }
-      .df { display: inline-flex; gap: .9cqw; margin-right: 1.2cqw; padding: .7cqw 1.4cqw; border-radius: 99px; background: var(--fill); font-family: var(--mono); font-size: 2.2cqw; font-weight: 700; }
-      .df i { font-style: normal; }
-      .df .ad { color: var(--green); }
-      .df .dl { color: var(--red); }
-      .ss { height: 100%; display: flex; flex-direction: column; gap: 2cqw; padding: 2.6cqw 3cqw; }
-      .msg { display: flex; flex-direction: column; gap: 1.3cqw; }
-      .menu { display: flex; flex-direction: column; gap: .6cqw; padding: 1cqw; border-radius: 1.8cqw; background: #fff; box-shadow: 0 0 0 .2cqw var(--line-2), 0 2cqw 4cqw -2.4cqw rgba(var(--tint), .5); }
-      .cm { display: flex; align-items: center; gap: 1.4cqw; padding: 1.1cqw 1.4cqw; border-radius: 1.2cqw; }
-      .cm .ci { display: grid; place-items: center; width: 4.4cqw; height: 4.4cqw; border-radius: 1.1cqw; background: var(--fill); color: var(--ink-3); }
-      .cm b { width: 14cqw; font-family: var(--mono); font-size: 2.7cqw; font-weight: 700; color: var(--ink); }
-      .cm span:last-child { font-size: 2.3cqw; font-weight: 600; color: var(--ink-3); white-space: nowrap; }
-      .cm.on { background: color-mix(in srgb, rgb(var(--tint)) 11%, #fff); box-shadow: inset 0 0 0 .25cqw color-mix(in srgb, rgb(var(--tint)) 55%, #fff); }
-      .cm.on .ci { background: var(--grad); color: #fff; }
-      .cm.on b { color: rgb(var(--tint)); }
-      .cm.on span:last-child { color: var(--ink); font-weight: 700; }
-      .inp { display: flex; align-items: center; gap: .4cqw; height: 6cqw; padding: 0 1cqw 0 2cqw; border-radius: 1.6cqw; background: #fff; box-shadow: 0 0 0 .25cqw color-mix(in srgb, rgb(var(--tint)) 45%, #fff); }
-      .sl { font-family: var(--mono); font-size: 3cqw; font-weight: 700; color: rgb(var(--tint)); }
-      .caret { width: .25cqw; height: 3cqw; background: var(--ink); }
-      .inp .send { display: grid; place-items: center; width: 4.2cqw; height: 4.2cqw; border-radius: 99px; background: var(--grad); color: #fff; }
+      .win__bar { padding-left: 8.5cqw; font-weight: 700; }
+      .bd { height: 100%; display: flex; flex-direction: column; gap: 2cqw; padding: 2.4cqw 3cqw; }
+      .plan { display: flex; flex-direction: column; gap: .8cqw; padding: 2cqw 2.4cqw; border-radius: 1.8cqw; background: #fff; box-shadow: 0 0 0 .2cqw var(--line-2), 0 2cqw 4cqw -2.4cqw rgba(var(--tint), .5); }
+      .ph { display: flex; align-items: center; gap: 1.2cqw; color: rgb(var(--tint)); margin-bottom: .4cqw; }
+      .ph b { font-size: 2.9cqw; font-weight: 750; color: var(--ink); }
+      .ph .cmd { margin-left: auto; padding: .5cqw 1.3cqw; border-radius: 99px; background: var(--fill); font-family: var(--mono); font-size: 2.3cqw; font-weight: 700; color: var(--ink-2); }
+      .st { display: flex; align-items: center; gap: 1.5cqw; height: 4.4cqw; padding: 0 1.2cqw; border-radius: 1.2cqw; }
+      .st b { font-size: 2.6cqw; font-weight: 650; color: var(--ink-2); white-space: nowrap; }
+      .st.run { background: color-mix(in srgb, rgb(var(--tint)) 10%, #fff); box-shadow: inset 0 0 0 .22cqw color-mix(in srgb, rgb(var(--tint)) 50%, #fff); }
+      .st.run b { color: var(--ink); font-weight: 750; }
+      .st .sp { display: grid; place-items: center; width: 2.6cqw; color: rgb(var(--tint)); }
+      .st .skel { margin-left: auto; }
+      .mode { display: flex; gap: .6cqw; align-self: flex-start; padding: .6cqw; border-radius: 99px; background: #fff; box-shadow: 0 0 0 .2cqw var(--line-2); }
+      .mode span { display: inline-flex; align-items: center; gap: .7cqw; padding: .9cqw 1.8cqw; border-radius: 99px; font-size: 2.4cqw; font-weight: 650; color: var(--ink-3); white-space: nowrap; }
+      .mode .on { background: var(--grad); color: #fff; font-weight: 750; font-size: 2.6cqw; }
     `,
   });
 })();
