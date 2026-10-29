@@ -2,13 +2,13 @@
   "key": "github/github-pages",
   "id": "100bbff0-a2d2-483c-be29-bbe0dfec4da4",
   "title": "Pages에 에이전트 배포하기",
-  "postUpdatedAt": "2026-10-29T07:16:35.227Z",
-  "contentHash": "sha256:12da43315de5c37383e4091a705740eff278cc60e3cef340a36ced4468eb6131",
+  "postUpdatedAt": "2026-10-29T09:18:05.797Z",
+  "contentHash": "sha256:b093646bfb87a1a6141b9b3ccbbdc49f118c504c98888b51cb4698ec87b12fa8",
   "origin": "ai",
   "mascots": [
-    "ducky-up",
-    "mona-side"
+    "ducky-side",
+    "mona-34"
   ],
-  "excerpt": "agent-seal로 봉인한 index.html을 올리고 Pages로 에이전트 웹앱을 공개합니다.",
-  "generatedAt": "2026-10-29T07:30:46.184Z"
+  "excerpt": "agent-seal로 봉인한 index.html을 Pages로 공개하고 AI로 디자인을 바꿉니다.",
+  "generatedAt": "2026-10-29T09:31:43.229Z"
 }
