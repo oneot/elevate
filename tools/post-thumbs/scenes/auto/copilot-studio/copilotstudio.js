@@ -1,57 +1,66 @@
-/* copilot-studio/copilotstudio — Preview answer: chosen color theme + deliverables table, every file attached */
+/* copilot-studio/copilotstudio — Preview activity trace: skills and connected agents in order, deliver-files last with 5 files attached */
 (() => {
   scene('copilot-studio/copilotstudio', (K) => {
-    const row = (icon, name) => `<div class="fr">${icon}<b>${name}</b><span class="sp"></span>
-      <span class="ok">${K.ico('checkmark_circle', { s: 2.4 })}첨부됨</span></div>`;
-    const sw = (a, b, on) => `<i class="sw${on ? ' on' : ''}" style="--a:${a};--b:${b}"></i>`;
+    const step = (kind, name, extra = '', cls = '') => `<div class="st ${kind} ${cls}">
+      <span class="dt"></span>
+      <span class="ni">${K.ico(kind === 'sk' ? 'puzzle_piece' : 'bot', { s: 2.7 })}</span>
+      <b>${name}</b><span class="sp"></span>${extra}
+    </div>`;
+    const ok = K.ico('checkmark_circle', { s: 2.6, cls: 'ck' });
+    const fi = (inner, bg) => `<span class="fi" style="--bg:${bg}">${inner}</span>`;
     return K.win({
-      x: 33, y: 9.5, w: 64, h: 50, title: 'AI Creative Agent Team', sub: ' · 미리보기', icon: false,
-      body: `<div class="ch">
-        ${K.bubble('AI 크리에이터 캠프 자료 만들어 줘', { me: true })}
-        <div class="th">${sw('#3aa8ff', '#bfe6ff')}<b>스카이 테마</b><span>맑고 신뢰감 있게</span></div>
-        <div class="tb">
-          ${row(K.app('powerpoint', { s: 3.2 }), 'presentation.pptx')}
-          ${row(K.ico('globe', { s: 3, c: 'var(--sky)' }), 'poster.html')}
-          ${row(K.app('excel', { s: 3.2 }), 'budget_analysis.xlsx')}
-        </div>
+      x: 33, y: 10.5, w: 63, h: 50, title: 'AI Creative Agent Team', sub: ' · 활동 기록', icon: false,
+      body: `<div class="tr">
+        ${step('sk', 'write-brief', ok)}
+        ${step('ag', 'budget-agent', ok)}
+        ${step('ag', 'ppt-agent 외 3개', ok)}
+        ${step('sk', 'liquid-glass-design', ok)}
+        ${step('sk', 'deliver-files', `<span class="dn">${K.ico('attach', { s: 2.4 })}5/5 첨부됨</span>`, 'on')}
       </div>`,
     })
       + K.card({
-        x: 4, y: 20, w: 26.5, cls: 'pk',
-        body: `<p class="pl">${K.ico('color', { s: 2.6 })}컬러 테마</p>
-          <div class="sws">${sw('#3aa8ff', '#bfe6ff', true)}${sw('#6fd3ff', '#ff4fb8')}${sw('#1d2b5a', '#5a78c8')}${sw('#25b26b', '#bdf0c9')}${sw('#ff7a6b', '#ffc9ae')}</div>`,
+        x: 3.5, y: 26, w: 32, cls: 'fl',
+        body: `<p class="fh">${K.ico('attach', { s: 2.6 })}파일 5개</p>
+          <div class="fs">
+            ${fi(K.app('powerpoint', { s: 4 }), 'rgba(255, 128, 92, .2)')}
+            ${fi(K.ico('image', { s: 3.6, c: '#ff8fc8' }), 'rgba(255, 122, 184, .2)')}
+            ${fi(K.app('word', { s: 4 }), 'rgba(90, 162, 255, .2)')}
+            ${fi(K.ico('globe', { s: 3.6, c: '#8cc4ff' }), 'rgba(90, 162, 255, .18)')}
+            ${fi(K.app('excel', { s: 4 }), 'rgba(63, 214, 143, .2)')}
+          </div>`,
       })
-      + K.tile({ x: 28.5, y: 3.8, s: 10.5 })
-      + K.float({ x: 15, y: 6.5, s: 6, icon: 'arrow_download', far: true })
-      + K.pill({ x: 4, bottom: 4.5, icon: 'sparkle', text: '같은 테마로 파일 5개' });
+      + K.tile({ x: 29.8, y: 3.8, s: 10.5 })
+      + K.float({ x: 13, bottom: 4, s: 6.4, icon: 'arrow_download' })
+      + K.pill({ right: 4, y: 3.4, icon: 'people_team', text: '원고는 전문가, 파일은 팀장' });
   }, {
-    deco: { big: 'ribbon', small: 'sphere', v: 1 },
+    deco: { big: 'ribbon', small: 'sphere', v: 3 },
     css: `
-      --sky: #2f8fe6;
-      .win__bar { padding-left: 9cqw; font-size: 2.7cqw; font-weight: 700; }
-      .ch { display: flex; flex-direction: column; gap: 2cqw; padding: 2.8cqw 3cqw; }
-      .ch .bubble { align-self: flex-end; font-size: 2.5cqw; white-space: nowrap; }
-      .th { display: flex; align-items: center; gap: 1.3cqw; white-space: nowrap; }
-      .th b { font-size: 2.9cqw; font-weight: 750; letter-spacing: -0.03em; }
-      .th span { font-size: 2.2cqw; font-weight: 600; color: var(--ink-3); }
-      .sw { flex: none; display: block; width: 3.6cqw; height: 3.6cqw; border-radius: 50%; background: linear-gradient(135deg, var(--a) 50%, var(--b) 50%); box-shadow: inset 0 0 0 .2cqw rgba(255, 255, 255, .5); }
-      .tb { display: flex; flex-direction: column; gap: .9cqw; padding: 1.2cqw; border-radius: 1.8cqw; background: rgba(255, 255, 255, .5); box-shadow: inset 0 0 0 .2cqw var(--line-2); }
-      .fr { display: flex; align-items: center; gap: 1.4cqw; height: 5cqw; padding: 0 1.4cqw; border-radius: 1.2cqw; }
-      .fr + .fr { box-shadow: 0 -.5cqw 0 -.35cqw var(--line-2); }
-      .fr b { font-family: var(--mono); font-size: 2.5cqw; font-weight: 700; white-space: nowrap; letter-spacing: -0.02em; }
+      .win__bar { padding-left: 11cqw; font-size: 2.7cqw; font-weight: 700; }
+      .tr { position: relative; display: flex; flex-direction: column; gap: 1.1cqw; padding: 2.6cqw 3cqw; }
+      .tr::before { content: ''; position: absolute; left: 4.6cqw; top: 5cqw; bottom: 5cqw; width: .3cqw; border-radius: 1cqw; background: var(--line-2); }
+      .st { position: relative; display: flex; align-items: center; gap: 1.4cqw; height: 5.3cqw; padding: 0 1.6cqw 0 4.4cqw; border-radius: 1.4cqw; }
+      .dt { position: absolute; left: .85cqw; top: 50%; width: 1.5cqw; height: 1.5cqw; translate: 0 -50%; border-radius: 50%; background: rgb(var(--tint)); box-shadow: 0 0 0 .35cqw rgba(var(--tint), .25); }
+      .ni { flex: none; display: grid; place-items: center; width: 4cqw; height: 4cqw; border-radius: 1.1cqw; background: color-mix(in srgb, rgb(var(--tint)) 14%, #fff); color: rgb(var(--tint)); }
+      .ag .ni { background: rgba(124, 97, 230, .16); color: #7b61c9; }
+      .st b { font-family: var(--mono); font-size: 2.5cqw; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
       .sp { flex: 1; }
-      .ok { display: inline-flex; align-items: center; gap: .6cqw; padding: .6cqw 1.3cqw; border-radius: 99px; background: rgba(36, 170, 104, .14); color: #16884f; font-size: 2.3cqw; font-weight: 700; white-space: nowrap; }
-      .pk { z-index: 3; padding: 2.4cqw 2.4cqw 2.6cqw; }
-      .pl { display: flex; align-items: center; gap: .8cqw; font-size: 2.5cqw; font-weight: 700; color: var(--ink); white-space: nowrap; }
-      .pl .ico { color: rgb(var(--tint)); }
-      .sws { display: flex; gap: .9cqw; margin-top: 1.8cqw; padding-left: .4cqw; }
-      .sws .sw.on { box-shadow: 0 0 0 .35cqw rgba(14, 40, 54, .6), 0 0 0 .7cqw rgb(var(--tint)); }
+      .ck { color: #23a868; }
+      .st.on { background: rgba(var(--tint), .12); box-shadow: inset 0 0 0 .3cqw rgb(var(--tint)); }
+      .st.on b { font-size: 2.8cqw; }
+      .dn { display: inline-flex; align-items: center; gap: .6cqw; padding: .7cqw 1.4cqw; border-radius: 99px; background: var(--grad); color: #fff; font-size: 2.4cqw; font-weight: 750; white-space: nowrap; }
+      .fl { z-index: 3; padding: 2.4cqw 2.6cqw 2.8cqw; }
+      .fh { display: flex; align-items: center; gap: .8cqw; font-size: 2.7cqw; font-weight: 750; white-space: nowrap; }
+      .fh .ico { color: rgb(var(--tint)); }
+      .fs { display: grid; grid-template-columns: repeat(5, 1fr); gap: .8cqw; margin-top: 1.8cqw; }
+      .fi { display: grid; place-items: center; aspect-ratio: 1; border-radius: 1.2cqw; background: var(--bg); }
       &.dark {
-        --sky: #7cc4ff;
-        .th span { color: var(--ink-3); }
-        .tb { background: rgba(255, 255, 255, .07); box-shadow: inset 0 0 0 .15cqw rgba(255, 255, 255, .14); }
-        .fr + .fr { box-shadow: 0 -.5cqw 0 -.35cqw rgba(255, 255, 255, .14); }
-        .ok { background: rgba(63, 214, 143, .2); color: #7ef0b6; }
+        .tr::before { background: rgba(255, 255, 255, .18); }
+        .ni { background: rgba(var(--tint), .2); color: #6fe6d4; }
+        .ag .ni { background: rgba(160, 138, 255, .22); color: #c3b5ff; }
+        .ck { color: #7ef0b6; }
+        .dt { background: #6fe6d4; box-shadow: 0 0 0 .35cqw rgba(111, 230, 212, .22); }
+        .st.on { background: rgba(var(--tint), .16); box-shadow: inset 0 0 0 .3cqw #4fd6c4; }
+        .fh .ico { color: #6fe6d4; }
       }
     `,
   });
