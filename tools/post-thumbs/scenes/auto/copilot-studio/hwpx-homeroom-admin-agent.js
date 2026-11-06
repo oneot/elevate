@@ -1,62 +1,53 @@
-/* copilot-studio/hwpx-homeroom-admin-agent — two photos in, three HWPX forms out, then ask before updating the ledger */
+/* copilot-studio/hwpx-homeroom-admin-agent — the attendance ledger gets a row only after the teacher says yes */
 (() => {
   scene('copilot-studio/hwpx-homeroom-admin-agent', (K) => {
-    const doc = (name) => `<div class="fd"><div class="ft"><span class="fi">${K.ico('document_text', { s: 3.2 })}</span><em>HWPX</em></div><b>${name}</b></div>`;
+    const old = `<div class="tr">${K.skel('70%')}${K.skel('60%')}${K.skel('76%')}<span></span></div>`;
     return K.win({
-      x: 4, y: 8.5, w: 60, h: 52, title: '우리반 행정 에이전트', icon: false,
-      body: `<div class="ch">
-        <div class="me">
-          <span class="ph">${K.ico('image', { s: 3 })}</span><span class="ph">${K.ico('image_multiple', { s: 3 })}</span>
-          ${K.bubble('결석 서류 3종 만들어 줘', { me: true })}
-        </div>
-        <div class="docs">${doc('신고서')}${doc('담임 의견서')}${doc('학부모 의견서')}</div>
-        <div class="ask hl">${K.ico('person_question_mark', { s: 3 })}<b>출결관리대장에 반영할까요?</b></div>
+      x: 36, y: 9, w: 61, h: 50, title: '출결관리대장.xlsx', icon: false,
+      barRight: K.chip('출결대장', { icon: 'table', tint: true }),
+      body: `<div class="lg">
+        <div class="tr th"><span>날짜</span><span>성명</span><span>구분</span><span>${K.ico('document_checkmark', { s: 2.6 })}</span></div>
+        ${old}${old}
+        <div class="tr rd"><span>10. 22.</span><b>최서준</b><span>결석·질병</span><em>미제출</em></div>
+        <div class="tr nw">${K.skel('70%', { tint: true })}<b>김민준</b><span>출석인정 2일</span><span class="ok">${K.ico('checkmark_circle', { s: 2.8 })}</span></div>
+        ${old}
       </div>`,
     })
       + K.card({
-        right: 3, y: 21.5, w: 33.5, cls: 'led',
-        body: `<p class="lh">${K.app('excel', { s: 3 })}<b>출결관리대장</b></p>
-          <div class="rw">
-            <span class="nm">최서준</span><span>10. 22.</span><span class="kd">결석·질병</span>
-          </div>
-          ${K.chip('12행에 한 줄 추가', { icon: 'table_add', tint: true })}`,
+        x: 5.5, y: 16, w: 31.5, cls: 'ask',
+        body: `<div class="bt">${K.app(null, { s: 3.6 })}${K.bubble('출결관리대장에<br>반영할까요?')}</div>
+          ${K.bubble('응, 대장에 반영해 줘', { me: true })}`,
       })
-      + K.tile({ x: 1, y: 3, s: 10.5 })
-      + K.float({ right: 1.2, y: 17.5, s: 5.6, icon: 'checkmark' })
-      + K.float({ right: 6, y: 6, app: 'onedrive', far: true })
-      + K.pill({ right: 4, bottom: 4.4, icon: 'document_checkmark', text: '사진 2장이 서류 3종으로' });
+      + K.tile({ x: 31.5, y: 3.6, s: 10.5 })
+      + K.float({ right: 5, y: 3.2, app: 'excel', s: 6 })
+      + K.float({ x: 30, y: 40.5, icon: 'checkmark', s: 5.4, far: true })
+      + K.pill({ x: 3, bottom: 4.4, icon: 'person_available', text: '선생님 확인 후 반영' });
   }, {
-    deco: { big: 'fold', small: 'sphere', v: 2 },
+    deco: { big: 'ribbon', small: 'sphere', v: 1 },
     css: `
-      .win__bar { padding-left: 12cqw; }
-      .ch { display: flex; flex-direction: column; gap: 2.6cqw; padding: 3cqw 3.2cqw; }
-      .me { display: flex; align-items: center; justify-content: flex-end; gap: 1cqw; }
-      .ph { display: grid; place-items: center; width: 5.4cqw; height: 5.4cqw; border-radius: 1.2cqw; background: rgba(255, 255, 255, .7); color: var(--ink-3); }
-      .me .bubble { margin-left: .6cqw; font-size: 2.6cqw; white-space: nowrap; }
-      .docs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4cqw; width: 52cqw; }
-      .ask { width: 44cqw; }
-      .fd { display: flex; flex-direction: column; align-items: flex-start; gap: 1.2cqw; padding: 1.6cqw 1.6cqw 1.8cqw; border-radius: 1.6cqw; background: rgba(255, 255, 255, .85); box-shadow: inset 0 0 0 .2cqw var(--line-2); }
-      .fi { display: grid; place-items: center; width: 5cqw; height: 5cqw; border-radius: 1.2cqw; background: color-mix(in srgb, rgb(var(--tint)) 12%, #fff); color: rgb(var(--tint)); }
-      .fd b { font-size: 2.45cqw; font-weight: 700; letter-spacing: -0.03em; white-space: nowrap; }
-      .ft { display: flex; align-items: center; justify-content: space-between; align-self: stretch; }
-      .ft em { font-style: normal; font-size: 1.9cqw; font-weight: 750; letter-spacing: .02em; color: rgb(var(--tint)); }
-      .ask { display: flex; align-items: center; gap: 1.2cqw; padding: 1.8cqw 2.2cqw; border-radius: 1.6cqw; color: rgb(var(--tint)); }
-      .ask b { font-size: 2.9cqw; font-weight: 750; letter-spacing: -0.03em; color: var(--ink); white-space: nowrap; }
-      .led { z-index: 3; display: flex; flex-direction: column; gap: 1.8cqw; padding: 2.6cqw 2.6cqw 2.8cqw; }
-      .lh { display: flex; align-items: center; gap: 1cqw; }
-      .lh b { font-size: 2.7cqw; font-weight: 750; letter-spacing: -0.03em; }
-      .rw { display: flex; align-items: center; gap: 1.4cqw; padding: 1.3cqw 1.6cqw; border-radius: 1.2cqw; font-size: 2.3cqw; font-weight: 650; white-space: nowrap;
-        background: color-mix(in srgb, var(--red) 14%, #fff); box-shadow: inset .5cqw 0 0 var(--red); color: var(--ink-2); }
-      .rw .nm { font-weight: 750; color: var(--ink); }
-      .led .chip { align-self: flex-start; font-size: 2.1cqw; }
-      .rw .kd { color: #c4302b; }
+      .win__bar { padding-left: 10cqw; }
+      .win__bar .chip { font-size: 2.2cqw; }
+      .lg { display: flex; flex-direction: column; padding: 2.6cqw 3cqw 0; }
+      .tr { display: grid; grid-template-columns: 11cqw 11cqw 17cqw 1fr; align-items: center; gap: 1.6cqw; height: 5.6cqw; padding: 0 1.8cqw;
+        border-bottom: .15cqw solid rgba(20, 22, 30, .08); font-size: 2.6cqw; font-weight: 650; white-space: nowrap; color: var(--ink-2); }
+      .tr .skel { height: 1.6cqw; }
+      .th { height: 5cqw; border-radius: 1.2cqw 1.2cqw 0 0; background: color-mix(in srgb, rgb(var(--tint)) 12%, #fff); font-size: 2.2cqw; font-weight: 700; color: var(--ink-3); }
+      .tr b { font-weight: 750; color: var(--ink); }
+      .rd { border-radius: 1cqw; background: color-mix(in srgb, var(--red) 14%, #fff); box-shadow: inset .55cqw 0 0 var(--red); }
+      .rd em { justify-self: start; padding: .4cqw 1.2cqw; border-radius: 99px; font-style: normal; font-size: 2.2cqw; font-weight: 750; color: #c4302b; background: color-mix(in srgb, var(--red) 18%, #fff); }
+      .nw { margin-top: .8cqw; border-radius: 1.2cqw; background: color-mix(in srgb, rgb(var(--tint)) 8%, #fff); box-shadow: inset 0 0 0 .25cqw rgba(var(--tint), .6); }
+      .nw span:nth-child(3) { color: rgb(var(--tint)); font-weight: 750; }
+      .ok { color: var(--green); display: flex; }
+      .ask { z-index: 3; display: flex; flex-direction: column; gap: 2cqw; padding: 2.8cqw 2.6cqw 3cqw; }
+      .bt { display: flex; align-items: flex-end; gap: 1.1cqw; }
+      .ask .bubble { max-width: none; font-size: 2.6cqw; font-weight: 650; line-height: 1.38; white-space: nowrap; }
+      .ask .bubble--me { align-self: flex-end; }
       &.dark {
-        .ph { background: rgba(255, 255, 255, .1); color: var(--ink-3); }
-        .fd { background: rgba(255, 255, 255, .09); box-shadow: inset 0 0 0 .15cqw rgba(255, 255, 255, .14); }
-        .fi { background: rgba(var(--tint), .18); }
-        .ask { background: rgba(var(--tint), .12); }
-        .rw { background: rgba(255, 107, 102, .16); }
-        .rw .kd { color: #ffa29c; }
+        .tr { border-bottom-color: rgba(255, 255, 255, .08); }
+        .th { background: rgba(var(--tint), .16); }
+        .rd { background: rgba(255, 107, 102, .16); }
+        .rd em { color: #ffa29c; background: rgba(255, 107, 102, .2); }
+        .nw { background: rgba(var(--tint), .12); }
       }
     `,
   });
