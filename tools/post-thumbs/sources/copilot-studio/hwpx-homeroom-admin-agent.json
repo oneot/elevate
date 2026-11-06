@@ -2,9 +2,9 @@
   "key": "copilot-studio/hwpx-homeroom-admin-agent",
   "id": "3abeb9d4-c192-4152-b4d6-7436de4a44da",
   "title": "행정 업무 자동화 하기",
-  "postUpdatedAt": "2026-11-06T08:12:02.587Z",
-  "contentHash": "sha256:3cc834e6569570269fa2d47b585f860a3e372bee1aaade044fe5ec2190965dda",
+  "postUpdatedAt": "2026-11-06T08:26:46.071Z",
+  "contentHash": "sha256:4f9bbd698050ea781d9d4dfe11e979bc14abb764f5a8649b770e2493dbdd40bc",
   "origin": "ai",
-  "excerpt": "결석 서류 3종 HWPX 작성, 출결관리대장 반영, 체험학습 서류 검토를 돕는 에이전트를 만듭니다.",
-  "generatedAt": "2026-11-06T08:26:15.642Z"
+  "excerpt": "사진 두 장으로 결석 서류 3종을 만들고 체험학습 서류를 검토해 출결관리대장에 반영합니다.",
+  "generatedAt": "2026-11-06T08:41:01.427Z"
 }
