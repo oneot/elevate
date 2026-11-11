@@ -1,10 +1,10 @@
 {
   "key": "copilot-studio/hwpx-homeroom-admin-agent",
   "id": "3abeb9d4-c192-4152-b4d6-7436de4a44da",
-  "title": "행정 업무 자동화 하기",
-  "postUpdatedAt": "2026-11-06T08:26:46.071Z",
-  "contentHash": "sha256:4f9bbd698050ea781d9d4dfe11e979bc14abb764f5a8649b770e2493dbdd40bc",
+  "title": "WorkIQ로 행정 업무 자동화 하기",
+  "postUpdatedAt": "2026-11-11T16:02:43.358Z",
+  "contentHash": "sha256:c49ebdea3d88ddbc2c9a5fc1d68e09b3f5d255428ada1e4ac5704335b872d103",
   "origin": "ai",
-  "excerpt": "사진 두 장으로 결석 서류 3종을 만들고 체험학습 서류를 검토해 출결관리대장에 반영합니다.",
-  "generatedAt": "2026-11-06T08:41:01.427Z"
+  "excerpt": "학부모 문자와 진료확인서 사진으로 결석 서류 3종을 HWPX로 받고 출결관리대장에 반영합니다.",
+  "generatedAt": "2026-11-11T16:16:42.615Z"
 }
