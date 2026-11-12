@@ -1,82 +1,81 @@
-/* copilot-studio/golden-time-router — github.io dashboard: map routes and the Top 3 ER ranking board */
+/* copilot-studio/golden-time-router — workflow canvas: Kakao/공공데이터 HTTP nodes and the "후보 병원마다" loop over 10 ERs */
 (() => {
+  const geo = (stage) => {
+    const b = stage.getBoundingClientRect();
+    const k = 100 / b.width;
+    return (sel) => {
+      const r = stage.querySelector(sel).getBoundingClientRect();
+      const l = (r.left - b.left) * k, t = (r.top - b.top) * k, w = r.width * k, h = r.height * k;
+      return { l, t, r: l + w, b: t + h, cx: l + w / 2, cy: t + h / 2 };
+    };
+  };
+  const tintOf = (stage) => `rgb(${getComputedStyle(stage).getPropertyValue('--tint').trim()})`;
+
   scene('copilot-studio/golden-time-router', (K) => {
-    const pin = (n, x, y) => `<span class="hp h${n}" style="left:${x}%;top:${y}%">${K.ico('heart_pulse', { s: 2 })}</span>`;
-    const row = (n, name, min, bed, on) => `<div class="rk${on ? ' on' : ''}">
-      <span class="n">${n}</span>
-      <div class="grow"><b>${name}</b><small>${K.ico('vehicle_car', { s: 2.2 })}${min} · 병상 ${bed}</small></div>
-    </div>`;
+    const top = (icon, name) => `<div class="tn"><span class="ni">${K.ico(icon, { s: 2.8 })}</span><b>${name}</b></div>`;
+    const http = (icon, name) => `<div class="hn"><span class="ni">${K.ico(icon, { s: 2.6 })}</span><b>${name}</b></div>`;
     return K.win({
-      x: 30, y: 9.5, w: 66, h: 50, title: '골든타임 라우터', icon: false,
-      barRight: K.chip('에이전트 연결됨', { dot: 'var(--green)' }),
-      body: `<div class="db">
-        <div class="map">
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-            <path class="r3" d="M44 58 C 30 70, 22 74, 18 86" />
-            <path class="r2" d="M44 58 C 62 54, 74 40, 80 30" />
-            <path class="r1" d="M44 58 C 46 40, 34 28, 30 16" />
-          </svg>
-          ${pin(1, 30, 16)}${pin(2, 80, 30)}${pin(3, 18, 86)}
-          <span class="me" style="left:44%;top:58%">${K.ico('location', { s: 2.6 })}</span>
-          <span class="lbl">보라매공원</span>
-        </div>
-        <div class="bd">
-          ${row(1, 'A대학병원', '7분', 5, true)}
-          ${row(2, 'B종합병원', '11분', 3)}
-          ${row(3, 'C의료원', '14분', 2)}
+      x: 4, y: 10, w: 62, h: 50, title: '근처 응급실 실시간 조회', icon: false,
+      barRight: K.chip('게시됨', { dot: 'var(--green)' }),
+      body: `<div class="cv">
+        <div class="r1">${top('globe_location', '장소 좌표 찾기')}<i class="ah"></i>${top('location', '근처 응급실 조회')}</div>
+        <i class="av"></i>
+        <div class="lp">
+          <div class="lh">${K.ico('arrow_repeat_all', { s: 3 })}<b>후보 병원마다</b>${K.chip('10곳', { solid: true })}</div>
+          <div class="gr">
+            ${http('alert_urgent', '① 메시지')}${http('vehicle_car', '② 이동 시간')}
+            ${http('bed', '③ 병상')}${http('heart_pulse', '④ 중증질환')}
+          </div>
         </div>
       </div>`,
     })
       + K.card({
-        x: 4, y: 16.4, w: 28.5, cls: 'ask',
-        body: `${K.bubble('보라매공원,<br>50대 다리골절 노인', { me: true })}
-          <div class="bot"><p class="bh">${K.ico('alert_urgent', { s: 2.4 })}이송 추천</p>${K.skel('86%')}${K.skel('60%')}</div>`,
+        right: 2.4, y: 31, w: 30, cls: 'rs',
+        body: `<p class="rh">${K.ico('arrow_reply', { s: 2.6 })}Respond to the agent</p>
+          <div class="out">${K.ico('braces_variable', { s: 2.6 })}<b>병원정보</b></div>
+          ${K.skel('88%')}${K.skel('64%')}`,
       })
-      + K.tile({ x: 26.4, y: 4, s: 10.5 })
-      + K.float({ right: 3.4, y: 2.6, s: 6, icon: 'location_ripple' })
-      + K.pill({ x: 4, bottom: 3.8, icon: 'trophy', text: '응급실 Top 3 추천' });
+      + '<div class="links"></div>'
+      + K.tile({ x: 1.6, y: 4, s: 10.5 })
+      + K.float({ right: 7, y: 17, s: 6, icon: 'timer', far: true })
+      + K.pill({ right: 4, y: 4, icon: 'arrow_sync', text: '응급실 10곳 실시간 조회' });
   }, {
-    deco: { big: 'ribbon', small: 'sphere', v: 3 },
+    deco: { big: 'ribbon', small: 'sphere', v: 2 },
     css: `
-      .win__bar { padding-left: 8.4cqw; font-size: 3cqw; font-weight: 700; }
+      .win__bar { padding-left: 11cqw; font-size: 2.9cqw; font-weight: 700; }
       .win__bar .chip { font-size: 2.2cqw; font-weight: 700; padding: .8cqw 1.6cqw; }
-      .db { height: 100%; display: flex; gap: 2.4cqw; padding: 2.8cqw 3cqw; }
-      .map { position: relative; flex: none; width: 27cqw; height: 36cqw; border-radius: 1.8cqw; overflow: hidden;
-        background:
-          linear-gradient(90deg, transparent 31%, rgba(255, 255, 255, .13) 31% 33%, transparent 33% 68%, rgba(255, 255, 255, .13) 68% 70%, transparent 70%),
-          linear-gradient(0deg, transparent 38%, rgba(255, 255, 255, .13) 38% 40%, transparent 40% 76%, rgba(255, 255, 255, .13) 76% 78%, transparent 78%),
-          radial-gradient(circle at 78% 82%, rgba(110, 200, 140, .22) 0 14%, transparent 15%),
-          rgba(255, 255, 255, .06);
-        box-shadow: inset 0 0 0 .15cqw rgba(255, 255, 255, .16); }
-      .map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-      .map path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-      .r1 { stroke: rgb(var(--tint)); stroke-width: .75cqw; filter: drop-shadow(0 0 .6cqw rgba(var(--tint), .8)); }
-      .r2 { stroke: rgba(255, 255, 255, .5); stroke-width: .45cqw; stroke-dasharray: 1cqw .8cqw; }
-      .r3 { stroke: rgba(255, 255, 255, .35); stroke-width: .45cqw; stroke-dasharray: 1cqw .8cqw; }
-      .hp { position: absolute; translate: -50% -50%; display: grid; place-items: center; width: 4.4cqw; height: 4.4cqw; border-radius: 50%;
-        background: rgba(255, 255, 255, .9); color: #e5484d; box-shadow: 0 .8cqw 1.6cqw -.6cqw rgba(4, 10, 20, .6); }
-      .hp.h1 { width: 5.2cqw; height: 5.2cqw; background: #fff; box-shadow: 0 0 0 .5cqw rgba(var(--tint), .85), 0 .8cqw 2cqw -.6cqw rgba(4, 10, 20, .6); }
-      .me { position: absolute; translate: -50% -50%; display: grid; place-items: center; width: 4.6cqw; height: 4.6cqw; border-radius: 50%;
-        background: var(--grad); color: #fff; box-shadow: 0 0 0 1.2cqw rgba(var(--tint), .25); }
-      .lbl { position: absolute; left: 52%; top: 66%; padding: .5cqw 1.2cqw; border-radius: 99px; background: rgba(10, 30, 40, .7);
-        font-size: 2.1cqw; font-weight: 700; color: #fff; white-space: nowrap; }
-      .bd { flex: 1; display: flex; flex-direction: column; gap: 1.5cqw; }
-      .rk { display: flex; align-items: center; gap: 1.5cqw; padding: 1.7cqw 1.8cqw; border-radius: 1.6cqw;
-        background: rgba(255, 255, 255, .07); box-shadow: inset 0 0 0 .15cqw rgba(255, 255, 255, .14); }
-      .rk .n { flex: none; display: grid; place-items: center; width: 4.4cqw; height: 4.4cqw; border-radius: 50%;
-        background: rgba(255, 255, 255, .14); font-size: 2.5cqw; font-weight: 800; color: var(--ink); }
-      .rk b { display: block; font-size: 2.7cqw; font-weight: 750; letter-spacing: -0.03em; color: var(--ink); white-space: nowrap; }
-      .rk small { display: flex; align-items: center; gap: .6cqw; margin-top: .4cqw; font-size: 2.2cqw; font-weight: 650; color: var(--ink-3); white-space: nowrap; }
-      .rk.on { background: rgba(var(--tint), .18); box-shadow: inset 0 0 0 .3cqw rgb(var(--tint)), 0 0 3cqw -1cqw rgba(var(--tint), .55); }
-      .rk.on .n { background: var(--grad); color: #fff; }
-      .rk.on b { font-size: 3cqw; }
-      .rk.on small { color: rgb(var(--tint)); }
-      .ask { z-index: 4; display: flex; flex-direction: column; gap: 1.6cqw; padding: 2.4cqw; }
-      .ask .bubble { max-width: 100%; font-size: 2.4cqw; font-weight: 650; line-height: 1.35; }
-      .bot { display: flex; flex-direction: column; gap: 1cqw; padding: 1.6cqw 1.8cqw; border-radius: 1.6cqw 1.6cqw 1.6cqw .6cqw; background: rgba(255, 255, 255, .08); }
-      .bh { display: flex; align-items: center; gap: .7cqw; margin-bottom: .3cqw; font-size: 2.3cqw; font-weight: 700; color: var(--ink); white-space: nowrap; }
-      .bh .ico { color: #ff8f88; }
-      .bot .skel { background: rgba(255, 255, 255, .2); }
+      .cv { height: 100%; padding: 3cqw 3.2cqw; display: flex; flex-direction: column; align-items: center;
+        background: radial-gradient(circle, rgba(255, 255, 255, .14) .16cqw, transparent .2cqw) 0 0 / 2.4cqw 2.4cqw; }
+      .ni { flex: none; display: grid; place-items: center; width: 4.6cqw; height: 4.6cqw; border-radius: 1.2cqw; background: rgba(var(--tint), .18); color: rgb(var(--tint)); }
+      .r1 { display: flex; align-items: center; width: 100%; }
+      .tn { flex: 1; display: flex; align-items: center; gap: 1.3cqw; padding: 1.2cqw 1.6cqw 1.2cqw 1.2cqw; border-radius: 1.6cqw;
+        background: rgba(255, 255, 255, .09); box-shadow: inset 0 0 0 .15cqw rgba(255, 255, 255, .14), 0 1.6cqw 3cqw -1.8cqw rgba(4, 10, 20, .45); }
+      .tn b { font-size: 2.5cqw; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); white-space: nowrap; }
+      .ah { position: relative; flex: none; width: 3.4cqw; height: .3cqw; background: rgba(255, 255, 255, .34); }
+      .ah::after { content: ''; position: absolute; right: .1cqw; top: 50%; width: 1.1cqw; height: 1.1cqw; translate: 0 -50%; rotate: -45deg; border-right: .3cqw solid rgba(255, 255, 255, .34); border-bottom: .3cqw solid rgba(255, 255, 255, .34); }
+      .av { position: relative; flex: none; width: .3cqw; height: 2.8cqw; background: rgba(255, 255, 255, .34); }
+      .av::after { content: ''; position: absolute; left: 50%; bottom: .1cqw; width: 1.1cqw; height: 1.1cqw; translate: -50% 0; rotate: 45deg; border-right: .3cqw solid rgba(255, 255, 255, .34); border-bottom: .3cqw solid rgba(255, 255, 255, .34); }
+      .lp { width: 100%; padding: 2cqw 2.2cqw 2.4cqw; border-radius: 2cqw; background: rgba(var(--tint), .1);
+        box-shadow: inset 0 0 0 .3cqw rgb(var(--tint)), 0 0 3.4cqw -1cqw rgba(var(--tint), .5); }
+      .lh { display: flex; align-items: center; gap: 1.2cqw; margin-bottom: 1.8cqw; color: rgb(var(--tint)); }
+      .lh b { font-size: 3cqw; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); white-space: nowrap; }
+      .lh .chip { font-size: 2.3cqw; font-weight: 750; padding: .6cqw 1.6cqw; }
+      .gr { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4cqw; }
+      .hn { display: flex; align-items: center; gap: 1.2cqw; padding: 1cqw 1.4cqw 1cqw 1cqw; border-radius: 1.4cqw;
+        background: rgba(255, 255, 255, .09); box-shadow: inset 0 0 0 .15cqw rgba(255, 255, 255, .14); }
+      .hn b { font-size: 2.5cqw; font-weight: 700; color: var(--ink); white-space: nowrap; }
+      .rs { z-index: 4; display: flex; flex-direction: column; gap: 1.4cqw; padding: 2.4cqw 2.2cqw 2.8cqw; }
+      .rh { display: flex; align-items: center; gap: .7cqw; font-size: 2.2cqw; font-weight: 700; letter-spacing: -0.02em; color: var(--ink-2); white-space: nowrap; }
+      .rh .ico { color: rgb(var(--tint)); }
+      .out { display: flex; align-items: center; gap: 1cqw; padding: 1.1cqw 1.4cqw; border-radius: 1.3cqw; background: rgba(var(--tint), .16); color: rgb(var(--tint)); }
+      .out b { font-size: 2.7cqw; font-weight: 750; color: var(--ink); white-space: nowrap; }
+      .rs .skel { background: rgba(255, 255, 255, .2); }
     `,
+    after(stage, K) {
+      const g = geo(stage);
+      const a = g('.lp');
+      const b = g('.rs');
+      stage.querySelector('.links').outerHTML = K.wires(K.curve(a.r + 0.4, a.cy, b.l - 0.8, b.cy, { c: tintOf(stage), dot: true }), { z: 3 });
+    },
   });
 })();
