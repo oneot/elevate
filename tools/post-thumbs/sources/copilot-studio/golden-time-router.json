@@ -1,0 +1,10 @@
+{
+  "key": "copilot-studio/golden-time-router",
+  "id": "8a3733d9-2540-454c-aadc-f02a5ed8f1cf",
+  "title": "Workflow를 활용한 골든타임 라우터 만들기",
+  "postUpdatedAt": "2026-11-12T11:34:56.673Z",
+  "contentHash": "sha256:8ec646e6881ce35ef63883776f27065a1a23af303e48c4db3ac9268600a25856",
+  "origin": "ai",
+  "excerpt": "워크플로로 응급실 10곳의 실시간 병상을 모아 상위 3곳을 추천하고 지도 대시보드로 배포합니다.",
+  "generatedAt": "2026-11-12T11:48:40.454Z"
+}
