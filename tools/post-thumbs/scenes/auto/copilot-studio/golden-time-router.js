@@ -1,81 +1,84 @@
-/* copilot-studio/golden-time-router — workflow canvas: Kakao/공공데이터 HTTP nodes and the "후보 병원마다" loop over 10 ERs */
+/* copilot-studio/golden-time-router — the github.io dashboard: map routes from 보라매공원 and the Top 3 이송 추천 board */
 (() => {
-  const geo = (stage) => {
-    const b = stage.getBoundingClientRect();
-    const k = 100 / b.width;
-    return (sel) => {
-      const r = stage.querySelector(sel).getBoundingClientRect();
-      const l = (r.left - b.left) * k, t = (r.top - b.top) * k, w = r.width * k, h = r.height * k;
-      return { l, t, r: l + w, b: t + h, cx: l + w / 2, cy: t + h / 2 };
-    };
-  };
-  const tintOf = (stage) => `rgb(${getComputedStyle(stage).getPropertyValue('--tint').trim()})`;
-
   scene('copilot-studio/golden-time-router', (K) => {
-    const top = (icon, name) => `<div class="tn"><span class="ni">${K.ico(icon, { s: 2.8 })}</span><b>${name}</b></div>`;
-    const http = (icon, name) => `<div class="hn"><span class="ni">${K.ico(icon, { s: 2.6 })}</span><b>${name}</b></div>`;
+    const row = (n, name, min, on) => `<div class="rk ${on ? 'on' : ''}">
+        <span class="no">${n}</span>
+        <div class="nm"><b>${name}</b>${K.skel(on ? '78%' : '62%')}</div>
+        <span class="mi">${K.ico('vehicle_car', { s: 2.4 })}${min}</span>
+      </div>`;
+    // map: start pin at (24, 58)%, three ER markers; routes drawn in the map's own 0–100 box
+    const map = `<div class="mp">
+        <svg class="rt" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path class="r3" d="M24 58 C 30 84, 52 92, 70 86"/>
+          <path class="r2" d="M24 58 C 18 34, 30 20, 46 16"/>
+          <path class="r1" d="M24 58 C 42 58, 58 46, 78 40"/>
+        </svg>
+        <span class="mk m1" style="left:78%;top:40%">1</span>
+        <span class="mk m2" style="left:46%;top:16%"></span>
+        <span class="mk m3" style="left:70%;top:86%"></span>
+        <span class="st" style="left:24%;top:58%">${K.ico('location', { s: 3.2 })}</span>
+        <span class="sl">보라매공원</span>
+      </div>`;
     return K.win({
-      x: 4, y: 10, w: 62, h: 50, title: '근처 응급실 실시간 조회', icon: false,
-      barRight: K.chip('게시됨', { dot: 'var(--green)' }),
-      body: `<div class="cv">
-        <div class="r1">${top('globe_location', '장소 좌표 찾기')}<i class="ah"></i>${top('location', '근처 응급실 조회')}</div>
-        <i class="av"></i>
-        <div class="lp">
-          <div class="lh">${K.ico('arrow_repeat_all', { s: 3 })}<b>후보 병원마다</b>${K.chip('10곳', { solid: true })}</div>
-          <div class="gr">
-            ${http('alert_urgent', '① 메시지')}${http('vehicle_car', '② 이동 시간')}
-            ${http('bed', '③ 병상')}${http('heart_pulse', '④ 중증질환')}
-          </div>
+      right: 2.5, y: 8.5, w: 65, h: 51, title: '골든타임 라우터', icon: false,
+      barRight: K.chip('에이전트 연결됨', { dot: 'var(--green)' }),
+      body: `<div class="db">${map}
+        <div class="bd">
+          <p class="bh">${K.ico('trophy', { s: 2.8 })}이송 추천</p>
+          ${row(1, 'A대학병원', '9분', true)}
+          ${row(2, 'B병원', '13분')}
+          ${row(3, 'C의료원', '16분')}
         </div>
       </div>`,
     })
       + K.card({
-        right: 2.4, y: 31, w: 30, cls: 'rs',
-        body: `<p class="rh">${K.ico('arrow_reply', { s: 2.6 })}Respond to the agent</p>
-          <div class="out">${K.ico('braces_variable', { s: 2.6 })}<b>병원정보</b></div>
-          ${K.skel('88%')}${K.skel('64%')}`,
+        x: 3.5, y: 16.5, w: 30.5, cls: 'ask',
+        body: `${K.bubble('보라매공원,\n50대 다리골절 노인', { me: true })}${K.skel('54%')}`,
       })
-      + '<div class="links"></div>'
-      + K.tile({ x: 1.6, y: 4, s: 10.5 })
-      + K.float({ right: 7, y: 17, s: 6, icon: 'timer', far: true })
-      + K.pill({ right: 4, y: 4, icon: 'arrow_sync', text: '응급실 10곳 실시간 조회' });
+      + K.tile({ x: 27, y: 3, s: 10.5 })
+      + K.float({ x: 6, y: 5.5, s: 6.4, icon: 'heart_pulse', far: true })
+      + K.pill({ x: 2.5, bottom: 5, icon: 'location', text: '응급실 Top 3 바로 추천' });
   }, {
-    deco: { big: 'ribbon', small: 'sphere', v: 2 },
+    deco: { big: 'ribbon', small: 'sphere', v: 1 },
     css: `
       .win__bar { padding-left: 11cqw; font-size: 2.9cqw; font-weight: 700; }
       .win__bar .chip { font-size: 2.2cqw; font-weight: 700; padding: .8cqw 1.6cqw; }
-      .cv { height: 100%; padding: 3cqw 3.2cqw; display: flex; flex-direction: column; align-items: center;
-        background: radial-gradient(circle, rgba(255, 255, 255, .14) .16cqw, transparent .2cqw) 0 0 / 2.4cqw 2.4cqw; }
-      .ni { flex: none; display: grid; place-items: center; width: 4.6cqw; height: 4.6cqw; border-radius: 1.2cqw; background: rgba(var(--tint), .18); color: rgb(var(--tint)); }
-      .r1 { display: flex; align-items: center; width: 100%; }
-      .tn { flex: 1; display: flex; align-items: center; gap: 1.3cqw; padding: 1.2cqw 1.6cqw 1.2cqw 1.2cqw; border-radius: 1.6cqw;
-        background: rgba(255, 255, 255, .09); box-shadow: inset 0 0 0 .15cqw rgba(255, 255, 255, .14), 0 1.6cqw 3cqw -1.8cqw rgba(4, 10, 20, .45); }
-      .tn b { font-size: 2.5cqw; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); white-space: nowrap; }
-      .ah { position: relative; flex: none; width: 3.4cqw; height: .3cqw; background: rgba(255, 255, 255, .34); }
-      .ah::after { content: ''; position: absolute; right: .1cqw; top: 50%; width: 1.1cqw; height: 1.1cqw; translate: 0 -50%; rotate: -45deg; border-right: .3cqw solid rgba(255, 255, 255, .34); border-bottom: .3cqw solid rgba(255, 255, 255, .34); }
-      .av { position: relative; flex: none; width: .3cqw; height: 2.8cqw; background: rgba(255, 255, 255, .34); }
-      .av::after { content: ''; position: absolute; left: 50%; bottom: .1cqw; width: 1.1cqw; height: 1.1cqw; translate: -50% 0; rotate: 45deg; border-right: .3cqw solid rgba(255, 255, 255, .34); border-bottom: .3cqw solid rgba(255, 255, 255, .34); }
-      .lp { width: 100%; padding: 2cqw 2.2cqw 2.4cqw; border-radius: 2cqw; background: rgba(var(--tint), .1);
-        box-shadow: inset 0 0 0 .3cqw rgb(var(--tint)), 0 0 3.4cqw -1cqw rgba(var(--tint), .5); }
-      .lh { display: flex; align-items: center; gap: 1.2cqw; margin-bottom: 1.8cqw; color: rgb(var(--tint)); }
-      .lh b { font-size: 3cqw; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); white-space: nowrap; }
-      .lh .chip { font-size: 2.3cqw; font-weight: 750; padding: .6cqw 1.6cqw; }
-      .gr { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4cqw; }
-      .hn { display: flex; align-items: center; gap: 1.2cqw; padding: 1cqw 1.4cqw 1cqw 1cqw; border-radius: 1.4cqw;
-        background: rgba(255, 255, 255, .09); box-shadow: inset 0 0 0 .15cqw rgba(255, 255, 255, .14); }
-      .hn b { font-size: 2.5cqw; font-weight: 700; color: var(--ink); white-space: nowrap; }
-      .rs { z-index: 4; display: flex; flex-direction: column; gap: 1.4cqw; padding: 2.4cqw 2.2cqw 2.8cqw; }
-      .rh { display: flex; align-items: center; gap: .7cqw; font-size: 2.2cqw; font-weight: 700; letter-spacing: -0.02em; color: var(--ink-2); white-space: nowrap; }
-      .rh .ico { color: rgb(var(--tint)); }
-      .out { display: flex; align-items: center; gap: 1cqw; padding: 1.1cqw 1.4cqw; border-radius: 1.3cqw; background: rgba(var(--tint), .16); color: rgb(var(--tint)); }
-      .out b { font-size: 2.7cqw; font-weight: 750; color: var(--ink); white-space: nowrap; }
-      .rs .skel { background: rgba(255, 255, 255, .2); }
+      .db { height: 100%; display: flex; gap: 2.4cqw; padding: 2.6cqw 2.8cqw 0; }
+      .mp { position: relative; flex: 1.15; height: 100%; border-radius: 2cqw 2cqw 0 0; overflow: hidden;
+        background:
+          linear-gradient(118deg, transparent 58%, rgba(90, 170, 220, .22) 58%, rgba(90, 170, 220, .22) 66%, transparent 66%),
+          repeating-linear-gradient(90deg, transparent 0 6.6cqw, rgba(255, 255, 255, .1) 6.6cqw 6.9cqw),
+          repeating-linear-gradient(0deg, transparent 0 5.4cqw, rgba(255, 255, 255, .1) 5.4cqw 5.7cqw),
+          rgba(255, 255, 255, .06);
+        box-shadow: inset 0 0 0 .15cqw rgba(255, 255, 255, .14); }
+      .rt { position: absolute; inset: 0; width: 100%; height: 100%; }
+      .rt path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+      .rt .r1 { stroke: rgb(var(--tint)); stroke-width: .75cqw; filter: drop-shadow(0 0 .8cqw rgba(var(--tint), .7)); }
+      .rt .r2, .rt .r3 { stroke: rgba(255, 255, 255, .5); stroke-width: .4cqw; stroke-dasharray: 1.2cqw 1cqw; }
+      .mk { position: absolute; translate: -50% -50%; display: grid; place-items: center; width: 4.6cqw; height: 4.6cqw; border-radius: 50%;
+        font-size: 2.5cqw; font-weight: 800; color: #fff; background: rgba(255, 255, 255, .26); box-shadow: 0 0 0 .3cqw rgba(255, 255, 255, .5); }
+      .mk.m2, .mk.m3 { width: 2.8cqw; height: 2.8cqw; background: rgba(255, 255, 255, .7); box-shadow: 0 0 0 .7cqw rgba(255, 255, 255, .2); }
+      .mk.m1 { width: 5.6cqw; height: 5.6cqw; font-size: 3cqw; background: var(--grad); box-shadow: 0 0 0 .35cqw #fff, 0 .8cqw 2cqw rgba(0, 0, 0, .35); }
+      .st { position: absolute; translate: -50% -88%; color: var(--pink); filter: drop-shadow(0 .4cqw .6cqw rgba(0, 0, 0, .4)); }
+      .sl { position: absolute; left: 3%; top: 66%; padding: .6cqw 1.3cqw; border-radius: 1.2cqw; font-size: 2.3cqw; font-weight: 750; color: var(--ink);
+        background: rgba(14, 40, 54, .55); white-space: nowrap; }
+      .bd { flex: 1; display: flex; flex-direction: column; gap: 1.5cqw; }
+      .bh { display: flex; align-items: center; gap: 1cqw; margin: .4cqw 0 .4cqw .4cqw; font-size: 2.8cqw; font-weight: 800; color: var(--ink); white-space: nowrap; }
+      .bh .ico { color: var(--amber); }
+      .rk { display: flex; align-items: center; gap: 1.3cqw; padding: 1.3cqw 1.4cqw; border-radius: 1.6cqw;
+        background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 .15cqw rgba(255, 255, 255, .13); }
+      .rk.on { background: rgba(var(--tint), .16); box-shadow: inset 0 0 0 .3cqw rgb(var(--tint)), 0 0 3cqw -1cqw rgba(var(--tint), .6); }
+      .no { flex: none; display: grid; place-items: center; width: 4cqw; height: 4cqw; border-radius: 50%; font-size: 2.3cqw; font-weight: 800; color: var(--ink); background: rgba(255, 255, 255, .16); }
+      .rk.on .no { background: var(--grad); color: #fff; }
+      .nm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .8cqw; }
+      .nm b { font-size: 2.5cqw; font-weight: 750; color: var(--ink); white-space: nowrap; }
+      .rk.on .nm b { font-size: 2.7cqw; }
+      .nm .skel { height: .9cqw; background: rgba(255, 255, 255, .2); }
+      .mi { display: flex; align-items: center; gap: .5cqw; font-size: 2.4cqw; font-weight: 800; color: var(--ink-2); white-space: nowrap; }
+      .rk.on .mi { color: rgb(var(--tint)); font-size: 2.7cqw; }
+      .ask { z-index: 4; display: flex; flex-direction: column; align-items: flex-end; gap: 1.4cqw; padding: 2.6cqw 2.2cqw; }
+      .ask .bubble { font-size: 2.6cqw; font-weight: 700; line-height: 1.4; white-space: pre; }
+      .ask .skel { background: rgba(255, 255, 255, .2); align-self: flex-start; }
     `,
-    after(stage, K) {
-      const g = geo(stage);
-      const a = g('.lp');
-      const b = g('.rs');
-      stage.querySelector('.links').outerHTML = K.wires(K.curve(a.r + 0.4, a.cy, b.l - 0.8, b.cy, { c: tintOf(stage), dot: true }), { z: 3 });
-    },
   });
 })();

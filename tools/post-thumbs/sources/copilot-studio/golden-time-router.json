@@ -2,9 +2,9 @@
   "key": "copilot-studio/golden-time-router",
   "id": "8a3733d9-2540-454c-aadc-f02a5ed8f1cf",
   "title": "Workflow를 활용한 골든타임 라우터 만들기",
-  "postUpdatedAt": "2026-11-12T12:15:35.335Z",
-  "contentHash": "sha256:97a511071509c2b68f95174df4e739cc8a0d6643a5fcd80a90762635d9c14257",
+  "postUpdatedAt": "2026-11-12T13:56:13.361Z",
+  "contentHash": "sha256:51fa36566bf5e9059d4bdbfdb5f6f7cf17b6e25f997bf19a8c4871efe62fd989",
   "origin": "ai",
-  "excerpt": "API 워크플로로 응급실 10곳을 실시간 조회해 상위 3곳을 추천하고 지도 대시보드로 배포합니다.",
-  "generatedAt": "2026-11-12T12:31:09.263Z"
+  "excerpt": "카카오·공공데이터 API 워크플로로 응급실 상위 3곳을 추천하고 지도 대시보드로 배포합니다.",
+  "generatedAt": "2026-11-12T14:12:24.242Z"
 }
